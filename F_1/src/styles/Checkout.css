@@ -1,0 +1,319 @@
+/* Checkout Page Styles */
+
+.checkout-container {
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Step Indicator Styling */
+.step-circle {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.step-circle:hover {
+  transform: scale(1.05);
+  cursor: pointer;
+}
+
+.step-circle.active {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
+  }
+  50% {
+    box-shadow: 0 2px 16px rgba(22, 163, 74, 0.6);
+  }
+}
+
+/* Step Line */
+.step-line {
+  transition: background-color 0.3s ease;
+}
+
+/* Form Input Styling */
+.form-input {
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.form-input:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(22, 163, 74, 0.1);
+}
+
+/* Delivery Option Card */
+.delivery-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideInUp 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.delivery-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.delivery-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.delivery-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.delivery-card.active {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+/* Payment Option Card */
+.payment-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideInUp 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.payment-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.payment-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.payment-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.payment-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.payment-card.active {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+/* Radio Button Styling */
+.radio-btn {
+  transition: all 0.2s ease;
+}
+
+.radio-btn.checked {
+  animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.5);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Order Summary Sidebar */
+.order-summary {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border: 1px solid rgba(34, 197, 94, 0.1);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.order-summary:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Summary Item */
+.summary-item {
+  animation: slideInLeft 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.summary-item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.summary-item:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.summary-item:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Price Display */
+.price-display {
+  animation: slideInRight 0.4s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.total-price {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Trust Signals */
+.trust-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 0.875rem;
+  color: #047857;
+  animation: slideInLeft 0.4s ease-out;
+}
+
+.trust-badge:nth-child(1) {
+  animation-delay: 0;
+}
+
+.trust-badge:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.trust-badge:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+/* Button Styles */
+.btn-place-order {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-place-order::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: left 0.5s ease;
+}
+
+.btn-place-order:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.btn-place-order:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .order-summary {
+    position: relative;
+  }
+}
+
+@media (max-width: 768px) {
+  .step-indicator {
+    gap: 8px;
+  }
+
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 0.875rem;
+  }
+
+  .delivery-card,
+  .payment-card {
+    padding: 1rem;
+  }
+
+  .form-input {
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .grid.grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .step-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+
+  .step-label {
+    font-size: 0.75rem;
+  }
+
+  .delivery-card .text-3xl,
+  .payment-card .text-3xl {
+    font-size: 1.75rem;
+  }
+
+  .flex.gap-4 {
+    gap: 8px;
+  }
+}

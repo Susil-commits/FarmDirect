@@ -1,0 +1,148 @@
+/* OnboardingWizard.css - Wizard animations and styles */
+
+.onboarding-wizard {
+  --primary-color: #22c55e;
+  --primary-dark: #16a34a;
+  --accent-color: #10b981;
+}
+
+/* Step transitions */
+.onboarding-wizard-step-enter {
+  animation: stepSlideIn 0.4s ease-out forwards;
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.onboarding-wizard-step-exit {
+  animation: stepSlideOut 0.3s ease-in forwards;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@keyframes stepSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes stepSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+}
+
+/* Progress bar animation */
+.onboarding-wizard progress {
+  accent-color: var(--primary-color);
+}
+
+/* Step indicator glow */
+.onboarding-wizard button[class*="scale-105"] {
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+}
+
+/* Form field animations */
+.onboarding-form-field {
+  animation: fieldFadeIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes fieldFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onboarding-form-field:nth-child(1) { animation-delay: 0.05s; }
+.onboarding-form-field:nth-child(2) { animation-delay: 0.1s; }
+.onboarding-form-field:nth-child(3) { animation-delay: 0.15s; }
+.onboarding-form-field:nth-child(4) { animation-delay: 0.2s; }
+.onboarding-form-field:nth-child(5) { animation-delay: 0.25s; }
+
+/* Step content bounce */
+.onboarding-wizard > div:last-of-type {
+  animation: contentBounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+@keyframes contentBounceIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Error shake animation */
+.onboarding-wizard input[aria-invalid="true"],
+.onboarding-wizard select[aria-invalid="true"],
+.onboarding-wizard textarea[aria-invalid="true"] {
+  animation: inputShake 0.4s ease-in-out;
+  border-color: #ef4444;
+}
+
+@keyframes inputShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Success checkmark pulse */
+.onboarding-wizard .checkmark-pulse {
+  animation: checkPulse 0.6s ease-out;
+}
+
+@keyframes checkPulse {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Tooltip animations */
+.onboarding-tooltip-enter {
+  animation: tooltipFadeIn 0.2s ease-out forwards;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth transitions for responsive design */
+@media (max-width: 768px) {
+  .onboarding-wizard-step-enter,
+  .onboarding-wizard-step-exit {
+    animation-duration: 0.3s;
+  }
+}

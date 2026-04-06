@@ -1,0 +1,74 @@
+/* OnboardingFlow.css - Main onboarding flow page styles */
+
+.onboarding-flow {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.onboarding-error {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  right: 2rem;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 1rem;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #ef4444;
+  border-radius: 0.5rem;
+  color: #991b1b;
+  font-weight: 500;
+  animation: slideInFromBottom 0.3s ease-out;
+  z-index: 100;
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .onboarding-error {
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .onboarding-error {
+    bottom: 0.5rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .onboarding-flow {
+    background: #0f172a;
+  }
+
+  .onboarding-error {
+    background: rgba(127, 29, 29, 0.2);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+  }
+}
+
+/* Print styles */
+@media print {
+  .onboarding-flow {
+    display: none;
+  }
+}

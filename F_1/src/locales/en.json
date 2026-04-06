@@ -1,0 +1,275 @@
+{
+  "common": {
+    "appName": "FarmDirect",
+    "language": "Language",
+    "english": "English",
+    "odia": "ଓଡ଼ିଆ",
+    "search": "Search",
+    "cart": "Cart",
+    "wishlist": "Wishlist",
+    "profile": "Profile",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "close": "Close",
+    "approve": "Approve",
+    "reject": "Reject",
+    "verify": "Verify",
+    "noData": "No data available"
+  },
+  "nav": {
+    "marketplace": "Marketplace",
+    "about": "About",
+    "contact": "Contact",
+    "dashboard": "Dashboard",
+    "myCrops": "My Crops",
+    "ordersReceived": "Orders Received",
+    "myOrders": "My Orders",
+    "users": "Users",
+    "crops": "Crops",
+    "settings": "Settings",
+    "help": "Help"
+  },
+  "footer": {
+    "quickLinks": "Quick Links",
+    "home": "Home",
+    "marketplace": "Marketplace",
+    "contact": "Contact",
+    "aboutUs": "About Us",
+    "company": "Company",
+    "aboutFarmDirect": "About FarmDirect",
+    "careers": "Careers",
+    "blog": "Blog",
+    "support": "Support",
+    "supportCenter": "Support Center",
+    "contactUs": "Contact Us",
+    "faq": "FAQ",
+    "legal": "Legal",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "copyright": "© 2024 FarmDirect. All rights reserved.",
+    "followUs": "Follow Us"
+  },
+  "languageSelector": {
+    "title": "Choose Your Language",
+    "subtitle": "Select your preferred language to get started",
+    "selectLanguageHint": "Click to select",
+    "welcomeMessage": "Welcome to FarmDirect - Your Direct Farm Connection"
+  },
+  "home": {
+    "hero": {
+      "title": "Fresh From Farm To Your Door",
+      "part1": "Farm to Table",
+      "part2": "Directly",
+      "subtitle": "Connect directly with local farmers. Get fresh, organic produce delivered to your doorstep.",
+      "cta": "Start Buying",
+      "joinFarmer": "Join as Farmer"
+    },
+    "features": {
+      "title": "Why Choose FarmDirect?",
+      "freshProduce": "Fresh Produce",
+      "freshProduceDesc": "Direct from farms to your doorstep",
+      "betterPrice": "Better Prices",
+      "betterPriceDesc": "No middlemen, farmers get more",
+      "community": "Community",
+      "communityDesc": "Support local farmers & agriculture",
+      "localSupply": "Local Supply",
+      "localSupplyDesc": "Know where your food comes from"
+    },
+    "stats": {
+      "farmers": "Farmers",
+      "customers": "Customers",
+      "varieties": "Crop Varieties",
+      "deliveryDays": "Delivery Days",
+      "farmersTitle": "Active Farmers",
+      "customersTitle": "Happy Customers",
+      "varietiesTitle": "Crop Varieties",
+      "deliveryDaysTitle": "Delivery Time"
+    },
+    "testimonials": {
+      "title": "What Our Community Says"
+    }
+  },
+  "marketplace": {
+    "title": "Fresh Produce Marketplace",
+    "subtitle": "Browse premium crops at the best prices. Login only when placing an order.",
+    "filter": "Filter",
+    "sort": "Sort",
+    "search": "Search crops...",
+    "allCrops": "All Crops",
+    "addToCart": "Add to Cart",
+    "addToWishlist": "Add to Wishlist",
+    "removeFromWishlist": "Remove from Wishlist",
+    "price": "Price",
+    "rating": "Rating",
+    "availability": "In Stock",
+    "noProducts": "No products found",
+    "loadingCrops": "Loading fresh crops...",
+    "unableToLoad": "Unable to load crops"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty",
+    "startShopping": "Start Shopping",
+    "quantity": "Quantity",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "tax": "Tax",
+    "shipping": "Shipping",
+    "checkout": "Proceed to Checkout",
+    "continueShopping": "Continue Shopping",
+    "remove": "Remove",
+    "update": "Update Cart"
+  },
+  "checkout": {
+    "shippingDetails": "Shipping Details",
+    "billingAddress": "Billing Address",
+    "paymentMethod": "Payment Method",
+    "orderSummary": "Order Summary",
+    "placeOrder": "Place Order",
+    "orderPlaced": "Order placed successfully!"
+  },
+  "admin": {
+    "dashboard": "Admin Dashboard",
+    "platformManagement": "Platform management & analytics",
+    "stats": {
+      "totalUsers": "Total Users",
+      "pendingVerifications": "Pending Verifications",
+      "verifiedBuyers": "Verified Buyers",
+      "platformRevenue": "Platform Revenue"
+    },
+    "tabs": {
+      "overview": "📊 Overview",
+      "verification": "✓ Verifications",
+      "users": "👥 Users",
+      "listings": "📦 Listings",
+      "orders": "🛒 Orders",
+      "analytics": "📈 Analytics"
+    },
+    "overview": {
+      "platformSummary": "Platform Summary",
+      "activeFarmers": "Active Farmers",
+      "activeBuyers": "Active Buyers",
+      "transactions": "Transactions",
+      "quickActions": "Quick Actions",
+      "announcement": "Announcement",
+      "generateReports": "Generate Reports",
+      "manageDisputes": "Manage Disputes",
+      "systemSettings": "System Settings",
+      "thisMonth": "this month"
+    },
+    "verification": {
+      "pendingVerifications": "Pending Verifications",
+      "verifiedBuyers": "Verified Buyers",
+      "noPendingVerifications": "No pending verifications - all caught up!",
+      "noVerifiedBuyers": "No verified buyers yet",
+      "email": "Email",
+      "phone": "Phone",
+      "city": "City",
+      "status": "Status",
+      "pendingReview": "Pending Review",
+      "pendingSince": "Pending since",
+      "verified": "Verified"
+    },
+    "users": {
+      "userManagement": "User Management",
+      "addUser": "+ Add User",
+      "noUsers": "No users to display",
+      "type": "Type",
+      "joined": "Joined",
+      "actions": "Actions"
+    },
+    "listings": {
+      "title": "Listings & Moderation",
+      "comingSoon": "Coming soon - manage and moderate crop listings"
+    },
+    "orders": {
+      "title": "Orders Management",
+      "comingSoon": "Coming soon - manage and track all orders"
+    },
+    "analytics": {
+      "title": "Analytics & Reports",
+      "comingSoon": "Coming soon - detailed analytics and reporting"
+    },
+    "accessDenied": "Access Denied",
+    "onlyAdminAccess": "Only admins can access this dashboard",
+    "goToHome": "Go To Home"
+  },
+  "farmer": {
+    "dashboard": "Farmer Dashboard",
+    "myListings": "My Listings",
+    "addCrop": "Add Crop",
+    "earnings": "Earnings",
+    "orders": "Orders"
+  },
+  "buyer": {
+    "dashboard": "Buyer Dashboard",
+    "myOrders": "My Orders",
+    "savedItems": "Saved Items",
+    "orderHistory": "Order History"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "phone": "Phone",
+    "city": "City",
+    "joinAsOption": "Join as",
+    "farmer": "Farmer",
+    "buyer": "Buyer",
+    "forgotPassword": "Forgot Password?",
+    "createAccount": "Create Account",
+    "alreadyHaveAccount": "Already have an account?",
+    "signUp": "Sign Up",
+    "signIn": "Sign In",
+    "loginWithGoogle": "Login with Google",
+    "loginWithGitHub": "Login with GitHub",
+    "invalidCredentials": "Invalid email or password",
+    "accountCreated": "Account created successfully!"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "name": "Name",
+    "email": "Email",
+    "subject": "Subject",
+    "message": "Message",
+    "send": "Send Message",
+    "emailSent": "Thank you! We'll get back to you soon."
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email",
+    "password": "Password must be at least 8 characters",
+    "passwordMismatch": "Passwords do not match",
+    "phone": "Please enter a valid phone number",
+    "invalidField": "This field is invalid"
+  },
+  "messages": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "success": "Success!",
+    "noData": "No data available",
+    "emptyCart": "Your cart is empty",
+    "emptyWishlist": "Your wishlist is empty",
+    "addedToCart": "Added to cart",
+    "removedFromCart": "Removed from cart",
+    "addedToWishlist": "Added to wishlist",
+    "removedFromWishlist": "Removed from wishlist"
+  }
+}

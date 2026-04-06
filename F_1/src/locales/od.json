@@ -1,0 +1,275 @@
+{
+  "common": {
+    "appName": "ଫାର୍ମ ଡାଇରେକ୍ଟ",
+    "language": "ଭାଷା",
+    "english": "English",
+    "odia": "ଓଡ଼ିଆ",
+    "search": "ସନ୍ଧାନ",
+    "cart": "କାର୍ଟ",
+    "wishlist": "ଇଚ୍ଛାସୂଚୀ",
+    "profile": "ପ୍ରୋଫାଇଲ",
+    "logout": "ଲଗଆଉଟ",
+    "login": "ଲଗଇନ୍",
+    "register": "ପଞ୍ଜୀକରଣ",
+    "loading": "ଲୋଡ୍ ହୋଇଛି...",
+    "error": "ତ୍ରୁଟି",
+    "success": "ସଫଳ",
+    "cancel": "ରଦ୍ଦ",
+    "save": "ସେଭ୍ ଚେଞ୍ଜ",
+    "delete": "ଡିଲିଟ",
+    "edit": "ସମ୍ପାଦନା",
+    "add": "ଯୋଗ",
+    "back": "ପଛକୁ",
+    "next": "ପରବର୍ତ୍ତୀ",
+    "previous": "ପୂର୍ବବର୍ତ୍ତୀ",
+    "submit": "ଜମା ଦିନ୍",
+    "close": "ବନ୍ଦ",
+    "approve": "ଅନୁମୋଦନ",
+    "reject": "ଠାକୁରାଣୀ",
+    "verify": "ଯାଞ୍ଚ",
+    "noData": "କୌଣସି ତଥ୍ୟ ଉପଲବ୍ଧ ନାହିଁ"
+  },
+  "nav": {
+    "marketplace": "ମାର୍କେଟପ୍ଲେସ୍",
+    "about": "ବିଷୟରେ",
+    "contact": "ଯୋଗାଯୋଗ",
+    "dashboard": "ଡ୍ୟାଶବୋର୍ଡ",
+    "myCrops": "ମୋ ଫସଲ",
+    "ordersReceived": "ଅର୍ଡର ଗ୍ରହୀତ",
+    "myOrders": "ମୋ ଅର୍ଡର",
+    "users": "ଆଉଟ୍",
+    "crops": "ଫସଲ",
+    "settings": "ସେଟିଂ",
+    "help": "ସାହାଯ୍ୟ"
+  },
+  "footer": {
+    "quickLinks": "ଦ୍ରୁତ ଲିକ୍",
+    "home": "ଘର",
+    "marketplace": "ମାର୍କେଟପ୍ଲେସ୍",
+    "contact": "ଯୋଗାଯୋଗ",
+    "aboutUs": "ଆମ ବିଷୟରେ",
+    "company": "କୋମ୍ପାନୀ",
+    "aboutFarmDirect": "ଫାର୍ମ ଡାଇରେକ୍ଟ ବିଷୟରେ",
+    "careers": "କ୍ଯାରିୟର",
+    "blog": "ବ୍ଲଗ",
+    "support": "ସହାୟତା",
+    "supportCenter": "ସହାୟତା କେନ୍ଦ୍ର",
+    "contactUs": "ଆମାକୁ ଯୋଗାଯୋଗ କର",
+    "faq": "ପ୍ରଶ୍ନ",
+    "legal": "ଆଇନି",
+    "privacyPolicy": "ଗୋପନୀୟତା ନୀତି",
+    "termsOfService": "ସେବାର ସର୍ତଗୁଡ଼ିକ",
+    "copyright": "© 2024 ଫାର୍ମ ଡାଇରେକ୍ଟ। ସର୍ବାଧିକାର ସୁରକ୍ଷିତ।",
+    "followUs": "ଆମକୁ ଅନୁସରଣ କର"
+  },
+  "languageSelector": {
+    "title": "ଆପଣଙ୍କ ଭାଷା ନିର୍ବାଚନ କରନ୍ତୁ",
+    "subtitle": "ଶୁରୁ ଠାରୁ ଆପଣଙ୍କ ପସନ୍ଦର ଭାଷା ବାଛନ୍ତୁ",
+    "selectLanguageHint": "ନିର୍ବାଚନ ଡାଚିଦା",
+    "welcomeMessage": "ଫାର୍ମ ଡାଇରେକ୍ଟକୁ ସ୍ୱାଗତମ - ଆପଣଙ୍କ ସିଧାସଳଳ ଫାର୍ମ ସଂଯୋଗ"
+  },
+  "home": {
+    "hero": {
+      "title": "ଫାର୍ମରୁ ଆପଣଙ୍କ ଦ୍ୱାରକୁ ତାଜା",
+      "part1": "ଫାର୍ମରୁ ଟେବୁଲକୁ",
+      "part2": "ପ୍ରତ୍ୟକ୍ଷଭାବେ",
+      "subtitle": "ସ୍ଥାନୀୟ କୃଷକମାନଙ୍କ ସହିତ ସିଧାସଳଳ ସଂଯୋଗ। ଆପଣଙ୍କ ଦ୍ୱାରକୁ ତାଜା, ଜୈବ ଉତ୍ପାଦ ବିତରଣ ପାଆନ୍ତୁ।",
+      "cta": "ଖିରିବ ଆରମ୍ଭ କର",
+      "joinFarmer": "ଚାଷୀ ଭାବେ ଯୋଗଦିନ୍"
+    },
+    "features": {
+      "title": "ଫାର୍ମ ଡାଇରେକ୍ଟ କାହିଁକୁ ବାଛନ୍ତୁ?",
+      "freshProduce": "ତାଜା ଉତ୍ପାଦ",
+      "freshProduceDesc": "ଫାର୍ମରୁ ଆପଣଙ୍କ ଦ୍ୱାରକୁ ସିଧାସଳଳ",
+      "betterPrice": "ଭଲ ମୂଲ୍ୟ",
+      "betterPriceDesc": "କୌଣସି ମଧ୍ୟସ୍ଥତାକାରୀ ନାହିଁ, ଚାଷୀ ଅଧିକ ପାଆନ୍ତି",
+      "community": "ସମ୍ପ୍ରଦାୟ",
+      "communityDesc": "ସ୍ଥାନୀୟ ଚାଷୀ ଏବଂ କୃଷି ସମର୍ଥନ କର",
+      "localSupply": "ସ୍ଥାନୀୟ ଯୋଗାଣ",
+      "localSupplyDesc": "ଜାଣିବା ଆପଣଙ୍କ ଖାଦ୍ୟ କେଉଁଠାରୁ ଆସେ"
+    },
+    "stats": {
+      "farmers": "ଚାଷୀ",
+      "customers": "ଗ୍ରାହକ",
+      "varieties": "ଫସଲ ଭେଦ",
+      "deliveryDays": "ବିତରଣ ଦିନ",
+      "farmersTitle": "ସକ୍ରିୟ ଚାଷୀ",
+      "customersTitle": "ସନ୍ତୁଷ୍ଟ ଗ୍ରାହକ",
+      "varietiesTitle": "ଫସଲ ଭେଦ",
+      "deliveryDaysTitle": "ବିତରଣ ସମୟ"
+    },
+    "testimonials": {
+      "title": "ଆମ ସମ୍ପ୍ରଦାୟ କଣ କହିବେ"
+    }
+  },
+  "marketplace": {
+    "title": "ତାଜା ଉତ୍ପାଦ ମାର୍କେଟପ୍ଲେସ୍",
+    "subtitle": "ସର୍ବୋତ୍ତମ ମୂଲ୍ୟରେ ପ୍ରିମିୟମ ଫସଲ ଏକ଴ି-ଆଠି। ଅର୍ଡର ଦେବା ସମୟରେ ଲଗଇନ୍ କର।",
+    "filter": "ଶୋଧନ",
+    "sort": "ବିଧୂଳିତ",
+    "search": "ଫସଲ ସନ୍ଧାନ କର...",
+    "allCrops": "ସମସ୍ତ ଫସଲ",
+    "addToCart": "କାର୍ଟରେ ଯୋଗ",
+    "addToWishlist": "ଇଚ୍ଛାସୂଚୀରେ ଯୋଗ",
+    "removeFromWishlist": "ଇଚ୍ଛାସୂଚୀ ଠାରୁ ଅପସାରଣ",
+    "price": "ମୂଲ୍ୟ",
+    "rating": "ମୂଲ୍ୟାଙ୍କନ",
+    "availability": "ଷ୍ଟକ୍‌ରେ ଅଛି",
+    "noProducts": "କୌଣସି ଉତ୍ପାଦ ମିଳିଲା ନାହିଁ",
+    "loadingCrops": "ତାଜା ଫସଲ ଲୋଡ୍ ହୋଇଛି...",
+    "unableToLoad": "ଫସଲ ଲୋଡ୍ କରିବାରେ ଅସମର୍ଥ"
+  },
+  "cart": {
+    "title": "ସ୍ୱାଗତ କାର୍ଟ",
+    "empty": "ଆପଣଙ୍କ କାର୍ଟ ଖାଲି ଅଛି",
+    "startShopping": "କିରଣ ଆରମ୍ଭ କର",
+    "quantity": "ପରିମାଣ",
+    "total": "ମୋଟ",
+    "subtotal": "ମୋଟ ମୋଟ",
+    "tax": "ଟେକ୍ସ",
+    "shipping": "ଶିପିଂ",
+    "checkout": "ଚେକଆଉଟକୁ ଅଗ୍ରସର ଅଡୁଛି",
+    "continueShopping": "ସ୍ୱାଗତ ଜାରିରଖ",
+    "remove": "ଅପସାରଣ",
+    "update": "କାର୍ଟ ଅଦ୍ୟତନ"
+  },
+  "checkout": {
+    "shippingDetails": "ଶିପିଂ ବିବରଣୀ",
+    "billingAddress": "ସ୍ୱାଗତ ଦିଲାଗି",
+    "paymentMethod": "ଅର୍ଥ ପ୍ରଦାନ ପଦ୍ଧତି",
+    "orderSummary": "ଅର୍ଡର ସାରାଂଶ",
+    "placeOrder": "ଅର୍ଡର ଓକ",
+    "orderPlaced": "ଅର୍ଡର ସଫଳତାର ସହିତ ନିଆଗଦ!"
+  },
+  "admin": {
+    "dashboard": "ଆଡମିନ ଡ୍ୟାଶବୋର୍ଡ",
+    "platformManagement": "ପ୍ଲାଟଫର୍ମ ପରିଚାଳନା ଏବଂ ବିଶ୍ଳେଷଣ",
+    "stats": {
+      "totalUsers": "ମୋଟ ଆଉଟ୍",
+      "pendingVerifications": "ନିଷ୍ପତ୍ତିସାଧ୍ୟ ଯାଞ୍ଚ",
+      "verifiedBuyers": "ଯାଞ୍ଚ ଖିରିବା",
+      "platformRevenue": "ପ୍ଲାଟଫର୍ମ ରାଜସ୍ଵ"
+    },
+    "tabs": {
+      "overview": "📊 ସାରାଂଶ",
+      "verification": "✓ ଯାଞ୍ଚ",
+      "users": "👥 ଆଉଟ୍",
+      "listings": "📦 ତାଲିକା",
+      "orders": "🛒 ଓର୍ଦେର୍",
+      "analytics": "📈 ବିଶ୍ଳେଷଣ"
+    },
+    "overview": {
+      "platformSummary": "ପ୍ଲାଟଫର୍ମ ସାରାଂଶ",
+      "activeFarmers": "ସକ୍ରିୟ ଚାଷୀ",
+      "activeBuyers": "ସକ୍ରିୟ ଖିରିବା",
+      "transactions": "ଲେଣ୍ଡିଙ୍ଗ",
+      "quickActions": "ଦ୍ରୁତ ପାଲକ",
+      "announcement": "ଘୋଷଣା",
+      "generateReports": "ରିପୋର୍ଟ ସୃଷ୍ଟି କର",
+      "manageDisputes": "ବିବାଦ ପରିଚାଳନା",
+      "systemSettings": "ସିଷ୍ଟମ ସେଟିଂ",
+      "thisMonth": "ଏହି ମାସ"
+    },
+    "verification": {
+      "pendingVerifications": "ନିଷ୍ପତ୍ତିସାଧ୍ୟ ଯାଞ୍ଚ",
+      "verifiedBuyers": "ଯାଞ୍ଚ ଖିରିବା",
+      "noPendingVerifications": "ନିଷ୍ପତ୍ତିସାଧ୍ୟ ଯାଞ୍ଚ ନାହିଁ - ସବୁ ଗୋଡ଼ିଲିଛି!",
+      "noVerifiedBuyers": "ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ଯାଞ୍ଚ ଖିରିବା ନାହିଁ",
+      "email": "ଇମେଲ",
+      "phone": "ଫୋନ",
+      "city": "ସହର",
+      "status": "ସ୍ଥିତି",
+      "pendingReview": "ନିଷ୍ପତ୍ତିସାଧ୍ୟ ସମୀକ୍ଷା",
+      "pendingSince": "ନିଷ୍ପତ୍ତି",
+      "verified": "ଯାଞ୍ଚ ହେଲା"
+    },
+    "users": {
+      "userManagement": "ଆଉଟ ପରିଚାଳନା",
+      "addUser": "+ ଆଉଟ ଯୋଗ",
+      "noUsers": "କୌଣସି ଆଉଟ ତଥ୍ୟ ଅଛି ନିକେ",
+      "type": "ପ୍ରକାର",
+      "joined": "ଯୋଗ ଦେଲା",
+      "actions": "ପାଲକ"
+    },
+    "listings": {
+      "title": "ତାଲିକା ଏବଂ ମଡେରେସନ",
+      "comingSoon": "ଶୀଘ୍ର ଆସୁଛି - ଫସଲ ତାଲିକା ପରିଚାଳନା ଏବଂ ମଡେରେສ"
+    },
+    "orders": {
+      "title": "ଅର୍ଡର ପରିଚାଳନା",
+      "comingSoon": "ଶୀଘ୍ର ଆସୁଛି - ସମସ୍ତ ଅର୍ଡର ପରିଚାଳନା ଏବଂ ଟ୍ରାକ"
+    },
+    "analytics": {
+      "title": "ବିଶ୍ଳେଷଣ ଏବଂ ରିପୋର୍ଟ",
+      "comingSoon": "ଶୀଘ୍ର ଆସୁଛି - ବିସ୍ତୃତ ବିଶ୍ଳେଷଣ ଏବଂ ରିପୋର୍ଟିଙ୍ଗ"
+    },
+    "accessDenied": "ଆଜ୍ଞା ଅଭାବୀ",
+    "onlyAdminAccess": "କେବଳ ଆଡମିନମାନେ ଏହି ଡ୍ୟାଶବୋର୍ଡ ଆସିପାରିବେନ୍ତୁ",
+    "goToHome": "ଘରକୁ ଯାଆ"
+  },
+  "farmer": {
+    "dashboard": "ଚାଷୀ ଡ୍ୟାଶବୋର୍ଡ",
+    "myListings": "ମୋ ତାଲିକା",
+    "addCrop": "ଫସଲ ଯୋଗ",
+    "earnings": "ଆୟ",
+    "orders": "ଅର୍ଡର"
+  },
+  "buyer": {
+    "dashboard": "ଖିରିବା ଡ୍ୟାଶବୋର୍ଡ",
+    "myOrders": "ମୋ ଅର୍ଡର",
+    "savedItems": "ସଂରକ୍ଷିତ ଆଇଟେମ",
+    "orderHistory": "ଅର୍ଡର ଇତିହାସ"
+  },
+  "auth": {
+    "login": "ଲଗଇନ୍",
+    "register": "ପଞ୍ଜୀକରଣ",
+    "email": "ଇମେଲ",
+    "password": "ପାସୱାର୍ଡ",
+    "confirmPassword": "ପାସୱାର୍ଡ ନିଶ୍ଚିତ",
+    "firstName": "ପ୍ରଥମ ନାମ",
+    "lastName": "ଶେଷ ନାମ",
+    "phone": "ଫୋନ",
+    "city": "ସହର",
+    "joinAsOption": "ଯୋଗ ଦିନ୍",
+    "farmer": "ଚାଷୀ",
+    "buyer": "ଖିରିବା",
+    "forgotPassword": "ପାସୱାର୍ଡ ଭୁଲ ଗଲା?",
+    "createAccount": "ଖାତା ସୃଷ୍ଟି",
+    "alreadyHaveAccount": "ପୂର୍ବରୁ ଖାତା ଅଛି?",
+    "signUp": "ସାଇନ ଅପ",
+    "signIn": "ସାଇନ ଇନ",
+    "loginWithGoogle": "ଗୋଗଲ୍ ସହିତ ଲଗଇନ୍",
+    "loginWithGitHub": "ଗିଟ୍ହବ୍ ସହିତ ଲଗଇନ୍",
+    "invalidCredentials": "ଭୁଲ ଇମେଲ ବା ପାସୱାର୍ଡ",
+    "accountCreated": "ଖାତା ସଫଳତାରେ ସୃଷ୍ଟି हéଲାこと!"
+  },
+  "contact": {
+    "title": "ଯୋଗାଯୋଗ",
+    "name": "ନାମ",
+    "email": "ଇମେଲ",
+    "subject": "ବିଷୟ",
+    "message": "ବାର୍ତ୍ତା",
+    "send": "ବାର୍ତ୍ତା ପଠାଓ",
+    "emailSent": "ଧନ୍ୟବାଦ! ଆମେ ଶୀଘ୍ର ଆଳୀକରିବୁ।"
+  },
+  "validation": {
+    "required": "ଏହି କ୍ଷେତ୍ର ଆବଶ୍ୟକ",
+    "email": "ଦୟା ସଫଳ ଇମେଲ ଦିନ୍",
+    "password": "ପାସୱାର୍ଡ ଅତିକମ 8 ଅକ୍ଷର ହୋବେକୋ",
+    "passwordMismatch": "ପାସୱାର୍ଡ ମେଳ ନାହିଁ",
+    "phone": "ଦୟା ସଫଳ ଫୋନ ନଂ ଦିନ୍",
+    "invalidField": "ଏହି କ୍ଷେତ୍ର ଅସଫଳ"
+  },
+  "messages": {
+    "loading": "ଲୋଡ୍ ହୋଇଛି...",
+    "error": "କିଛି ଭୁଲ ହେଲା",
+    "success": "ସଫଳ!",
+    "noData": "କୌଣସି ତଥ୍ୟ ଉପଲବ୍ଧ ନାହିଁ",
+    "emptyCart": "ଆପଣଙ୍କ କାର୍ଟ ଖାଲି ଅଛି",
+    "emptyWishlist": "ଆପଣଙ୍କ ଇଚ୍ଛାସୂଚୀ ଖାଲି ଅଛି",
+    "addedToCart": "କାର୍ଟରେ ଯୋଗ ଦେଲା",
+    "removedFromCart": "କାର୍ଟ ଠାରୁ ଅପସାରଣ ଦେଲା",
+    "addedToWishlist": "ଇଚ୍ଛାସୂଚୀରେ ଯୋଗ",
+    "removedFromWishlist": "ଇଚ୍ଛାସୂଚୀ ଠାରୁ ଅପସାରଣ"
+  }
+}
