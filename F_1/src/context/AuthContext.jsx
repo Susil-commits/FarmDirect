@@ -184,7 +184,7 @@ export const AuthProvider = ({ children }) => {
         window.removeEventListener(event, handleActivity);
       });
     };
-  }, [user, logout]);
+  }, [user]);
 
   // Periodic token refresh check (every 5 minutes)
   useEffect(() => {
