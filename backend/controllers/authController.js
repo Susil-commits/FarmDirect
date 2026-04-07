@@ -37,10 +37,12 @@ export const register = async (req, res, next) => {
 
     // Generate token
     const token = generateToken(user._id);
+    const refreshToken = generateToken(user._id); // In production, use a different secret/expiry
 
     res.status(201).json({
       message: 'User registered successfully',
       token,
+      refreshToken,
       user: {
         id: user._id,
         name: user.name,
@@ -104,10 +106,12 @@ export const login = async (req, res, next) => {
 
     // Generate token
     const token = generateToken(user._id);
+    const refreshToken = generateToken(user._id); // In production, use a different secret/expiry
 
     res.status(200).json({
       message: 'Login successful',
       token,
+      refreshToken,
       user: {
         id: user._id,
         name: user.name,
@@ -132,9 +136,11 @@ export const getCurrentUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
     res.status(200).json({
-      data: {
+      message: 'User fetched successfully',
+      user: {
         ...user.toObject(),
         photo: user.profilePicture, // Return profilePicture as photo
+        id: user._id, // Ensure id field is present
       }
     });
   } catch (error) {
@@ -168,9 +174,11 @@ export const updateProfile = async (req, res, next) => {
 
     res.status(200).json({
       message: 'Profile updated successfully',
+      token: localStorage.token || generateToken(user._id), // Include token for consistency
       user: {
         ...user.toObject(),
         photo: user.profilePicture, // Return as photo for frontend
+        id: user._id, // Ensure id field
       },
     });
   } catch (error) {
@@ -247,10 +255,12 @@ export const googleCallback = async (req, res, next) => {
 
     // Generate JWT token
     const token = generateToken(user._id);
+    const refreshToken = generateToken(user._id); // In production, use different secret/expiry
 
     res.status(200).json({
       message: 'Google login successful',
       token,
+      refreshToken,
       user: {
         id: user._id,
         name: user.name,
@@ -260,6 +270,7 @@ export const googleCallback = async (req, res, next) => {
         location: user.location,
         photo: user.profilePicture,
         verified: user.verified,
+        kycStatus: user.kycStatus || 'pending',
       },
     });
   } catch (error) {
@@ -352,10 +363,12 @@ export const githubCallback = async (req, res, next) => {
 
     // Generate JWT token
     const token = generateToken(user._id);
+    const refreshToken = generateToken(user._id); // In production, use different secret
 
     res.status(200).json({
       message: 'GitHub login successful',
       token,
+      refreshToken,
       user: {
         id: user._id,
         name: user.name,
@@ -365,6 +378,7 @@ export const githubCallback = async (req, res, next) => {
         location: user.location,
         photo: user.profilePicture,
         verified: user.verified,
+        kycStatus: user.kycStatus || 'pending',
       },
     });
   } catch (error) {

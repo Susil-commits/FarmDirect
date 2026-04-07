@@ -91,7 +91,8 @@ export const AuthProvider = ({ children }) => {
           try {
             // Validate token structure and get user from backend
             const response = await authService.getCurrentUser();
-            const userData = response.data;
+            // Response structure after API interceptor: {message, user, ...}
+            const userData = response.user || response.data?.user || response;
             
             setUser(userData);
             setSessionActive(true);
@@ -151,16 +152,24 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (!user) return;
 
+    let activityTimeout;
+    
     const handleActivity = () => {
-      const now = Date.now().toString();
-      localStorage.setItem('lastActivityTime', now);
-      setLastActivity(new Date());
+      // Clear previous timeout
+      clearTimeout(activityTimeout);
+      
+      // Debounce: only update after 2 seconds of inactivity
+      activityTimeout = setTimeout(() => {
+        const now = Date.now().toString();
+        localStorage.setItem('lastActivityTime', now);
+        setLastActivity(new Date());
 
-      // Check for idle timeout (30 minutes)
-      if (isSessionExpired(1800000)) {
-        console.warn('Session expired due to inactivity');
-        logout();
-      }
+        // Check for idle timeout (30 minutes)
+        if (isSessionExpired(1800000)) {
+          console.warn('Session expired due to inactivity');
+          logout();
+        }
+      }, 2000); // 2 second debounce
     };
 
     // Add activity listeners
@@ -170,11 +179,12 @@ export const AuthProvider = ({ children }) => {
     });
 
     return () => {
+      clearTimeout(activityTimeout);
       events.forEach(event => {
         window.removeEventListener(event, handleActivity);
       });
     };
-  }, [user]);
+  }, [user, logout]);
 
   // Periodic token refresh check (every 5 minutes)
   useEffect(() => {
