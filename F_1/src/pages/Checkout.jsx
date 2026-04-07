@@ -29,6 +29,11 @@ export default function Checkout() {
   const [errors, setErrors] = useState({});
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Reset scroll position to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Pre-fill user address if available
   useEffect(() => {
     if (user) {

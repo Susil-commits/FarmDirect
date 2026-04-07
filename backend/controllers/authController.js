@@ -73,25 +73,6 @@ export const login = async (req, res, next) => {
       return res.status(400).json({ message: 'Please provide email and password' });
     }
 
-    // Hardcoded admin account for testing
-    if (email === 'admin@123' && password === 'password') {
-      const token = generateToken('admin_fixed_id_test');
-      return res.status(200).json({
-        message: 'Login successful',
-        token,
-        user: {
-          id: 'admin_fixed_id_test',
-          name: 'Admin User',
-          email: 'admin@123',
-          role: 'admin',
-          phone: '0000000000',
-          location: 'System Admin',
-          verified: true,
-          kycStatus: 'verified', // Admin is always verified
-        },
-      });
-    }
-
     // Find user and select password
     const user = await User.findOne({ email }).select('+password');
     if (!user) {

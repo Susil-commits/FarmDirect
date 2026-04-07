@@ -30,7 +30,16 @@ export default function OnboardingFlow() {
   // Check if user already completed onboarding
   useEffect(() => {
     if (user?.onboardingCompleted) {
-      navigate('/dashboard');
+      // Navigate to role-based dashboard
+      if (user.role === 'farmer') {
+        navigate('/farmer/dashboard');
+      } else if (user.role === 'buyer') {
+        navigate('/buyer/dashboard');
+      } else if (user.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/'); // Fallback to home
+      }
     }
   }, [user, navigate]);
 
@@ -197,9 +206,17 @@ export default function OnboardingFlow() {
         throw new Error('Failed to complete onboarding');
       }
 
-      // Refresh user data and navigate
+      // Refresh user data and navigate to role-based dashboard
       await refreshAll();
-      navigate('/dashboard');
+      if (formData.role === 'farmer') {
+        navigate('/farmer/dashboard');
+      } else if (formData.role === 'buyer') {
+        navigate('/buyer/dashboard');
+      } else if (formData.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/'); // Fallback to home
+      }
     } catch (err) {
       console.error('Onboarding error:', err);
       setError(err.message || 'An error occurred. Please try again.');
@@ -210,8 +227,16 @@ export default function OnboardingFlow() {
 
   const handleSkip = (formData) => {
     console.log('Onboarding skipped with data:', formData);
-    // Navigate to dashboard anyway
-    navigate('/dashboard');
+    // Navigate to role-based dashboard
+    if (formData.role === 'farmer') {
+      navigate('/farmer/dashboard');
+    } else if (formData.role === 'buyer') {
+      navigate('/buyer/dashboard');
+    } else if (formData.role === 'admin') {
+      navigate('/admin/dashboard');
+    } else {
+      navigate('/'); // Fallback to home
+    }
   };
 
   if (!user) {

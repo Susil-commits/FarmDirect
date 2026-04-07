@@ -84,6 +84,11 @@ export default function CropDetail() {
     { title: 'Delivered to You', completed: false },
   ];
 
+  // Reset scroll position to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Fetch crop details
   useEffect(() => {
     const fetchCropDetails = async () => {
@@ -186,7 +191,7 @@ export default function CropDetail() {
   if (loading) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4 flex items-center justify-center">
+        <div className="min-h-screen bg-linear-to-br from-white via-green-50 to-white py-12 px-4 flex items-center justify-center">
           <div className="text-center">
             <Loader size={48} className="text-green-600 animate-spin mx-auto mb-4" />
             <p className="text-gray-600 text-lg font-semibold">Loading crop details...</p>
@@ -199,7 +204,7 @@ export default function CropDetail() {
   if (error || !crop) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4">
+        <div className="min-h-screen bg-linear-to-br from-white via-green-50 to-white py-12 px-4">
           <div className="max-w-4xl mx-auto">
             <Card variant="warning">
               <div className="p-8 flex items-center gap-4">
@@ -225,7 +230,7 @@ export default function CropDetail() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4 relative">
+      <div className="min-h-screen bg-linear-to-br from-white via-green-50 to-white py-12 px-4 relative">
         <div className="absolute inset-0 premium-gradient pointer-events-none"></div>
         <div className="max-w-6xl mx-auto relative z-10">
           
@@ -242,7 +247,7 @@ export default function CropDetail() {
             <div className="lg:col-span-2">
               {/* Main Image */}
               <Card className="mb-6 animate-slide-in-left">
-                <div className="p-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-t-lg flex items-center justify-center hover-lift">
+                <div className="p-12 bg-linear-to-br from-green-100 to-emerald-100 rounded-t-lg flex items-center justify-center hover-lift">
                   <span className="text-9xl animate-bounce-soft">{crop.image}</span>
                 </div>
                 <div className="p-6">

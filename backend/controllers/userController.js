@@ -3,7 +3,7 @@ import asyncHandler from '../utils/asyncHandler.js';
 
 // Get user profile
 export const getUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.userId).select('-password');
+  const user = await User.findById(req.user._id).select('-password');
   
   if (!user) {
     return res.status(404).json({
@@ -23,7 +23,7 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
   const { firstName, lastName, phone, bio, profilePicture } = req.body;
   
   const user = await User.findByIdAndUpdate(
-    req.user.userId,
+    req.user._id,
     { firstName, lastName, phone, bio, profilePicture, updatedAt: new Date() },
     { new: true, runValidators: true }
   ).select('-password');
@@ -80,7 +80,7 @@ export const addAddress = asyncHandler(async (req, res) => {
 
 // Get addresses
 export const getAddresses = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.userId);
+  const user = await User.findById(req.user._id);
   
   if (!user) {
     return res.status(404).json({

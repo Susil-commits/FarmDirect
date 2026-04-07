@@ -16,6 +16,11 @@ export default function AdminVerification() {
   const [verificationRequests, setVerificationRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Reset scroll position to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Fetch verification requests on component mount
   useEffect(() => {
     fetchVerificationRequests();

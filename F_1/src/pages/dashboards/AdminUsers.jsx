@@ -14,6 +14,11 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [filterRole, setFilterRole] = useState('all');
 
+  // Reset scroll position to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     fetchData();
   }, []);

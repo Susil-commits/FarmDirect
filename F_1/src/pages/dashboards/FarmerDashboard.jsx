@@ -1,4 +1,5 @@
-﻿import { useAuth } from '../../context/AuthContext';
+﻿import { useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
@@ -8,6 +9,11 @@ import FarmerAnalytics from '../../components/farmer/FarmerAnalytics';
 export default function FarmerDashboard() {
   const { user, verificationStatus } = useAuth();
   const { navigate } = useRouter();
+
+  // Reset scroll position to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Redirect non-farmers
   if (!user || user.role !== 'farmer') {

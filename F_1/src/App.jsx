@@ -101,6 +101,10 @@ function App() {
         return <JoinAsFarmer />;
       case '/cart':
         return <ShoppingCart />;
+      case '/checkout':
+        return <Checkout />;
+      case '/order-confirmation':
+        return <OrderConfirmation />;
       case '/wishlist':
         return <Wishlist />;
       case '/orders':

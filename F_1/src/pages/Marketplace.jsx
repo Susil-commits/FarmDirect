@@ -29,6 +29,11 @@ export default function Marketplace() {
   const locations = ['Punjab', 'Himachal', 'Haryana', 'Karnataka', 'Maharashtra', 'Uttar Pradesh', 'Delhi', 'West Bengal'];
   const cropTypes = ['Vegetables', 'Fruits', 'Grains', 'Herbs', 'Organic'];
 
+  // Reset scroll position to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Fetch crops from API
   useEffect(() => {
     const fetchCrops = async () => {

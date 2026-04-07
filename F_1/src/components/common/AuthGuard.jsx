@@ -64,7 +64,7 @@ export const withAuthGuard = (
 
           // Check verification status
           if (requireVerification && verificationStatus !== 'verified') {
-            navigate('/verify');
+            navigate('/verification/progress');
             setLoading(false);
             return;
           }

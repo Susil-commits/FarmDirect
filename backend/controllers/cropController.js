@@ -9,7 +9,7 @@ export const createCrop = async (req, res, next) => {
 
     const crop = await CropListing.create({
       farmerId: req.user._id,
-      name,
+      cropName: name, // Use correct field name from schema
       category,
       price,
       quantity,
@@ -17,7 +17,7 @@ export const createCrop = async (req, res, next) => {
       specifications,
       harvestDate,
       certifications,
-      status: 'pending_review',
+      status: 'active', // Changed from 'pending_review' to 'active'
     });
 
     res.status(201).json({

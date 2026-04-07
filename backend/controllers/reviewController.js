@@ -7,7 +7,7 @@ import asyncHandler from '../utils/asyncHandler.js';
 // Add review for crop
 export const addReview = asyncHandler(async (req, res) => {
   const { cropId, rating, comment } = req.body;
-  const userId = req.user.userId;
+  const userId = req.user._id;
   
   // Validate rating
   if (rating < 1 || rating > 5) {

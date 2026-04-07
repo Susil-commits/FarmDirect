@@ -34,6 +34,11 @@ export default function Home() {
   const [gradientAngle, setGradientAngle] = useState(0);
   const [imageError, setImageError] = useState(false);
 
+  // Reset scroll position to top on page load/refresh
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Animate gradient background
   useEffect(() => {
     const interval = setInterval(() => {

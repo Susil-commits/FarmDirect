@@ -17,13 +17,13 @@ export const usePrivateRoute = (requiredRoles = null) => {
       const sessionCheck = await checkSession();
       if (!sessionCheck.active) {
         console.warn('Session not active:', sessionCheck.reason);
-        navigate('/login');
+        navigate('/auth/login');
         return;
       }
 
       // Check authentication
       if (!isAuthenticated) {
-        navigate('/login');
+        navigate('/auth/login');
         return;
       }
 

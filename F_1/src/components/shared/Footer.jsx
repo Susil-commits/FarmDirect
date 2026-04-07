@@ -31,11 +31,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <button onClick={() => navigate('/')} className="flex items-center gap-2 mb-4 hover:opacity-80 transition cursor-pointer">
-              <div className="w-8 h-8 bg-linear-to-br from-green-600 to-green-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">🌾</span>
-              </div>
-              <h3 className="text-lg font-bold text-white">FarmDirect</h3>
+            <button onClick={() => navigate('/')} className="mb-4 hover:opacity-80 transition cursor-pointer">
+              <h3 className="text-2xl font-bold text-green-700">FarmDirect</h3>
             </button>
             <p className="text-sm">Connecting farmers directly to buyers. Fresh produce, fair prices.</p>
           </div>

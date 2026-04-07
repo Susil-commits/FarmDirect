@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useWishlist } from '../context/WishlistContext';
 import { useRouter } from '../context/RouterContext';
 import { useCart } from '../context/CartContext';
@@ -12,6 +12,11 @@ export default function Wishlist() {
   const { addToCart } = useCart();
   const { navigate } = useRouter();
   const { addToast } = useToast();
+
+  // Reset scroll position to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleAddToCart = (product) => {
     addToCart(product, 1);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useRouter } from '../context/RouterContext';
 import { useToast } from '../context/ToastContext';
@@ -10,6 +10,11 @@ export default function ShoppingCart() {
   const { cart, removeFromCart, updateQuantity, clearCart, getTotalPrice } = useCart();
   const { navigate } = useRouter();
   const { addToast } = useToast();
+
+  // Reset scroll position to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleQuantityChange = (productId, quantity) => {
     const newQty = Math.max(1, parseInt(quantity) || 1);

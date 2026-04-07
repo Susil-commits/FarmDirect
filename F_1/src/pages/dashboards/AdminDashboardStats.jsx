@@ -13,6 +13,11 @@ export default function AdminDashboardStats() {
   const [allCrops, setAllCrops] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Reset scroll position to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     fetchData();
   }, []);

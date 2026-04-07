@@ -25,6 +25,11 @@ export default function VerificationProgress() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedAt, setSubmittedAt] = useState(null);
 
+  // Reset scroll position to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     // If already verified, redirect to dashboard
     if (verificationStatus === 'verified') {
@@ -168,12 +173,12 @@ export default function VerificationProgress() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-cyan-50 py-12 px-4">
+      <div className="min-h-screen bg-linear-to-br from-blue-50 via-sky-50 to-cyan-50 py-12 px-4">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
             <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-linear-to-br from-blue-600 to-blue-500 rounded-full flex items-center justify-center">
                 <Clock className="w-8 h-8 text-white" />
               </div>
             </div>
@@ -190,7 +195,7 @@ export default function VerificationProgress() {
             <div className="p-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 {/* Current Status */}
-                <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg">
+                <div className="p-6 bg-linear-to-br from-gray-50 to-gray-100 rounded-lg">
                   <div className="flex items-center gap-3 mb-3">
                     {getStatusIcon(verificationStatus)}
                     <h3 className="font-semibold text-gray-900">Current Status</h3>
@@ -205,7 +210,7 @@ export default function VerificationProgress() {
                 </div>
 
                 {/* Documents Progress */}
-                <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                <div className="p-6 bg-linear-to-br from-blue-50 to-blue-100 rounded-lg">
                   <div className="flex items-center gap-3 mb-3">
                     <FileText className="w-5 h-5 text-blue-600" />
                     <h3 className="font-semibold text-gray-900">Documents</h3>
@@ -217,7 +222,7 @@ export default function VerificationProgress() {
                 </div>
 
                 {/* Timeline Info */}
-                <div className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
+                <div className="p-6 bg-linear-to-br from-orange-50 to-orange-100 rounded-lg">
                   <div className="flex items-center gap-3 mb-3">
                     <Clock className="w-5 h-5 text-orange-600" />
                     <h3 className="font-semibold text-gray-900">Timeline</h3>
@@ -232,7 +237,7 @@ export default function VerificationProgress() {
                 <h3 className="font-semibold text-gray-900 mb-4">Verification Timeline</h3>
                 <div className="space-y-3">
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center shrink-0 mt-1">
                       <CheckCircle className="w-5 h-5 text-white" />
                     </div>
                     <div>
@@ -241,7 +246,7 @@ export default function VerificationProgress() {
                     </div>
                   </div>
                   <div className="flex gap-4">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${allDocumentsUploaded ? 'bg-green-500' : 'bg-gray-300'}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 ${allDocumentsUploaded ? 'bg-green-500' : 'bg-gray-300'}`}>
                       {allDocumentsUploaded ? (
                         <CheckCircle className="w-5 h-5 text-white" />
                       ) : (
@@ -254,7 +259,7 @@ export default function VerificationProgress() {
                     </div>
                   </div>
                   <div className="flex gap-4">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${verificationStatus === 'verified' ? 'bg-green-500' : verificationStatus === 'pending' ? 'bg-orange-500' : 'bg-gray-300'}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 ${verificationStatus === 'verified' ? 'bg-green-500' : verificationStatus === 'pending' ? 'bg-orange-500' : 'bg-gray-300'}`}>
                       {verificationStatus === 'verified' ? (
                         <CheckCircle className="w-5 h-5 text-white" />
                       ) : verificationStatus === 'pending' ? (
@@ -269,7 +274,7 @@ export default function VerificationProgress() {
                     </div>
                   </div>
                   <div className="flex gap-4">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${verificationStatus === 'verified' ? 'bg-green-500' : 'bg-gray-300'}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 ${verificationStatus === 'verified' ? 'bg-green-500' : 'bg-gray-300'}`}>
                       {verificationStatus === 'verified' ? (
                         <CheckCircle className="w-5 h-5 text-white" />
                       ) : (
@@ -301,7 +306,7 @@ export default function VerificationProgress() {
                       <button
                         type="button"
                         onClick={() => toggleSection(doc.id)}
-                        className="w-full p-4 bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 rounded-lg transition flex items-center justify-between border border-gray-200"
+                        className="w-full p-4 bg-linear-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 rounded-lg transition flex items-center justify-between border border-gray-200"
                       >
                         <div className="flex items-center gap-4 text-left">
                           <span className="text-2xl">{doc.icon}</span>

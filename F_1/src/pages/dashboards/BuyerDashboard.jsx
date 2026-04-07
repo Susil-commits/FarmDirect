@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ShoppingCart, Heart, Clock, Truck, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
@@ -11,6 +11,11 @@ export default function BuyerDashboard() {
   const { user, verificationStatus } = useAuth();
   const { navigate } = useRouter();
   const [activeTab, setActiveTab] = useState('active-orders');
+
+  // Reset scroll position to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Redirect non-buyers
   if (!user || user.role !== 'buyer') {

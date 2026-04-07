@@ -46,7 +46,7 @@ export default function Navbar() {
     } else if (user.role === 'buyer') {
       // Buyer but not verified - redirect to verification page
       console.warn('Please complete KYC verification to access marketplace');
-      handleNavigate('/verify'); // or you can show a modal
+      handleNavigate('/verification/progress'); // Redirect to proper verification page
     } else {
       // Other roles cannot access marketplace as buyers
       console.warn('Only verified buyers can access the marketplace');

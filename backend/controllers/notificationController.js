@@ -3,7 +3,7 @@ import asyncHandler from '../utils/asyncHandler.js';
 
 // Get user notifications
 export const getNotifications = asyncHandler(async (req, res) => {
-  const userId = req.user.userId;
+  const userId = req.user._id;
   const { page = 1, limit = 20, isRead } = req.query;
   
   const skip = (page - 1) * limit;
@@ -37,7 +37,7 @@ export const getNotifications = asyncHandler(async (req, res) => {
 // Mark notification as read
 export const markAsRead = asyncHandler(async (req, res) => {
   const { notificationId } = req.params;
-  const userId = req.user.userId;
+  const userId = req.user._id;
   
   const notification = await Notification.findByIdAndUpdate(
     notificationId,
@@ -61,7 +61,7 @@ export const markAsRead = asyncHandler(async (req, res) => {
 
 // Mark all notifications as read
 export const markAllAsRead = asyncHandler(async (req, res) => {
-  const userId = req.user.userId;
+  const userId = req.user._id;
   
   await Notification.updateMany(
     { userId, isRead: false },
@@ -77,7 +77,7 @@ export const markAllAsRead = asyncHandler(async (req, res) => {
 // Delete notification
 export const deleteNotification = asyncHandler(async (req, res) => {
   const { notificationId } = req.params;
-  const userId = req.user.userId;
+  const userId = req.user._id;
   
   const notification = await Notification.findOneAndDelete({
     _id: notificationId,
@@ -99,7 +99,7 @@ export const deleteNotification = asyncHandler(async (req, res) => {
 
 // Delete all notifications
 export const deleteAllNotifications = asyncHandler(async (req, res) => {
-  const userId = req.user.userId;
+  const userId = req.user._id;
   
   await Notification.deleteMany({ userId });
   
@@ -111,7 +111,7 @@ export const deleteAllNotifications = asyncHandler(async (req, res) => {
 
 // Get unread count
 export const getUnreadCount = asyncHandler(async (req, res) => {
-  const userId = req.user.userId;
+  const userId = req.user._id;
   
   const unreadCount = await Notification.countDocuments({
     userId,
