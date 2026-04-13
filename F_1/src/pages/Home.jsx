@@ -33,6 +33,7 @@ export default function Home() {
 
   const [gradientAngle, setGradientAngle] = useState(0);
   const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
 
   // Reset scroll position to top on page load/refresh
   useEffect(() => {
@@ -199,12 +200,19 @@ export default function Home() {
                 </div>
               ) : (
                 <>
+                  {imageLoading && (
+                    <div className="absolute inset-0 bg-linear-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse"></div>
+                  )}
                   <img 
                     src="https://t4.ftcdn.net/jpg/12/50/32/05/360_F_1250320539_mSBEKgn75R0ITYmIU0euFdPaWRw8tsnO.jpg" 
                     alt="Fresh produce from farmers" 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    loading="lazy"
-                    onError={handleImageError}
+                    className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+                    loading="eager"
+                    onLoad={() => setImageLoading(false)}
+                    onError={() => {
+                      setImageError(true);
+                      setImageLoading(false);
+                    }}
                     decoding="async"
                   />
                   {/* Animated glow overlay on hover */}

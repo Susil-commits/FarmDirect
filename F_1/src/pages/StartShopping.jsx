@@ -1,5 +1,5 @@
 import { ArrowRight, ShoppingCart, ArrowLeft } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import PageTransition from '../components/common/PageTransition.jsx';
@@ -24,6 +24,12 @@ export default function StartShopping() {
   const { navigate } = useRouter();
   const { user } = useAuth();
   const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+
+  // Reset scroll position to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Safe navigation handler with error handling
   const handleNavigation = useCallback((path) => {
@@ -62,6 +68,7 @@ export default function StartShopping() {
   // Handle hero image error with fallback
   const handleImageError = useCallback(() => {
     setImageError(true);
+    setImageLoading(false);
   }, []);
 
   return (
@@ -72,7 +79,7 @@ export default function StartShopping() {
           <div className="max-w-6xl mx-auto">
             <button
               onClick={() => handleNavigation('/')}
-              className="flex items-center gap-2 text-green-600 hover:text-green-700 font-medium transition-colors duration-200 group"
+              className="flex items-center gap-2 text-green-600 hover:text-green-700 font-medium transition-colors duration-200 group cursor-pointer"
               title="Back to Home"
               aria-label="Go back to home page"
             >
@@ -101,13 +108,17 @@ export default function StartShopping() {
 
             {/* Hero Image */}
             <ScrollAnimation className="scroll-slide mt-16">
-              <div className="rounded-3xl overflow-hidden glass premium-glow h-80 md:h-96 flex items-center justify-center shadow-2xl transform hover:scale-105 transition-transform duration-300 border-2 border-white/50">
+              <div className="rounded-3xl overflow-hidden glass premium-glow h-80 md:h-96 flex items-center justify-center shadow-2xl transform hover:scale-105 transition-transform duration-300 border-2 border-white/50 relative">
+                {imageLoading && (
+                  <div className="absolute inset-0 bg-linear-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse"></div>
+                )}
                 <img
                   src={imageError ? HERO_IMAGE.fallback : HERO_IMAGE.src}
                   alt={HERO_IMAGE.alt}
-                  loading="lazy"
+                  loading="eager"
+                  onLoad={() => setImageLoading(false)}
                   onError={handleImageError}
-                  className="w-full h-full object-cover"
+                  className={`w-full h-full object-cover ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
                   decoding="async"
                 />
               </div>
