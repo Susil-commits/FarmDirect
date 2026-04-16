@@ -423,9 +423,13 @@ async function seedDatabase() {
       'delivered'
     ];
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 20; i++) {
       const buyer = buyers[i % buyers.length];
-      const selectedCrops = crops.slice(i * 3, (i + 1) * 3);
+      const cropStart = (i * 2) % crops.length;
+      const selectedCrops = [
+        crops[cropStart],
+        crops[(cropStart + 1) % crops.length]
+      ];
       
       const items = selectedCrops.map(crop => ({
         cropId: crop._id,
@@ -459,7 +463,7 @@ async function seedDatabase() {
         chargesAmount: 0,
         fineAmount: 0,
         totalWithCharges: totalAmount,
-        orderStatus: orderStatuses[Math.floor(Math.random() * orderStatuses.length)],
+        orderStatus: i % 2 === 0 ? 'delivered' : orderStatuses[Math.floor(Math.random() * orderStatuses.length)],
         paymentMethod: 'cod',
         paymentStatus: Math.random() > 0.7 ? 'completed' : 'pending',
         verificationCall: {

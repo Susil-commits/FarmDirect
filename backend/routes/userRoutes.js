@@ -1,8 +1,12 @@
 import express from 'express';
 import * as userController from '../controllers/userController.js';
+import * as adminController from '../controllers/adminController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Public routes - no auth required
+router.get('/community/stats', adminController.getPublicCommunityStats);
 
 // Protected routes - User only
 router.get('/profile', protect, userController.getUserProfile);

@@ -4,7 +4,7 @@ import PageTransition from '../components/common/PageTransition.jsx';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import ScrollAnimation from '../components/common/ScrollAnimation';
-import { Mail, Phone, MapPin, Clock, MessageSquare, Send, CheckCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe, MessageSquare, Send, CheckCircle } from 'lucide-react';
 
 export default function Contact() {
   const { navigate } = useRouter();
@@ -39,27 +39,27 @@ export default function Contact() {
   const contactInfo = [
     {
       icon: <Phone size={32} />,
-      title: 'Phone',
-      details: '+91 1800-FRESH-01',
-      subtext: '24/7 Customer Support'
+      title: 'Susil Kumar Nayak',
+      details: 'Final Year CSE Student',
+      subtext: 'Full Stack Developer'
     },
     {
       icon: <Mail size={32} />,
-      title: 'Email',
-      details: 'support@farmdirect.io',
-      subtext: 'Response within 2 hours'
+      title: 'Email Support',
+      details: 'nayaksushil298@gmail.com',
+      subtext: 'Response within 24 hours'
     },
     {
       icon: <MapPin size={32} />,
-      title: 'Headquarters',
-      details: '123 Agriculture Hub, Delhi',
-      subtext: 'Mon-Fri: 9 AM - 6 PM IST'
+      title: 'Dibesh Ranjan Das',
+      details: 'Final Year CSE Student',
+      subtext: 'Full Stack Developer'
     },
     {
-      icon: <Clock size={32} />,
-      title: 'Business Hours',
-      details: '9:00 AM - 8:00 PM IST',
-      subtext: 'Monday to Saturday'
+      icon: <Globe size={32} />,
+      title: 'Project Type',
+      details: 'Final Year Project (CSE)',
+      subtext: 'FarmDirect - Farm to Consumer Platform'
     }
   ];
 
@@ -240,34 +240,7 @@ export default function Contact() {
                 </div>
               </Card>
 
-              {/* Offices */}
-              <Card className="p-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">Our Offices</h3>
-                <div className="space-y-4">
-                  {[
-                    { city: 'Delhi', addr: '123 Agriculture Hub, Connaught Place' },
-                    { city: 'Mumbai', addr: '456 Farm Tower, Nariman Point' },
-                    { city: 'Bangalore', addr: '789 Green Block, Indiranagar' }
-                  ].map((office, idx) => (
-                    <div key={idx} className="pb-4 border-b last:border-0">
-                      <p className="font-bold text-gray-900">{office.city}</p>
-                      <p className="text-gray-600 text-sm">{office.addr}</p>
-                    </div>
-                  ))}
-                </div>
-              </Card>
 
-              {/* Social Media */}
-              <Card className="p-8 bg-linear-to-br from-green-50 to-emerald-50">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Follow Us</h3>
-                <div className="flex gap-3">
-                  {['📘 Facebook', '🐦 Twitter', '📸 Instagram', '💼 LinkedIn'].map((social, idx) => (
-                    <button key={idx} className="flex-1 px-4 py-2 bg-white border border-green-300 rounded-lg hover:bg-green-50 transition font-semibold text-sm cursor-pointer text-gray-900">
-                      {social}
-                    </button>
-                  ))}
-                </div>
-              </Card>
             </ScrollAnimation>
           </div>
 
@@ -289,33 +262,7 @@ export default function Contact() {
             </div>
           </ScrollAnimation>
 
-          {/* Farmer Partnership CTA */}
-          <ScrollAnimation className="scroll-slide">
-            <Card className="bg-linear-to-br from-orange-50 to-amber-50 p-12">
-              <div className="max-w-3xl mx-auto text-center">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">🌾 Are You a Farmer?</h2>
-                <p className="text-lg text-gray-700 mb-6">
-                  Join thousands of farmers earning 30% more by selling directly to consumers. No middlemen, no commission delays.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    onClick={() => navigate('/contact')}
-                  >
-                    Become a Farmer Partner
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    onClick={() => navigate('/')}
-                  >
-                    Learn More
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </ScrollAnimation>
+
         </div>
       </div>
     </PageTransition>

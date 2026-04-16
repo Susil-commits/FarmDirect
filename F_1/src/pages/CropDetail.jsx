@@ -12,6 +12,7 @@ import LoginPrompt from '../components/modals/LoginPrompt';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useRecentlyViewed } from '../context/RecentlyViewedContext';
 import { useToast } from '../context/ToastContext';
 import { cropService } from '../services/appService';
 import '../styles/CropDetail.css';
@@ -20,6 +21,7 @@ export default function CropDetail() {
   const { navigate, params } = useRouter();
   const { isAuthenticated, setRedirectPath } = useAuth();
   const { addToCart } = useCart();
+  const { addToRecentlyViewed } = useRecentlyViewed();
   const { addToast } = useToast();
 
   const cropId = params?.cropId || 1;
@@ -97,15 +99,24 @@ export default function CropDetail() {
       try {
         setLoading(true);
         setError(null);
+        let cropData;
         // Try to fetch from API
         try {
           const response = await cropService.getCropById(cropId);
-          setCrop(response.data || response);
+          cropData = response.data || response;
+          setCrop(cropData);
         } catch (apiErr) {
           // Use sample data for demo
           console.log('Using sample crop data');
-          setCrop(sampleCrop);
+          cropData = sampleCrop;
+          setCrop(cropData);
         }
+        
+        // Track this view in recently viewed
+        if (cropData) {
+          addToRecentlyViewed(cropData);
+        }
+        
         setFarmer(sampleFarmer);
       } catch (err) {
         console.error('Failed to fetch crop:', err);
@@ -116,7 +127,7 @@ export default function CropDetail() {
     };
 
     fetchCropDetails();
-  }, [cropId]);
+  }, [cropId, addToRecentlyViewed]);
 
   // Load wishlist from localStorage
   useEffect(() => {

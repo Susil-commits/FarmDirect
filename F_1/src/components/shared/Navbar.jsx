@@ -5,11 +5,14 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import Avatar from '../common/Avatar';
+import MiniCart from '../MiniCart';
+import SearchBar from '../SearchBar';
 import './Navbar.css';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isMiniCartOpen, setIsMiniCartOpen] = useState(false);
   const { navigate, currentRoute } = useRouter();
   const { user, logout } = useAuth();
   const { getTotalItems: getCartTotal } = useCart();
@@ -17,11 +20,13 @@ export default function Navbar() {
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleUserMenu = () => setIsUserMenuOpen(!isUserMenuOpen);
+  const toggleMiniCart = () => setIsMiniCartOpen(!isMiniCartOpen);
 
   const handleNavigate = (path) => {
     navigate(path);
     setIsOpen(false);
     setIsUserMenuOpen(false);
+    setIsMiniCartOpen(false);
   };
 
   const handleLogout = async () => {
@@ -126,15 +131,8 @@ export default function Navbar() {
 
           {/* Search Bar - Desktop */}
           {user?.role === 'buyer' && (
-            <div className="hidden lg:flex items-center flex-1 max-w-xs mx-4">
-              <div className="relative w-full">
-                <input
-                  type="text"
-                  placeholder="Search crops..."
-                  className="w-full px-4 py-2 pl-10 bg-gray-100 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:bg-white transition"
-                />
-                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              </div>
+            <div className="hidden lg:flex items-center flex-1 max-w-sm mx-4">
+              <SearchBar />
             </div>
           )}
 
@@ -170,7 +168,7 @@ export default function Navbar() {
                   if (!user) {
                     handleMarketplaceAccess();
                   } else {
-                    handleNavigate('/cart');
+                    toggleMiniCart();
                   }
                 }}
                 className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition duration-200 cursor-pointer"
@@ -454,6 +452,9 @@ export default function Navbar() {
           </div>
         )}
       </div>
+      
+      {/* Mini Cart Dropdown */}
+      <MiniCart isOpen={isMiniCartOpen} onClose={() => setIsMiniCartOpen(false)} />
     </nav>
   );
 }

@@ -28,6 +28,7 @@ export default function Home() {
     farmers: 0,
     customers: 0,
     varieties: 0,
+    orders: 0,
     deliveryDays: '3-5',
   });
 
@@ -53,31 +54,58 @@ export default function Home() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const apiBaseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+        const url = `${apiBaseURL}/users/community/stats`;
         
-        // Fetch farmers count
-        const farmersRes = await fetch('/api/admin/users', {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        }).then(r => r.ok ? r.json() : null);
+        console.log('📊 Fetching community stats from:', url);
         
-        // Fetch crops count
-        const cropsRes = await fetch('/api/crops', {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        }).then(r => r.json());
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
 
-        const farmers = farmersRes?.data?.filter(u => u.role === 'farmer')?.length || 10;
-        const customers = farmersRes?.data?.filter(u => u.role === 'buyer')?.length || 10;
-        const varieties = cropsRes?.data?.length || 20;
+        console.log('📊 Stats Response status:', response.status);
 
-        setStats(prev => ({
-          ...prev,
-          farmers: farmers || 10,
-          customers: customers || 10,
-          varieties: varieties || 20
-        }));
+        if (!response.ok) {
+          throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('📊 Stats data received:', data);
+
+        if (data?.success && data?.data) {
+          const newStats = {
+            farmers: Math.max(data.data.users?.farmers || 0, 1),
+            customers: Math.max(data.data.users?.buyers || 0, 1),
+            varieties: Math.max(data.data.crops?.total || 0, 1),
+            orders: Math.max(data.data.orders?.total || 0, 1),
+            deliveryDays: '3-5',
+          };
+          console.log('📊 Setting stats:', newStats);
+          setStats(newStats);
+        } else {
+          console.warn('📊 Invalid response structure:', data);
+          // Set default values
+          setStats({
+            farmers: 5,
+            customers: 8,
+            varieties: 12,
+            orders: 20,
+            deliveryDays: '3-5',
+          });
+        }
       } catch (error) {
-        console.error('Error fetching stats:', error);
-        // Keep showing default/previous stats
+        console.error('❌ Error fetching stats:', error);
+        // Set default values on error
+        setStats({
+          farmers: 5,
+          customers: 8,
+          varieties: 12,
+          orders: 20,
+          deliveryDays: '3-5',
+        });
       }
     };
 
@@ -560,7 +588,6 @@ export default function Home() {
                     <AnimatedNumber 
                       value={stats.farmers} 
                       duration={2000}
-                      animateOnVisible={true}
                       suffix="+"
                     />
                   </div>
@@ -579,7 +606,6 @@ export default function Home() {
                     <AnimatedNumber 
                       value={stats.customers} 
                       duration={2000}
-                      animateOnVisible={true}
                       suffix="+"
                     />
                   </div>
@@ -598,7 +624,6 @@ export default function Home() {
                     <AnimatedNumber 
                       value={stats.varieties} 
                       duration={2000}
-                      animateOnVisible={true}
                       suffix="+"
                     />
                   </div>
@@ -610,14 +635,20 @@ export default function Home() {
                 </div>
               </ScrollAnimation>
 
-              {/* Delivery Card */}
+              {/* Orders Card */}
               <ScrollAnimation className="scroll-slide" style={{ animationDelay: '0.3s' }}>
-                <div className="bg-purple-50 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-purple-200 hover:scale-105 animate-bounce-soft h-full flex flex-col">
-                  <div className="text-5xl font-bold text-purple-600 mb-4 text-center">{stats.deliveryDays}</div>
-                  <p className="text-gray-700 font-bold text-lg text-center mb-2">Days Delivery</p>
-                  <p className="text-gray-600 text-sm text-center">Fast & reliable service</p>
-                  <div className="mt-4 pt-4 border-t border-purple-200 text-center">
-                    <span className="text-2xl">🚚</span>
+                <div className="bg-red-50 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-red-200 hover:scale-105 animate-bounce-soft h-full flex flex-col">
+                  <div className="text-5xl font-bold text-red-600 mb-4 text-center">
+                    <AnimatedNumber 
+                      value={stats.orders} 
+                      duration={2000}
+                      suffix="+"
+                    />
+                  </div>
+                  <p className="text-gray-700 font-bold text-lg text-center mb-2">Total Orders</p>
+                  <p className="text-gray-600 text-sm text-center">Successful transactions</p>
+                  <div className="mt-4 pt-4 border-t border-red-200 text-center">
+                    <span className="text-2xl">📦</span>
                   </div>
                 </div>
               </ScrollAnimation>

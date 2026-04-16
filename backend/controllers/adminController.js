@@ -4,6 +4,38 @@ import Order from '../models/Order.js';
 import Review from '../models/Review.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
+// Public community stats (no auth required)
+export const getPublicCommunityStats = asyncHandler(async (req, res) => {
+  try {
+    const totalFarmers = await User.countDocuments({ role: 'farmer', status: 'active' });
+    const totalBuyers = await User.countDocuments({ role: 'buyer', status: 'active' });
+    const totalCrops = await CropListing.countDocuments({ status: 'active' });
+    const totalOrders = await Order.countDocuments({ orderStatus: { $in: ['delivered', 'completed'] } });
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        users: {
+          farmers: totalFarmers || 0,
+          buyers: totalBuyers || 0
+        },
+        crops: {
+          total: totalCrops || 0
+        },
+        orders: {
+          total: totalOrders || 0
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching public stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch community stats'
+    });
+  }
+});
+
 // Dashboard statistics
 export const getDashboardStats = asyncHandler(async (req, res) => {
   const totalUsers = await User.countDocuments();

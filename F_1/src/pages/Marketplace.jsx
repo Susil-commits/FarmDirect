@@ -1,22 +1,29 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Heart, Filter, ShoppingCart, Loader, AlertCircle, CheckCircle } from 'lucide-react';
+import { MapPin, Heart, Filter, ShoppingCart, Loader, AlertCircle, CheckCircle, Check } from 'lucide-react';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
 import FarmerBadge from '../components/common/FarmerBadge';
+import QuantitySelector from '../components/QuantitySelector';
+import ProductBadge from '../components/ProductBadge';
+import RecentlyViewedCarousel from '../components/RecentlyViewedCarousel';
 import FilterPanel from '../components/FilterPanel';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { calculateBadges } from '../utils/badgeCalculation';
 import { cropService } from '../services/appService';
 import '../styles/Marketplace.css';
 
 export default function Marketplace() {
   const { navigate } = useRouter();
   const { isAuthenticated } = useAuth();
+  const { addToCart } = useCart();
   const { wishlist, addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const [toast, setToast] = useState(null);
   
   const [filters, setFilters] = useState({
     cropType: '',
@@ -44,6 +51,12 @@ export default function Marketplace() {
     { value: 'price-low', label: '💰 Price: Low to High' },
     { value: 'price-high', label: '💳 Price: High to Low' },
   ];
+
+  // Toast notifications
+  const showToast = (message, type = 'success', duration = 3000) => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), duration);
+  };
 
   // Reset scroll position to top on page load
   useEffect(() => {
@@ -134,8 +147,10 @@ export default function Marketplace() {
   const toggleWishlist = (crop) => {
     if (isInWishlist(crop.id)) {
       removeFromWishlist(crop.id);
+      showToast(`Removed from wishlist`, 'info');
     } else {
       addToWishlist(crop);
+      showToast(`❤️ Added to wishlist`, 'success');
     }
   };
 
@@ -143,15 +158,27 @@ export default function Marketplace() {
     navigate(`/crop/${cropId}`);
   };
 
-  const handleAddToCart = (crop) => {
-    // Cart context will handle this
-    navigate(`/crop/${crop.id}`);
+  const handleAddToCart = (crop, quantity = 1) => {
+    addToCart(crop, quantity);
+    showToast(`✅ ${quantity}x ${crop.name} added to cart!`, 'success');
   };
 
   return (
     <PageTransition>
       <div className="min-h-screen bg-linear-to-br from-white via-green-50 to-white py-6 px-4 relative">
         <div className="absolute inset-0 premium-gradient pointer-events-none"></div>
+        
+        {/* Toast Notification */}
+        {toast && (
+          <div className={`fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 animate-slide-in-right ${
+            toast.type === 'success' ? 'bg-green-500' :
+            toast.type === 'error' ? 'bg-red-500' :
+            'bg-blue-500'
+          } text-white font-medium flex items-center gap-2`}>
+            {toast.message}
+          </div>
+        )}
+        
         <div className="max-w-7xl mx-auto relative z-10">
           
           {/* Main Header */}
@@ -211,6 +238,9 @@ export default function Marketplace() {
 
             {/* Main Content */}
             <div className="lg:col-span-3">
+              {/* Recently Viewed Carousel */}
+              <RecentlyViewedCarousel />
+              
               {/* Error State */}
               {error && (
                 <Card variant="warning" className="mb-6 animate-slide-in-down">
@@ -316,15 +346,24 @@ export default function Marketplace() {
   );
 }
 
-// Improved Crop Card Component with Enhanced Animations
+// Enhanced Crop Card Component with Quick-Add Overlay
 function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, onAddToCart, index }) {
-  const staggerDelay = index * 0.08; // Increased stagger for better effect
+  const [quantity, setQuantity] = useState(1);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const staggerDelay = index * 0.08;
+  const availableQty = crop.quantity || 100;
+
+  const handleQuickAdd = () => {
+    onAddToCart(crop, quantity);
+    setShowQuickAdd(false);
+    setQuantity(1);
+  };
 
   return (
     <Card 
       hover 
       animated={true}
-      className="crop-card stagger-item"
+      className="crop-card stagger-item relative"
       style={{ 
         animationDelay: `${staggerDelay}s`,
         '--card-delay': staggerDelay
@@ -333,7 +372,8 @@ function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, onAddToCart,
       <div className="p-4 relative group">
         {/* Image Section */}
         <div className="relative mb-4 overflow-hidden rounded-lg group">
-          <div className="bg-linear-to-br from-green-100 to-emerald-100 rounded-lg relative min-h-48 flex items-center justify-center group-hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+          <div className="bg-linear-to-br from-green-100 to-emerald-100 rounded-lg relative min-h-48 flex items-center justify-center group-hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer"
+               onClick={() => setShowQuickAdd(true)}>
             {crop.image && crop.image.startsWith('http') ? (
               // Real image from Cloudinary or external URL
               <img
@@ -351,14 +391,54 @@ function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, onAddToCart,
                 {crop.image || '🌾'}
               </span>
             )}
+            
+            {/* Quick-Add Overlay */}
+            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto">
+              <div className="bg-white rounded-lg shadow-xl p-4 w-4/5 max-w-xs animate-scale-in pointer-events-auto">
+                <h4 className="font-bold text-gray-900 mb-3 text-center text-sm">{crop.name}</h4>
+                
+                {/* Quantity Selector */}
+                <div className="mb-4 flex justify-center">
+                  <QuantitySelector
+                    quantity={quantity}
+                    onQuantityChange={setQuantity}
+                    min={1}
+                    max={Math.min(availableQty, 100)}
+                    size="sm"
+                  />
+                </div>
+
+                {/* Price Info */}
+                <p className="text-center text-green-600 font-bold text-lg mb-3">
+                  ₹{(crop.price * quantity).toFixed(2)}
+                </p>
+
+                {/* Quick Add Button */}
+                <button
+                  onClick={handleQuickAdd}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 mb-2"
+                >
+                  <ShoppingCart size={16} /> Add to Cart
+                </button>
+
+                {/* View Details Link */}
+                <button
+                  onClick={onViewCrop}
+                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm"
+                >
+                  View Details
+                </button>
+              </div>
+            </div>
+
             {/* Animated overlay on hover */}
-            <div className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
+            <div className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none"></div>
           </div>
           
           {/* Wishlist Button with Heart Animation */}
           <button 
             onClick={onToggleFavorite}
-            className={`absolute top-4 right-4 transition-all duration-300 z-10 hover-scale ${
+            className={`absolute top-4 right-4 transition-all duration-300 z-20 hover-scale ${
               isFavorite 
                 ? 'text-red-600 animate-scale-in' 
                 : 'text-gray-400 hover:text-red-600'
@@ -372,9 +452,16 @@ function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, onAddToCart,
             />
           </button>
 
+          {/* Product Badges */}
+          <div className="absolute top-4 left-4 flex gap-2 z-10">
+            {calculateBadges(crop).map((badgeType) => (
+              <ProductBadge key={badgeType} badgeType={badgeType} />
+            ))}
+          </div>
+
           {/* Verified Badge with Bounce */}
           {crop.farmer_verified && (
-            <div className="absolute bottom-4 left-4 flex items-center gap-1 bg-white px-2 py-1 rounded-full text-xs font-semibold text-green-600 shadow-md animate-bounce-up hover:shadow-lg transition-shadow">
+            <div className="absolute bottom-4 left-4 flex items-center gap-1 bg-white px-2 py-1 rounded-full text-xs font-semibold text-green-600 shadow-md animate-bounce-up hover:shadow-lg transition-shadow z-10">
               <CheckCircle size={14} className="text-green-600" /> Verified
             </div>
           )}
@@ -427,18 +514,26 @@ function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, onAddToCart,
             <Button 
               variant="primary" 
               size="sm" 
-              className="w-full flex items-center justify-center gap-2 hover-scale"
-              onClick={onViewCrop}
+              className="w-full hidden md:flex items-center justify-center gap-2 hover-scale"
+              onClick={() => setShowQuickAdd(true)}
             >
-              👁️ View Details
+              <ShoppingCart size={16} /> Quick Add
+            </Button>
+            <Button 
+              variant="primary" 
+              size="sm" 
+              className="w-full flex md:hidden items-center justify-center gap-2 hover-scale"
+              onClick={() => setShowQuickAdd(true)}
+            >
+              <ShoppingCart size={16} /> Add to Cart
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
               className="w-full flex items-center justify-center gap-2 hover-scale"
-              onClick={onAddToCart}
+              onClick={onViewCrop}
             >
-              <ShoppingCart size={16} /> Add to Cart
+              👁️ View Details
             </Button>
           </div>
         </div>

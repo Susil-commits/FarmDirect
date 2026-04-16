@@ -21,10 +21,11 @@ export default function AnimatedNumber({
   decimals = 0,
   suffix = '',
   prefix = '',
-  animateOnVisible = true,
+  animateOnVisible = false,
 }) {
   const [displayValue, setDisplayValue] = useState(0);
   const [isVisible, setIsVisible] = useState(!animateOnVisible);
+  const [elementId] = useState(`animated-number-${Math.random()}`);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -65,13 +66,13 @@ export default function AnimatedNumber({
       { threshold: 0.5 }
     );
 
-    const element = document.getElementById(`animated-number-${Math.random()}`);
+    const element = document.getElementById(elementId);
     if (element) {
       observer.observe(element);
     }
 
     return () => observer.disconnect();
-  }, [animateOnVisible]);
+  }, [elementId, animateOnVisible]);
 
   const formattedValue = format
     ? format(displayValue)
@@ -79,8 +80,8 @@ export default function AnimatedNumber({
 
   return (
     <span
-      id={`animated-number-${Math.random()}`}
-      className={`animate-pulse-soft ${className}`.trim()}
+      id={elementId}
+      className={className}
     >
       {prefix}
       {formattedValue}

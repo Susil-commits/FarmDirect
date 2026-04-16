@@ -4,7 +4,7 @@ import PageTransition from '../components/common/PageTransition.jsx';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import ScrollAnimation from '../components/common/ScrollAnimation';
-import { Users, Target, Heart, Zap, Globe, Award, TrendingUp, Shield } from 'lucide-react';
+import { Users, Target, Heart, Zap, Globe, Award, TrendingUp, Shield, Code, Layers } from 'lucide-react';
 
 export default function About() {
   const { navigate } = useRouter();
@@ -34,28 +34,18 @@ export default function About() {
 
   const team = [
     {
-      name: 'Rajesh Kumar',
-      role: 'Founder & CEO',
-      emoji: '👨‍💼',
-      bio: 'Former agricultural economist with 15+ years of experience'
-    },
-    {
-      name: 'Priya Sharma',
-      role: 'Co-Founder & COO',
-      emoji: '👩‍💼',
-      bio: 'Supply chain expert passionate about rural development'
-    },
-    {
-      name: 'Arjun Desai',
-      role: 'Chief Technology Officer',
+      name: 'Susil Kumar Nayak',
+      role: 'Full Stack Developer - CSE 2026',
       emoji: '👨‍💻',
-      bio: 'Tech entrepreneur focused on farm-to-table solutions'
+      bio: 'Backend & Frontend | Database Design | API Development | Full Stack Architecture',
+      batch: 'Passout CSE 2026'
     },
     {
-      name: 'Neha Patel',
-      role: 'Head of Farmer Relations',
-      emoji: '👩‍🌾',
-      bio: 'Community organizer with deep roots in farming communities'
+      name: 'Dibesh Ranjan Das',
+      role: 'Full Stack Developer - CSE 2026',
+      emoji: '👨‍💻',
+      bio: 'Frontend & Backend | UI/UX Design | API Integration | Full Stack Development',
+      batch: 'Passout CSE 2026'
     }
   ];
 
@@ -74,7 +64,9 @@ export default function About() {
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl font-bold mb-4">About FarmDirect</h1>
             <p className="text-xl text-green-50">
-              Connecting farmers directly to consumers. Fresh produce, fair prices, sustainable farming.
+              A Final Year Project by CSE Students<br/>
+              <strong>Susil Kumar Nayak & Dibesh Ranjan Das</strong><br/>
+              Connecting farmers directly to consumers through an innovative e-commerce platform.
             </p>
           </div>
         </div>
@@ -89,10 +81,10 @@ export default function About() {
                   <h2 className="text-3xl font-bold text-gray-900">Our Mission</h2>
                 </div>
                 <p className="text-lg text-gray-700 leading-relaxed mb-4">
-                  FarmDirect empowers farmers across India by providing a direct-to-consumer marketplace that eliminates middlemen, ensures fair pricing, and promotes sustainable agricultural practices. We believe that every farmer deserves to benefit fully from their hard work.
+                  FarmDirect is a comprehensive Final Year Project developed by Computer Science Engineering (CSE) students Susil Kumar Nayak and Dibesh Ranjan Das. This platform empowers farmers across India by providing a direct-to-consumer marketplace that eliminates middlemen and ensures fair pricing.
                 </p>
                 <p className="text-lg text-gray-700 leading-relaxed">
-                  Our platform enables consumers to get the freshest produce directly from verified farmers while supporting rural communities and sustainable farming methods.
+                  Using modern web technologies and best practices in full-stack development, this platform enables consumers to get the freshest produce directly from verified farmers while supporting rural communities and promoting sustainable farming practices.
                 </p>
               </div>
             </Card>
@@ -135,14 +127,19 @@ export default function About() {
 
           {/* Team Section */}
           <ScrollAnimation className="scroll-slide mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Meet Our Team</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">Meet Our Team</h2>
+            <div className="flex flex-col md:flex-row gap-8 max-w-4xl mx-auto items-center justify-center">
               {team.map((member, idx) => (
-                <Card key={idx} hover className="text-center p-8">
-                  <div className="text-6xl mb-4">{member.emoji}</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">{member.name}</h3>
-                  <p className="text-green-600 font-semibold mb-3">{member.role}</p>
-                  <p className="text-gray-700 text-sm">{member.bio}</p>
+                <Card key={idx} hover className="text-center p-10 w-full md:w-80 flex flex-col items-center bg-linear-to-br from-green-50 to-white">
+                  <div className="text-8xl mb-6 transform hover:scale-110 transition-transform">{member.emoji}</div>
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{member.name}</h3>
+                    <p className="text-green-600 font-semibold mb-4 text-sm">{member.role}</p>
+                    <p className="text-gray-700 text-sm leading-relaxed">{member.bio}</p>
+                  </div>
+                  <div className="mt-6 pt-6 border-t border-green-200 w-full">
+                    <p className="text-xs text-green-700 font-bold uppercase tracking-wide">{member.batch}</p>
+                  </div>
                 </Card>
               ))}
             </div>
@@ -150,46 +147,90 @@ export default function About() {
 
           {/* Impact Section */}
           <ScrollAnimation className="scroll-slide mb-16">
-            <Card className="bg-linear-to-br from-blue-50 to-indigo-50 p-12">
-              <div className="flex items-center gap-4 mb-6">
-                <Globe size={40} className="text-blue-600" />
-                <h2 className="text-3xl font-bold text-gray-900">Our Impact</h2>
+            <div className="bg-linear-to-r from-green-600 via-emerald-600 to-teal-600 rounded-xl p-12 text-white">
+              <div className="flex items-center gap-4 mb-8">
+                <Award size={40} className="text-white" />
+                <h2 className="text-3xl font-bold">Project Achievements</h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <p className="text-4xl font-bold text-blue-600 mb-2">₹50 Cr+</p>
-                  <p className="text-gray-700">Total payments to farmers (2023-2024)</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="text-center p-6 bg-white/10 rounded-lg backdrop-blur">
+                  <div className="text-5xl font-bold text-white mb-3">10+</div>
+                  <p className="text-green-50 font-semibold">Features Implemented</p>
+                  <p className="text-sm text-green-100 mt-2">Marketplace, Orders, Wishlist & more</p>
                 </div>
-                <div>
-                  <p className="text-4xl font-bold text-blue-600 mb-2">25%</p>
-                  <p className="text-gray-700">Average income increase for farmers</p>
+                <div className="text-center p-6 bg-white/10 rounded-lg backdrop-blur">
+                  <div className="text-5xl font-bold text-white mb-3">4</div>
+                  <p className="text-green-50 font-semibold">Tech Stacks</p>
+                  <p className="text-sm text-green-100 mt-2">React, Node.js, MongoDB, Vite</p>
                 </div>
-                <div>
-                  <p className="text-4xl font-bold text-blue-600 mb-2">50+</p>
-                  <p className="text-gray-700">Districts covered across India</p>
+                <div className="text-center p-6 bg-white/10 rounded-lg backdrop-blur">
+                  <div className="text-5xl font-bold text-white mb-3">100%</div>
+                  <p className="text-green-50 font-semibold">Responsive Design</p>
+                  <p className="text-sm text-green-100 mt-2">Mobile, Tablet & Desktop</p>
+                </div>
+                <div className="text-center p-6 bg-white/10 rounded-lg backdrop-blur">
+                  <div className="text-5xl font-bold text-white mb-3">🏆</div>
+                  <p className="text-green-50 font-semibold">Final Year Project</p>
+                  <p className="text-sm text-green-100 mt-2">CSE Department, 2024</p>
                 </div>
               </div>
-            </Card>
+            </div>
           </ScrollAnimation>
 
-          {/* Journey Timeline */}
-          <ScrollAnimation className="scroll-slide mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Our Journey</h2>
-            <div className="space-y-6">
-              {[
-                { year: '2020', title: 'Founded', desc: 'FarmDirect launched with 100 farmers' },
-                { year: '2021', title: 'Scaled', desc: 'Expanded to 2000+ farmers and 10000+ customers' },
-                { year: '2022', title: 'Growth', desc: 'Series A funding, expanded to 5 states' },
-                { year: '2023', title: 'Impact', desc: 'Reached 50000+ customers, ₹50 Cr+ payments' },
-                { year: '2024', title: 'Innovation', desc: 'Launched AI-powered quality checks & mobile app' }
-              ].map((milestone, idx) => (
-                <Card key={idx} hover className="p-6 flex items-start gap-6">
-                  <div className="text-2xl font-bold text-green-600 min-w-fit">{milestone.year}</div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">{milestone.title}</h3>
-                    <p className="text-gray-700">{milestone.desc}</p>
+          {/* Journey Timeline - Horizontal Progress */}
+          <ScrollAnimation className="scroll-slide">
+            <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">Our Project Journey</h2>
+            
+            {/* Progress Steps */}
+            <div className="mb-12 px-4">
+              <div className="flex items-center justify-between mb-8 max-w-5xl mx-auto">
+                {[
+                  { num: 1, label: 'Planning', color: 'bg-blue-500' },
+                  { num: 2, label: 'Backend', color: 'bg-green-500' },
+                  { num: 3, label: 'Frontend', color: 'bg-purple-500' },
+                  { num: 4, label: 'Testing', color: 'bg-yellow-500' },
+                  { num: 5, label: 'Launch', color: 'bg-red-500' }
+                ].map((step, idx) => (
+                  <div key={idx} className="flex flex-col items-center flex-1">
+                    <div className={`${step.color} text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg shadow-lg mb-2 transform hover:scale-110 transition-transform`}>
+                      {step.num}
+                    </div>
+                    <p className="text-xs md:text-sm font-semibold text-gray-700 text-center">{step.label}</p>
+                    {idx < 4 && <div className="hidden md:block absolute w-20 h-1 bg-linear-to-r from-gray-300 to-gray-300 mt-6"></div>}
                   </div>
-                </Card>
+                ))}
+              </div>
+              
+              {/* Connecting line */}
+              <div className="hidden md:flex h-1 bg-linear-to-r from-blue-500 via-green-500 to-red-500 rounded-full max-w-5xl mx-auto mb-12"></div>
+            </div>
+            
+            {/* Phase Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 max-w-7xl mx-auto px-2">
+              {[
+                { phase: 'Phase 1', title: 'Planning & Design', timeline: 'Aug - Sep 2024', desc: 'Requirements, architecture, database, UI wireframes, tech stack', icon: '📋', bgColor: 'bg-blue-500', details: ['Requirements', 'Architecture', 'Database', 'Wireframes', 'Tech Stack'] },
+                { phase: 'Phase 2', title: 'Backend Dev', timeline: 'Oct - Nov 2024', desc: 'APIs, JWT auth, RBAC, MongoDB, Cloudinary, payments', icon: '⚙️', bgColor: 'bg-green-500', details: ['50+ APIs', 'Authentication', 'RBAC', 'DB Models', 'Upload'] },
+                { phase: 'Phase 3', title: 'Frontend Dev', timeline: 'Nov - Dec 2024', desc: 'React, Tailwind CSS, components, marketplace UI, dashboards', icon: '🎨', bgColor: 'bg-purple-500', details: ['React', 'Responsive', 'State Mgmt', 'Components', 'Navigation'] },
+                { phase: 'Phase 4', title: 'Integration & Test', timeline: 'Dec 2024 - Jan 2025', desc: 'API integration, testing, performance tuning, security checks', icon: '✅', bgColor: 'bg-yellow-500', details: ['API Tests', 'Unit Tests', 'E2E Tests', 'Optimize', 'Security'] },
+                { phase: 'Phase 5', title: 'Deployment', timeline: 'Jan - Feb 2025', desc: 'Production deployment, API docs, guides, documentation, report', icon: '🚀', bgColor: 'bg-red-500', details: ['Deploy', 'API Docs', 'Guides', 'Docs', 'Report'] }
+              ].map((milestone, idx) => (
+                <div key={idx} className={`${milestone.bgColor} p-6 rounded-xl text-white h-full transform hover:scale-105 transition-all duration-300 shadow-lg`}>
+                  <div className="text-4xl mb-3">{milestone.icon}</div>
+                  <div className="uppercase text-xs font-bold mb-1 opacity-90 tracking-wider">{milestone.phase}</div>
+                  <h3 className="text-sm font-bold mb-2 leading-tight">{milestone.title}</h3>
+                  <p className="text-white text-xs mb-3 leading-snug">{milestone.desc}</p>
+                  <div className="border-t border-white/40 pt-3">
+                    <p className="text-xs font-bold mb-2 opacity-90 uppercase tracking-wide">Tasks:</p>
+                    <ul className="text-xs space-y-1">
+                      {milestone.details.map((detail, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <span className="w-1 h-1 bg-white rounded-full"></span>
+                          <span className="font-medium">{detail}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               ))}
             </div>
           </ScrollAnimation>
