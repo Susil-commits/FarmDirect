@@ -20,6 +20,8 @@ export default function FilterPanel({
     cropType: currentFilters.cropType || '',
     priceRange: currentFilters.priceRange || [0, 1000],
     location: currentFilters.location || '',
+    verifiedFarmersOnly: currentFilters.verifiedFarmersOnly || false,
+    organicOnly: currentFilters.organicOnly || false,
   });
   const [isOpen, setIsOpen] = useState(!mobileCollapsed);
 
@@ -29,6 +31,8 @@ export default function FilterPanel({
       cropType: currentFilters.cropType || '',
       priceRange: currentFilters.priceRange || [0, 1000],
       location: currentFilters.location || '',
+      verifiedFarmersOnly: currentFilters.verifiedFarmersOnly || false,
+      organicOnly: currentFilters.organicOnly || false,
     });
   }, [currentFilters]);
 
@@ -52,6 +56,8 @@ export default function FilterPanel({
       cropType: '',
       priceRange: [0, 1000],
       location: '',
+      verifiedFarmersOnly: false,
+      organicOnly: false,
     };
     setLocalFilters(resetFilters);
     onReset();
@@ -194,6 +200,44 @@ export default function FilterPanel({
                     </span>
                   </label>
                 ))}
+              </div>
+            </div>
+
+            {/* Checkbox Filters: Verified & Organic */}
+            <div className="animate-slide-in-down border-t pt-6" style={{ animationDelay: '0.4s' }}>
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">✨ Special Filters</h4>
+              <div className="space-y-3">
+                {/* Verified Farmers Only */}
+                <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-green-50 cursor-pointer transition-colors group border border-gray-200 hover:border-green-300">
+                  <input
+                    type="checkbox"
+                    checked={currentFilters.verifiedFarmersOnly || false}
+                    onChange={(e) => onFilterChange({...currentFilters, verifiedFarmersOnly: e.target.checked})}
+                    className="w-4 h-4 text-green-600 cursor-pointer rounded"
+                  />
+                  <div className="flex-1">
+                    <span className="text-gray-700 group-hover:text-green-600 font-medium flex items-center gap-1">
+                      <span>✓</span> Verified Farmers Only
+                    </span>
+                    <p className="text-xs text-gray-500">Show only verified sellers</p>
+                  </div>
+                </label>
+
+                {/* Organic Only */}
+                <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-green-50 cursor-pointer transition-colors group border border-gray-200 hover:border-green-300">
+                  <input
+                    type="checkbox"
+                    checked={currentFilters.organicOnly || false}
+                    onChange={(e) => onFilterChange({...currentFilters, organicOnly: e.target.checked})}
+                    className="w-4 h-4 text-green-600 cursor-pointer rounded"
+                  />
+                  <div className="flex-1">
+                    <span className="text-gray-700 group-hover:text-green-600 font-medium flex items-center gap-1">
+                      <span>🌱</span> Certified Organic
+                    </span>
+                    <p className="text-xs text-gray-500">Show only organic products</p>
+                  </div>
+                </label>
               </div>
             </div>
 

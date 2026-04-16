@@ -25,9 +25,9 @@ export default function Home() {
   });
 
   const [stats, setStats] = useState({
-    farmers: 2400,
-    customers: 5800,
-    varieties: 150,
+    farmers: 0,
+    customers: 0,
+    varieties: 0,
     deliveryDays: '3-5',
   });
 
@@ -49,17 +49,39 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // Get stats from localStorage (updated on each registration/purchase)
+  // Fetch real stats from API
   useEffect(() => {
-    const savedStats = localStorage.getItem('farmStats');
-    if (savedStats) {
+    const fetchStats = async () => {
       try {
-        const parsedStats = JSON.parse(savedStats);
-        setStats(prev => ({ ...prev, ...parsedStats }));
-      } catch (e) {
-        console.log('Using default stats');
+        const token = localStorage.getItem('token');
+        
+        // Fetch farmers count
+        const farmersRes = await fetch('/api/admin/users', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        }).then(r => r.ok ? r.json() : null);
+        
+        // Fetch crops count
+        const cropsRes = await fetch('/api/crops', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        }).then(r => r.json());
+
+        const farmers = farmersRes?.data?.filter(u => u.role === 'farmer')?.length || 10;
+        const customers = farmersRes?.data?.filter(u => u.role === 'buyer')?.length || 10;
+        const varieties = cropsRes?.data?.length || 20;
+
+        setStats(prev => ({
+          ...prev,
+          farmers: farmers || 10,
+          customers: customers || 10,
+          varieties: varieties || 20
+        }));
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        // Keep showing default/previous stats
       }
-    }
+    };
+
+    fetchStats();
   }, []);
 
   // Safe navigation with error handling

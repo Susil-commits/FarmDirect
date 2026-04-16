@@ -9,6 +9,7 @@ import GlobalPageLoader from './components/common/GlobalPageLoader';
 import Home from './pages/Home';
 import Marketplace from './pages/Marketplace';
 import CropDetail from './pages/CropDetail';
+import FarmerProfile from './pages/FarmerProfile';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import StartShopping from './pages/StartShopping';
@@ -91,6 +92,8 @@ function App() {
         return <Marketplace />;
       case '/crop/:id':
         return <CropDetail />;
+      case '/farmer/:farmerId':
+        return <FarmerProfile />;
       case '/about':
         return <About />;
       case '/contact':

@@ -4,6 +4,8 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
 import Timeline from '../components/common/Timeline';
+import FarmerDetailCard from '../components/common/FarmerDetailCard';
+import RelatedProducts from '../components/common/RelatedProducts';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
 import LoginPrompt from '../components/modals/LoginPrompt';
@@ -41,7 +43,7 @@ export default function CropDetail() {
     reviews: 24,
     harvestDate: '22 Mar, 2026',
     farmLocation: 'Punjab, India',
-    image: '🍅',
+    image: 'https://images.unsplash.com/photo-1592841496694-e91a2dbe3534?w=800&h=800&fit=crop',
     description: 'Fresh, organic tomatoes harvested directly from our farm. No chemical pesticides or fertilizers used. Sourced from sustainable farming practices.',
     certifications: ['Organic', 'Farm Fresh', 'Pesticide Free', 'Non-GMO'],
     specifications: {
@@ -247,8 +249,19 @@ export default function CropDetail() {
             <div className="lg:col-span-2">
               {/* Main Image */}
               <Card className="mb-6 animate-slide-in-left">
-                <div className="p-12 bg-linear-to-br from-green-100 to-emerald-100 rounded-t-lg flex items-center justify-center hover-lift">
-                  <span className="text-9xl animate-bounce-soft">{crop.image}</span>
+                <div className="bg-linear-to-br from-green-100 to-emerald-100 rounded-t-lg flex items-center justify-center hover-lift relative overflow-hidden" style={{ minHeight: '400px' }}>
+                  {crop.image && crop.image.startsWith('http') ? (
+                    // Real image from Cloudinary
+                    <img
+                      src={crop.image}
+                      alt={crop.name}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  ) : (
+                    // Fallback: emoji
+                    <span className="text-9xl animate-bounce-soft">{crop.image || '🌾'}</span>
+                  )}
                 </div>
                 <div className="p-6">
                   <h1 className="text-4xl font-bold text-gray-900 mb-2 animate-slide-in-down">{crop.name}</h1>
@@ -345,6 +358,63 @@ export default function CropDetail() {
                   </Card>
                 </ScrollAnimation>
               )}
+
+              {/* Related Products Section */}
+              <RelatedProducts
+                products={[
+                  {
+                    id: 2,
+                    name: 'Organic Cucumbers',
+                    price: 35,
+                    quantity: 80,
+                    rating: 4.6,
+                    reviews: 18,
+                    image: 'https://images.unsplash.com/photo-1609137144813-2e231ebd96e3?w=400&h=400&fit=crop',
+                    farmer: crop.farmer || 'Local Farmer',
+                    farmer_verified: true,
+                  },
+                  {
+                    id: 3,
+                    name: 'Fresh Bell Peppers',
+                    price: 60,
+                    quantity: 50,
+                    rating: 4.7,
+                    reviews: 22,
+                    image: 'https://images.unsplash.com/photo-1599599810694-b9efb4ffd8b0?w=400&h=400&fit=crop',
+                    farmer: crop.farmer || 'Local Farmer',
+                    farmer_verified: true,
+                  },
+                  {
+                    id: 4,
+                    name: 'Organic Lettuce',
+                    price: 25,
+                    quantity: 100,
+                    rating: 4.5,
+                    reviews: 15,
+                    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=400&fit=crop',
+                    farmer: crop.farmer || 'Local Farmer',
+                    farmer_verified: true,
+                  },
+                  {
+                    id: 5,
+                    name: 'Fresh Carrots',
+                    price: 40,
+                    quantity: 120,
+                    rating: 4.9,
+                    reviews: 28,
+                    image: 'https://images.unsplash.com/photo-1447621334519-51cf6537b839?w=400&h=400&fit=crop',
+                    farmer: crop.farmer || 'Local Farmer',
+                    farmer_verified: true,
+                  },
+                ]}
+                title="More from this Farmer"
+                onProductClick={(id) => navigate(`/crop/${id}`)}
+                onAddToCart={(product) => {
+                  addToCart(product);
+                  addToast(`${product.name} added to cart!`, 'success');
+                }}
+                showFarmer={false}
+              />
             </div>
 
             {/* Sidebar - Order & Farmer Info */}
@@ -437,45 +507,14 @@ export default function CropDetail() {
                 </div>
               </Card>
 
-              {/* Farmer Info Card */}
+              {/* Farmer Info Card - Enhanced with FarmerDetailCard */}
               {farmer && (
-                <Card variant="light" hover animated={false} className="animate-slide-in-right" style={{ animationDelay: '0.1s' }}>
-                  <div className="p-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4 animate-fade-in">👨‍🌾 Sold by</h3>
-
-                    <div className="text-center mb-6 animate-slide-in-down" style={{ animationDelay: '0.2s' }}>
-                      <div className="text-6xl mb-3">{farmer.image}</div>
-                      <h4 className="text-xl font-bold text-gray-900">{farmer.name}</h4>
-                      {farmer.verified && (
-                        <p className="text-green-600 text-sm font-semibold flex items-center gap-1 justify-center mt-1 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-                          <CheckCircle size={16} /> Verified Farmer
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-3 text-sm mb-6 pb-6 border-b animate-slide-in-down" style={{ animationDelay: '0.3s' }}>
-                      <p className="flex items-center gap-2"><MapPin size={16} className="text-gray-600" /> {farmer.location}</p>
-                      <p className="text-gray-600">📅 Member since {farmer.joinedDate}</p>
-                      <p className="text-gray-700"><strong>{farmer.totalListings}</strong> active listings</p>
-                      <p className="text-gray-700 flex items-center gap-1">
-                        <span className="text-yellow-400">⭐</span>
-                        <strong>{farmer.rating}</strong> from {farmer.followers} followers
-                      </p>
-                    </div>
-
-                    <p className="text-gray-700 text-sm mb-6 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                      {farmer.bio}
-                    </p>
-
-                    <Button variant="primary" size="md" className="w-full mb-3 animate-slide-in-up" style={{ animationDelay: '0.5s' }}>
-                      👀 View All Products
-                    </Button>
-
-                    <Button variant="outline" size="md" className="w-full flex items-center gap-2 justify-center animate-slide-in-up" style={{ animationDelay: '0.6s' }}>
-                      <MessageSquare size={18} /> Message
-                    </Button>
-                  </div>
-                </Card>
+                <FarmerDetailCard
+                  farmer={farmer}
+                  onViewProfile={() => navigate(`/farmer/${farmer.id || 1}`)}
+                  onMessage={() => addToast('Farmer messaging coming soon!', 'info')}
+                  onViewAllProducts={() => navigate(`/farmer/${farmer.id || 1}/products`)}
+                />
               )}
             </div>
           </div>

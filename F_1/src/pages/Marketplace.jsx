@@ -3,6 +3,7 @@ import { MapPin, Heart, Filter, ShoppingCart, Loader, AlertCircle, CheckCircle }
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
+import FarmerBadge from '../components/common/FarmerBadge';
 import FilterPanel from '../components/FilterPanel';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
@@ -21,18 +22,58 @@ export default function Marketplace() {
     cropType: '',
     priceRange: [0, 1000],
     location: '',
+    verifiedFarmersOnly: false,
+    organicOnly: false,
+    sortBy: 'newest' // 'newest', 'popular', 'rating', 'price-low', 'price-high'
   });
   const [crops, setCrops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [marketplaceStats, setMarketplaceStats] = useState({
+    farmers: 0,
+    products: 0,
+    reviews: 0
+  });
 
   const locations = ['Punjab', 'Himachal', 'Haryana', 'Karnataka', 'Maharashtra', 'Uttar Pradesh', 'Delhi', 'West Bengal'];
   const cropTypes = ['Vegetables', 'Fruits', 'Grains', 'Herbs', 'Organic'];
+  const sortOptions = [
+    { value: 'newest', label: '🆕 Newest First' },
+    { value: 'popular', label: '🔥 Most Popular' },
+    { value: 'rating', label: '⭐ Highest Rated' },
+    { value: 'price-low', label: '💰 Price: Low to High' },
+    { value: 'price-high', label: '💳 Price: High to Low' },
+  ];
 
   // Reset scroll position to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Fetch marketplace stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const usersRes = await fetch('/api/admin/users', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        }).then(r => r.ok ? r.json() : null);
+        
+        const farmers = usersRes?.data?.filter(u => u.role === 'farmer')?.length || 0;
+        const products = crops.length;
+        
+        setMarketplaceStats({
+          farmers: farmers || 10,
+          products: products || 25,
+          reviews: crops.reduce((sum, c) => sum + (c.totalReviews || 0), 0)
+        });
+      } catch (error) {
+        console.error('Error fetching marketplace stats:', error);
+      }
+    };
+
+    fetchStats();
+  }, [crops]);
 
   // Fetch crops from API
   useEffect(() => {
@@ -62,8 +103,33 @@ export default function Marketplace() {
     const priceMatch = crop.price >= filters.priceRange[0] && crop.price <= filters.priceRange[1];
     const locationMatch = !filters.location || crop.location === filters.location;
     const typeMatch = !filters.cropType || crop.category === filters.cropType;
-    return priceMatch && locationMatch && typeMatch;
+    const verifiedMatch = !filters.verifiedFarmersOnly || crop.farmer_verified;
+    const organicMatch = !filters.organicOnly || crop.certifications?.includes('Organic') || crop.category === 'Organic';
+    
+    return priceMatch && locationMatch && typeMatch && verifiedMatch && organicMatch;
+  }).sort((a, b) => {
+    switch(filters.sortBy) {
+      case 'popular':
+        return (b.totalReviews || 0) - (a.totalReviews || 0);
+      case 'rating':
+        return (b.rating || 0) - (a.rating || 0);
+      case 'price-low':
+        return a.price - b.price;
+      case 'price-high':
+        return b.price - a.price;
+      case 'newest':
+      default:
+        return (b.id || 0) - (a.id || 0);
+    }
   });
+
+  // Count active filters
+  const activeFilterCount = Object.entries(filters).filter(([key, val]) => {
+    if (key === 'sortBy') return false;
+    if (key === 'priceRange') return val[0] !== 0 || val[1] !== 1000;
+    if (key === 'verifiedFarmersOnly' || key === 'organicOnly') return val === true;
+    return val !== '';
+  }).length;
 
   const toggleWishlist = (crop) => {
     if (isInWishlist(crop.id)) {
@@ -96,6 +162,31 @@ export default function Marketplace() {
                 <span className="text-2xl">💡</span>
                 Browse premium crops at the best prices. <strong>Login only when placing an order.</strong>
               </p>
+              
+              {/* Trust Badges */}
+              <div className="flex flex-wrap gap-4 mt-4">
+                <div className="flex items-center gap-2 px-3 py-2 bg-green-50 rounded-lg border border-green-200">
+                  <span className="text-xl">👨‍🌾</span>
+                  <div>
+                    <p className="font-bold text-gray-900">{marketplaceStats.farmers}+</p>
+                    <p className="text-xs text-gray-600">Verified Farmers</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                  <span className="text-xl">🛒</span>
+                  <div>
+                    <p className="font-bold text-gray-900">{marketplaceStats.products}+</p>
+                    <p className="text-xs text-gray-600">Fresh Products</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <span className="text-xl">⭐</span>
+                  <div>
+                    <p className="font-bold text-gray-900">{marketplaceStats.reviews}+</p>
+                    <p className="text-xs text-gray-600">Customer Reviews</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </ScrollAnimation>
 
@@ -107,7 +198,14 @@ export default function Marketplace() {
               priceRange={[0, 1000]}
               currentFilters={filters}
               onFilterChange={setFilters}
-              onReset={() => setFilters({ cropType: '', priceRange: [0, 1000], location: '' })}
+              onReset={() => setFilters({ 
+                cropType: '', 
+                priceRange: [0, 1000], 
+                location: '',
+                verifiedFarmersOnly: false,
+                organicOnly: false,
+                sortBy: 'newest'
+              })}
               mobileCollapsed={false}
             />
 
@@ -135,6 +233,44 @@ export default function Marketplace() {
                 </div>
               ) : (
                 <>
+                  {/* Sorting & Filters Bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 mb-6 p-4 bg-green-50 rounded-lg border border-green-200 animate-slide-in-down">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-700">Sort by:</span>
+                      <select
+                        value={filters.sortBy}
+                        onChange={(e) => setFilters({...filters, sortBy: e.target.value})}
+                        className="px-3 py-2 rounded-lg border border-green-300 bg-white text-gray-700 font-medium cursor-pointer hover:border-green-500 transition-colors"
+                      >
+                        {sortOptions.map(opt => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Active Filters Badge */}
+                    {activeFilterCount > 0 && (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-green-100 rounded-lg border border-green-300 animate-bounce-soft">
+                        <span className="text-sm font-semibold text-green-700">🎯 {activeFilterCount} active</span>
+                        <button 
+                          onClick={() => setFilters({ 
+                            cropType: '', 
+                            priceRange: [0, 1000], 
+                            location: '',
+                            verifiedFarmersOnly: false,
+                            organicOnly: false,
+                            sortBy: 'newest'
+                          })}
+                          className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors font-semibold"
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Results Count */}
                   <p className="text-gray-600 mb-6 animate-fade-in font-semibold">
                     ✅ Showing {filteredCrops.length} fresh crops
@@ -196,9 +332,25 @@ function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, onAddToCart,
     >
       <div className="p-4 relative group">
         {/* Image Section */}
-        <div className="relative mb-4 overflow-hidden rounded-lg">
-          <div className="bg-linear-to-br from-green-100 to-emerald-100 rounded-lg p-6 text-center relative min-h-40 flex items-center justify-center group-hover:shadow-lg transition-shadow duration-300">
-            <span className="text-6xl animate-bounce-soft group-hover:scale-110 transition-transform duration-300">{crop.image || '🌾'}</span>
+        <div className="relative mb-4 overflow-hidden rounded-lg group">
+          <div className="bg-linear-to-br from-green-100 to-emerald-100 rounded-lg relative min-h-48 flex items-center justify-center group-hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+            {crop.image && crop.image.startsWith('http') ? (
+              // Real image from Cloudinary or external URL
+              <img
+                src={crop.image}
+                alt={crop.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : (
+              // Fallback: emoji or placeholder
+              <span className="text-6xl animate-bounce-soft group-hover:scale-110 transition-transform duration-300">
+                {crop.image || '🌾'}
+              </span>
+            )}
             {/* Animated overlay on hover */}
             <div className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
           </div>
@@ -242,14 +394,18 @@ function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, onAddToCart,
           </div>
 
           {/* Stats with Hover Effects */}
-          <div className="grid grid-cols-2 gap-2 text-sm animate-slide-in-left" style={{ animationDelay: `${staggerDelay + 0.2}s` }}>
+          <div className="grid grid-cols-3 gap-2 text-sm animate-slide-in-left" style={{ animationDelay: `${staggerDelay + 0.2}s` }}>
             <div className="bg-blue-50 p-2 rounded text-center group-hover:bg-blue-100 transition-colors">
               <p className="text-gray-600 text-xs">Available</p>
-              <p className="font-bold text-gray-900">{crop.quantity} kg</p>
+              <p className="font-bold text-gray-900">{crop.quantity || 10} kg</p>
             </div>
             <div className="bg-yellow-50 p-2 rounded text-center group-hover:bg-yellow-100 transition-colors">
               <p className="text-gray-600 text-xs">Rating</p>
               <p className="font-bold text-yellow-600">⭐ {crop.rating || 4.5}</p>
+            </div>
+            <div className="bg-purple-50 p-2 rounded text-center group-hover:bg-purple-100 transition-colors">
+              <p className="text-gray-600 text-xs">Reviews</p>
+              <p className="font-bold text-purple-600">{crop.totalReviews || 0}</p>
             </div>
           </div>
 
@@ -259,10 +415,11 @@ function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, onAddToCart,
           </p>
 
           {/* Farmer Info */}
-          <div className="bg-green-50 p-2 rounded text-sm group-hover:bg-green-100 transition-colors animate-slide-in-left" style={{ animationDelay: `${staggerDelay + 0.3}s` }}>
-            <p className="text-gray-700">
-              <strong>👨‍🌾</strong> {crop.farmer || 'Local Farmer'}
-            </p>
+          <div className="animate-slide-in-left" style={{ animationDelay: `${staggerDelay + 0.3}s` }}>
+            <FarmerBadge 
+              farmer={crop.farmer}
+              compact={true}
+            />
           </div>
 
           {/* Action Buttons with Animations */}

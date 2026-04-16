@@ -134,7 +134,7 @@ export const getReviews = asyncHandler(async (req, res) => {
 // Delete review
 export const deleteReview = asyncHandler(async (req, res) => {
   const { reviewId } = req.params;
-  const userId = req.user.userId;
+  const userId = req.user._id;
   
   const review = await Review.findById(reviewId);
   
@@ -266,7 +266,7 @@ export const reportReview = asyncHandler(async (req, res) => {
   // Add report to review (optional: create a separate Report collection)
   review.reports = review.reports || [];
   review.reports.push({
-    reportedBy: req.user.userId,
+    reportedBy: req.user._id,
     reason,
     description,
     reportedAt: new Date()

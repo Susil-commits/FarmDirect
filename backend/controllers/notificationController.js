@@ -169,7 +169,7 @@ export const sendBulkNotifications = asyncHandler(async (req, res) => {
 
 // Get notification preferences
 export const getPreferences = asyncHandler(async (req, res) => {
-  const userId = req.user.userId;
+  const userId = req.user._id;
   
   const notification = await Notification.findOne({ userId });
   
@@ -190,7 +190,7 @@ export const getPreferences = asyncHandler(async (req, res) => {
 
 // Update notification preferences
 export const updatePreferences = asyncHandler(async (req, res) => {
-  const userId = req.user.userId;
+  const userId = req.user._id;
   const preferences = req.body;
   
   // This would typically be stored in a UserPreferences collection

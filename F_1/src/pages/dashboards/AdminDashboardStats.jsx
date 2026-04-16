@@ -77,7 +77,8 @@ export default function AdminDashboardStats() {
     farmers: allUsers.filter(u => u.role === 'farmer').length,
     buyers: allUsers.filter(u => u.role === 'buyer').length,
     totalCrops: allCrops.length,
-    activeCrops: allCrops.filter(c => c.status === 'live').length
+    activeCrops: allCrops.filter(c => c.status === 'active' || c.listingApprovalStatus === 'approved').length,
+    pendingFarmers: allUsers.filter(u => u.role === 'farmer' && u.kycStatus === 'pending').length
   };
 
   return (
@@ -194,11 +195,49 @@ export default function AdminDashboardStats() {
 
                 <Card className="bg-indigo-50 border-l-4 border-indigo-500">
                   <div className="p-6">
-                    <p className="text-sm text-gray-600 font-semibold">Active Crops</p>
-                    <p className="text-4xl font-bold text-indigo-600 mt-2">{statisticsData.activeCrops}</p>
+                    <p className="text-sm text-gray-600 font-semibold">Pending KYC</p>
+                    <p className="text-4xl font-bold text-indigo-600 mt-2">{statisticsData.pendingFarmers}</p>
                   </div>
                 </Card>
               </div>
+
+              {/* Pending Farmers Section */}
+              {statisticsData.pendingFarmers > 0 && (
+                <Card className="bg-yellow-50 border-l-4 border-yellow-500">
+                  <div className="p-6">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4">Farmers Awaiting KYC Approval ({statisticsData.pendingFarmers})</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-yellow-100">
+                          <tr>
+                            <th className="px-4 py-2 text-left font-semibold text-gray-700">Farmer Name</th>
+                            <th className="px-4 py-2 text-left font-semibold text-gray-700">Email</th>
+                            <th className="px-4 py-2 text-left font-semibold text-gray-700">Farm</th>
+                            <th className="px-4 py-2 text-left font-semibold text-gray-700">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {allUsers.filter(u => u.role === 'farmer' && u.kycStatus === 'pending').slice(0, 5).map(farmer => (
+                            <tr key={farmer._id} className="border-b hover:bg-yellow-50">
+                              <td className="px-4 py-3 font-semibold text-gray-900">{farmer.firstName} {farmer.lastName}</td>
+                              <td className="px-4 py-3 text-gray-600">{farmer.email}</td>
+                              <td className="px-4 py-3 text-gray-600">{farmer.farmName || 'N/A'}</td>
+                              <td className="px-4 py-3 space-x-2">
+                                <button className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-semibold transition">
+                                  Approve
+                                </button>
+                                <button className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold transition">
+                                  Reject
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </Card>
+              )}
 
               <Card className="bg-white">
                 <div className="p-8">

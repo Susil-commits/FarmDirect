@@ -39,7 +39,7 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
 export const addAddress = asyncHandler(async (req, res) => {
   const { streetAddress, area, city, state, pincode, latitude, longitude, isDefault } = req.body;
   
-  const user = await User.findById(req.user.userId);
+  const user = await User.findById(req.user._id);
   
   if (!user) {
     return res.status(404).json({
@@ -99,7 +99,7 @@ export const getAddresses = asyncHandler(async (req, res) => {
 export const deleteAddress = asyncHandler(async (req, res) => {
   const { addressId } = req.params;
   
-  const user = await User.findById(req.user.userId);
+  const user = await User.findById(req.user._id);
   
   if (!user) {
     return res.status(404).json({
