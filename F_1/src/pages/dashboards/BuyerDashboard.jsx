@@ -5,6 +5,7 @@ import { useRouter } from '../../context/RouterContext';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
+import BackButton from '../../components/common/BackButton';
 import Timeline from '../../components/common/Timeline';
 
 export default function BuyerDashboard() {
@@ -13,7 +14,7 @@ export default function BuyerDashboard() {
   const [activeTab, setActiveTab] = useState('active-orders');
   const [orders, setOrders] = useState([]);
   const [wishlistItems, setWishlistItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, _setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalOrders: 0,
     wishlistCount: 0,
@@ -35,7 +36,7 @@ export default function BuyerDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      setLoading(true);
+      _setLoading(true);
       const token = localStorage.getItem('token');
       
       // Fetch orders
@@ -75,7 +76,7 @@ export default function BuyerDashboard() {
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
-      setLoading(false);
+      _setLoading(false);
     }
   };
 
@@ -130,6 +131,11 @@ export default function BuyerDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
+        {/* Back Button */}
+        <div className="mb-6">
+          <BackButton label="Back" />
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">My Account</h1>

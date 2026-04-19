@@ -1,4 +1,4 @@
-import React, { createContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useState, useCallback, useEffect, useContext } from 'react';
 import { authService } from '../services/appService.js';
 import { socialAuthService } from '../services/socialAuthService.js';
 import { isTokenExpired, decodeToken, hasRole, getUserIdFromToken } from '../utils/jwtUtils.js';
@@ -75,8 +75,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       const token = localStorage.getItem('token');
-      const storedVerificationStatus = localStorage.getItem('verificationStatus');
       const storedUser = localStorage.getItem('userData');
+      const storedVerificationStatus = localStorage.getItem('verificationStatus');
+      const storedServerStartTime = localStorage.getItem('serverStartTime');
       
       if (token) {
         // Check if token is expired
@@ -85,19 +86,18 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('userData');
+          localStorage.removeItem('serverStartTime');
+          localStorage.removeItem('currentRoute');
           setUser(null);
           setSessionActive(false);
+          setRedirectPath('/');
         } else {
-          try {
-            // Validate token structure and get user from backend
-            const response = await authService.getCurrentUser();
-            // Response structure after API interceptor: {message, user, ...}
-            const userData = response.user || response.data?.user || response;
-            
+          // Token exists and is valid - use cached user data first
+          if (storedUser) {
+            const userData = JSON.parse(storedUser);
             setUser(userData);
             setSessionActive(true);
-            localStorage.setItem('userData', JSON.stringify(userData));
-
+            
             const verifyStatus = userData?.kycStatus || storedVerificationStatus || null;
             setVerificationStatus(verifyStatus);
             if (verifyStatus) {
@@ -112,32 +112,74 @@ export const AuthProvider = ({ children }) => {
             if (!localStorage.getItem('lastActivityTime')) {
               localStorage.setItem('lastActivityTime', Date.now().toString());
             }
+          }
 
-          } catch (err) {
-            // API call failed, try to restore from cache
-            if (storedUser) {
-              try {
-                const cachedUser = JSON.parse(storedUser);
-                setUser(cachedUser);
-                setSessionActive(true);
-                setVerificationStatus(cachedUser?.kycStatus || storedVerificationStatus || null);
-                console.log('Restored user from cache');
-              } catch (parseErr) {
-                console.error('Failed to parse cached user:', parseErr);
-                localStorage.removeItem('token');
-                localStorage.removeItem('refreshToken');
-                localStorage.removeItem('userData');
-                setUser(null);
-                setSessionActive(false);
-                setError(err);
-              }
-            } else {
+          // Try to validate token structure with backend (non-blocking)
+          try {
+            const response = await authService.getCurrentUser();
+            const userData = response.user || response.data?.user || response;
+            
+            // Check for server restart by comparing serverStartTime
+            const currentServerStartTime = response.serverStartTime;
+            if (storedServerStartTime && currentServerStartTime && storedServerStartTime !== currentServerStartTime.toString()) {
+              console.warn('⚠️ Server was restarted! Logging out user.');
+              // Server has restarted - force logout and redirect to home
               localStorage.removeItem('token');
               localStorage.removeItem('refreshToken');
+              localStorage.removeItem('userData');
+              localStorage.removeItem('serverStartTime');
+              localStorage.removeItem('verificationStatus');
+              localStorage.removeItem('currentRoute');
+              localStorage.removeItem('lastActivityTime');
               setUser(null);
               setSessionActive(false);
-              setError(err);
+              setRedirectPath('/');
+              setLoading(false);
+              return;
             }
+            
+            // Update with fresh data from server
+            setUser(userData);
+            localStorage.setItem('userData', JSON.stringify(userData));
+
+            const verifyStatus = userData?.kycStatus || storedVerificationStatus || null;
+            setVerificationStatus(verifyStatus);
+            if (verifyStatus) {
+              localStorage.setItem('verificationStatus', verifyStatus);
+            }
+
+          } catch (err) {
+            // Check if user was deleted (404 Not Found)
+            if (err.status === 404 || err.message === 'User not found') {
+              console.warn('⚠️ User account has been deleted');
+              // Clear auth data
+              localStorage.removeItem('token');
+              localStorage.removeItem('refreshToken');
+              localStorage.removeItem('userData');
+              localStorage.removeItem('serverStartTime');
+              localStorage.removeItem('verificationStatus');
+              localStorage.removeItem('currentRoute');
+              localStorage.removeItem('lastActivityTime');
+              setUser(null);
+              setSessionActive(false);
+              setRedirectPath('/login?deleted=true');
+              setError('Your account has been deleted. Please contact support if this was not intentional.');
+              setLoading(false);
+              return;
+            }
+            // If server is unreachable AND we have no cached user, then logout
+            if (!storedUser && (err.message === 'Network Error' || err.code === 'ECONNREFUSED')) {
+              console.error('Server unreachable on app load, logging out');
+              localStorage.removeItem('token');
+              localStorage.removeItem('refreshToken');
+              localStorage.removeItem('userData');
+              localStorage.removeItem('serverStartTime');
+              localStorage.removeItem('currentRoute');
+              setUser(null);
+              setSessionActive(false);
+              setRedirectPath('/');
+            }
+            // Otherwise, keep the user logged in with cached data
           }
         }
       }
@@ -187,27 +229,34 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
   // Periodic token refresh check (every 5 minutes)
+  // DISABLED: This was causing constant state updates and re-renders
+  // Token refresh will happen on-demand when needed
   useEffect(() => {
-    if (!user) return;
-
-    const interval = setInterval(() => {
-      const token = localStorage.getItem('token');
-      
-      if (token && isTokenExpired(token, 600)) {
-        // Token will expire in next 10 minutes - it will auto-refresh on next API call
-        console.log('Token will expire soon - will auto-refresh on next API call');
-        setTokenRefreshTime(new Date());
-      }
-    }, 300000); // Check every 5 minutes
-
-    return () => clearInterval(interval);
-  }, [user]);
+    // Placeholder - not checking on interval
+    return () => {};
+  }, []);
 
   const register = useCallback(async (userData) => {
     setLoading(true);
     setError(null);
     try {
       const response = await authService.register(userData);
+      
+      // Store tokens if provided (auto-login after registration)
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+      }
+      if (response.refreshToken) {
+        localStorage.setItem('refreshToken', response.refreshToken);
+      }
+      if (response.serverStartTime) {
+        localStorage.setItem('serverStartTime', response.serverStartTime.toString());
+      }
+      if (response.user) {
+        localStorage.setItem('userData', JSON.stringify(response.user));
+        setUser(response.user);
+        setSessionActive(true);
+      }
       
       // Update stats
       const currentStats = JSON.parse(
@@ -243,6 +292,11 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('refreshToken', response.refreshToken);
       }
       
+      // Store server start time for detecting server restart
+      if (response.serverStartTime) {
+        localStorage.setItem('serverStartTime', response.serverStartTime.toString());
+      }
+      
       // Store user data
       if (response.user) {
         localStorage.setItem('userData', JSON.stringify(response.user));
@@ -275,12 +329,20 @@ export const AuthProvider = ({ children }) => {
   const logout = useCallback(async () => {
     setLoading(true);
     try {
+      // Get user ID before clearing
+      const userId = user?.id;
+      
       await authService.logout();
       
       // Clear all auth data
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('verificationStatus');
+      localStorage.removeItem('serverStartTime');
+      // Clear user-specific submission state
+      if (userId) {
+        localStorage.removeItem(`verificationSubmittedAt_${userId}`);
+      }
       localStorage.removeItem('userData');
       localStorage.removeItem('currentRoute');
       localStorage.removeItem('lastActivityTime');
@@ -296,7 +358,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   const updatePassword = useCallback(async (passwordData) => {
     try {
@@ -359,6 +421,9 @@ export const AuthProvider = ({ children }) => {
       if (response.refreshToken) {
         localStorage.setItem('refreshToken', response.refreshToken);
       }
+      if (response.serverStartTime) {
+        localStorage.setItem('serverStartTime', response.serverStartTime.toString());
+      }
       setUser(response.user);
       setSessionActive(true);
       recordLoginHistory(response.user);
@@ -379,6 +444,9 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', response.token);
       if (response.refreshToken) {
         localStorage.setItem('refreshToken', response.refreshToken);
+      }
+      if (response.serverStartTime) {
+        localStorage.setItem('serverStartTime', response.serverStartTime.toString());
       }
       setUser(response.user);
       setSessionActive(true);
@@ -404,14 +472,52 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
+      const token = localStorage.getItem('token');
+      
+      console.log('📤 Submitting verification documents...');
+      
+      // If documents is FormData, convert to JSON
+      let payload = {};
+      if (documents instanceof FormData) {
+        // Extract file names from FormData
+        for (let [key, value] of documents.entries()) {
+          if (value instanceof File) {
+            payload[key] = { fileName: value.name, size: value.size };
+          }
+        }
+      } else {
+        payload = documents;
+      }
+
+      // Call backend API to submit KYC documents
+      const response = await fetch('/api/auth/submit-kyc', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ documents: payload })
+      });
+
+      console.log('📡 API Response Status:', response.status);
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to submit documents');
+      }
+
+      const data = await response.json();
+      
+      // Update context state
       setVerificationData(documents);
       setVerificationStatus('pending');
       localStorage.setItem('verificationStatus', 'pending');
-      localStorage.setItem('verificationData', JSON.stringify(documents));
+      localStorage.setItem('verificationData', JSON.stringify(payload));
       
-      console.log('Verification documents submitted:', documents);
+      console.log('✅ Verification documents submitted to backend:', data);
       return { status: 'success', message: 'Documents submitted for verification' };
     } catch (err) {
+      console.error('❌ Error submitting documents:', err);
       setError(err);
       throw err;
     } finally {
@@ -420,9 +526,42 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const fetchVerificationStatus = useCallback(async () => {
-    const storedStatus = localStorage.getItem('verificationStatus');
-    setVerificationStatus(storedStatus);
-    return storedStatus;
+    try {
+      // Fetch latest user data from backend to get current kycStatus
+      const response = await authService.getCurrentUser();
+      const userData = response.user || response.data?.user || response;
+      
+      if (userData) {
+        const newStatus = userData.kycStatus || null;
+        const oldStatus = localStorage.getItem('verificationStatus');
+        
+        // Update if status changed
+        if (newStatus !== oldStatus) {
+          setVerificationStatus(newStatus);
+          localStorage.setItem('verificationStatus', newStatus);
+          
+          // Update user data as well
+          setUser(userData);
+          localStorage.setItem('userData', JSON.stringify(userData));
+        }
+        
+        return newStatus;
+      }
+    } catch (err) {
+      console.error('Error fetching verification status:', err);
+      // Fall back to stored status if API fails
+      const storedStatus = localStorage.getItem('verificationStatus');
+      setVerificationStatus(storedStatus);
+      return storedStatus;
+    }
+  }, []);
+
+  // Periodic verification status check (every 30 seconds for pending users)
+  // DISABLED: This was causing constant re-renders and API calls
+  // Verification status can be checked on-demand instead
+  useEffect(() => {
+    // Placeholder - not fetching on interval to prevent constant refreshes
+    return () => {};
   }, []);
 
   // NEW: Role-based access guards
@@ -528,7 +667,7 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => {
-  const context = React.useContext(AuthContext);
+  const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }

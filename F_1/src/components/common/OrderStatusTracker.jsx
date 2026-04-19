@@ -78,7 +78,7 @@ export default function OrderStatusTracker({ order }) {
 
   return (
     <div className="w-full">
-      <div className="bg-linear-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border-2 border-blue-200">
+      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border-2 border-blue-200">
         <h3 className="text-lg font-bold text-gray-900 mb-6">📊 Order Status & Timeline</h3>
 
         <div className="space-y-6">

@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import Card from '../../components/common/Card';
+import LogoutConfirmationModal from '../../components/common/LogoutConfirmationModal';
 import { Package, AlertTriangle, LogOut, Menu, Search, Eye, Trash2, Users, BarChart3, Lock, Unlock } from 'lucide-react';
 
 export default function AdminCrops() {
@@ -12,7 +13,13 @@ export default function AdminCrops() {
   const [searchQuery, setSearchQuery] = useState('');
   const [allCrops, setAllCrops] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [frozenCrops, setFrozenCrops] = useState({});
+  const [showFreezeModal, setShowFreezeModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [selectedCrop, setSelectedCrop] = useState(null);
+  const [freezeReason, setFreezeReason] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -23,7 +30,7 @@ export default function AdminCrops() {
       setLoading(true);
       const token = localStorage.getItem('token');
 
-      const cropsRes = await fetch('/api/crops', {
+      const cropsRes = await fetch('/api/admin/crops', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -38,33 +45,92 @@ export default function AdminCrops() {
     }
   };
 
-  const handleDeleteCrop = async (cropId) => {
-    if (!window.confirm('Are you sure you want to delete this crop? This action cannot be undone.')) return;
+  const handleDeleteClick = (crop) => {
+    setSelectedCrop(crop);
+    setDeleteReason('');
+    setShowDeleteModal(true);
+  };
+
+  const handleSubmitDelete = async () => {
+    if (!deleteReason.trim()) {
+      alert('⚠️ Please provide a reason for deletion');
+      return;
+    }
+
     try {
+      setActionLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/crops/${cropId}`, {
+      const response = await fetch(`/api/admin/crops/${selectedCrop._id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason: deleteReason })
       });
+
       if (response.ok) {
+        alert(`✅ Crop "${selectedCrop.cropName}" has been deleted`);
+        setShowDeleteModal(false);
+        setDeleteReason('');
         await fetchData();
+      } else {
+        const data = await response.json();
+        alert(`❌ Error: ${data.message}`);
       }
     } catch (error) {
       console.error('Error deleting crop:', error);
+      alert('❌ Error deleting crop');
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  const handleFreezeCrop = (cropId) => {
-    setFrozenCrops(prev => ({
-      ...prev,
-      [cropId]: !prev[cropId]
-    }));
+  const handleFreezeClick = (crop) => {
+    setSelectedCrop(crop);
+    setFreezeReason('');
+    setShowFreezeModal(true);
+  };
+
+  const handleSubmitFreeze = async () => {
+    if (!freezeReason.trim()) {
+      alert('⚠️ Please provide a reason for freezing');
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/admin/crops/${selectedCrop._id}/freeze`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason: freezeReason })
+      });
+
+      if (response.ok) {
+        alert(`✅ Crop "${selectedCrop.cropName}" has been frozen`);
+        setShowFreezeModal(false);
+        setFreezeReason('');
+        await fetchData();
+      } else {
+        const data = await response.json();
+        alert(`❌ Error: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Error freezing crop:', error);
+      alert('❌ Error freezing crop');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   if (!user || user.role !== 'admin') {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-linear-to-br from-slate-900 to-slate-800 flex items-center justify-center px-4">
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center px-4">
           <div className="text-center">
             <AlertTriangle size={48} className="mx-auto mb-4 text-orange-500" />
             <h2 className="text-3xl font-bold text-white mb-4">Access Denied</h2>
@@ -91,7 +157,7 @@ export default function AdminCrops() {
     <PageTransition>
       <div className="min-h-screen bg-gray-100 flex">
         {/* Sidebar */}
-        <div className={`fixed lg:static inset-0 lg:inset-auto transition-all duration-300 ${sidebarOpen ? 'w-72' : 'w-20'} bg-linear-to-b from-green-700 to-green-800 text-white flex flex-col z-40 ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
+        <div className={`fixed lg:static inset-0 lg:inset-auto transition-all duration-300 ${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-green-700 to-green-800 text-white flex flex-col z-40 ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
           <div className="p-6 border-b border-green-600">
             <div className="flex items-center justify-between">
               {sidebarOpen && (
@@ -133,10 +199,7 @@ export default function AdminCrops() {
                 <p className="text-xs text-green-200 uppercase mb-2">Admin</p>
                 <p className="font-semibold truncate mb-3">{user?.name}</p>
                 <button
-                  onClick={() => {
-                    logout();
-                    navigate('/');
-                  }}
+                  onClick={() => setShowLogoutConfirm(true)}
                   className="w-full flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition text-sm"
                 >
                   <LogOut size={16} /> Logout
@@ -247,30 +310,20 @@ export default function AdminCrops() {
 
                         <div className="flex gap-2">
                           <button 
-                            onClick={() => handleFreezeCrop(crop._id)}
-                            className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg transition text-sm font-semibold ${
-                              frozenCrops[crop._id]
-                                ? 'bg-blue-100 hover:bg-blue-200 text-blue-700'
-                                : 'bg-purple-100 hover:bg-purple-200 text-purple-700'
-                            }`}
-                            title={frozenCrops[crop._id] ? "Unfreeze crop" : "Freeze crop"}
+                            onClick={() => handleFreezeClick(crop)}
+                            disabled={actionLoading}
+                            className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-yellow-100 hover:bg-yellow-200 disabled:bg-gray-200 text-yellow-700 rounded-lg transition text-sm font-semibold"
+                            title="Freeze crop"
                           >
-                            {frozenCrops[crop._id] ? (
-                              <>
-                                <Unlock size={16} /> Unfreeze
-                              </>
-                            ) : (
-                              <>
-                                <Lock size={16} /> Freeze
-                              </>
-                            )}
+                            <Lock size={16} /> Freeze
                           </button>
                           <button 
-                            onClick={() => handleDeleteCrop(crop._id)}
-                            className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition text-sm font-semibold"
+                            onClick={() => handleDeleteClick(crop)}
+                            disabled={actionLoading}
+                            className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-100 hover:bg-red-200 disabled:bg-gray-200 text-red-700 rounded-lg transition text-sm font-semibold"
                             title="Delete crop"
                           >
-                            <Trash2 size={16} /> Remove
+                            <Trash2 size={16} /> Delete
                           </button>
                         </div>
                       </div>
@@ -282,6 +335,119 @@ export default function AdminCrops() {
           </div>
         </div>
       </div>
+
+      {/* Freeze Modal */}
+      {showFreezeModal && selectedCrop && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="max-w-md w-full">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Freeze Crop</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                You are about to freeze <strong>{selectedCrop.cropName}</strong>
+              </p>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Reason for Freezing *
+                </label>
+                <select
+                  value={freezeReason}
+                  onChange={(e) => setFreezeReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  disabled={actionLoading}
+                >
+                  <option value="">Select a reason...</option>
+                  <option value="Low quality">Low quality</option>
+                  <option value="Misleading information">Misleading information</option>
+                  <option value="Duplicate listing">Duplicate listing</option>
+                  <option value="Suspicious activity">Suspicious activity</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowFreezeModal(false);
+                    setFreezeReason('');
+                  }}
+                  disabled={actionLoading}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition disabled:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitFreeze}
+                  disabled={actionLoading || !freezeReason}
+                  className="flex-1 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition"
+                >
+                  {actionLoading ? 'Processing...' : 'Freeze'}
+                </button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Delete Modal */}
+      {showDeleteModal && selectedCrop && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="max-w-md w-full">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Crop</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                ⚠️ <strong>WARNING:</strong> This action is permanent. You are about to delete <strong>{selectedCrop.cropName}</strong>
+              </p>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Reason for Deletion *
+                </label>
+                <textarea
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  placeholder="Enter the reason for deletion..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm resize-none"
+                  rows="4"
+                  disabled={actionLoading}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeleteReason('');
+                  }}
+                  disabled={actionLoading}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition disabled:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitDelete}
+                  disabled={actionLoading || !deleteReason.trim()}
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition"
+                >
+                  {actionLoading ? 'Processing...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <LogoutConfirmationModal
+          onConfirm={async () => {
+            setShowLogoutConfirm(false);
+            await logout();
+            navigate('/');
+          }}
+          onCancel={() => setShowLogoutConfirm(false)}
+        />
+      )}
     </PageTransition>
   );
 }

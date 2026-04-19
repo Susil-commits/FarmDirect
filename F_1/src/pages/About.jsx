@@ -7,7 +7,7 @@ import ScrollAnimation from '../components/common/ScrollAnimation';
 import { Users, Target, Heart, Zap, Globe, Award, TrendingUp, Shield, Code, Layers } from 'lucide-react';
 
 export default function About() {
-  const { navigate } = useRouter();
+
 
   const values = [
     {
@@ -58,9 +58,9 @@ export default function About() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-linear-to-br from-white via-green-50 to-white">
+      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white">
         {/* Hero Section */}
-        <div className="bg-linear-to-br from-green-600 via-emerald-600 to-green-700 text-white py-16 px-4">
+        <div className="bg-gradient-to-br from-green-600 via-emerald-600 to-green-700 text-white py-16 px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl font-bold mb-4">About FarmDirect</h1>
             <p className="text-xl text-green-50">
@@ -74,7 +74,7 @@ export default function About() {
         <div className="max-w-6xl mx-auto px-4 py-16">
           {/* Mission Section */}
           <ScrollAnimation className="scroll-slide mb-16">
-            <Card className="bg-linear-to-br from-green-50 to-emerald-50">
+            <Card className="bg-gradient-to-br from-green-50 to-emerald-50">
               <div className="p-12">
                 <div className="flex items-center gap-4 mb-6">
                   <Target size={40} className="text-green-600" />
@@ -92,7 +92,7 @@ export default function About() {
 
           {/* Why Choose Us */}
           <ScrollAnimation className="scroll-slide mb-16">
-            <Card className="bg-linear-to-br from-amber-50 to-orange-50 p-12">
+            <Card className="bg-gradient-to-br from-amber-50 to-orange-50 p-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-8">Why Choose FarmDirect?</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="flex gap-4">
@@ -130,7 +130,7 @@ export default function About() {
             <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">Meet Our Team</h2>
             <div className="flex flex-col md:flex-row gap-8 max-w-4xl mx-auto items-center justify-center">
               {team.map((member, idx) => (
-                <Card key={idx} hover className="text-center p-10 w-full md:w-80 flex flex-col items-center bg-linear-to-br from-green-50 to-white">
+                <Card key={idx} hover className="text-center p-10 w-full md:w-80 flex flex-col items-center bg-gradient-to-br from-green-50 to-white">
                   <div className="text-8xl mb-6 transform hover:scale-110 transition-transform">{member.emoji}</div>
                   <div className="flex-1">
                     <h3 className="text-2xl font-bold text-gray-900 mb-2">{member.name}</h3>
@@ -147,7 +147,7 @@ export default function About() {
 
           {/* Impact Section */}
           <ScrollAnimation className="scroll-slide mb-16">
-            <div className="bg-linear-to-r from-green-600 via-emerald-600 to-teal-600 rounded-xl p-12 text-white">
+            <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-xl p-12 text-white">
               <div className="flex items-center gap-4 mb-8">
                 <Award size={40} className="text-white" />
                 <h2 className="text-3xl font-bold">Project Achievements</h2>
@@ -196,13 +196,13 @@ export default function About() {
                       {step.num}
                     </div>
                     <p className="text-xs md:text-sm font-semibold text-gray-700 text-center">{step.label}</p>
-                    {idx < 4 && <div className="hidden md:block absolute w-20 h-1 bg-linear-to-r from-gray-300 to-gray-300 mt-6"></div>}
+                    {idx < 4 && <div className="hidden md:block absolute w-20 h-1 bg-gradient-to-r from-gray-300 to-gray-300 mt-6"></div>}
                   </div>
                 ))}
               </div>
               
               {/* Connecting line */}
-              <div className="hidden md:flex h-1 bg-linear-to-r from-blue-500 via-green-500 to-red-500 rounded-full max-w-5xl mx-auto mb-12"></div>
+              <div className="hidden md:flex h-1 bg-gradient-to-r from-blue-500 via-green-500 to-red-500 rounded-full max-w-5xl mx-auto mb-12"></div>
             </div>
             
             {/* Phase Cards Grid */}

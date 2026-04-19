@@ -7,6 +7,7 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import PageTransition from '../../components/common/PageTransition.jsx';
+import BackButton from '../../components/common/BackButton';
 
 export default function Register() {
   const { navigate } = useRouter();
@@ -29,13 +30,48 @@ export default function Register() {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!formData.email.includes('@')) newErrors.email = 'Valid email is required';
-    if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-    if (role === 'farmer' && !formData.location.trim()) newErrors.location = 'Farm location is required';
+    // First name validation
+    if (!formData.firstName || !formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+    }
+    
+    // Last name validation
+    if (!formData.lastName || !formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
+    }
+    
+    // Email validation
+    if (!formData.email || !formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!formData.email.includes('@')) {
+      newErrors.email = 'Valid email format required (example@domain.com)';
+    }
+    
+    // Password validation
+    if (!formData.password || !formData.password.trim()) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    // Confirm password validation
+    if (!formData.confirmPassword || !formData.confirmPassword.trim()) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    // Phone validation
+    if (!formData.phone || !formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (formData.phone.trim().length < 10) {
+      newErrors.phone = 'Phone number must be at least 10 digits';
+    }
+    
+    // Location validation for farmer
+    if (role === 'farmer' && (!formData.location || !formData.location.trim())) {
+      newErrors.location = 'Farm location is required for farmers';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -59,8 +95,11 @@ export default function Register() {
     }
 
     setIsLoading(true);
+    setErrors({});
+    
     try {
-      const response = await register({
+      console.log('📝 Attempting registration for:', formData.email);
+      const _response = await register({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -70,7 +109,8 @@ export default function Register() {
         ...(role === 'farmer' && { location: formData.location })
       });
 
-      addToast(`Welcome ${formData.firstName}! Account created successfully. Please log in to continue.`, 'success');
+      console.log('✅ Registration successful!');
+      addToast('Account created successfully! Redirecting to login...', 'success');
       
       // Clear form data after successful registration
       setFormData({
@@ -82,22 +122,41 @@ export default function Register() {
         phone: '',
         location: '',
       });
-      setErrors({});
       
       // Clear the form ref to remove data from DOM
       if (formRef.current) {
         formRef.current.reset();
       }
       
-      // Navigate to login page - user must log in with credentials
-      setTimeout(() => {
-        navigate('/auth/login');
-      }, 1500);
+      // Navigate to login page immediately
+      navigate('/auth/login');
     } catch (error) {
-      console.error('Registration error:', error);
-      addToast(error?.message || 'Registration failed. Please try again.', 'error');
-    } finally {
+      console.error('❌ Registration error:', error);
       setIsLoading(false);
+      
+      let errorMessage = 'Registration failed';
+      const errorData = error?.response?.data || error;
+      
+      if (typeof errorData === 'string') {
+        errorMessage = errorData;
+      } else if (errorData?.message) {
+        errorMessage = errorData.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      // Parse specific errors
+      if (errorMessage.toLowerCase().includes('already') || errorMessage.toLowerCase().includes('exist') || errorMessage.toLowerCase().includes('email')) {
+        errorMessage = 'This email is already registered. Please login or use a different email.';
+        setErrors({ ...errors, email: 'Email already registered' });
+      } else if (errorMessage.toLowerCase().includes('validation')) {
+        errorMessage = 'Please check all fields and try again.';
+      } else if (errorMessage.toLowerCase().includes('network') || errorMessage.toLowerCase().includes('connection')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      }
+      
+      console.log('📢 Showing error to user:', errorMessage);
+      addToast(errorMessage, 'error');
     }
   };
 
@@ -107,12 +166,17 @@ export default function Register() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-linear-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center py-12 px-4 relative">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center py-12 px-4 relative">
         <div className="absolute inset-0 premium-gradient"></div>
         <Card variant="deep" className="w-full max-w-md animate-scale-in relative z-10 bg-white/20 backdrop-blur-lg border border-white/10 shadow-2xl">
           <div className="p-10">
+            {/* Back Button */}
+            <div className="mb-6">
+              <BackButton label="Go Back" />
+            </div>
+
             <div className="flex justify-center mb-4">
-              <div className="w-12 h-12 bg-linear-to-br from-green-600 to-green-500 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-500 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-xl">🌾</span>
               </div>
             </div>

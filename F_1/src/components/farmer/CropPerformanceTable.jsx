@@ -59,6 +59,7 @@ export default function CropPerformanceTable({ data }) {
     }
   };
 
+// SortIcon moved outside
   const SortIcon = ({ column }) => {
     if (sortBy !== column) return <span className="text-gray-300">↕</span>;
     return sortOrder === 'desc' ? <TrendingDown size={16} /> : <TrendingUp size={16} />;

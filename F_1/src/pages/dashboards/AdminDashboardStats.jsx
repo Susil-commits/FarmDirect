@@ -3,15 +3,22 @@ import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import Card from '../../components/common/Card';
-import { BarChart3, Users, Package, AlertTriangle, LogOut, Menu } from 'lucide-react';
+import LogoutConfirmationModal from '../../components/common/LogoutConfirmationModal';
+import { BarChart3, Users, Package, AlertTriangle, LogOut } from 'lucide-react';
 
 export default function AdminDashboardStats() {
   const { user, logout } = useAuth();
   const { navigate } = useRouter();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [allUsers, setAllUsers] = useState([]);
-  const [allCrops, setAllCrops] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    farmers: 0,
+    buyers: 0,
+    totalCrops: 0,
+    pendingFarmers: 0
+  });
+  const [_loading, _setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Reset scroll position to top on page load
   useEffect(() => {
@@ -24,38 +31,43 @@ export default function AdminDashboardStats() {
 
   const fetchData = async () => {
     try {
-      setLoading(true);
+      _setLoading(true);
+      setError(null);
       const token = localStorage.getItem('token');
 
-      const [usersRes, cropsRes] = await Promise.all([
-        fetch('/api/admin/users-with-crops', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch('/api/crops', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-      ]);
-
-      if (usersRes.ok) {
-        const data = await usersRes.json();
-        setAllUsers(data.data || []);
-      }
-
-      if (cropsRes.ok) {
-        const data = await cropsRes.json();
-        setAllCrops(data.data || []);
+      const response = await fetch('/api/admin/dashboard/stats', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Dashboard stats fetched:', data);
+        
+        setStats({
+          totalUsers: data.data?.users?.total || 0,
+          farmers: data.data?.users?.farmers || 0,
+          buyers: data.data?.users?.buyers || 0,
+          admins: data.data?.users?.admins || 0,
+          totalCrops: data.data?.crops?.total || 0,
+          activeCrops: data.data?.crops?.active || 0,
+          pendingFarmers: data.data?.pendingKYC || 0
+        });
+      } else {
+        console.error('❌ Failed to fetch stats:', response.status);
+        setError('Failed to load dashboard stats');
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('❌ Error fetching data:', error);
+      setError(error.message);
     } finally {
-      setLoading(false);
+      _setLoading(false);
     }
   };
 
   if (!user || user.role !== 'admin') {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-linear-to-br from-slate-900 to-slate-800 flex items-center justify-center px-4">
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center px-4">
           <div className="text-center">
             <AlertTriangle size={48} className="mx-auto mb-4 text-orange-500" />
             <h2 className="text-3xl font-bold text-white mb-4">Access Denied</h2>
@@ -72,188 +84,117 @@ export default function AdminDashboardStats() {
     );
   }
 
-  const statisticsData = {
-    totalUsers: allUsers.length,
-    farmers: allUsers.filter(u => u.role === 'farmer').length,
-    buyers: allUsers.filter(u => u.role === 'buyer').length,
-    totalCrops: allCrops.length,
-    activeCrops: allCrops.filter(c => c.status === 'active' || c.listingApprovalStatus === 'approved').length,
-    pendingFarmers: allUsers.filter(u => u.role === 'farmer' && u.kycStatus === 'pending').length
-  };
+  // Use stats directly
+  const statisticsData = stats;
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gray-100 flex">
-        {/* Sidebar */}
-        <div className={`fixed lg:static inset-0 lg:inset-auto transition-all duration-300 ${sidebarOpen ? 'w-72' : 'w-20'} bg-linear-to-b from-green-700 to-green-800 text-white flex flex-col z-40 ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
-          <div className="p-6 border-b border-green-600">
-            <div className="flex items-center justify-between">
-              {sidebarOpen && (
-                <div>
-                  <h2 className="text-2xl font-bold">FarmDirect</h2>
-                  <p className="text-xs text-green-200">Admin</p>
-                </div>
-              )}
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        {/* Top Navigation Bar */}
+        <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm z-30">
+          <div className="flex items-center gap-3">
+            <BarChart3 size={28} className="text-green-600" />
+            <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
           </div>
-
-          <nav className="flex-1 p-4 space-y-2">
-            {[
-              { id: 'dashboard', label: 'Dashboard', icon: BarChart3, path: '/admin/dashboard' },
-              { id: 'users', label: 'Users', icon: Users, path: '/admin/users' },
-              { id: 'crops', label: 'Crops', icon: Package, path: '/admin/crops' }
-            ].map(item => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  navigate(item.path);
-                  setSidebarOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition ${
-                  item.id === 'dashboard'
-                    ? 'bg-green-900 text-white shadow-lg'
-                    : 'text-green-100 hover:bg-green-600'
-                }`}
-              >
-                <item.icon size={20} />
-                {sidebarOpen && item.label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="border-t border-green-600 p-4">
-            {sidebarOpen && (
-              <>
-                <p className="text-xs text-green-200 uppercase mb-2">Admin</p>
-                <p className="font-semibold truncate mb-3">{user?.name}</p>
-                <button
-                  onClick={() => {
-                    logout();
-                    navigate('/');
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition text-sm"
-                >
-                  <LogOut size={16} /> Logout
-                </button>
-              </>
-            )}
-          </div>
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-semibold"
+          >
+            <LogOut size={18} /> Logout
+          </button>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-auto">
-          {/* Top Bar */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-30">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="hidden lg:block text-gray-600 hover:text-gray-900"
-              >
-                <Menu size={24} />
-              </button>
-              <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-            </div>
-            <button
-              onClick={() => navigate('/admin/profile')}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-semibold"
-            >
-              My Profile
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="p-6">
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <Card className="bg-blue-50 border-l-4 border-blue-500">
-                  <div className="p-6">
-                    <p className="text-sm text-gray-600 font-semibold">Total Users</p>
-                    <p className="text-4xl font-bold text-blue-600 mt-2">{statisticsData.totalUsers}</p>
-                  </div>
-                </Card>
-
-                <Card className="bg-green-50 border-l-4 border-green-500">
-                  <div className="p-6">
-                    <p className="text-sm text-gray-600 font-semibold">Farmers</p>
-                    <p className="text-4xl font-bold text-green-600 mt-2">{statisticsData.farmers}</p>
-                  </div>
-                </Card>
-
-                <Card className="bg-purple-50 border-l-4 border-purple-500">
-                  <div className="p-6">
-                    <p className="text-sm text-gray-600 font-semibold">Buyers</p>
-                    <p className="text-4xl font-bold text-purple-600 mt-2">{statisticsData.buyers}</p>
-                  </div>
-                </Card>
-
-                <Card className="bg-orange-50 border-l-4 border-orange-500">
-                  <div className="p-6">
-                    <p className="text-sm text-gray-600 font-semibold">Total Crops</p>
-                    <p className="text-4xl font-bold text-orange-600 mt-2">{statisticsData.totalCrops}</p>
-                  </div>
-                </Card>
-
-                <Card className="bg-indigo-50 border-l-4 border-indigo-500">
-                  <div className="p-6">
-                    <p className="text-sm text-gray-600 font-semibold">Pending KYC</p>
-                    <p className="text-4xl font-bold text-indigo-600 mt-2">{statisticsData.pendingFarmers}</p>
-                  </div>
-                </Card>
-              </div>
-
-              {/* Pending Farmers Section */}
-              {statisticsData.pendingFarmers > 0 && (
-                <Card className="bg-yellow-50 border-l-4 border-yellow-500">
-                  <div className="p-6">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4">Farmers Awaiting KYC Approval ({statisticsData.pendingFarmers})</h3>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-yellow-100">
-                          <tr>
-                            <th className="px-4 py-2 text-left font-semibold text-gray-700">Farmer Name</th>
-                            <th className="px-4 py-2 text-left font-semibold text-gray-700">Email</th>
-                            <th className="px-4 py-2 text-left font-semibold text-gray-700">Farm</th>
-                            <th className="px-4 py-2 text-left font-semibold text-gray-700">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {allUsers.filter(u => u.role === 'farmer' && u.kycStatus === 'pending').slice(0, 5).map(farmer => (
-                            <tr key={farmer._id} className="border-b hover:bg-yellow-50">
-                              <td className="px-4 py-3 font-semibold text-gray-900">{farmer.firstName} {farmer.lastName}</td>
-                              <td className="px-4 py-3 text-gray-600">{farmer.email}</td>
-                              <td className="px-4 py-3 text-gray-600">{farmer.farmName || 'N/A'}</td>
-                              <td className="px-4 py-3 space-x-2">
-                                <button className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-semibold transition">
-                                  Approve
-                                </button>
-                                <button className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold transition">
-                                  Reject
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </Card>
-              )}
-
-              <Card className="bg-white">
+        {/* Content */}
+        <div className="p-6">
+          <div className="space-y-6 max-w-7xl mx-auto">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+              <Card className="bg-blue-100 border-2 border-blue-600 shadow-xl hover:shadow-2xl transition transform hover:scale-105">
                 <div className="p-8">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4">Welcome to Admin Dashboard</h2>
-                  <p className="text-gray-600 mb-4">Use the sidebar to navigate between sections:</p>
-                  <ul className="space-y-2 text-gray-700">
-                    <li>• <strong>Users:</strong> Manage all users, view their details, and take actions</li>
-                    <li>• <strong>Crops:</strong> View all active crop listings with details</li>
-                    <li>• <strong>Dashboard:</strong> View platform statistics and overview</li>
-                  </ul>
+                  <p className="text-lg font-bold text-black">Total Users</p>
+                  <p className="text-5xl font-extrabold mt-4 text-blue-700">{statisticsData.totalUsers}</p>
+                </div>
+              </Card>
+
+              <Card className="bg-green-100 border-2 border-green-600 shadow-xl hover:shadow-2xl transition transform hover:scale-105">
+                <div className="p-8">
+                  <p className="text-lg font-bold text-black">Farmers</p>
+                  <p className="text-5xl font-extrabold mt-4 text-green-700">{statisticsData.farmers}</p>
+                </div>
+              </Card>
+
+              <Card className="bg-purple-100 border-2 border-purple-600 shadow-xl hover:shadow-2xl transition transform hover:scale-105">
+                <div className="p-8">
+                  <p className="text-lg font-bold text-black">Buyers</p>
+                  <p className="text-5xl font-extrabold mt-4 text-purple-700">{statisticsData.buyers}</p>
+                </div>
+              </Card>
+
+              <Card className="bg-orange-100 border-2 border-orange-600 shadow-xl hover:shadow-2xl transition transform hover:scale-105">
+                <div className="p-8">
+                  <p className="text-lg font-bold text-black">Total Crops</p>
+                  <p className="text-5xl font-extrabold mt-4 text-orange-700">{statisticsData.totalCrops}</p>
+                </div>
+              </Card>
+
+              <Card className="bg-indigo-100 border-2 border-indigo-600 shadow-xl hover:shadow-2xl transition transform hover:scale-105">
+                <div className="p-8">
+                  <p className="text-lg font-bold text-black">Pending KYC</p>
+                  <p className="text-5xl font-extrabold mt-4 text-indigo-700">{statisticsData.pendingFarmers}</p>
                 </div>
               </Card>
             </div>
+
+            {/* Dashboard Info */}
+            <Card className="bg-white shadow-md rounded-xl border border-slate-200">
+              <div className="p-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <Users size={28} className="text-green-600" />
+                  <h2 className="text-2xl font-bold text-gray-800">Quick Navigation</h2>
+                </div>
+                <p className="text-gray-600 mb-6">Access other sections of the admin panel:</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <button
+                    onClick={() => navigate('/admin/approvals')}
+                    className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg hover:shadow-md transition"
+                  >
+                    <p className="font-bold text-blue-700 text-lg">👤 KYC Approvals</p>
+                    <p className="text-sm text-blue-600 mt-1">Approve/Reject pending KYC</p>
+                  </button>
+                  <button
+                    onClick={() => navigate('/admin/management')}
+                    className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-lg hover:shadow-md transition"
+                  >
+                    <p className="font-bold text-purple-700 text-lg">🛡️ User Management</p>
+                    <p className="text-sm text-purple-600 mt-1">Freeze/Delete users</p>
+                  </button>
+                  <button
+                    onClick={() => navigate('/admin/crops')}
+                    className="p-4 bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 rounded-lg hover:shadow-md transition"
+                  >
+                    <p className="font-bold text-green-700 text-lg">🌾 Crop Moderation</p>
+                    <p className="text-sm text-green-600 mt-1">Freeze/Delete crops</p>
+                  </button>
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
+
+
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <LogoutConfirmationModal
+          onConfirm={async () => {
+            setShowLogoutConfirm(false);
+            await logout();
+            navigate('/');
+          }}
+          onCancel={() => setShowLogoutConfirm(false)}
+        />
+      )}
     </PageTransition>
   );
 }

@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import errorHandler from './middleware/errorHandler.js';
+import { resetServerStartTime, getServerStartTime } from './utils/serverTime.js';
 
 import authRoutes from './routes/authRoutes.js';
 import cropRoutes from './routes/cropRoutes.js';
@@ -13,12 +14,16 @@ import reviewRoutes from './routes/reviewRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import farmerRoutes from './routes/farmerRoutes.js';
+import dataAccessRoutes from './routes/dataAccessRoutes.js';
 
 // Load environment variables
 dotenv.config();
 
 // Initialize Express app
 const app = express();
+
+// Reset server start time on app initialization
+resetServerStartTime();
 
 // Connect to MongoDB
 connectDB();
@@ -42,7 +47,11 @@ if (process.env.NODE_ENV === 'development') {
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ message: 'Server is running', timestamp: new Date() });
+  res.status(200).json({ 
+    message: 'Server is running', 
+    timestamp: new Date(),
+    serverStartTime: getServerStartTime()
+  });
 });
 
 // API Routes
@@ -55,6 +64,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/farmer', farmerRoutes);
+app.use('/api/data', dataAccessRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

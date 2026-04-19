@@ -120,10 +120,12 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${token}`;
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh failed - redirect to login
+        // Refresh failed - clear auth data and let app redirect naturally
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+        localStorage.removeItem('userData');
+        localStorage.removeItem('verificationStatus');
+        // Don't redirect here - let the component handle it
         return Promise.reject(refreshError);
       }
     }

@@ -7,7 +7,7 @@ import PageTransition from '../components/common/PageTransition';
 export default function OrderTracking() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [_selectedOrder, _setSelectedOrder] = useState(null);
   const [expandedOrder, setExpandedOrder] = useState(null);
   const { addToast } = useToast();
 

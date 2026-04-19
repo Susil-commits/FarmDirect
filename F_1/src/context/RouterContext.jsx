@@ -3,18 +3,9 @@ import { createContext, useState, useContext, useEffect } from 'react';
 const RouterContext = createContext();
 
 export function RouterProvider({ children }) {
-  // Initialize with saved route from localStorage, default to /
-  const [currentRoute, setCurrentRoute] = useState(() => {
-    return localStorage.getItem('currentRoute') || '/';
-  });
-
-  // Save route to localStorage whenever it changes (but skip auth routes)
-  useEffect(() => {
-    // Don't persist auth routes - always default to home when returning
-    if (!currentRoute.includes('/auth/')) {
-      localStorage.setItem('currentRoute', currentRoute);
-    }
-  }, [currentRoute]);
+  // Initialize to home (/) on every refresh - routes are NOT persisted
+  // This ensures that refreshing any page redirects to home
+  const [currentRoute, setCurrentRoute] = useState('/');
 
   const navigate = (path) => {
     // Skip loading if already on same page

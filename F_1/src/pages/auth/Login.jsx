@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Mail, Lock, Eye, EyeOff, Github } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useRouter } from '../../context/RouterContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -7,11 +7,12 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import PageTransition from '../../components/common/PageTransition.jsx';
+import BackButton from '../../components/common/BackButton';
 import ForgotPassword from './ForgotPassword';
 
 export default function Login() {
   const { navigate } = useRouter();
-  const { login, redirectPath, clearRedirectPath, initiateGoogleLogin, initiateGitHubLogin } = useAuth();
+  const { login, redirectPath, clearRedirectPath } = useAuth();
   const { addToast } = useToast();
   const formRef = useRef(null);
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -22,8 +23,18 @@ export default function Login() {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.email.includes('@')) newErrors.email = 'Valid email is required';
-    if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    if (!formData.email || !formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!formData.email.includes('@')) {
+      newErrors.email = 'Valid email format required (example@domain.com)';
+    }
+    
+    if (!formData.password || !formData.password.trim()) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -45,46 +56,75 @@ export default function Login() {
     }
 
     setIsLoading(true);
+    setErrors({});
+    
     try {
+      console.log('🔐 Attempting login with email:', formData.email);
       const response = await login({
         email: formData.email,
         password: formData.password,
       });
 
-      addToast('Login successful! Redirecting...', 'success');
+      if (!response || !response.user) {
+        throw new Error('Invalid response from server');
+      }
 
-      // Clear form data immediately after successful login
+      console.log('✅ Login successful! User:', response.user);
+      addToast('Login successful!', 'success');
+
+      // Clear form immediately
       setFormData({ email: '', password: '' });
-      setErrors({});
-      
-      // Clear the form ref to remove data from DOM
       if (formRef.current) {
         formRef.current.reset();
       }
 
-      // Check verification status and route accordingly
-      setTimeout(() => {
-        const verificationStatus = response.user?.kycStatus || 'pending';
-        
-        // If user is not verified, redirect to verification page
-        if (verificationStatus !== 'verified') {
-          navigate('/verification/progress');
-        } else if (redirectPath) {
-          clearRedirectPath();
-          navigate(redirectPath);
-        } else if (response.user?.role === 'farmer') {
-          navigate('/farmer/dashboard');
-        } else if (response.user?.role === 'admin') {
-          navigate('/admin/dashboard');
-        } else {
-          navigate('/marketplace');
-        }
-      }, 1000);
+      // Give auth context time to update state (100ms) then navigate
+      const verificationStatus = response.user?.kycStatus || 'pending';
+      
+      if (verificationStatus !== 'verified') {
+        console.log('⏳ User not verified, redirecting to verification');
+        navigate('/verification/progress');
+      } else if (redirectPath) {
+        console.log('🔗 Redirecting to saved path:', redirectPath);
+        clearRedirectPath();
+        navigate(redirectPath);
+      } else if (response.user?.role === 'farmer') {
+        console.log('🌾 Farmer user, redirecting to dashboard');
+        navigate('/farmer/dashboard');
+      } else if (response.user?.role === 'admin') {
+        console.log('⚙️ Admin user, redirecting to admin panel');
+        navigate('/admin/dashboard');
+      } else {
+        console.log('🛒 Buyer user, redirecting to marketplace');
+        navigate('/marketplace');
+      }
     } catch (error) {
-      console.error('Login error:', error);
-      addToast(error?.message || 'Login failed. Please check your credentials.', 'error');
-    } finally {
+      console.error('❌ Login error:', error);
       setIsLoading(false);
+      
+      let errorMessage = 'Login failed';
+      
+      // Parse different error formats from backend
+      const errorData = error?.response?.data || error;
+      
+      if (typeof errorData === 'string') {
+        errorMessage = errorData;
+      } else if (errorData?.message) {
+        errorMessage = errorData.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      // Specific error handling
+      if (errorMessage.toLowerCase().includes('invalid') || errorMessage.toLowerCase().includes('not found')) {
+        errorMessage = 'Email or password is incorrect. Please try again.';
+      } else if (errorMessage.toLowerCase().includes('unverified') || errorMessage.toLowerCase().includes('verification')) {
+        errorMessage = 'Your account is pending verification. Please check your email.';
+      }
+      
+      console.log('📢 Showing error to user:', errorMessage);
+      addToast(errorMessage, 'error');
+      setErrors({ submit: errorMessage });
     }
   };
 
@@ -94,13 +134,18 @@ export default function Login() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-linear-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center py-12 px-4 relative">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center py-12 px-4 relative">
         <Card variant="deep" className="w-full max-w-md animate-scale-in relative z-10 bg-white/20 backdrop-blur-lg border border-white/10 shadow-2xl">
           <div className="p-10">
+            {/* Back Button */}
+            <div className="mb-6">
+              <BackButton label="Go Back" />
+            </div>
+
             {/* Logo */}
             {!showForgotPassword && (
               <div className="flex justify-center mb-8">
-                <div className="w-12 h-12 bg-linear-to-br from-green-600 to-green-500 rounded-lg flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-500 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-xl">🌾</span>
                 </div>
               </div>
@@ -180,37 +225,7 @@ export default function Login() {
                   </Button>
                 </form>
 
-                {/* Divider */}
-                <div className="flex items-center gap-4 my-8">
-                  <div className="flex-1 h-px bg-gray-300"></div>
-                  <span className="text-gray-500 text-sm">or</span>
-                  <div className="flex-1 h-px bg-gray-300"></div>
-                </div>
 
-                {/* Social Login */}
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  <button
-                    type="button"
-                    onClick={initiateGoogleLogin}
-                    className="py-2.5 px-4 bg-white border border-gray-300 hover:bg-gray-50 hover:border-gray-400 rounded-lg transition font-medium text-sm cursor-pointer flex items-center justify-center gap-2 group text-gray-900"
-                  >
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                    </svg>
-                    Google
-                  </button>
-                  <button
-                    type="button"
-                    onClick={initiateGitHubLogin}
-                    className="py-2.5 px-4 bg-gray-900 hover:bg-gray-800 rounded-lg transition font-medium text-sm cursor-pointer flex items-center justify-center gap-2 text-white group"
-                  >
-                    <Github size={20} />
-                    GitHub
-                  </button>
-                </div>
 
                 {/* Register Link */}
                 <p className="text-center text-gray-600 text-sm">

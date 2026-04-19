@@ -5,6 +5,7 @@ import { useRouter } from '../../context/RouterContext';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
+import BackButton from '../../components/common/BackButton';
 
 export default function BuyerVerification() {
   const { user } = useAuth();
@@ -177,23 +178,65 @@ export default function BuyerVerification() {
           </Card>
         )}
 
-        {/* Verification Status */}
+        {/* Verification Status - After Submission */}
         {allSubmitted && (
-          <Card className="mb-8 bg-blue-50 border-l-4 border-blue-600">
-            <div className="p-6">
-              <div className="flex items-start gap-4">
-                <Clock className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-1">Verification In Progress</h3>
-                  <p className="text-gray-700 text-sm mb-2">Your documents were submitted on {submittedAt}</p>
-                  <p className="text-gray-600 text-sm">Our admin team is reviewing your documents. You'll receive an email notification once verification is complete (typically 24-48 hours).</p>
+          <>
+            <Card className="mb-8 bg-blue-50 border-l-4 border-blue-600">
+              <div className="p-6">
+                <div className="flex items-start gap-4">
+                  <Clock className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-bold text-gray-900 mb-1">Verification In Progress</h3>
+                    <p className="text-gray-700 text-sm mb-2">Your documents were submitted on {submittedAt}</p>
+                    <p className="text-gray-600 text-sm">Our admin team is reviewing your documents. You'll receive an email notification once verification is complete (typically 24-48 hours).</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+
+            <Card className="bg-white shadow-lg text-center p-12 mb-8">
+              <Clock className="w-16 h-16 text-orange-600 mx-auto mb-4 animate-spin" />
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">Thank You for Submitting!</h2>
+              <p className="text-gray-700 mb-2">
+                Your buyer account verification documents have been successfully submitted.
+              </p>
+              <p className="text-gray-600 mb-8">
+                Our admin team is now reviewing your information. You'll receive an email notification once your account is verified (typically within 24-48 hours).
+              </p>
+              <div className="bg-blue-50 p-6 rounded-lg mb-6">
+                <p className="text-sm text-blue-800 mb-3">
+                  <strong>What to expect:</strong>
+                </p>
+                <ul className="text-sm text-blue-700 space-y-2 text-left">
+                  <li>• Documents are verified for authenticity and accuracy</li>
+                  <li>• Email notification upon approval with your shopping features unlocked</li>
+                  <li>• You can track your verification status by logging in anytime</li>
+                  <li>• Start shopping and placing orders once your account is verified</li>
+                </ul>
+              </div>
+              <div className="flex gap-3 justify-center">
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => window.location.reload()}
+                >
+                  Refresh Status
+                </Button>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => navigate('/marketplace')}
+                >
+                  Go to Marketplace
+                </Button>
+              </div>
+            </Card>
+          </>
         )}
 
-        {/* Progress Overview */}
+        {/* Upload Form - Only show before submission */}
+        {!allSubmitted && (
+          <>
         <Card className="mb-8">
           <div className="p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Verification Progress</h2>
@@ -350,6 +393,8 @@ export default function BuyerVerification() {
             {allSubmitted ? 'Documents Submitted' : 'Submit for Verification'}
           </Button>
         </div>
+          </>
+        )}
       </div>
     </div>
   );

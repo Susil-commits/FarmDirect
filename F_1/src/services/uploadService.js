@@ -83,7 +83,7 @@ export const uploadService = {
       });
       formData.append('documentType', documentType);
 
-      const response = await fetch('/api/kyc/submit', {
+      const response = await fetch('/api/auth/kyc/submit', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

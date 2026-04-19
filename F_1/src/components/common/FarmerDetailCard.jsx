@@ -28,7 +28,7 @@ export default function FarmerDetailCard({
   const isVerified = farmerData.verified || farmerData.farmer_verified;
 
   return (
-    <div className="border border-green-200 rounded-lg p-6 bg-linear-to-br from-green-50 via-emerald-50 to-teal-50 shadow-sm hover:shadow-md transition-shadow">
+    <div className="border border-green-200 rounded-lg p-6 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 shadow-sm hover:shadow-md transition-shadow">
       {/* Header: Farmer Title */}
       <div className="mb-4 pb-4 border-b border-green-200">
         <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wide">Sold By</h3>

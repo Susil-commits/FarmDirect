@@ -1,4 +1,4 @@
-import React, { createContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useState, useCallback, useEffect, useRef } from 'react';
 import { notificationService } from '../services/appService.js';
 
 export const ToastContext = createContext();
@@ -51,6 +51,7 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const pollingIntervalRef = useRef(null);
 
   const fetchNotifications = useCallback(async (page = 1) => {
     setLoading(true);
@@ -70,7 +71,8 @@ export const NotificationProvider = ({ children }) => {
       const response = await notificationService.getUnreadCount();
       setUnreadCount(response.unreadCount);
     } catch (err) {
-      console.error('Failed to fetch unread count:', err);
+      // Silently fail - notifications are not critical
+      console.debug('Failed to fetch unread count:', err);
     }
   }, []);
 
@@ -112,11 +114,17 @@ export const NotificationProvider = ({ children }) => {
     }
   }, []);
 
+  // Only start polling when component mounts and stop before unmounting
+  // Avoid unnecessary polling attempts that cause errors and re-renders
   useEffect(() => {
-    fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000); // Poll every 30 seconds
-    return () => clearInterval(interval);
-  }, [fetchUnreadCount]);
+    // Don't fetch notifications automatically - let components request them on demand
+    // This prevents constant re-renders and API calls
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
 
   return (
     <NotificationContext.Provider

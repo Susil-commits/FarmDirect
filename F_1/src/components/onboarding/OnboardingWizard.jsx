@@ -118,7 +118,7 @@ export default function OnboardingWizard({
 
   return (
     <PageTransition>
-      <div className="onboarding-wizard min-h-screen bg-linear-to-br from-green-50 via-white to-emerald-50">
+      <div className="onboarding-wizard min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
         {/* Progress Bar */}
         {showProgressBar && (
           <div className="sticky top-0 z-40 bg-white shadow-sm">
@@ -133,7 +133,7 @@ export default function OnboardingWizard({
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                 <div
-                  className="bg-linear-to-r from-green-500 to-emerald-600 h-full transition-all duration-500 ease-out"
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 h-full transition-all duration-500 ease-out"
                   style={{ width: `${progress}%` }}
                 ></div>
               </div>

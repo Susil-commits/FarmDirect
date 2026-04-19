@@ -1,22 +1,31 @@
 import { useState } from 'react';
-import { Menu, X, ShoppingCart, Heart, User, LogOut, Search, Bell, Home, Grid, Settings, Compass } from 'lucide-react';
+import { Menu, X, ShoppingCart, Heart, User, LogOut, Search, Bell, Home, Grid, Settings, Compass, CheckCircle } from 'lucide-react';
 import { useRouter } from '../../context/RouterContext';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { useNotifications } from '../../context/NotificationContext';
 import Avatar from '../common/Avatar';
 import MiniCart from '../MiniCart';
 import SearchBar from '../SearchBar';
+import EmptyCartWishlistModal from '../common/EmptyCartWishlistModal';
+import NotificationEmptyModal from '../common/NotificationEmptyModal';
+import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 import './Navbar.css';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMiniCartOpen, setIsMiniCartOpen] = useState(false);
+  const [showEmptyModal, setShowEmptyModal] = useState(false);
+  const [emptyModalType, setEmptyModalType] = useState('cart'); // 'cart' or 'wishlist'
+  const [showNotificationEmpty, setShowNotificationEmpty] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { navigate, currentRoute } = useRouter();
   const { user, logout } = useAuth();
   const { getTotalItems: getCartTotal } = useCart();
   const { wishlist } = useWishlist();
+  const { unreadCount } = useNotifications();
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleUserMenu = () => setIsUserMenuOpen(!isUserMenuOpen);
@@ -30,9 +39,19 @@ export default function Navbar() {
   };
 
   const handleLogout = async () => {
+    // Show confirmation modal instead of logging out directly
+    setShowLogoutConfirm(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    setShowLogoutConfirm(false);
     await logout();
     navigate('/');
     setIsUserMenuOpen(false);
+  };
+
+  const handleCancelLogout = () => {
+    setShowLogoutConfirm(false);
   };
 
   // Special handler for marketplace access with verification check
@@ -101,7 +120,15 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => handleNavigate('/')}>
+          <div 
+            className="flex items-center gap-2 cursor-pointer shrink-0" 
+            onClick={() => {
+              navigate('/');
+              setIsOpen(false);
+              setIsUserMenuOpen(false);
+              setIsMiniCartOpen(false);
+            }}
+          >
             <h1 className="text-2xl font-bold text-green-700">FarmDirect</h1>
           </div>
 
@@ -143,13 +170,13 @@ export default function Navbar() {
               <button
                 onClick={() => {
                   if (!user) {
-                    handleMarketplaceAccess();
+                    setEmptyModalType('wishlist');
+                    setShowEmptyModal(true);
                   } else {
                     handleNavigate('/wishlist');
                   }
                 }}
                 className="relative p-2 text-gray-600 hover:text-red-500 hover:bg-red-50 rounded-lg transition duration-200 cursor-pointer"
-                title={user ? "Wishlist" : "Browse & Save"}
                 aria-label={user ? `Wishlist with ${wishlist.length} items` : "Browse and save items"}
               >
                 <Heart size={20} fill={user && wishlist.length > 0 ? "currentColor" : "none"} />
@@ -166,13 +193,13 @@ export default function Navbar() {
               <button
                 onClick={() => {
                   if (!user) {
-                    handleMarketplaceAccess();
+                    setEmptyModalType('cart');
+                    setShowEmptyModal(true);
                   } else {
                     toggleMiniCart();
                   }
                 }}
                 className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition duration-200 cursor-pointer"
-                title={user ? "Shopping Cart" : "Start Shopping"}
                 aria-label={user ? `Shopping cart with ${cartTotal} items` : "Start shopping in marketplace"}
               >
                 <ShoppingCart size={20} />
@@ -187,12 +214,24 @@ export default function Navbar() {
             {/* Notifications - All authenticated users */}
             {user && (
               <button
+                onClick={() => {
+                  if (unreadCount === 0) {
+                    setShowNotificationEmpty(true);
+                  } else {
+                    // TODO: Navigate to notifications page or open notifications modal
+                    navigate('/notifications');
+                  }
+                }}
                 className="relative p-2 text-gray-600 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition duration-200 cursor-pointer"
-                title="Notifications"
-                aria-label="View notifications"
+                title={unreadCount > 0 ? `${unreadCount} new notification${unreadCount > 1 ? 's' : ''}` : "No new notifications"}
+                aria-label={unreadCount > 0 ? `View ${unreadCount} notifications` : "No notifications"}
               >
                 <Bell size={20} />
-                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-orange-500 rounded-full" aria-hidden="true"></span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-red-600 text-white text-xs rounded-full flex items-center justify-center font-bold px-1 animate-pulse">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </button>
             )}
 
@@ -214,7 +253,32 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* User Menu - Show when logged in */}
+            {/* Home Icon - Show when logged in and NOT on home page */}
+            {user && currentRoute !== '/' && (
+              <button
+                onClick={() => handleNavigate('/')}
+                className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition duration-200 cursor-pointer"
+                aria-label="Go to Home Page"
+              >
+                <Home size={20} className="text-green-600" />
+              </button>
+            )}
+
+            {/* Status Icon on Home Page ONLY - Show ONLY when logged in and on home page / */}
+            {user && currentRoute === '/' && (
+              <button
+                onClick={() => {
+                  window.history.back();
+                }}
+                className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition duration-200 cursor-pointer"
+                title="Go Back to Previous Page"
+                aria-label="Go back to previous page"
+              >
+                <CheckCircle size={20} className="text-green-600" />
+              </button>
+            )}
+
+            {/* User Menu - Show when logged in on all pages */}
             {user && (
               <div className="relative hidden sm:block">
                 <button
@@ -227,46 +291,56 @@ export default function Navbar() {
 
                 {/* Dropdown Menu */}
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                     {/* User Info Header */}
                     <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-3">
                       <Avatar user={user} size="md" />
-                      <div className="flex-1">
-                        <p className="font-bold text-gray-900 text-sm">{user.name || 'User'}</p>
-                        <p className="text-xs text-gray-600">{user.email}</p>
-                        {user.verified && (
-                          <p className="text-xs text-green-600 font-semibold">✓ Verified</p>
-                        )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-gray-900 text-sm truncate">{user.name || 'User'}</p>
+                        <p className="text-xs text-gray-600 truncate">{user.email}</p>
                       </div>
                     </div>
 
                     <button
                       onClick={() => handleNavigate(user.role === 'admin' ? '/admin/profile' : '/profile')}
-                      className="w-full text-left px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-600 transition cursor-pointer"
+                      className="w-full text-left px-4 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-600 transition cursor-pointer text-sm font-medium flex items-center gap-2"
                     >
-                      👤 My Profile
+                      <span>👤</span>
+                      <span>My Profile</span>
                     </button>
                     {user.role === 'buyer' && (
                       <button
                         onClick={() => handleNavigate('/buyer/dashboard')}
-                        className="w-full text-left px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-600 transition cursor-pointer"
+                        className="w-full text-left px-4 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-600 transition cursor-pointer text-sm font-medium flex items-center gap-2"
                       >
-                        📊 My Dashboard
+                        <span>📊</span>
+                        <span>My Dashboard</span>
                       </button>
                     )}
                     {user.role === 'farmer' && (
                       <button
                         onClick={() => handleNavigate('/farmer/dashboard')}
-                        className="w-full text-left px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-600 transition cursor-pointer"
+                        className="w-full text-left px-4 py-2.5 text-gray-700 hover:bg-green-50 hover:text-green-600 transition cursor-pointer text-sm font-medium flex items-center gap-2"
                       >
-                        🌾 My Farm
+                        <span>🌾</span>
+                        <span>My Farm</span>
+                      </button>
+                    )}
+                    {user.role === 'admin' && (
+                      <button
+                        onClick={() => handleNavigate('/admin/dashboard')}
+                        className="w-full text-left px-4 py-2.5 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition cursor-pointer text-sm font-medium flex items-center gap-2"
+                      >
+                        <span>⚙️</span>
+                        <span>Admin Dashboard</span>
                       </button>
                     )}
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition flex items-center gap-2 cursor-pointer"
+                      className="w-full text-left px-4 py-2.5 text-red-600 hover:bg-red-50 transition flex items-center gap-2 cursor-pointer text-sm font-medium border-t border-gray-200 mt-1"
                     >
-                      <LogOut size={16} /> Logout
+                      <LogOut size={16} />
+                      <span>Logout</span>
                     </button>
                   </div>
                 )}
@@ -455,6 +529,29 @@ export default function Navbar() {
       
       {/* Mini Cart Dropdown */}
       <MiniCart isOpen={isMiniCartOpen} onClose={() => setIsMiniCartOpen(false)} />
+
+      {/* Empty Cart/Wishlist Modal */}
+      {showEmptyModal && (
+        <EmptyCartWishlistModal
+          type={emptyModalType}
+          onClose={() => setShowEmptyModal(false)}
+        />
+      )}
+
+      {/* Empty Notification Modal */}
+      {showNotificationEmpty && (
+        <NotificationEmptyModal
+          onClose={() => setShowNotificationEmpty(false)}
+        />
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <LogoutConfirmationModal
+          onConfirm={handleConfirmLogout}
+          onCancel={handleCancelLogout}
+        />
+      )}
     </nav>
   );
 }

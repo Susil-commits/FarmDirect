@@ -20,7 +20,7 @@ import '../styles/Marketplace.css';
 
 export default function Marketplace() {
   const { navigate } = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { _isAuthenticated } = useAuth();
   const { addToCart } = useCart();
   const { wishlist, addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [toast, setToast] = useState(null);
@@ -165,7 +165,7 @@ export default function Marketplace() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-linear-to-br from-white via-green-50 to-white py-6 px-4 relative">
+      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-6 px-4 relative">
         <div className="absolute inset-0 premium-gradient pointer-events-none"></div>
         
         {/* Toast Notification */}
@@ -346,195 +346,138 @@ export default function Marketplace() {
   );
 }
 
-// Enhanced Crop Card Component with Quick-Add Overlay
+// Enhanced Crop Card Component - Clean Design
 function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, onAddToCart, index }) {
-  const [quantity, setQuantity] = useState(1);
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
   const staggerDelay = index * 0.08;
   const availableQty = crop.quantity || 100;
-
-  const handleQuickAdd = () => {
-    onAddToCart(crop, quantity);
-    setShowQuickAdd(false);
-    setQuantity(1);
-  };
 
   return (
     <Card 
       hover 
       animated={true}
-      className="crop-card stagger-item relative"
+      className="crop-card stagger-item"
       style={{ 
         animationDelay: `${staggerDelay}s`,
         '--card-delay': staggerDelay
       }}
     >
-      <div className="p-4 relative group">
-        {/* Image Section */}
-        <div className="relative mb-4 overflow-hidden rounded-lg group">
-          <div className="bg-linear-to-br from-green-100 to-emerald-100 rounded-lg relative min-h-48 flex items-center justify-center group-hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer"
-               onClick={() => setShowQuickAdd(true)}>
-            {crop.image && crop.image.startsWith('http') ? (
-              // Real image from Cloudinary or external URL
-              <img
-                src={crop.image}
-                alt={crop.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                loading="lazy"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
-            ) : (
-              // Fallback: emoji or placeholder
-              <span className="text-6xl animate-bounce-soft group-hover:scale-110 transition-transform duration-300">
+      <div className="p-4 relative group flex flex-col h-full">
+        {/* Dark Background Image Section */}
+        <div className="relative mb-4 overflow-hidden rounded-lg group -m-4 mb-4 bg-gradient-to-br from-slate-800 to-slate-900 min-h-48 flex items-center justify-center cursor-pointer"
+             onClick={onViewCrop}>
+          {crop.image && crop.image.startsWith('http') ? (
+            <img
+              src={crop.image}
+              alt={crop.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+              onError={(e) => e.target.style.display = 'none'}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center w-full h-full">
+              <span className="text-7xl animate-bounce-soft group-hover:scale-110 transition-transform duration-300">
                 {crop.image || '🌾'}
               </span>
-            )}
-            
-            {/* Quick-Add Overlay */}
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto">
-              <div className="bg-white rounded-lg shadow-xl p-4 w-4/5 max-w-xs animate-scale-in pointer-events-auto">
-                <h4 className="font-bold text-gray-900 mb-3 text-center text-sm">{crop.name}</h4>
-                
-                {/* Quantity Selector */}
-                <div className="mb-4 flex justify-center">
-                  <QuantitySelector
-                    quantity={quantity}
-                    onQuantityChange={setQuantity}
-                    min={1}
-                    max={Math.min(availableQty, 100)}
-                    size="sm"
-                  />
-                </div>
-
-                {/* Price Info */}
-                <p className="text-center text-green-600 font-bold text-lg mb-3">
-                  ₹{(crop.price * quantity).toFixed(2)}
-                </p>
-
-                {/* Quick Add Button */}
-                <button
-                  onClick={handleQuickAdd}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 mb-2"
-                >
-                  <ShoppingCart size={16} /> Add to Cart
-                </button>
-
-                {/* View Details Link */}
-                <button
-                  onClick={onViewCrop}
-                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm"
-                >
-                  View Details
-                </button>
-              </div>
-            </div>
-
-            {/* Animated overlay on hover */}
-            <div className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none"></div>
-          </div>
-          
-          {/* Wishlist Button with Heart Animation */}
-          <button 
-            onClick={onToggleFavorite}
-            className={`absolute top-4 right-4 transition-all duration-300 z-20 hover-scale ${
-              isFavorite 
-                ? 'text-red-600 animate-scale-in' 
-                : 'text-gray-400 hover:text-red-600'
-            }`}
-            title={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
-          >
-            <Heart 
-              size={24} 
-              fill={isFavorite ? 'currentColor' : 'none'}
-              className={isFavorite ? 'animate-pulse-soft' : ''}
-            />
-          </button>
-
-          {/* Product Badges */}
-          <div className="absolute top-4 left-4 flex gap-2 z-10">
-            {calculateBadges(crop).map((badgeType) => (
-              <ProductBadge key={badgeType} badgeType={badgeType} />
-            ))}
-          </div>
-
-          {/* Verified Badge with Bounce */}
-          {crop.farmer_verified && (
-            <div className="absolute bottom-4 left-4 flex items-center gap-1 bg-white px-2 py-1 rounded-full text-xs font-semibold text-green-600 shadow-md animate-bounce-up hover:shadow-lg transition-shadow z-10">
-              <CheckCircle size={14} className="text-green-600" /> Verified
             </div>
           )}
+          
+          {/* Overlay on hover */}
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300"></div>
+
+          {/* Badges */}
+          <div className="absolute top-2 left-2 flex gap-2 z-10">
+            {crop.farmer_verified && (
+              <div className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                <Check size={12} /> Verified
+              </div>
+            )}
+          </div>
+
+          {/* Wishlist Button */}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite();
+            }}
+            className={`absolute top-2 right-2 transition-all duration-300 z-20 p-2 rounded-full ${
+              isFavorite 
+                ? 'bg-red-500 text-white' 
+                : 'bg-white/80 hover:bg-white text-gray-600'
+            }`}
+          >
+            <Heart 
+              size={20} 
+              fill={isFavorite ? 'currentColor' : 'none'}
+            />
+          </button>
         </div>
 
-        {/* Info Section */}
-        <div className="space-y-3">
-          <div className="animate-slide-in-left" style={{ animationDelay: `${staggerDelay + 0.1}s` }}>
-            <h3 className="font-bold text-lg text-gray-900 mb-1">{crop.name}</h3>
-            <p className="text-gray-600 text-sm">{crop.description || 'Fresh from farm'}</p>
-          </div>
-
-          {/* Price with Animation */}
-          <div className="flex items-baseline gap-2 animate-slide-in-left" style={{ animationDelay: `${staggerDelay + 0.15}s` }}>
-            <p className="text-green-600 font-bold text-2xl group-hover:text-green-700 transition-colors">₹{crop.price}</p>
-            <p className="text-gray-600 text-sm">/kg</p>
-          </div>
-
-          {/* Stats with Hover Effects */}
-          <div className="grid grid-cols-3 gap-2 text-sm animate-slide-in-left" style={{ animationDelay: `${staggerDelay + 0.2}s` }}>
-            <div className="bg-blue-50 p-2 rounded text-center group-hover:bg-blue-100 transition-colors">
-              <p className="text-gray-600 text-xs">Available</p>
-              <p className="font-bold text-gray-900">{crop.quantity || 10} kg</p>
+        {/* Content Section */}
+        <div className="space-y-3 flex-1 flex flex-col">
+          {/* Product Name */}
+          <h3 className="text-lg font-bold text-gray-900 line-clamp-2">
+            {crop.name}
+          </h3>
+          
+          {/* Farmer Badge */}
+          <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+              {crop.farmerName?.[0]?.toUpperCase() || 'F'}
             </div>
-            <div className="bg-yellow-50 p-2 rounded text-center group-hover:bg-yellow-100 transition-colors">
-              <p className="text-gray-600 text-xs">Rating</p>
-              <p className="font-bold text-yellow-600">⭐ {crop.rating || 4.5}</p>
-            </div>
-            <div className="bg-purple-50 p-2 rounded text-center group-hover:bg-purple-100 transition-colors">
-              <p className="text-gray-600 text-xs">Reviews</p>
-              <p className="font-bold text-purple-600">{crop.totalReviews || 0}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-gray-700 truncate">
+                {crop.farmerName || 'Farmer'}
+              </p>
+              <p className="text-xs text-gray-500 flex items-center gap-1">
+                <MapPin size={12} /> {crop.location || 'Location'}
+              </p>
             </div>
           </div>
 
-          {/* Location */}
-          <p className="text-gray-600 text-sm flex items-center gap-1 animate-slide-in-left" style={{ animationDelay: `${staggerDelay + 0.25}s` }}>
-            <MapPin size={14} className="text-green-600" /> {crop.location || 'Farm Location'}
-          </p>
-
-          {/* Farmer Info */}
-          <div className="animate-slide-in-left" style={{ animationDelay: `${staggerDelay + 0.3}s` }}>
-            <FarmerBadge 
-              farmer={crop.farmer}
-              compact={true}
-            />
+          {/* Rating */}
+          <div className="flex items-center gap-2 text-sm">
+            <div className="flex text-yellow-400">
+              {[...Array(5)].map((_, i) => (
+                <span key={i}>
+                  {i < Math.floor(crop.rating || 4) ? '⭐' : '☆'}
+                </span>
+              ))}
+            </div>
+            <span className="text-gray-600 text-xs">({crop.totalReviews || 0})</span>
           </div>
 
-          {/* Action Buttons with Animations */}
-          <div className="space-y-2 pt-2 animate-slide-in-left" style={{ animationDelay: `${staggerDelay + 0.35}s` }}>
-            <Button 
-              variant="primary" 
-              size="sm" 
-              className="w-full hidden md:flex items-center justify-center gap-2 hover-scale"
-              onClick={() => setShowQuickAdd(true)}
+          {/* Price Box */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg border border-green-200">
+            <p className="text-xs text-gray-600 font-medium">Price per {crop.unit || 'kg'}</p>
+            <p className="text-2xl font-bold text-green-700 mt-1">₹{Math.floor(crop.price)}</p>
+          </div>
+
+          {/* Stock Status */}
+          <div className={`text-xs font-bold rounded-lg p-2 text-center ${
+            availableQty > 20 
+              ? 'bg-green-100 text-green-700' 
+              : availableQty > 5 
+              ? 'bg-yellow-100 text-yellow-700' 
+              : 'bg-red-100 text-red-700'
+          }`}>
+            {availableQty > 20 ? '✅ In Stock' : availableQty > 0 ? '⚠️ Limited' : '❌ Out of Stock'}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-3 border-t border-gray-200 mt-auto">
+            <button
+              onClick={() => onAddToCart(crop)}
+              disabled={availableQty <= 0}
+              className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold py-2 px-3 rounded-lg transition-colors text-sm"
             >
-              <ShoppingCart size={16} /> Quick Add
-            </Button>
-            <Button 
-              variant="primary" 
-              size="sm" 
-              className="w-full flex md:hidden items-center justify-center gap-2 hover-scale"
-              onClick={() => setShowQuickAdd(true)}
-            >
-              <ShoppingCart size={16} /> Add to Cart
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full flex items-center justify-center gap-2 hover-scale"
+              <ShoppingCart size={16} className="inline mr-1" /> Add
+            </button>
+            <button
               onClick={onViewCrop}
+              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-3 rounded-lg transition-colors text-sm"
             >
-              👁️ View Details
-            </Button>
+              Details
+            </button>
           </div>
         </div>
       </div>

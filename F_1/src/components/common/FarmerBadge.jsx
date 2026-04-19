@@ -56,7 +56,7 @@ export default function FarmerBadge({
   // Full version for detail pages
   return (
     <div 
-      className="border border-green-200 rounded-lg p-3 bg-linear-to-br from-green-50 to-emerald-50 hover:shadow-md transition-shadow cursor-pointer"
+      className="border border-green-200 rounded-lg p-3 bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-md transition-shadow cursor-pointer"
       onClick={onClick}
     >
       <div className="flex items-start gap-3">

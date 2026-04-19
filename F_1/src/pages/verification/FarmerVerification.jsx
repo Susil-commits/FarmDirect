@@ -5,6 +5,8 @@ import { useRouter } from '../../context/RouterContext';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
+import BackButton from '../../components/common/BackButton';
+import uploadService from '../../services/uploadService';
 
 export default function FarmerVerification() {
   const { user } = useAuth();
@@ -19,6 +21,7 @@ export default function FarmerVerification() {
 
   const [submittedAt, setSubmittedAt] = useState(null);
   const [allSubmitted, setAllSubmitted] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Redirect non-farmers
   if (!user || user.role !== 'farmer') {
@@ -101,18 +104,38 @@ export default function FarmerVerification() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const allUploaded = Object.values(documents).every(doc => doc.file);
     if (!allUploaded) {
       alert('Please upload all required documents');
       return;
     }
-    setSubmittedAt(new Date().toLocaleDateString());
-    setAllSubmitted(true);
-    alert('Documents submitted for verification. Our team will review within 24-48 hours.');
+
+    try {
+      setIsUploading(true);
+      
+      // Collect all files
+      const allFiles = Object.values(documents)
+        .map(doc => doc.file)
+        .filter(Boolean);
+
+      // Upload to backend
+      const result = await uploadService.uploadKYCDocuments(allFiles, 'farmer_kyc');
+      
+      console.log('✅ KYC documents submitted:', result);
+      
+      setSubmittedAt(new Date().toLocaleDateString());
+      setAllSubmitted(true);
+      alert('✅ Documents submitted successfully! Our team will review within 24-48 hours.');
+    } catch (error) {
+      console.error('❌ Upload error:', error);
+      alert('❌ Error submitting documents. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  const getStatusColor = (status) => {
+  const _getStatusColor = (status) => {
     switch (status) {
       case 'verified': return 'text-green-600';
       case 'pending': return 'text-blue-600';
@@ -139,23 +162,65 @@ export default function FarmerVerification() {
           <p className="text-gray-600">Complete your profile verification to start selling on FarmDirect</p>
         </div>
 
-        {/* Verification Status */}
+        {/* Verification Status - After Submission */}
         {allSubmitted && (
-          <Card className="mb-8 bg-blue-50 border-l-4 border-blue-600">
-            <div className="p-6">
-              <div className="flex items-start gap-4">
-                <Clock className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-1">Verification In Progress</h3>
-                  <p className="text-gray-700 text-sm mb-2">Your documents were submitted on {submittedAt}</p>
-                  <p className="text-gray-600 text-sm">Our admin team is reviewing your documents. You'll receive an email notification once verification is complete (typically 24-48 hours).</p>
+          <>
+            <Card className="mb-8 bg-blue-50 border-l-4 border-blue-600">
+              <div className="p-6">
+                <div className="flex items-start gap-4">
+                  <Clock className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-bold text-gray-900 mb-1">Verification In Progress</h3>
+                    <p className="text-gray-700 text-sm mb-2">Your documents were submitted on {submittedAt}</p>
+                    <p className="text-gray-600 text-sm">Our admin team is reviewing your documents. You'll receive an email notification once verification is complete (typically 24-48 hours).</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+
+            <Card className="bg-white shadow-lg text-center p-12 mb-8">
+              <Clock className="w-16 h-16 text-orange-600 mx-auto mb-4 animate-spin" />
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">Thank You for Submitting!</h2>
+              <p className="text-gray-700 mb-2" >
+                Your farmer account verification documents have been successfully submitted.
+              </p>
+              <p className="text-gray-600 mb-8">
+                Our admin team is now reviewing your information. You'll receive an email notification once your account is verified (typically within 24-48 hours).
+              </p>
+              <div className="bg-green-50 p-6 rounded-lg mb-6">
+                <p className="text-sm text-green-800 mb-3">
+                  <strong>What to expect:</strong>
+                </p>
+                <ul className="text-sm text-green-700 space-y-2 text-left">
+                  <li>• Documents are verified for authenticity and accuracy</li>
+                  <li>• Email notification upon approval with your seller dashboard access</li>
+                  <li>• You can track your verification status by logging in anytime</li>
+                  <li>• Start selling crops once your account is verified</li>
+                </ul>
+              </div>
+              <div className="flex gap-3 justify-center">
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => window.location.reload()}
+                >
+                  Refresh Status
+                </Button>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => navigate('/farmer/dashboard')}
+                >
+                  Go to Dashboard
+                </Button>
+              </div>
+            </Card>
+          </>
         )}
 
-        {/* Progress Overview */}
+        {/* Upload Form - Only show before submission */}
+        {!allSubmitted && (
+          <>
         <Card className="mb-8">
           <div className="p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Verification Progress</h2>
@@ -290,6 +355,7 @@ export default function FarmerVerification() {
             variant="secondary"
             size="lg"
             className="flex-1"
+            disabled={isUploading}
           >
             Skip for Now
           </Button>
@@ -298,11 +364,13 @@ export default function FarmerVerification() {
             variant="primary"
             size="lg"
             className="flex-1"
-            disabled={allSubmitted}
+            disabled={allSubmitted || isUploading}
           >
-            {allSubmitted ? 'Documents Submitted' : 'Submit for Verification'}
+            {isUploading ? '⏳ Submitting...' : allSubmitted ? 'Documents Submitted' : 'Submit for Verification'}
           </Button>
         </div>
+          </>
+        )}
       </div>
     </div>
   );

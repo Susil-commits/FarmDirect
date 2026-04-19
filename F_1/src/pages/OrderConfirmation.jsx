@@ -60,7 +60,7 @@ export default function OrderConfirmation() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-linear-to-br from-green-50 via-emerald-50 to-green-100 py-12 px-4 relative">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 py-12 px-4 relative">
         <div className="max-w-4xl mx-auto relative z-10">
           
           {/* Success Message */}

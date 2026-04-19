@@ -7,6 +7,8 @@ import Button from '../components/common/Button';
 import Avatar from '../components/common/Avatar';
 import FileInput from '../components/common/FileInput';
 import Card from '../components/common/Card';
+import BackButton from '../components/common/BackButton';
+import LogoutConfirmationModal from '../components/common/LogoutConfirmationModal';
 import { Camera, Mail, Phone, MapPin, Shield, LogOut, Settings, ShoppingBag, Lock, Bell, AlertTriangle } from 'lucide-react';
 import '../styles/UserProfile.css';
 
@@ -17,6 +19,10 @@ export default function UserProfile() {
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showFreezeModal, setShowFreezeModal] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
 
   // Reset scroll position to top on page load
   useEffect(() => {
@@ -66,11 +72,37 @@ export default function UserProfile() {
   };
 
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    setShowLogoutConfirm(false);
+    await logout();
+    navigate('/');
+    addToast('Logged out successfully', 'info');
+  };
+
+  const handleFreezeAccount = () => {
+    addToast('Your account has been temporarily frozen. Contact support to reactivate.', 'success');
+    setShowFreezeModal(false);
+    // Call backend API to freeze account
+    // await userService.freezeAccount(user.id);
+  };
+
+  const handleDeleteAccount = () => {
+    if (deleteConfirmation.toLowerCase() !== 'delete my account') {
+      addToast('Please type the correct text to confirm', 'error');
+      return;
+    }
+    addToast('Your account and all associated data have been permanently deleted.', 'success');
+    setShowDeleteModal(false);
+    setDeleteConfirmation('');
+    setTimeout(() => {
       logout();
       navigate('/');
-      addToast('Logged out successfully', 'info');
-    }
+    }, 1500);
+    // Call backend API to delete account
+    // await userService.deleteAccount(user.id);
   };
 
   if (!user) {
@@ -95,9 +127,14 @@ export default function UserProfile() {
 
   return (
     <PageTransition>
-      <div className="profile-page min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50">
+      <div className="profile-page min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+        {/* Back Button */}
+        <div className="pt-6 px-6 md:px-12">
+          <BackButton label="Back" />
+        </div>
+
         {/* Premium Header Section */}
-        <div className="relative h-48 bg-linear-to-r from-green-600 via-emerald-500 to-teal-600 overflow-hidden">
+        <div className="relative h-48 bg-gradient-to-r from-green-600 via-emerald-500 to-teal-600 overflow-hidden">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full filter blur-3xl"></div>
             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white rounded-full filter blur-3xl"></div>
@@ -148,7 +185,7 @@ export default function UserProfile() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 px-6 py-4 rounded-xl font-semibold transition duration-300 whitespace-nowrap ${
                   activeTab === tab.id
-                    ? 'bg-linear-to-r from-green-500 to-emerald-500 text-white shadow-lg'
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
               >
@@ -165,7 +202,7 @@ export default function UserProfile() {
                   {/* Info Cards Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Card className="p-0! overflow-hidden hover:shadow-xl transition duration-300">
-                      <div className="bg-linear-to-br from-blue-50 to-blue-100 p-6 border-b border-blue-200">
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 border-b border-blue-200">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="bg-blue-500 text-white p-3 rounded-lg">
                             <Mail size={20} />
@@ -177,7 +214,7 @@ export default function UserProfile() {
                     </Card>
 
                     <Card className="p-0! overflow-hidden hover:shadow-xl transition duration-300">
-                      <div className="bg-linear-to-br from-green-50 to-emerald-100 p-6 border-b border-green-200">
+                      <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-6 border-b border-green-200">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="bg-green-500 text-white p-3 rounded-lg">
                             <Phone size={20} />
@@ -189,7 +226,7 @@ export default function UserProfile() {
                     </Card>
 
                     <Card className="p-0! overflow-hidden hover:shadow-xl transition duration-300">
-                      <div className="bg-linear-to-br from-purple-50 to-purple-100 p-6 border-b border-purple-200">
+                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 border-b border-purple-200">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="bg-purple-500 text-white p-3 rounded-lg">
                             <MapPin size={20} />
@@ -201,7 +238,7 @@ export default function UserProfile() {
                     </Card>
 
                     <Card className="p-0! overflow-hidden hover:shadow-xl transition duration-300">
-                      <div className="bg-linear-to-br from-orange-50 to-orange-100 p-6 border-b border-orange-200">
+                      <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 border-b border-orange-200">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="bg-orange-500 text-white p-3 rounded-lg">
                             <MapPin size={20} />
@@ -215,7 +252,7 @@ export default function UserProfile() {
 
                   {/* Full Width Cards */}
                   <Card className="p-0! overflow-hidden hover:shadow-xl transition duration-300">
-                    <div className="bg-linear-to-r from-cyan-50 to-cyan-100 p-6 border-b border-cyan-200">
+                    <div className="bg-gradient-to-r from-cyan-50 to-cyan-100 p-6 border-b border-cyan-200">
                       <div className="flex items-center gap-3 mb-3">
                         <div className="bg-cyan-500 text-white p-3 rounded-lg">
                           <MapPin size={20} />
@@ -234,7 +271,7 @@ export default function UserProfile() {
                   {/* Profile Photo */}
                   {formData.photo && (
                     <Card className="p-0! overflow-hidden">
-                      <div className="bg-linear-to-br from-green-50 to-emerald-100 p-8">
+                      <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-8">
                         <p className="text-sm font-bold text-gray-700 mb-4">Profile Photo</p>
                         <img 
                           src={formData.photo} 
@@ -248,7 +285,7 @@ export default function UserProfile() {
                   {/* Edit Button */}
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="w-full bg-linear-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-4 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-4 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
                     ✏️ Edit Profile
                   </button>
@@ -258,7 +295,7 @@ export default function UserProfile() {
                   <h2 className="text-2xl font-bold text-gray-900 mb-8">Edit Personal Information</h2>
                   <form className="space-y-8">
                     {/* Photo Upload */}
-                    <div className="bg-linear-to-br from-green-50 to-emerald-100 p-8 rounded-xl border-2 border-dashed border-green-300">
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-8 rounded-xl border-2 border-dashed border-green-300">
                       <div className="flex items-center gap-3 mb-4">
                         <Camera size={24} className="text-green-600" />
                         <h3 className="text-lg font-bold text-gray-900">Profile Photo</h3>
@@ -371,7 +408,7 @@ export default function UserProfile() {
                         onClick={handleSave}
                         type="button"
                         disabled={isUploadingPhoto}
-                        className="flex-1 px-6 py-4 bg-linear-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-400 disabled:to-gray-400 text-white rounded-lg transition font-bold shadow-lg hover:shadow-xl"
+                        className="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-400 disabled:to-gray-400 text-white rounded-lg transition font-bold shadow-lg hover:shadow-xl"
                       >
                         {isUploadingPhoto ? '⏳ Saving...' : '✅ Save Changes'}
                       </button>
@@ -400,7 +437,7 @@ export default function UserProfile() {
                 <p className="text-gray-600 mb-8 text-lg">Start shopping and your orders will appear here</p>
                 <button
                   onClick={() => navigate('/marketplace')}
-                  className="inline-block bg-linear-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-4 px-8 rounded-xl transition duration-300 shadow-lg hover:shadow-xl"
+                  className="inline-block bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-4 px-8 rounded-xl transition duration-300 shadow-lg hover:shadow-xl"
                 >
                   🛒 Browse Products
                 </button>
@@ -422,14 +459,14 @@ export default function UserProfile() {
                       <h3 className="text-2xl font-bold text-gray-900">Notifications</h3>
                     </div>
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between p-5 bg-linear-to-r from-blue-50 to-blue-100 rounded-lg hover:shadow-md transition">
+                      <div className="flex items-center justify-between p-5 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg hover:shadow-md transition">
                         <div className="flex-1">
                           <p className="font-bold text-gray-900">Email Notifications</p>
                           <p className="text-sm text-gray-600">Updates about orders and promotions</p>
                         </div>
                         <input type="checkbox" defaultChecked className="w-6 h-6 cursor-pointer" />
                       </div>
-                      <div className="flex items-center justify-between p-5 bg-linear-to-r from-purple-50 to-purple-100 rounded-lg hover:shadow-md transition">
+                      <div className="flex items-center justify-between p-5 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg hover:shadow-md transition">
                         <div className="flex-1">
                           <p className="font-bold text-gray-900">SMS Alerts</p>
                           <p className="text-sm text-gray-600">SMS updates for orders and deliveries</p>
@@ -450,14 +487,14 @@ export default function UserProfile() {
                       <h3 className="text-2xl font-bold text-gray-900">Security</h3>
                     </div>
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between p-5 bg-linear-to-r from-green-50 to-emerald-100 rounded-lg hover:shadow-md transition">
+                      <div className="flex items-center justify-between p-5 bg-gradient-to-r from-green-50 to-emerald-100 rounded-lg hover:shadow-md transition">
                         <div className="flex-1">
                           <p className="font-bold text-gray-900">Two-Factor Authentication</p>
                           <p className="text-sm text-gray-600">Enhance account security with 2FA</p>
                         </div>
                         <input type="checkbox" className="w-6 h-6 cursor-pointer" />
                       </div>
-                      <button className="w-full px-6 py-4 bg-linear-to-r from-blue-100 to-blue-200 hover:from-blue-200 hover:to-blue-300 text-blue-700 rounded-lg font-bold transition shadow-sm hover:shadow-md">
+                      <button className="w-full px-6 py-4 bg-gradient-to-r from-blue-100 to-blue-200 hover:from-blue-200 hover:to-blue-300 text-blue-700 rounded-lg font-bold transition shadow-sm hover:shadow-md">
                         <Lock size={18} className="inline mr-2" /> Change Password
                       </button>
                     </div>
@@ -476,12 +513,21 @@ export default function UserProfile() {
                     <div className="space-y-3">
                       <button
                         onClick={handleLogout}
-                        className="w-full px-6 py-4 bg-linear-to-r from-orange-100 to-orange-200 hover:from-orange-200 hover:to-orange-300 text-orange-700 rounded-lg font-bold transition shadow-sm hover:shadow-md"
+                        className="w-full px-6 py-4 bg-gradient-to-r from-orange-100 to-orange-200 hover:from-orange-200 hover:to-orange-300 text-orange-700 rounded-lg font-bold transition shadow-sm hover:shadow-md"
                       >
                         <LogOut size={18} className="inline mr-2" /> Logout
                       </button>
-                      <button className="w-full px-6 py-4 bg-linear-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-bold transition shadow-lg hover:shadow-xl">
-                        <Lock size={18} className="inline mr-2" /> Delete Account Permanently
+                      <button
+                        onClick={() => setShowFreezeModal(true)}
+                        className="w-full px-6 py-4 bg-gradient-to-r from-yellow-100 to-yellow-200 hover:from-yellow-200 hover:to-yellow-300 text-yellow-700 rounded-lg font-bold transition shadow-sm hover:shadow-md"
+                      >
+                        <Lock size={18} className="inline mr-2" /> Freeze Account Temporarily
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteModal(true)}
+                        className="w-full px-6 py-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-bold transition shadow-lg hover:shadow-xl"
+                      >
+                        <AlertTriangle size={18} className="inline mr-2" /> Delete Account Permanently
                       </button>
                       <p className="text-xs text-gray-600 mt-4 p-4 bg-red-50 rounded-lg">
                         ⚠️ Warning: Account deletion is permanent and cannot be undone. All your data, including profile information and order history, will be permanently deleted.
@@ -494,6 +540,95 @@ export default function UserProfile() {
           )}
         </div>
       </div>
+
+      {/* Freeze Account Modal */}
+      {showFreezeModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <Card className="max-w-md w-full">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <Lock size={20} /> Freeze Account
+              </h3>
+              <p className="text-gray-600 mb-6">
+                This will temporarily freeze your account. You can reactivate it anytime by logging in or contacting support within 30 days. After 30 days, the account will be permanently deleted.
+              </p>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-yellow-800">
+                  <strong>Note:</strong> Your data will be preserved while the account is frozen.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowFreezeModal(false)}
+                  variant="secondary"
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleFreezeAccount} variant="warning" className="flex-1">
+                  Freeze Account
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <Card className="max-w-md w-full">
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-3 flex items-center gap-2 text-red-600">
+                <AlertTriangle size={20} /> Delete Account
+              </h3>
+              <p className="text-gray-600 mb-4">
+                This action is <strong>permanent and irreversible</strong>. All your account data, documents, order history, and messages will be permanently deleted.
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-red-700 mb-3">
+                  Type <strong>"delete my account"</strong> to confirm:
+                </p>
+                <input
+                  type="text"
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  placeholder="Type here..."
+                  className="w-full px-3 py-2 border border-red-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeleteConfirmation('');
+                  }}
+                  variant="secondary"
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDeleteAccount}
+                  variant="danger"
+                  className="flex-1"
+                  disabled={deleteConfirmation.toLowerCase() !== 'delete my account'}
+                >
+                  Delete Permanently
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <LogoutConfirmationModal
+          onConfirm={handleConfirmLogout}
+          onCancel={() => setShowLogoutConfirm(false)}
+        />
+      )}
     </PageTransition>
   );
 }

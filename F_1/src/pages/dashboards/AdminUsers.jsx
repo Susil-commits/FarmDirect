@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import Card from '../../components/common/Card';
+import LogoutConfirmationModal from '../../components/common/LogoutConfirmationModal';
 import { Users, AlertTriangle, LogOut, Menu, Search, Eye, EyeOff, Trash2, Ban, Lock } from 'lucide-react';
 
 export default function AdminUsers() {
@@ -13,6 +14,7 @@ export default function AdminUsers() {
   const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterRole, setFilterRole] = useState('all');
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Reset scroll position to top on page load
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function AdminUsers() {
   if (!user || user.role !== 'admin') {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-linear-to-br from-slate-900 to-slate-800 flex items-center justify-center px-4">
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center px-4">
           <div className="text-center">
             <AlertTriangle size={48} className="mx-auto mb-4 text-orange-500" />
             <h2 className="text-3xl font-bold text-white mb-4">Access Denied</h2>
@@ -106,19 +108,21 @@ export default function AdminUsers() {
   };
 
   const filteredUsers = allUsers.filter(u => {
+    // Only show verified users (approved KYC)
+    const isVerified = u.kycStatus === 'verified' || u.role === 'admin';
     const matchesRole = filterRole === 'all' || u.role === filterRole;
     const matchesSearch = !searchQuery || 
       u.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.email?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesRole && matchesSearch;
+    return isVerified && matchesRole && matchesSearch;
   });
 
   return (
     <PageTransition>
       <div className="min-h-screen bg-gray-100 flex">
         {/* Sidebar */}
-        <div className={`fixed lg:static inset-0 lg:inset-auto transition-all duration-300 ${sidebarOpen ? 'w-72' : 'w-20'} bg-linear-to-b from-green-700 to-green-800 text-white flex flex-col z-40 ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
+        <div className={`fixed lg:static inset-0 lg:inset-auto transition-all duration-300 ${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-green-700 to-green-800 text-white flex flex-col z-40 ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
           <div className="p-6 border-b border-green-600">
             <div className="flex items-center justify-between">
               {sidebarOpen && (
@@ -133,6 +137,7 @@ export default function AdminUsers() {
           <nav className="flex-1 p-4 space-y-2">
             {[
               { id: 'dashboard', label: 'Dashboard', icon: () => <span>📊</span>, path: '/admin/dashboard' },
+              { id: 'approvals', label: 'Approvals', icon: () => <span>✓</span>, path: '/admin/approvals' },
               { id: 'users', label: 'Users', icon: Users, path: '/admin/users' },
               { id: 'crops', label: 'Crops', icon: () => <span>🌾</span>, path: '/admin/crops' }
             ].map(item => (
@@ -160,10 +165,7 @@ export default function AdminUsers() {
                 <p className="text-xs text-green-200 uppercase mb-2">Admin</p>
                 <p className="font-semibold truncate mb-3">{user?.name}</p>
                 <button
-                  onClick={() => {
-                    logout();
-                    navigate('/');
-                  }}
+                  onClick={() => setShowLogoutConfirm(true)}
                   className="w-full flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition text-sm"
                 >
                   <LogOut size={16} /> Logout
@@ -197,6 +199,27 @@ export default function AdminUsers() {
           {/* Content */}
           <div className="p-6">
             <div className="space-y-6">
+              {/* Pending KYC Alert */}
+              {(() => {
+                const pendingCount = allUsers.filter(u => u.kycStatus === 'pending').length;
+                return pendingCount > 0 && (
+                  <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="text-sm font-bold text-yellow-800">⏳ Pending KYC Approvals</h3>
+                        <p className="text-sm text-yellow-700 mt-1">{pendingCount} user{pendingCount > 1 ? 's' : ''} waiting for KYC verification. Approve them first before they appear here.</p>
+                      </div>
+                      <button
+                        onClick={() => navigate('/admin/approvals')}
+                        className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded font-semibold whitespace-nowrap"
+                      >
+                        View Pending
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <Card className="bg-white">
                 <div className="p-4 flex gap-4">
                   <div className="flex-1 relative">
@@ -326,6 +349,18 @@ export default function AdminUsers() {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <LogoutConfirmationModal
+          onConfirm={async () => {
+            setShowLogoutConfirm(false);
+            await logout();
+            navigate('/');
+          }}
+          onCancel={() => setShowLogoutConfirm(false)}
+        />
+      )}
     </PageTransition>
   );
 }

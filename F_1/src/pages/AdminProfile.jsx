@@ -6,9 +6,10 @@ import PageTransition from '../components/common/PageTransition.jsx';
 import Button from '../components/common/Button';
 import Avatar from '../components/common/Avatar';
 import Card from '../components/common/Card';
+import LogoutConfirmationModal from '../components/common/LogoutConfirmationModal';
 import {
   Shield, Mail, Phone, MapPin, Clock, Users, TrendingUp, Activity,
-  Settings, LogOut, Camera, Lock, Bell, FileText, BarChart3,
+  Settings, LogOut, Camera, Lock, Bell, FileText, BarChart3, Package,
   CalendarDays, Zap, Award, CheckCircle, AlertTriangle
 } from 'lucide-react';
 
@@ -18,14 +19,16 @@ export default function AdminProfile() {
   const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [stats, setStats] = useState({
-    totalUsers: 1250,
-    totalFarmers: 380,
-    totalBuyers: 870,
-    totalOrders: 450,
-    totalRevenue: 125000,
-    activeSessions: 42
+    totalUsers: 0,
+    totalFarmers: 0,
+    totalBuyers: 0,
+    totalCrops: 0,
+    pendingFarmers: 0,
+    activeSessions: 0
   });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -63,17 +66,74 @@ export default function AdminProfile() {
   };
 
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      logout();
-      navigate('/');
-      addToast('Logged out successfully', 'info');
-    }
+    setShowLogoutConfirm(true);
   };
+
+  const handleConfirmLogout = async () => {
+    setShowLogoutConfirm(false);
+    await logout();
+    navigate('/');
+    addToast('Logged out successfully', 'info');
+  };
+
+  // Fetch real-time stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        const token = localStorage.getItem('token');
+
+        // Fetch users by role
+        const usersRes = await fetch('http://localhost:5000/api/admin/users', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const usersData = await usersRes.json();
+
+        // Fetch crops
+        const cropsRes = await fetch('http://localhost:5000/api/admin/crops', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const cropsData = await cropsRes.json();
+
+        // Fetch pending farmer verifications
+        const pendingRes = await fetch('http://localhost:5000/api/admin/approvals?status=pending&role=farmer', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const pendingData = await pendingRes.json();
+
+        const allUsers = usersData.data || [];
+        const allCrops = cropsData.data || [];
+        const pendingFarmers = pendingData.data || [];
+
+        const farmers = allUsers.filter(u => u.role === 'farmer').length;
+        const buyers = allUsers.filter(u => u.role === 'buyer').length;
+
+        setStats({
+          totalUsers: allUsers.length,
+          totalFarmers: farmers,
+          totalBuyers: buyers,
+          totalCrops: allCrops.length,
+          pendingFarmers: pendingFarmers.length,
+          activeSessions: Math.floor(Math.random() * 50) + 10 // Simulated active sessions
+        });
+        setStatsLoading(false);
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        setStatsLoading(false);
+      }
+    };
+
+    fetchStats();
+    
+    // Refresh stats every 30 seconds for real-time updates
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (!user || user.role !== 'admin') {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Access Denied</h2>
             <p className="text-gray-600 mb-8">This page is only accessible to administrators</p>
@@ -88,9 +148,9 @@ export default function AdminProfile() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         {/* Premium Header Section */}
-        <div className="relative h-64 bg-linear-to-br from-blue-600 via-indigo-600 to-purple-700 overflow-hidden">
+        <div className="relative h-64 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 overflow-hidden">
           {/* Animated background elements */}
           <div className="absolute inset-0 opacity-20">
             <div className="absolute top-0 right-1/4 w-96 h-96 bg-white rounded-full filter blur-3xl animate-pulse"></div>
@@ -106,7 +166,7 @@ export default function AdminProfile() {
                   <Avatar user={user} size="xl" className="w-full h-full" />
                 </div>
                 {isEditing && (
-                  <label className="absolute bottom-2 right-2 bg-linear-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-full p-3 cursor-pointer shadow-lg transition transform hover:scale-110">
+                  <label className="absolute bottom-2 right-2 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-full p-3 cursor-pointer shadow-lg transition transform hover:scale-110">
                     <Camera size={20} />
                     <input type="file" name="photo" onChange={handleChange} hidden accept="image/*" />
                   </label>
@@ -148,7 +208,7 @@ export default function AdminProfile() {
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 md:px-6 -mt-8 pb-12 relative z-10">
           {/* Tab Navigation */}
-          <div className="bg-linear-to-r from-slate-700 to-slate-800 rounded-2xl shadow-2xl p-2 mb-8 flex gap-2 overflow-x-auto border border-slate-600">
+          <div className="bg-gradient-to-r from-slate-700 to-slate-800 rounded-2xl shadow-2xl p-2 mb-8 flex gap-2 overflow-x-auto border border-slate-600">
             {[
               { id: 'overview', label: '📊 Overview', icon: BarChart3 },
               { id: 'profile', label: '👤 Profile Info', icon: Shield },
@@ -160,7 +220,7 @@ export default function AdminProfile() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-6 py-4 rounded-xl font-bold transition duration-300 whitespace-nowrap transform hover:scale-105 ${
                   activeTab === tab.id
-                    ? 'bg-linear-to-r from-blue-500 to-indigo-600 text-white shadow-lg scale-105'
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg scale-105'
                     : 'text-slate-300 hover:text-white hover:bg-slate-600/50'
                 }`}
               >
@@ -175,7 +235,7 @@ export default function AdminProfile() {
             <div className="space-y-6">
               {/* Quick Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="bg-linear-to-br from-blue-600 to-blue-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
+                <Card className="bg-gradient-to-br from-blue-600 to-blue-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
                   <div className="p-8">
                     <div className="flex items-center justify-between mb-4">
                       <div className="bg-white/20 p-4 rounded-lg backdrop-blur-sm">
@@ -184,46 +244,46 @@ export default function AdminProfile() {
                       <TrendingUp size={24} className="text-blue-200" />
                     </div>
                     <p className="text-blue-100 text-sm font-semibold uppercase tracking-wide">Total Users</p>
-                    <p className="text-5xl font-black mt-2">{stats.totalUsers.toLocaleString()}</p>
-                    <p className="text-blue-200 text-xs mt-3">+12% from last month</p>
+                    <p className="text-5xl font-black mt-2">{statsLoading ? '...' : stats.totalUsers.toLocaleString()}</p>
+                    <p className="text-blue-200 text-xs mt-3">Farmers: {stats.totalFarmers} | Buyers: {stats.totalBuyers}</p>
                   </div>
                 </Card>
 
-                <Card className="bg-linear-to-br from-green-600 to-emerald-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
+                <Card className="bg-gradient-to-br from-green-600 to-emerald-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
                   <div className="p-8">
                     <div className="flex items-center justify-between mb-4">
                       <div className="bg-white/20 p-4 rounded-lg backdrop-blur-sm">
-                        <Activity size={28} />
+                        <Package size={28} />
                       </div>
                       <TrendingUp size={24} className="text-emerald-200" />
                     </div>
-                    <p className="text-emerald-100 text-sm font-semibold uppercase tracking-wide">Active Orders</p>
-                    <p className="text-5xl font-black mt-2">{stats.totalOrders.toLocaleString()}</p>
-                    <p className="text-emerald-200 text-xs mt-3">+8% from last week</p>
+                    <p className="text-emerald-100 text-sm font-semibold uppercase tracking-wide">Total Crops</p>
+                    <p className="text-5xl font-black mt-2">{statsLoading ? '...' : stats.totalCrops.toLocaleString()}</p>
+                    <p className="text-emerald-200 text-xs mt-3">Active listings on platform</p>
                   </div>
                 </Card>
 
-                <Card className="bg-linear-to-br from-purple-600 to-pink-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
+                <Card className="bg-gradient-to-br from-purple-600 to-pink-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
                   <div className="p-8">
                     <div className="flex items-center justify-between mb-4">
                       <div className="bg-white/20 p-4 rounded-lg backdrop-blur-sm">
-                        <TrendingUp size={28} />
+                        <CheckCircle size={28} />
                       </div>
-                      <CheckCircle size={24} className="text-pink-200" />
+                      <TrendingUp size={24} className="text-pink-200" />
                     </div>
-                    <p className="text-pink-100 text-sm font-semibold uppercase tracking-wide">Total Revenue</p>
-                    <p className="text-5xl font-black mt-2">₹{(stats.totalRevenue / 100000).toFixed(1)}L</p>
-                    <p className="text-pink-200 text-xs mt-3">+25% growth</p>
+                    <p className="text-pink-100 text-sm font-semibold uppercase tracking-wide">Pending Verification</p>
+                    <p className="text-5xl font-black mt-2">{statsLoading ? '...' : stats.pendingFarmers.toLocaleString()}</p>
+                    <p className="text-pink-200 text-xs mt-3">Farmer approvals pending</p>
                   </div>
                 </Card>
               </div>
 
               {/* User Breakdown */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="bg-slate-700/50 border border-slate-600 text-white">
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-6">
-                      <div className="bg-linear-to-br from-emerald-400 to-green-600 p-3 rounded-lg">
+                      <div className="bg-gradient-to-br from-emerald-400 to-green-600 p-3 rounded-lg">
                         <Users size={24} />
                       </div>
                       <h3 className="text-xl font-bold">Farmer Accounts</h3>
@@ -231,12 +291,17 @@ export default function AdminProfile() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-slate-300">Total Farmers</span>
-                        <span className="text-2xl font-bold text-emerald-400">{stats.totalFarmers}</span>
+                        <span className="text-2xl font-bold text-emerald-400">{statsLoading ? '...' : stats.totalFarmers}</span>
                       </div>
                       <div className="w-full bg-slate-600 rounded-full h-2">
-                        <div className="bg-linear-to-r from-emerald-400 to-green-500 h-2 rounded-full" style={{ width: '30%' }}></div>
+                        <div 
+                          className="bg-gradient-to-r from-emerald-400 to-green-500 h-2 rounded-full" 
+                          style={{ width: stats.totalUsers > 0 ? `${(stats.totalFarmers / stats.totalUsers) * 100}%` : '0%' }}
+                        ></div>
                       </div>
-                      <p className="text-xs text-slate-400">30% of total user base</p>
+                      <p className="text-xs text-slate-400">
+                        {stats.totalUsers > 0 ? `${((stats.totalFarmers / stats.totalUsers) * 100).toFixed(1)}%` : '0%'} of total users
+                      </p>
                     </div>
                   </div>
                 </Card>
@@ -244,7 +309,7 @@ export default function AdminProfile() {
                 <Card className="bg-slate-700/50 border border-slate-600 text-white">
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-6">
-                      <div className="bg-linear-to-br from-blue-400 to-indigo-600 p-3 rounded-lg">
+                      <div className="bg-gradient-to-br from-blue-400 to-indigo-600 p-3 rounded-lg">
                         <Users size={24} />
                       </div>
                       <h3 className="text-xl font-bold">Buyer Accounts</h3>
@@ -252,12 +317,43 @@ export default function AdminProfile() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-slate-300">Total Buyers</span>
-                        <span className="text-2xl font-bold text-blue-400">{stats.totalBuyers}</span>
+                        <span className="text-2xl font-bold text-blue-400">{statsLoading ? '...' : stats.totalBuyers}</span>
                       </div>
                       <div className="w-full bg-slate-600 rounded-full h-2">
-                        <div className="bg-linear-to-r from-blue-400 to-indigo-500 h-2 rounded-full" style={{ width: '70%' }}></div>
+                        <div 
+                          className="bg-gradient-to-r from-blue-400 to-indigo-500 h-2 rounded-full" 
+                          style={{ width: stats.totalUsers > 0 ? `${(stats.totalBuyers / stats.totalUsers) * 100}%` : '0%' }}
+                        ></div>
                       </div>
-                      <p className="text-xs text-slate-400">70% of total user base</p>
+                      <p className="text-xs text-slate-400">
+                        {stats.totalUsers > 0 ? `${((stats.totalBuyers / stats.totalUsers) * 100).toFixed(1)}%` : '0%'} of total users
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="bg-slate-700/50 border border-slate-600 text-white">
+                  <div className="p-8">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="bg-gradient-to-br from-orange-400 to-pink-600 p-3 rounded-lg">
+                        <Package size={24} />
+                      </div>
+                      <h3 className="text-xl font-bold">Active Crops</h3>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-300">Total Listings</span>
+                        <span className="text-2xl font-bold text-orange-400">{statsLoading ? '...' : stats.totalCrops}</span>
+                      </div>
+                      <div className="w-full bg-slate-600 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-orange-400 to-pink-500 h-2 rounded-full" 
+                          style={{ width: stats.totalFarmers > 0 ? Math.min((stats.totalCrops / (stats.totalFarmers * 2)) * 100, 100) : '0%' }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-slate-400">
+                        Avg {stats.totalFarmers > 0 ? (stats.totalCrops / stats.totalFarmers).toFixed(1) : '0'} per farmer
+                      </p>
                     </div>
                   </div>
                 </Card>
@@ -272,7 +368,7 @@ export default function AdminProfile() {
                 <>
                   {/* Info Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card className="bg-linear-to-br from-blue-600/20 to-blue-700/20 border border-blue-500/30 text-white hover:shadow-2xl transition duration-300">
+                    <Card className="bg-gradient-to-br from-blue-600/20 to-blue-700/20 border border-blue-500/30 text-white hover:shadow-2xl transition duration-300">
                       <div className="p-8">
                         <div className="flex items-center gap-4 mb-4">
                           <div className="bg-blue-500/30 p-4 rounded-lg backdrop-blur-sm border border-blue-400/30">
@@ -285,7 +381,7 @@ export default function AdminProfile() {
                       </div>
                     </Card>
 
-                    <Card className="bg-linear-to-br from-emerald-600/20 to-emerald-700/20 border border-emerald-500/30 text-white hover:shadow-2xl transition duration-300">
+                    <Card className="bg-gradient-to-br from-emerald-600/20 to-emerald-700/20 border border-emerald-500/30 text-white hover:shadow-2xl transition duration-300">
                       <div className="p-8">
                         <div className="flex items-center gap-4 mb-4">
                           <div className="bg-emerald-500/30 p-4 rounded-lg backdrop-blur-sm border border-emerald-400/30">
@@ -298,7 +394,7 @@ export default function AdminProfile() {
                       </div>
                     </Card>
 
-                    <Card className="bg-linear-to-br from-purple-600/20 to-purple-700/20 border border-purple-500/30 text-white hover:shadow-2xl transition duration-300">
+                    <Card className="bg-gradient-to-br from-purple-600/20 to-purple-700/20 border border-purple-500/30 text-white hover:shadow-2xl transition duration-300">
                       <div className="p-8">
                         <div className="flex items-center gap-4 mb-4">
                           <div className="bg-purple-500/30 p-4 rounded-lg backdrop-blur-sm border border-purple-400/30">
@@ -311,7 +407,7 @@ export default function AdminProfile() {
                       </div>
                     </Card>
 
-                    <Card className="bg-linear-to-br from-orange-600/20 to-orange-700/20 border border-orange-500/30 text-white hover:shadow-2xl transition duration-300">
+                    <Card className="bg-gradient-to-br from-orange-600/20 to-orange-700/20 border border-orange-500/30 text-white hover:shadow-2xl transition duration-300">
                       <div className="p-8">
                         <div className="flex items-center gap-4 mb-4">
                           <div className="bg-orange-500/30 p-4 rounded-lg backdrop-blur-sm border border-orange-400/30">
@@ -328,7 +424,7 @@ export default function AdminProfile() {
                   {/* Edit Button */}
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="w-full bg-linear-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-bold py-4 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-2xl transform hover:scale-105 text-lg"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-bold py-4 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-2xl transform hover:scale-105 text-lg"
                   >
                     ✏️ Edit Profile Information
                   </button>
@@ -336,7 +432,7 @@ export default function AdminProfile() {
               ) : (
                 <Card className="bg-slate-700/50 border border-slate-600 text-white">
                   <div className="p-8">
-                    <h2 className="text-3xl font-bold mb-8 bg-linear-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                    <h2 className="text-3xl font-bold mb-8 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
                       Edit Admin Profile
                     </h2>
 
@@ -390,7 +486,7 @@ export default function AdminProfile() {
                       </div>
 
                       {/* Photo Upload */}
-                      <div className="bg-linear-to-br from-blue-600/20 to-indigo-600/20 p-8 rounded-xl border-2 border-dashed border-blue-500/50">
+                      <div className="bg-gradient-to-br from-blue-600/20 to-indigo-600/20 p-8 rounded-xl border-2 border-dashed border-blue-500/50">
                         <div className="text-center">
                           <Camera size={40} className="mx-auto mb-4 text-blue-400" />
                           <h3 className="text-lg font-bold text-white mb-2">Upload Profile Photo</h3>
@@ -405,7 +501,7 @@ export default function AdminProfile() {
                             className="hidden"
                             id="photo-input"
                           />
-                          <label htmlFor="photo-input" className="inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg cursor-pointer hover:from-blue-700 hover:to-indigo-700 transition">
+                          <label htmlFor="photo-input" className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg cursor-pointer hover:from-blue-700 hover:to-indigo-700 transition">
                             Choose Photo
                           </label>
                         </div>
@@ -415,13 +511,13 @@ export default function AdminProfile() {
                       <div className="flex gap-4">
                         <button
                           onClick={handleSave}
-                          className="flex-1 bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 shadow-lg text-base"
+                          className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 shadow-lg text-base"
                         >
                           ✅ Save Changes
                         </button>
                         <button
                           onClick={() => setIsEditing(false)}
-                          className="flex-1 bg-linear-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white font-bold py-3 px-6 rounded-lg transition duration-300 shadow-lg text-base"
+                          className="flex-1 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white font-bold py-3 px-6 rounded-lg transition duration-300 shadow-lg text-base"
                         >
                           ❌ Cancel
                         </button>
@@ -469,7 +565,7 @@ export default function AdminProfile() {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Security Settings */}
-                <Card className="bg-linear-to-br from-red-600/20 to-red-700/20 border border-red-500/30">
+                <Card className="bg-gradient-to-br from-red-600/20 to-red-700/20 border border-red-500/30">
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-6">
                       <Lock className="text-red-400" size={28} />
@@ -487,7 +583,7 @@ export default function AdminProfile() {
                 </Card>
 
                 {/* Notification Settings */}
-                <Card className="bg-linear-to-br from-blue-600/20 to-blue-700/20 border border-blue-500/30">
+                <Card className="bg-gradient-to-br from-blue-600/20 to-blue-700/20 border border-blue-500/30">
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-6">
                       <Bell className="text-blue-400" size={28} />
@@ -510,13 +606,21 @@ export default function AdminProfile() {
               {/* Logout Button */}
               <button
                 onClick={handleLogout}
-                className="w-full bg-linear-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-4 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-2xl transform hover:scale-105 text-lg flex items-center justify-center gap-3"
+                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-4 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-2xl transform hover:scale-105 text-lg flex items-center justify-center gap-3"
               >
                 <LogOut size={24} /> Logout
               </button>
             </div>
           )}
         </div>
+
+        {/* Logout Confirmation Modal */}
+        {showLogoutConfirm && (
+          <LogoutConfirmationModal
+            onConfirm={handleConfirmLogout}
+            onCancel={() => setShowLogoutConfirm(false)}
+          />
+        )}
       </div>
     </PageTransition>
   );

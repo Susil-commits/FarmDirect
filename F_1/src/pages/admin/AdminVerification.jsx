@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Clock, Download, Eye, FileText } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Download, Eye, FileText, Lock, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
+import BackButton from '../../components/common/BackButton';
 
 export default function AdminVerification() {
   const { user } = useAuth();
@@ -13,8 +14,10 @@ export default function AdminVerification() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [showFreezeModal, setShowFreezeModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [verificationRequests, setVerificationRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, _setLoading] = useState(true);
 
   // Reset scroll position to top on page load
   useEffect(() => {
@@ -28,7 +31,7 @@ export default function AdminVerification() {
 
   const fetchVerificationRequests = async () => {
     try {
-      setLoading(true);
+      _setLoading(true);
       // TODO: Replace with actual API call
       // const response = await adminService.getPendingKYC();
       // setVerificationRequests(response.data || []);
@@ -37,7 +40,7 @@ export default function AdminVerification() {
       console.error('Failed to fetch verification requests:', error);
       setVerificationRequests([]);
     } finally {
-      setLoading(false);
+      _setLoading(false);
     }
   };
 
@@ -62,12 +65,47 @@ export default function AdminVerification() {
     setVerificationRequests(prev =>
       prev.map(req =>
         req.id === selectedRequest.id
-          ? { ...req, status: 'verified', verifiedDate: new Date().toLocaleDateString() }
+          ? { ...req, status: 'verified', verifiedDate: new Date().toLocaleDateString(), accountStatus: 'active' }
           : req
       )
     );
+    
+    // Trigger congratulation modal for the verified user
+    if (selectedRequest.userId) {
+      localStorage.setItem(`showCongratulation_${selectedRequest.userId}`, 'true');
+    }
+    
     setSelectedRequest(null);
-    alert('Verification approved successfully!');
+    alert('Verification approved successfully! User will see congratulation on next login.');
+  };
+
+  const handleFreeze = () => {
+    if (!selectedRequest) {
+      alert('Please select a user first');
+      return;
+    }
+    setVerificationRequests(prev =>
+      prev.map(req =>
+        req.id === selectedRequest.id
+          ? { ...req, accountStatus: 'frozen' }
+          : req
+      )
+    );
+    setShowFreezeModal(false);
+    alert(`Account for ${selectedRequest.name} has been frozen.`);
+  };
+
+  const handleDelete = () => {
+    if (!selectedRequest) {
+      alert('Please select a user first');
+      return;
+    }
+    setVerificationRequests(prev =>
+      prev.filter(req => req.id !== selectedRequest.id)
+    );
+    setShowDeleteModal(false);
+    setSelectedRequest(null);
+    alert(`Account for ${selectedRequest.name} has been deleted along with all associated data.`);
   };
 
   const handleReject = () => {
@@ -100,6 +138,11 @@ export default function AdminVerification() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-7xl mx-auto">
+        {/* Back Button */}
+        <div className="mb-6">
+          <BackButton label="Back to Admin Dashboard" />
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Verification Dashboard</h1>
@@ -294,6 +337,25 @@ export default function AdminVerification() {
                       </Button>
                     </div>
                   )}
+
+                  {selectedRequest.status === 'verified' && (
+                    <div className="flex gap-3 pt-6 border-t border-gray-200">
+                      <Button
+                        onClick={() => setShowFreezeModal(true)}
+                        variant="secondary"
+                        className="flex items-center gap-2 flex-1"
+                      >
+                        <Lock size={18} /> Freeze Account
+                      </Button>
+                      <Button
+                        onClick={() => setShowDeleteModal(true)}
+                        variant="danger"
+                        className="flex items-center gap-2 flex-1"
+                      >
+                        <Trash2 size={18} /> Delete Account
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </Card>
             ) : (
@@ -336,6 +398,67 @@ export default function AdminVerification() {
                   </Button>
                   <Button onClick={handleReject} variant="danger" className="flex-1">
                     Reject
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Freeze Modal */}
+        {showFreezeModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <Card className="max-w-md w-full">
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <Lock size={20} /> Freeze Account
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Are you sure you want to freeze the account for <strong>{selectedRequest?.name}</strong>? They will not be able to access the platform until unfrozen.
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setShowFreezeModal(false)}
+                    variant="secondary"
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleFreeze} variant="warning" className="flex-1">
+                    Freeze Account
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Delete Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <Card className="max-w-md w-full">
+              <div className="p-6">
+                <h3 className="text-xl font-bold mb-3 flex items-center gap-2 text-red-600">
+                  <Trash2 size={20} /> Delete Account
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Are you sure you want to permanently delete the account for <strong>{selectedRequest?.name}</strong>?
+                </p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-red-700">
+                    <strong>Warning:</strong> This action is irreversible. All account data, including documents and transaction history, will be permanently deleted.
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setShowDeleteModal(false)}
+                    variant="secondary"
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleDelete} variant="danger" className="flex-1">
+                    Delete Permanently
                   </Button>
                 </div>
               </div>

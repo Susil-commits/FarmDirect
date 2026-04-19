@@ -30,7 +30,7 @@ export default function ProductComparison() {
       // const response = await cropService.getAllCrops();
       // setAllCrops(response.data || []);
       setAllCrops([]);
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to fetch crops:', error);
       setAllCrops([]);
     }

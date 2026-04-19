@@ -10,7 +10,6 @@ import '../styles/FilterPanel.css';
 export default function FilterPanel({
   cropTypes = [],
   locations = [],
-  priceRange = [0, 1000],
   currentFilters = {},
   onFilterChange = () => {},
   onReset = () => {},
@@ -151,7 +150,7 @@ export default function FilterPanel({
                     max="1000"
                     value={localFilters.priceRange[1]}
                     onChange={(e) => handlePriceChange(parseInt(e.target.value))}
-                    className="w-full h-2 bg-linear-to-r from-green-300 to-emerald-500 rounded-lg appearance-none cursor-pointer slider"
+                    className="w-full h-2 bg-gradient-to-r from-green-300 to-emerald-500 rounded-lg appearance-none cursor-pointer slider"
                   />
                 </div>
                 <div className="bg-green-50 p-3 rounded-lg text-center shadow-sm hover:shadow-md transition-shadow">

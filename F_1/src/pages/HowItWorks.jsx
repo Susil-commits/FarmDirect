@@ -124,7 +124,7 @@ export default function HowItWorks() {
                 }
               ].map((item, idx) => (
                 <div key={idx} className="text-center">
-                  <div className="bg-linear-to-br from-green-100 to-emerald-100 rounded-lg p-6 mb-4 inline-block">
+                  <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg p-6 mb-4 inline-block">
                     <item.icon size={48} className="text-green-600" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">{item.title}</h3>

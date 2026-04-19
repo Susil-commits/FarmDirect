@@ -3,6 +3,7 @@ import { useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { ToastProvider } from './context/ToastContext';
+import { NotificationProvider } from './context/NotificationContext';
 import Navbar from './components/shared/Navbar';
 import Footer from './components/shared/Footer';
 import GlobalPageLoader from './components/common/GlobalPageLoader';
@@ -26,6 +27,8 @@ import ProductComparison from './pages/ProductComparison';
 import PendingVerification from './pages/PendingVerification';
 import AdminProfile from './pages/AdminProfile';
 import AdminDashboardStats from './pages/dashboards/AdminDashboardStats';
+import AdminApprovals from './pages/dashboards/AdminApprovals';
+import AdminManagement from './pages/dashboards/AdminManagement';
 import AdminUsers from './pages/dashboards/AdminUsers';
 import AdminCrops from './pages/dashboards/AdminCrops';
 import FarmerDashboard from './pages/dashboards/FarmerDashboard';
@@ -41,16 +44,28 @@ import Pricing from './pages/Pricing';
 import Support from './pages/Support';
 import HowItWorks from './pages/HowItWorks';
 import RoutingTest from './pages/RoutingTest';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 function App() {
   const { currentRoute, navigate } = useRouter();
-  const { user, logout, loading } = useAuth();
+  const { user, loading, redirectPath, clearRedirectPath } = useAuth();
 
-  // Log whenever the route changes
+  // Handle redirects (e.g., when auth fails on server restart)
+  // Use a ref to track if we've already handled this redirect to prevent loops
+  const redirectHandledRef = useRef(false);
+
   useEffect(() => {
-    console.log('✅ App re-rendered with currentRoute:', currentRoute);
-  }, [currentRoute]);
+    if (redirectPath && !redirectHandledRef.current) {
+      redirectHandledRef.current = true;
+      console.log('🔄 Redirecting to:', redirectPath);
+      navigate(redirectPath);
+      clearRedirectPath();
+      // Reset the flag after a small delay so it can handle new redirects
+      setTimeout(() => {
+        redirectHandledRef.current = false;
+      }, 100);
+    }
+  }, [redirectPath]);
 
   const renderPage = () => {
     // Don't render anything while loading auth state on initial mount/refresh
@@ -138,6 +153,10 @@ function App() {
         return user?.role === 'buyer' ? <BuyerVerification /> : <Home />;
       case '/admin/dashboard':
         return user?.role === 'admin' ? <AdminDashboardStats /> : <Home />;
+      case '/admin/approvals':
+        return user?.role === 'admin' ? <AdminApprovals /> : <Home />;
+      case '/admin/management':
+        return user?.role === 'admin' ? <AdminManagement /> : <Home />;
       case '/admin/users':
         return user?.role === 'admin' ? <AdminUsers /> : <Home />;
       case '/admin/crops':
@@ -165,27 +184,22 @@ function App() {
     }
   };
 
-  const handleNavigation = (path) => {
-    navigate(path);
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
+  // Navigation and logout handled via useRouter and useAuth contexts
 
   return (
     <CartProvider>
       <WishlistProvider>
         <ToastProvider>
-          <GlobalPageLoader />
-          <div className="min-h-screen bg-white flex flex-col">
-            <Navbar />
-            <main className="flex-1">
-              {renderPage()}
-            </main>
-            <Footer />
-          </div>
+          <NotificationProvider>
+            <GlobalPageLoader />
+            <div className="min-h-screen bg-white flex flex-col">
+              <Navbar />
+              <main className="flex-1">
+                {renderPage()}
+              </main>
+              <Footer />
+            </div>
+          </NotificationProvider>
         </ToastProvider>
       </WishlistProvider>
     </CartProvider>

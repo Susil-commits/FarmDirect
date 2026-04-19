@@ -18,7 +18,7 @@ export default function FarmerProfile() {
 
   const [farmer, setFarmer] = useState(null);
   const [crops, setCrops] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, _setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Sample farmer data
@@ -87,7 +87,7 @@ export default function FarmerProfile() {
   if (error && !farmer) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-linear-to-br from-white via-green-50 to-white py-12 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4">
           <div className="max-w-4xl mx-auto">
             <Button variant="outline" onClick={() => navigate(-1)} className="mb-6">
               <ArrowLeft size={16} /> Go Back
@@ -108,7 +108,7 @@ export default function FarmerProfile() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-linear-to-br from-white via-green-50 to-white py-8 px-4 relative">
+      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-8 px-4 relative">
         <div className="absolute inset-0 premium-gradient pointer-events-none"></div>
         <div className="max-w-6xl mx-auto relative z-10">
           
@@ -123,7 +123,7 @@ export default function FarmerProfile() {
           {farmer && (
             <ScrollAnimation className="scroll-slide mb-8">
               <Card variant="deep" animated={false} className="overflow-hidden">
-                <div className="relative h-40 bg-linear-to-r from-green-400 to-emerald-500">
+                <div className="relative h-40 bg-gradient-to-r from-green-400 to-emerald-500">
                   <div className="absolute inset-0 opacity-10 pattern-bg"></div>
                 </div>
 
@@ -262,7 +262,7 @@ export default function FarmerProfile() {
                     <div className="p-4 relative group">
                       {/* Image */}
                       <div className="relative mb-4 overflow-hidden rounded-lg">
-                        <div className="bg-linear-to-br from-green-100 to-emerald-100 rounded-lg relative min-h-40 flex items-center justify-center group-hover:shadow-lg transition-shadow">
+                        <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg relative min-h-40 flex items-center justify-center group-hover:shadow-lg transition-shadow">
                           {crop.image && crop.image.startsWith('http') ? (
                             <img
                               src={crop.image}

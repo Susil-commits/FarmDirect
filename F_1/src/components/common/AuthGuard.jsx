@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useRouter } from '../context/RouterContext.jsx';
 
@@ -6,7 +6,7 @@ import { useRouter } from '../context/RouterContext.jsx';
  * Auth Guard - HOC for protecting routes and pages
  * Provides role-based access control, verification requirements, etc.
  */
-export const withAuthGuard = (
+const withAuthGuard = (
   Component,
   options = {}
 ) => {
@@ -20,7 +20,6 @@ export const withAuthGuard = (
 
   return function ProtectedComponent(props) {
     const { 
-      user, 
       isAuthenticated, 
       hasRole, 
       hasPermission, 
@@ -28,58 +27,58 @@ export const withAuthGuard = (
       checkSession 
     } = useAuth();
     const { navigate } = useRouter();
-    const [loading, setLoading] = React.useState(true);
-    const [authorized, setAuthorized] = React.useState(false);
+    const [loading, setLoading] = useState(true);
+    const [authorized, setAuthorized] = useState(false);
 
-    React.useEffect(() => {
-      const validateAccess = async () => {
-        try {
-          // Check session validity
-          const session = await checkSession();
-          if (!session.active) {
-            navigate(redirectTo);
-            return;
-          }
-
-          // Check authentication
-          if (!isAuthenticated) {
-            navigate(redirectTo);
-            setLoading(false);
-            return;
-          }
-
-          // Check roles
-          if (requiredRoles && !hasRole(requiredRoles)) {
-            navigate('/unauthorized');
-            setLoading(false);
-            return;
-          }
-
-          // Check permissions
-          if (requiredPermissions && !hasPermission(requiredPermissions)) {
-            navigate('/forbidden');
-            setLoading(false);
-            return;
-          }
-
-          // Check verification status
-          if (requireVerification && verificationStatus !== 'verified') {
-            navigate('/verification/progress');
-            setLoading(false);
-            return;
-          }
-
-          setAuthorized(true);
-        } catch (error) {
-          console.error('Auth guard validation error:', error);
+    const validateAccess = useCallback(async () => {
+      try {
+        // Check session validity
+        const session = await checkSession();
+        if (!session.active) {
           navigate(redirectTo);
-        } finally {
-          setLoading(false);
+          return;
         }
-      };
 
+        // Check authentication
+        if (!isAuthenticated) {
+          navigate(redirectTo);
+          setLoading(false);
+          return;
+        }
+
+        // Check roles
+        if (requiredRoles && !hasRole(requiredRoles)) {
+          navigate('/unauthorized');
+          setLoading(false);
+          return;
+        }
+
+        // Check permissions
+        if (requiredPermissions && !hasPermission(requiredPermissions)) {
+          navigate('/forbidden');
+          setLoading(false);
+          return;
+        }
+
+        // Check verification status
+        if (requireVerification && verificationStatus !== 'verified') {
+          navigate('/verification/progress');
+          setLoading(false);
+          return;
+        }
+
+        setAuthorized(true);
+      } catch (error) {
+        console.error('Auth guard validation error:', error);
+        navigate(redirectTo);
+      } finally {
+        setLoading(false);
+      }
+    }, [isAuthenticated, hasRole, hasPermission, checkSession, navigate, requiredRoles, requiredPermissions, requireVerification, verificationStatus, redirectTo]);
+
+    useEffect(() => {
       validateAccess();
-    }, [isAuthenticated, requiredRoles, requiredPermissions, requireVerification, verificationStatus]);
+    }, [validateAccess]);
 
     if (loading) {
       return fallbackComponent || (
@@ -99,6 +98,8 @@ export const withAuthGuard = (
     return <Component {...props} />;
   };
 };
+
+export default withAuthGuard;
 
 /**
  * Role Badge Component - Show user's role
@@ -209,5 +210,3 @@ export const VerificationGate = ({
 
   return shouldShow ? children : fallback;
 };
-
-export default withAuthGuard;

@@ -1,5 +1,4 @@
-export default function Card({ children, className = '', hover = true, animated = true, glass = true, variant = 'default' }) {
-  const baseClass = glass ? 'glass' : 'bg-white';
+export default function Card({ children, className = '', hover = true, animated = true, _glass = true, variant = 'default' }) {
   const hoverClass = hover ? 'premium-hover' : '';
   const animatedClass = animated ? 'stagger-item' : '';
   

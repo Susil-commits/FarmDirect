@@ -62,7 +62,7 @@ export default function GoogleCallback() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-linear-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4 animate-pulse">
             <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">

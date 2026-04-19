@@ -105,21 +105,23 @@ export const getOrders = async (req, res, next) => {
 
     // Filter based on user role
     if (req.user.role === 'farmer') {
-      query.farmerId = req.user._id;
+      // FIX: Support multi-farmer orders - farmers appear in items array
+      query['items.farmerId'] = req.user._id;
     } else if (req.user.role === 'buyer') {
       query.buyerId = req.user._id;
     }
+    // Admin sees all orders (no filter)
 
     if (status) {
-      query.status = status;
+      query.orderStatus = status;
     }
 
     const skip = (page - 1) * limit;
 
     const orders = await Order.find(query)
-      .populate('cropId', 'name price image')
+      .populate('items.cropId', 'name price image')
       .populate('buyerId', 'name email phone')
-      .populate('farmerId', 'name email phone location')
+      .populate('items.farmerId', 'name email phone location')
       .skip(skip)
       .limit(Number(limit))
       .sort({ createdAt: -1 });
@@ -145,20 +147,20 @@ export const getOrders = async (req, res, next) => {
 export const getOrderById = async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.id)
-      .populate('cropId')
+      .populate('items.cropId')
       .populate('buyerId', 'name email phone location avatar')
-      .populate('farmerId', 'name email phone location avatar rating');
+      .populate('items.farmerId', 'name email phone location avatar rating');
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
     // Check authorization
-    if (
-      order.buyerId._id.toString() !== req.user._id.toString() &&
-      order.farmerId._id.toString() !== req.user._id.toString() &&
-      req.user.role !== 'admin'
-    ) {
+    const isBuyer = order.buyerId._id.toString() === req.user._id.toString();
+    const isFarmer = order.items.some(item => item.farmerId._id.toString() === req.user._id.toString());
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isBuyer && !isFarmer && !isAdmin) {
       return res.status(403).json({ message: 'Not authorized to view this order' });
     }
 

@@ -95,9 +95,9 @@ export default function JoinAsFarmer() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-linear-to-br from-white via-green-50 to-white">
+      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white">
         {/* Hero Section */}
-        <section className="py-20 px-4 bg-linear-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
+        <section className="py-20 px-4 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
           <div className="max-w-6xl mx-auto relative z-10">
             <ScrollAnimation className="scroll-slide mb-12">
               <div className="text-center">
@@ -172,7 +172,7 @@ export default function JoinAsFarmer() {
         </section>
 
         {/* By The Numbers */}
-        <section className="py-20 px-4 bg-linear-to-br from-green-50 via-white to-green-50">
+        <section className="py-20 px-4 bg-gradient-to-br from-green-50 via-white to-green-50">
           <div className="max-w-6xl mx-auto">
             <ScrollAnimation className="scroll-slide mb-12">
               <h2 className="text-4xl font-bold text-gray-900 text-center mb-4">FarmDirect by the Numbers</h2>
@@ -238,7 +238,7 @@ export default function JoinAsFarmer() {
         </section>
 
         {/* What Farmers Say */}
-        <section className="py-20 px-4 bg-linear-to-r from-green-50 to-emerald-50">
+        <section className="py-20 px-4 bg-gradient-to-r from-green-50 to-emerald-50">
           <div className="max-w-6xl mx-auto">
             <ScrollAnimation className="scroll-slide mb-12">
               <h2 className="text-4xl font-bold text-gray-900 text-center mb-4">What Farmers Are Saying</h2>
@@ -313,7 +313,7 @@ export default function JoinAsFarmer() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 px-4 bg-linear-to-r from-green-600 to-emerald-600">
+        <section className="py-20 px-4 bg-gradient-to-r from-green-600 to-emerald-600">
           <ScrollAnimation className="scroll-slide">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-4xl font-bold text-white mb-6">Ready to Grow Your Farm Business?</h2>

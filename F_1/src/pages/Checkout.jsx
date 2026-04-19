@@ -124,7 +124,7 @@ export default function Checkout() {
   if (cart.length === 0) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-linear-to-br from-white via-green-50 to-white py-12 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4">
           <div className="max-w-2xl mx-auto">
             <Card animated={false}>
               <div className="p-12 text-center">
@@ -144,7 +144,7 @@ export default function Checkout() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-linear-to-br from-white via-green-50 to-white py-12 px-4 relative">
+      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4 relative">
         <div className="absolute inset-0 premium-gradient pointer-events-none"></div>
         <div className="max-w-6xl mx-auto relative z-10">
           
@@ -156,7 +156,7 @@ export default function Checkout() {
 
           {/* COD Info Banner */}
           <ScrollAnimation className="scroll-slide mb-8">
-            <div className="bg-linear-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-2xl p-6 md:p-8 shadow-lg">
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-2xl p-6 md:p-8 shadow-lg">
               <div className="flex items-start gap-4">
                 <div className="shrink-0">
                   <Phone className="text-blue-600" size={32} />
@@ -399,7 +399,7 @@ export default function Checkout() {
                       </h2>
 
                       {/* Payment Method Info */}
-                      <div className="bg-linear-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-6 mb-8">
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-6 mb-8">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center font-bold">✓</div>
                           <h3 className="font-bold text-lg text-green-900">Cash on Delivery (COD)</h3>

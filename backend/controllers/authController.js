@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import { generateToken, verifyToken } from '../utils/jwt.js';
 import { hashPassword, comparePassword } from '../utils/password.js';
+import { getServerStartTime } from '../utils/serverTime.js';
 import axios from 'axios';
 
 // @route POST /api/auth/register
@@ -55,6 +56,7 @@ export const register = async (req, res, next) => {
         kycStatus: user.kycStatus, // Include KYC verification status (should be 'pending')
         photo: user.profilePicture, // Return as photo
       },
+      serverStartTime: getServerStartTime()
     });
   } catch (error) {
     next(error);
@@ -71,6 +73,28 @@ export const login = async (req, res, next) => {
     // Validate input
     if (!email || !password) {
       return res.status(400).json({ message: 'Please provide email and password' });
+    }
+
+    // ADMIN ACCOUNT - Hardcoded for testing
+    if (email === 'admin@123' && password === 'password') {
+      const token = generateToken('admin_id_12345');
+      const refreshToken = generateToken('admin_id_12345');
+      
+      return res.status(200).json({
+        message: 'Login successful',
+        token,
+        refreshToken,
+        user: {
+          id: 'admin_id_12345',
+          name: 'Admin User',
+          email: 'admin@123',
+          role: 'admin',
+          phone: '+91 9999999999',
+          location: 'India',
+          kycStatus: 'verified'
+        },
+        serverStartTime: getServerStartTime()
+      });
     }
 
     // Find user and select password
@@ -104,6 +128,7 @@ export const login = async (req, res, next) => {
         kycStatus: user.kycStatus, // Include KYC verification status
         photo: user.profilePicture, // Include photo
       },
+      serverStartTime: getServerStartTime()
     });
   } catch (error) {
     next(error);
@@ -115,14 +140,38 @@ export const login = async (req, res, next) => {
 // @access Private
 export const getCurrentUser = async (req, res, next) => {
   try {
+    // Handle admin user (hardcoded for testing)
+    if (req.user._id === 'admin_id_12345') {
+      return res.status(200).json({
+        message: 'User fetched successfully',
+        user: {
+          id: 'admin_id_12345',
+          name: 'Admin User',
+          email: 'admin@123',
+          role: 'admin',
+          phone: '+91 9999999999',
+          location: 'India',
+          kycStatus: 'verified',
+          verified: true
+        },
+        serverStartTime: getServerStartTime()
+      });
+    }
+
+    // Handle regular users from database
     const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     res.status(200).json({
       message: 'User fetched successfully',
       user: {
         ...user.toObject(),
-        photo: user.profilePicture, // Return profilePicture as photo
-        id: user._id, // Ensure id field is present
-      }
+        photo: user.profilePicture,
+        id: user._id
+      },
+      serverStartTime: getServerStartTime()
     });
   } catch (error) {
     next(error);
@@ -402,5 +451,155 @@ export const refreshTokenHandler = async (req, res, next) => {
       message: 'Failed to refresh token',
       error: error.message,
     });
+  }
+};
+
+// @route POST /api/kyc/submit
+// @desc Submit KYC documents for verification
+// @access Private
+export const submitKYCDocuments = async (req, res, next) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const { documents, aadharNumber, city, state, pincode } = req.body;
+
+    console.log('📝 submitKYCDocuments called for user:', userId);
+    console.log('📄 Documents received:', documents);
+    console.log('👤 Personal details received:', { aadharNumber, city, state, pincode });
+    
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      console.error('❌ User not found:', userId);
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    console.log(`👤 User found: ${user.email}, role: ${user.role}, current kycStatus: ${user.kycStatus}`);
+
+    // Update user's KYC documents and status
+    user.kycStatus = 'pending';
+    user.kycVerifiedAt = null; // Clear verification date
+    user.kycSubmittedAt = new Date(); // Record submission time
+    
+    // Store document file names
+    if (documents) {
+      user.kycDocuments = {
+        aadharNumber: aadharNumber,
+        governmentId: documents.governmentId ? { fileName: documents.governmentId.fileName, uploadedAt: new Date() } : null,
+        profilePhoto: documents.profilePhoto ? { fileName: documents.profilePhoto.fileName, uploadedAt: new Date() } : null,
+        addressProof: documents.addressProof ? { fileName: documents.addressProof.fileName, uploadedAt: new Date() } : null,
+        landOwnership: documents.landOwnership ? { fileName: documents.landOwnership.fileName, uploadedAt: new Date() } : null,
+        farmRegistration: documents.farmRegistration ? { fileName: documents.farmRegistration.fileName, uploadedAt: new Date() } : null,
+      };
+    }
+    
+    // Store personal details
+    if (aadharNumber || city || state || pincode) {
+      user.kycDetails = {
+        aadharNumber: aadharNumber,
+      };
+      
+      // Update address if provided
+      if (!user.addresses) user.addresses = [];
+      if (user.addresses.length === 0) {
+        user.addresses.push({
+          city: city,
+          state: state,
+          pincode: pincode,
+          isDefault: true
+        });
+      } else {
+        user.addresses[0] = {
+          ...user.addresses[0],
+          city: city,
+          state: state,
+          pincode: pincode
+        };
+      }
+    }
+    
+    await user.save();
+
+    console.log(`✅ KYC submitted for user: ${user.email}, status: pending, submitted at: ${user.kycSubmittedAt}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'KYC documents submitted successfully. Please wait for admin approval.',
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        kycStatus: user.kycStatus,
+        kycSubmittedAt: user.kycSubmittedAt,
+        kycDocuments: user.kycDocuments,
+        kycDetails: user.kycDetails
+      }
+    });
+  } catch (error) {
+    console.error('❌ KYC submission error:', error);
+    next(error);
+  }
+};
+
+// @route POST /api/auth/delete-account
+// @desc Delete user account (user-initiated)
+// @access Private
+export const deleteAccount = async (req, res, next) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    
+    console.log('🗑️ Delete account requested for user:', userId);
+
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      console.error('❌ User not found:', userId);
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Import related models
+    const CropListing = (await import('../models/CropListing.js')).default;
+    const Order = (await import('../models/Order.js')).default;
+    const Review = (await import('../models/Review.js')).default;
+    const Wishlist = (await import('../models/Wishlist.js')).default;
+    const Notification = (await import('../models/Notification.js')).default;
+
+    const userEmail = user.email;
+
+    // Delete all related data
+    if (user.role === 'farmer') {
+      // Delete farmer's crop listings
+      await CropListing.deleteMany({ farmerId: userId });
+      console.log('🌾 Deleted crop listings for farmer');
+    }
+
+    // Delete user's orders
+    await Order.deleteMany({ $or: [{ buyerId: userId }, { farmerId: userId }] });
+    console.log('📦 Deleted orders');
+
+    // Delete user's reviews
+    await Review.deleteMany({ $or: [{ reviewerId: userId }, { revieweeId: userId }] });
+    console.log('⭐ Deleted reviews');
+
+    // Delete wishlist items
+    await Wishlist.deleteMany({ userId: userId });
+    console.log('❤️ Deleted wishlist items');
+
+    // Delete notifications
+    await Notification.deleteMany({ userId: userId });
+    console.log('🔔 Deleted notifications');
+
+    // Delete user
+    await User.findByIdAndDelete(userId);
+    console.log(`✅ User deleted: ${userEmail}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Your account has been permanently deleted. All associated data has been removed.'
+    });
+  } catch (error) {
+    console.error('❌ Account deletion error:', error);
+    next(error);
   }
 };

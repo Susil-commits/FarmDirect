@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import BackButton from '../../components/common/BackButton';
 import { AlertCircle } from 'lucide-react';
 import FarmerAnalytics from '../../components/farmer/FarmerAnalytics';
 
@@ -54,5 +55,12 @@ export default function FarmerDashboard() {
   }
 
   // Render new analytics dashboard
-  return <FarmerAnalytics />;
+  return (
+    <div>
+      <div className="max-w-7xl mx-auto pt-8 px-4">
+        <BackButton label="Back" />
+      </div>
+      <FarmerAnalytics />
+    </div>
+  );
 }

@@ -7,7 +7,7 @@ import ScrollAnimation from '../components/common/ScrollAnimation';
 import { Mail, Phone, MapPin, Globe, MessageSquare, Send, CheckCircle } from 'lucide-react';
 
 export default function Contact() {
-  const { navigate } = useRouter();
+  // Navigation handled by context
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -92,9 +92,9 @@ export default function Contact() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-linear-to-br from-white via-green-50 to-white">
+      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white">
         {/* Hero Section */}
-        <div className="bg-linear-to-br from-green-600 via-emerald-600 to-green-700 text-white py-16 px-4">
+        <div className="bg-gradient-to-br from-green-600 via-emerald-600 to-green-700 text-white py-16 px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl font-bold mb-4">Get in Touch</h1>
             <p className="text-xl text-green-50">

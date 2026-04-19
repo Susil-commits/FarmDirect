@@ -25,7 +25,10 @@ export default function AnimatedNumber({
 }) {
   const [displayValue, setDisplayValue] = useState(0);
   const [isVisible, setIsVisible] = useState(!animateOnVisible);
-  const [elementId] = useState(`animated-number-${Math.random()}`);
+  const [elementId] = useState(() => {
+    // Generate unique ID without Math.random
+    return `animated-number-${Date.now()}-${Math.floor(performance.now() % 1000)}`;
+  });
 
   useEffect(() => {
     if (!isVisible) return;

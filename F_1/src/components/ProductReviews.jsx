@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/Reviews.css';
 
-export default function ProductReviews({ productId, productName }) {
+export default function ProductReviews({ productId }) {
   const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, _setLoading] = useState(true);
 
   // Fetch reviews on component mount
   useEffect(() => {
@@ -12,16 +12,17 @@ export default function ProductReviews({ productId, productName }) {
 
   const fetchReviews = async () => {
     try {
-      setLoading(true);
+      _setLoading(true);
       // TODO: Replace with actual API call
       // const response = await reviewService.getReviews(productId);
       // setReviews(response.data || []);
       setReviews([]);
+      _setLoading(false);
     } catch (error) {
       console.error('Failed to fetch reviews:', error);
       setReviews([]);
     } finally {
-      setLoading(false);
+      _setLoading(false);
     }
   };
 

@@ -23,7 +23,7 @@ export default function OnboardingFlow() {
   const { navigate } = useRouter();
   const { user, login } = useAuth();
   const { refreshAll } = useData();
-  const [loading, setLoading] = useState(false);
+  const [_loading, _setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
@@ -69,27 +69,27 @@ export default function OnboardingFlow() {
         validate: async (data) => {
           const errors = {};
 
-          if (!data.fullName?.trim()) {
+          if (!stepData.fullName?.trim()) {
             errors.fullName = 'Full name is required';
           }
 
-          if (!data.email?.trim()) {
+          if (!stepData.email?.trim()) {
             errors.email = 'Email is required';
-          } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+          } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(stepData.email)) {
             errors.email = 'Please enter a valid email';
           }
 
-          if (!data.phone?.trim()) {
+          if (!stepData.phone?.trim()) {
             errors.phone = 'Phone number is required';
           }
 
-          if (!data.password) {
+          if (!stepData.password) {
             errors.password = 'Password is required';
-          } else if (data.password.length < 8) {
+          } else if (stepData.password.length < 8) {
             errors.password = 'Password must be at least 8 characters';
           }
 
-          if (data.password !== data.confirmPassword) {
+          if (stepData.password !== stepData.confirmPassword) {
             errors.confirmPassword = 'Passwords do not match';
           }
 
@@ -188,7 +188,7 @@ export default function OnboardingFlow() {
   };
 
   const handleComplete = async (formData) => {
-    setLoading(true);
+    _setLoading(true);
     setError(null);
 
     try {
@@ -221,7 +221,7 @@ export default function OnboardingFlow() {
       console.error('Onboarding error:', err);
       setError(err.message || 'An error occurred. Please try again.');
     } finally {
-      setLoading(false);
+      _setLoading(false);
     }
   };
 

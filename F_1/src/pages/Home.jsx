@@ -11,7 +11,7 @@ import { useParticleEffect, useRippleEffect } from '../hooks/useParticleEffect';
 
 export default function Home() {
   const { navigate } = useRouter();
-  const { user } = useAuth();
+  const { _user } = useAuth();
   const heroRef = useRef(null);
   const { ref: particleRef, triggerBurst } = useParticleEffect({
     particleCount: 15,
@@ -57,8 +57,6 @@ export default function Home() {
         const apiBaseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
         const url = `${apiBaseURL}/users/community/stats`;
         
-        console.log('📊 Fetching community stats from:', url);
-        
         const response = await fetch(url, {
           method: 'GET',
           headers: {
@@ -66,14 +64,11 @@ export default function Home() {
           }
         });
 
-        console.log('📊 Stats Response status:', response.status);
-
         if (!response.ok) {
           throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
-        console.log('📊 Stats data received:', data);
 
         if (data?.success && data?.data) {
           const newStats = {
@@ -83,7 +78,6 @@ export default function Home() {
             orders: Math.max(data.data.orders?.total || 0, 1),
             deliveryDays: '3-5',
           };
-          console.log('📊 Setting stats:', newStats);
           setStats(newStats);
         } else {
           console.warn('📊 Invalid response structure:', data);
@@ -211,7 +205,7 @@ export default function Home() {
               <div>
                 <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
                   <span className="inline-block animate-slide-in-left">Farm to Table</span>{' '}
-                  <span className="text-transparent bg-clip-text bg-linear-to-r from-green-500 to-emerald-600 inline-block animate-gradient-text">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-600 inline-block animate-gradient-text">
                     Directly
                   </span>
                 </h1>
@@ -251,7 +245,7 @@ export default function Home() {
               ) : (
                 <>
                   {imageLoading && (
-                    <div className="absolute inset-0 bg-linear-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse"></div>
                   )}
                   <img 
                     src="https://t4.ftcdn.net/jpg/12/50/32/05/360_F_1250320539_mSBEKgn75R0ITYmIU0euFdPaWRw8tsnO.jpg" 
@@ -266,7 +260,7 @@ export default function Home() {
                     decoding="async"
                   />
                   {/* Animated glow overlay on hover */}
-                  <div className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
                 </>
               )}
             </div>
@@ -297,7 +291,7 @@ export default function Home() {
         </section>
 
         {/* How It Works - User Guide */}
-        <section className="py-20 px-4 relative bg-linear-to-br from-white via-green-50 to-white">
+        <section className="py-20 px-4 relative bg-gradient-to-br from-white via-green-50 to-white">
           <div className="max-w-6xl mx-auto relative z-10">
             <ScrollAnimation className="scroll-slide mb-16">
               <div className="text-center">
@@ -317,7 +311,7 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Step 1 */}
                 <ScrollAnimation className="scroll-slide">
-                  <Card hover className="h-full bg-linear-to-br from-blue-50 to-cyan-50 border-2 border-blue-200">
+                  <Card hover className="h-full bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200">
                     <div className="p-8">
                       <div className="w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center text-3xl font-bold mb-6 mx-auto">
                         1
@@ -350,7 +344,7 @@ export default function Home() {
 
                 {/* Step 2 */}
                 <ScrollAnimation className="scroll-slide" style={{ animationDelay: '0.1s' }}>
-                  <Card hover className="h-full bg-linear-to-br from-green-50 to-emerald-50 border-2 border-green-200">
+                  <Card hover className="h-full bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
                     <div className="p-8">
                       <div className="w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center text-3xl font-bold mb-6 mx-auto">
                         2
@@ -387,7 +381,7 @@ export default function Home() {
 
                 {/* Step 3 */}
                 <ScrollAnimation className="scroll-slide" style={{ animationDelay: '0.2s' }}>
-                  <Card hover className="h-full bg-linear-to-br from-orange-50 to-amber-50 border-2 border-orange-200">
+                  <Card hover className="h-full bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200">
                     <div className="p-8">
                       <div className="w-16 h-16 bg-orange-500 text-white rounded-full flex items-center justify-center text-3xl font-bold mb-6 mx-auto">
                         3
@@ -439,7 +433,7 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Farmer Step 1 */}
                 <ScrollAnimation className="scroll-slide">
-                  <Card hover className="h-full bg-linear-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
+                  <Card hover className="h-full bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
                     <div className="p-8">
                       <div className="w-16 h-16 bg-purple-500 text-white rounded-full flex items-center justify-center text-3xl font-bold mb-6 mx-auto">
                         1
@@ -472,7 +466,7 @@ export default function Home() {
 
                 {/* Farmer Step 2 */}
                 <ScrollAnimation className="scroll-slide" style={{ animationDelay: '0.1s' }}>
-                  <Card hover className="h-full bg-linear-to-br from-red-50 to-pink-50 border-2 border-red-200">
+                  <Card hover className="h-full bg-gradient-to-br from-red-50 to-pink-50 border-2 border-red-200">
                     <div className="p-8">
                       <div className="w-16 h-16 bg-red-500 text-white rounded-full flex items-center justify-center text-3xl font-bold mb-6 mx-auto">
                         2
@@ -509,7 +503,7 @@ export default function Home() {
 
                 {/* Farmer Step 3 */}
                 <ScrollAnimation className="scroll-slide" style={{ animationDelay: '0.2s' }}>
-                  <Card hover className="h-full bg-linear-to-br from-yellow-50 to-amber-50 border-2 border-yellow-200">
+                  <Card hover className="h-full bg-gradient-to-br from-yellow-50 to-amber-50 border-2 border-yellow-200">
                     <div className="p-8">
                       <div className="w-16 h-16 bg-yellow-500 text-white rounded-full flex items-center justify-center text-3xl font-bold mb-6 mx-auto">
                         3
@@ -657,7 +651,7 @@ export default function Home() {
         </section>
 
         {/* Testimonials - Premium Section */}
-        <section className="py-20 px-4 relative bg-linear-to-br from-gray-50 via-green-50 to-gray-50">
+        <section className="py-20 px-4 relative bg-gradient-to-br from-gray-50 via-green-50 to-gray-50">
           <div className="max-w-6xl mx-auto relative z-10">
             <ScrollAnimation className="scroll-slide mb-16">
               <div className="text-center">
@@ -668,7 +662,7 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {testimonials.map((testi, i) => (
                 <ScrollAnimation key={i} className="scroll-slide" style={{ animationDelay: `${i * 0.1}s` }}>
-                  <Card hover className="h-full bg-linear-to-br from-white to-gray-50 border border-gray-100 hover:shadow-lg transition-all duration-300 group">
+                  <Card hover className="h-full bg-gradient-to-br from-white to-gray-50 border border-gray-100 hover:shadow-lg transition-all duration-300 group">
                     <div className="p-8">
                       {/* Animated Stars */}
                       <div className="flex gap-1 mb-4">
@@ -685,17 +679,17 @@ export default function Home() {
                       
                       {/* Quote */}
                       <p className="text-gray-700 italic mb-6 leading-relaxed flex gap-3">
-                        <span className="text-3xl text-green-600 font-bold leading-none animate-fade-in">\"</span>
+                        <span className="text-3xl text-green-600 font-bold leading-none animate-fade-in">"</span>
                         <span>{testi.text}</span>
-                        <span className="text-3xl text-green-600 font-bold leading-none animate-fade-in">\"</span>
+                        <span className="text-3xl text-green-600 font-bold leading-none animate-fade-in">"</span>
                       </p>
                       
                       {/* Animated Divider */}
-                      <div className="h-1 w-12 bg-linear-to-r from-green-400 to-emerald-400 rounded mb-6 group-hover:w-20 transition-all duration-500"></div>
+                      <div className="h-1 w-12 bg-gradient-to-r from-green-400 to-emerald-400 rounded mb-6 group-hover:w-20 transition-all duration-500"></div>
                       
                       {/* User Info with Animated Avatar */}
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-linear-to-br from-green-400 to-emerald-400 flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:shadow-green-200/50 hover:scale-110 transition-all duration-300 animate-bounce-soft">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-400 flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:shadow-green-200/50 hover:scale-110 transition-all duration-300 animate-bounce-soft">
                           {testi.avatar}
                         </div>
                         <div>

@@ -92,9 +92,42 @@ const userSchema = new mongoose.Schema(
       enum: ['pending', 'verified', 'rejected'],
       default: 'pending'
     },
+    kycSubmittedAt: Date,
     kycVerifiedAt: Date,
     kycRejectionReason: String,
     kycComments: String,
+    // KYC Documents - Store document details
+    kycDocuments: {
+      aadharNumber: String,
+      governmentId: {
+        fileName: String,
+        uploadedAt: Date
+      },
+      profilePhoto: {
+        fileName: String,
+        uploadedAt: Date
+      },
+      addressProof: {
+        fileName: String,
+        uploadedAt: Date
+      },
+      landOwnership: {  // For farmers
+        fileName: String,
+        uploadedAt: Date
+      },
+      farmRegistration: {  // For farmers
+        fileName: String,
+        uploadedAt: Date
+      }
+    },
+    // KYC Personal Details
+    kycDetails: {
+      aadharNumber: String,
+      governmentIdType: String, // PAN, Passport, DL, etc.
+      governmentIdNumber: String,
+      dateOfBirth: Date,
+      profilePhotoUrl: String
+    },
     // Rating
     rating: {
       type: Number,
