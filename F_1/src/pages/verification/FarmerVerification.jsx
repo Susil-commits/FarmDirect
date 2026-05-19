@@ -1,15 +1,16 @@
-import { useState } from 'react';
-import { Upload, CheckCircle, Clock, AlertCircle, Download } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Upload, CheckCircle, Clock, AlertCircle, Download, Eye } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import BackButton from '../../components/common/BackButton';
+import DocumentPreviewModal from '../../components/admin/DocumentPreviewModal.jsx';
 import uploadService from '../../services/uploadService';
 
 export default function FarmerVerification() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { navigate } = useRouter();
   const [documents, setDocuments] = useState({
     governmentId: { file: null, status: 'pending', fileName: '' },
@@ -22,6 +23,44 @@ export default function FarmerVerification() {
   const [submittedAt, setSubmittedAt] = useState(null);
   const [allSubmitted, setAllSubmitted] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
+
+  // Pre-populate documents from backend kycDocuments when user data is available
+  useEffect(() => {
+    if (!user?.kycDocuments) return;
+
+    const kycDocs = user.kycDocuments;
+    const hasSubmittedDocs = Object.values(kycDocs).some(
+      (doc) => doc && typeof doc === 'object' && doc.url
+    );
+
+    if (!hasSubmittedDocs) return;
+
+    const docMappings = ['governmentId', 'landOwnership', 'bankAccount', 'farmRegistration', 'landSurvey'];
+    const restoredDocs = {};
+    let hasAnyDoc = false;
+
+    docMappings.forEach((docId) => {
+      const backendDoc = kycDocs[docId];
+      if (backendDoc && backendDoc.url) {
+        restoredDocs[docId] = {
+          file: null,
+          status: 'submitted',
+          fileName: backendDoc.fileName || 'Uploaded document',
+          url: backendDoc.url,
+          mimeType: backendDoc.mimeType || 'application/pdf',
+        };
+        hasAnyDoc = true;
+      }
+    });
+
+    if (hasAnyDoc) {
+      setDocuments((prev) => ({ ...prev, ...restoredDocs }));
+      if (user.kycSubmittedAt) {
+        setSubmittedAt(new Date(user.kycSubmittedAt));
+      }
+    }
+  }, [user?.kycDocuments, user?.kycSubmittedAt]);
 
   // Redirect non-farmers
   if (!user || user.role !== 'farmer') {
@@ -41,7 +80,7 @@ export default function FarmerVerification() {
   }
 
   // If already verified
-  if (user?.verified) {
+  if (user?.kycStatus === 'verified') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <Card className="w-full max-w-md">
@@ -101,46 +140,76 @@ export default function FarmerVerification() {
           fileName: file.name,
         }
       }));
+    } else {
+      // Remove/reset the document
+      setDocuments(prev => ({
+        ...prev,
+        [docId]: { file: null, status: 'pending', fileName: '' }
+      }));
     }
   };
 
   const handleSubmit = async () => {
-    const allUploaded = Object.values(documents).every(doc => doc.file);
-    if (!allUploaded) {
-      alert('Please upload all required documents');
+    // Count docs that are either newly uploaded (have File object) OR already submitted on backend with a file URL
+    const readyDocs = Object.values(documents).filter(
+      doc => doc.file || (doc.status === 'submitted' && doc.url)
+    );
+    const allReady = readyDocs.length === requiredDocs.length;
+    if (!allReady) {
+      const missing = requiredDocs.filter(doc => {
+        const d = documents[doc.id];
+        return !d.file && !(d.status === 'submitted' && d.url);
+      });
+      alert(`Please upload all required documents. Missing: ${missing.map(d => d.label).join(', ')}`);
+      return;
+    }
+
+    // Check if there are any new files to actually upload
+    // IMPORTANT: Also allow re-upload if docs are marked "submitted" but have no file URL
+    // (this happens when a previous upload failed silently — kycStatus is "pending" but no docs stored)
+    const hasNewFiles = Object.values(documents).some(
+      doc => doc.file || (doc.status === 'submitted' && !doc.url)
+    );
+    if (!hasNewFiles) {
+      alert('All documents are already submitted and under review. No new files to upload.');
       return;
     }
 
     try {
       setIsUploading(true);
-      
-      // Collect all files
-      const allFiles = Object.values(documents)
-        .map(doc => doc.file)
-        .filter(Boolean);
+
+      // Build file map - include docs with actual File objects (newly uploaded ones)
+      // AND docs that were marked "submitted" but have no file URL (failed previous upload)
+      const fileMap = {};
+      Object.entries(documents).forEach(([docId, doc]) => {
+        if (doc.file) {
+          fileMap[docId] = doc.file;
+        }
+      });
+
+      console.log('📤 [FarmerVerification] Uploading files:', Object.keys(fileMap));
+      console.log('📤 [FarmerVerification] File details:', Object.entries(fileMap).map(([k, v]) => `${k}: ${v.name} (${v.size} bytes)`));
 
       // Upload to backend
-      const result = await uploadService.uploadKYCDocuments(allFiles, 'farmer_kyc');
-      
-      console.log('✅ KYC documents submitted:', result);
-      
+      const result = await uploadService.uploadKYCDocuments(fileMap, 'farmer_kyc');
+
+      console.log('✅ [FarmerVerification] KYC documents submitted:', result);
+
+      // CRITICAL: Refresh user data to get kycDocuments from backend
+      // This ensures the pre-populate useEffect can find the docs on next page load
+      console.log('🔄 [FarmerVerification] Refreshing user data...');
+      const refreshedUser = await refreshUser();
+      console.log('🔄 [FarmerVerification] User refreshed, kycDocuments:', Object.keys(refreshedUser?.kycDocuments || {}));
+
       setSubmittedAt(new Date().toLocaleDateString());
       setAllSubmitted(true);
       alert('✅ Documents submitted successfully! Our team will review within 24-48 hours.');
     } catch (error) {
-      console.error('❌ Upload error:', error);
-      alert('❌ Error submitting documents. Please try again.');
+      console.error('❌ [FarmerVerification] Upload error:', error);
+      const serverMsg = error?.response?.data?.message || error?.message || 'Unknown error';
+      alert(`❌ Error submitting documents: ${serverMsg}\n\nPlease check that:\n• All files are under 10MB\n• Files are PDF, JPG, or PNG format\n• Your internet connection is stable\n\nIf the problem persists, try refreshing the page and uploading again.`);
     } finally {
       setIsUploading(false);
-    }
-  };
-
-  const _getStatusColor = (status) => {
-    switch (status) {
-      case 'verified': return 'text-green-600';
-      case 'pending': return 'text-blue-600';
-      case 'rejected': return 'text-red-600';
-      default: return 'text-gray-600';
     }
   };
 
@@ -207,11 +276,20 @@ export default function FarmerVerification() {
                   Refresh Status
                 </Button>
                 <Button
-                  variant="primary"
+                  variant="outline"
                   size="md"
-                  onClick={() => navigate('/farmer/dashboard')}
+                  onClick={() => {
+                    setAllSubmitted(false);
+                    setSubmittedAt(null);
+                    // Reset all document states to pending
+                    const resetDocs = {};
+                    Object.keys(documents).forEach((key) => {
+                      resetDocs[key] = { file: null, status: 'pending', fileName: '' };
+                    });
+                    setDocuments(resetDocs);
+                  }}
                 >
-                  Go to Dashboard
+                  Resubmit Documents
                 </Button>
               </div>
             </Card>
@@ -225,15 +303,15 @@ export default function FarmerVerification() {
           <div className="p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Verification Progress</h2>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-              {requiredDocs.map((doc, idx) => {
+              {requiredDocs.map((doc) => {
                 const docData = documents[doc.id];
                 return (
                   <div key={doc.id} className="text-center">
                     <div className={`text-4xl mb-2 opacity-70`}>{doc.icon}</div>
                     <p className="text-xs text-gray-600 font-medium">{doc.label}</p>
                     <Badge
-                      label={docData.status === 'pending' && !docData.file ? 'Pending' : docData.file ? 'Uploaded' : 'Pending'}
-                      variant={docData.file ? 'success' : 'warning'}
+                      label={docData.status === 'submitted' ? 'Submitted' : docData.file ? 'Uploaded' : 'Pending'}
+                      variant={docData.status === 'submitted' || docData.file ? 'success' : 'warning'}
                       size="sm"
                       className="mt-2 mx-auto"
                     />
@@ -245,12 +323,12 @@ export default function FarmerVerification() {
               <div
                 className="bg-green-600 h-2 rounded-full transition-all duration-300"
                 style={{
-                  width: `${(Object.values(documents).filter(d => d.file).length / requiredDocs.length) * 100}%`
+                  width: `${(Object.values(documents).filter(d => d.file || d.status === 'submitted').length / requiredDocs.length) * 100}%`
                 }}
               ></div>
             </div>
             <p className="text-sm text-gray-600 mt-2">
-              {Object.values(documents).filter(d => d.file).length} of {requiredDocs.length} documents uploaded
+              {Object.values(documents).filter(d => d.file || d.status === 'submitted').length} of {requiredDocs.length} documents uploaded
             </p>
           </div>
         </Card>
@@ -271,27 +349,53 @@ export default function FarmerVerification() {
                     </div>
                   </div>
                   <Badge
-                    label={documents[doc.id].file ? 'Uploaded' : 'Required'}
-                    variant={documents[doc.id].file ? 'success' : 'warning'}
+                    label={
+                      documents[doc.id].status === 'submitted' ? 'Submitted' :
+                      documents[doc.id].file ? 'Uploaded' : 'Required'
+                    }
+                    variant={
+                      documents[doc.id].status === 'submitted' ? 'success' :
+                      documents[doc.id].file ? 'success' : 'warning'
+                    }
                   />
                 </div>
 
-                {documents[doc.id].file ? (
-                  <div className="bg-white rounded-lg p-4 border-2 border-green-200 mb-4">
+                {documents[doc.id].file || documents[doc.id].status === 'submitted' ? (
+                  <div className={`bg-white rounded-lg p-4 border-2 mb-4 ${documents[doc.id].status === 'submitted' ? 'border-blue-200' : 'border-green-200'}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
+                        {documents[doc.id].status === 'submitted' ? (
+                          <Clock className="w-5 h-5 text-blue-600" />
+                        ) : (
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                        )}
                         <div>
                           <p className="font-medium text-gray-900">{documents[doc.id].fileName}</p>
-                          <p className="text-xs text-gray-500">Ready for verification</p>
+                          <p className="text-xs text-gray-500">
+                            {documents[doc.id].status === 'submitted' ? 'Already submitted — under review' : 'Ready for verification'}
+                          </p>
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleFileUpload(doc.id, null)}
-                        className="text-red-600 hover:text-red-700 font-medium text-sm"
-                      >
-                        Remove
-                      </button>
+                      <div className="flex items-center gap-3">
+                        {documents[doc.id].url && (
+                          <button
+                            onClick={() => setSelectedDocument({
+                              url: documents[doc.id].url,
+                              fileName: documents[doc.id].fileName,
+                              mimeType: documents[doc.id].mimeType || 'application/pdf',
+                            })}
+                            className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1"
+                          >
+                            <Eye className="w-4 h-4" /> View
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleFileUpload(doc.id, null)}
+                          className="text-red-600 hover:text-red-700 font-medium text-sm"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -349,21 +453,12 @@ export default function FarmerVerification() {
         </Card>
 
         {/* Submit Button */}
-        <div className="mt-8 flex gap-4">
-          <Button
-            onClick={() => navigate('/farmer/dashboard')}
-            variant="secondary"
-            size="lg"
-            className="flex-1"
-            disabled={isUploading}
-          >
-            Skip for Now
-          </Button>
+        <div className="mt-8">
           <Button
             onClick={handleSubmit}
             variant="primary"
             size="lg"
-            className="flex-1"
+            className="w-full"
             disabled={allSubmitted || isUploading}
           >
             {isUploading ? '⏳ Submitting...' : allSubmitted ? 'Documents Submitted' : 'Submit for Verification'}
@@ -372,6 +467,14 @@ export default function FarmerVerification() {
           </>
         )}
       </div>
+
+      {/* Document Preview Modal */}
+      {selectedDocument && (
+        <DocumentPreviewModal
+          document={selectedDocument}
+          onClose={() => setSelectedDocument(null)}
+        />
+      )}
     </div>
   );
 }

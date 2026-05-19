@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Download, Share2, Star } from 'lucide-react';
 import PageTransition from '../components/common/PageTransition';
 import { useToast } from '../context/ToastContext';
+import { cropService } from '../services/appService';
 
 // Comparison service
 

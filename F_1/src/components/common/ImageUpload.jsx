@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Upload, X, AlertCircle, CheckCircle } from 'lucide-react';
-import axios from 'axios';
+import directApi from '../../services/directApi.js';
 import '../styles/ImageUpload.css';
 
 /**
@@ -67,15 +67,14 @@ const ImageUpload = ({
 
     try {
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('file', file);
       formData.append('folder', folder);
 
-      // Upload to backend
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/upload`,
+      // Upload to backend — use directApi to bypass Vite proxy for file uploads
+      const response = await directApi.post(
+        '/upload',
         formData,
         {
-          headers: { 'Content-Type': 'multipart/form-data' },
           onUploadProgress: (progressEvent) => {
             const progress = Math.round(
               (progressEvent.loaded * 100) / progressEvent.total
@@ -86,6 +85,7 @@ const ImageUpload = ({
       );
 
       // Success
+      // directApi returns raw axios response, so access .data
       setSuccess(true);
       onUploadSuccess(response.data.url);
       

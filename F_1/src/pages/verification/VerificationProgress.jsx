@@ -1,32 +1,37 @@
 import { useState, useEffect } from 'react';
-import { Upload, CheckCircle, Clock, AlertCircle, FileText, Camera, ChevronDown, ChevronUp } from 'lucide-react';
+import { Upload, CheckCircle, Clock, AlertCircle, FileText, Camera, ChevronDown, ChevronUp, Eye } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 import { useToast } from '../../context/ToastContext';
+import { authServiceExtended } from '../../services/appService';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import BackButton from '../../components/common/BackButton';
 import CongratulationModal from '../../components/common/CongratulationModal';
 import PageTransition from '../../components/common/PageTransition.jsx';
+import DocumentPreviewModal from '../../components/admin/DocumentPreviewModal.jsx';
 
 export default function VerificationProgress() {
-  const { user, verificationStatus, submitVerificationDocuments, fetchVerificationStatus } = useAuth();
+  const { user, verificationStatus, submitVerificationDocuments, fetchVerificationStatus, refreshUser } = useAuth();
   const { navigate } = useRouter();
   const { addToast } = useToast();
   const [expandedSections, setExpandedSections] = useState({});
   const [isChecking, setIsChecking] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
+  
+  const getBaseDocuments = (role) => ({
+    governmentId: { file: null, status: 'pending', fileName: '' },
+    profilePhoto: { file: null, status: 'pending', fileName: '' },
+    addressProof: { file: null, status: 'pending', fileName: '' },
+    ...(role === 'farmer' && {
+      landOwnership: { file: null, status: 'pending', fileName: '' },
+      farmRegistration: { file: null, status: 'pending', fileName: '' },
+    })
+  });
   
   const [documents, setDocuments] = useState(() => {
-    const baseDocuments = {
-      governmentId: { file: null, status: 'pending', fileName: '' },
-      profilePhoto: { file: null, status: 'pending', fileName: '' },
-      addressProof: { file: null, status: 'pending', fileName: '' },
-      ...(user?.role === 'farmer' && {
-        landOwnership: { file: null, status: 'pending', fileName: '' },
-        farmRegistration: { file: null, status: 'pending', fileName: '' },
-      })
-    };
+    const baseDocuments = getBaseDocuments(user?.role);
     
     if (user?.id) {
       const stored = localStorage.getItem(`verificationDocuments_${user.id}`);
@@ -42,13 +47,40 @@ export default function VerificationProgress() {
     
     return baseDocuments;
   });
+
+  // Sync documents state when user role changes (ensures farmer docs are added)
+  useEffect(() => {
+    if (!user?.role) return;
+    const expectedKeys = Object.keys(getBaseDocuments(user.role));
+    const currentKeys = Object.keys(documents);
+    const missingKeys = expectedKeys.filter(k => !currentKeys.includes(k));
+    if (missingKeys.length > 0) {
+      setDocuments(prev => {
+        const updated = { ...prev };
+        missingKeys.forEach(key => {
+          updated[key] = { file: null, status: 'pending', fileName: '' };
+        });
+        return updated;
+      });
+    }
+  }, [user?.role]);
   
+  // Check if user has NA-marked address fields (farmers who marked address as N/A during registration)
+  const hasNAAddress = user?.role === 'farmer' && (
+    user?.address === 'NA' || user?.city === 'NA' || user?.state === 'NA' || user?.pincode === 'NA'
+  );
+
   // Personal details state
   const [personalDetails, setPersonalDetails] = useState({
     aadharNumber: '',
-    city: user?.addresses?.[0]?.city || '',
-    state: user?.addresses?.[0]?.state || '',
-    pincode: user?.addresses?.[0]?.pincode || ''
+    address: (!hasNAAddress && user?.address && user?.address !== 'NA') ? user.address : '',
+    city: (!hasNAAddress && user?.city && user?.city !== 'NA') ? user.city : (user?.addresses?.[0]?.city || ''),
+    state: (!hasNAAddress && user?.state && user?.state !== 'NA') ? user.state : (user?.addresses?.[0]?.state || ''),
+    pincode: (!hasNAAddress && user?.pincode && user?.pincode !== 'NA') ? user.pincode : (user?.addresses?.[0]?.pincode || ''),
+    // Farmer-specific fields
+    farmName: user?.farmName || '',
+    farmArea: user?.farmArea || '',
+    experience: user?.experience || ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedAt, setSubmittedAt] = useState(() => {
@@ -65,6 +97,7 @@ export default function VerificationProgress() {
   });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
 
   // Reset scroll position to top on page load
   useEffect(() => {
@@ -79,24 +112,84 @@ export default function VerificationProgress() {
         toStore[key] = {
           status: doc.status || 'pending',
           fileName: doc.fileName || '',
-          file: doc.file ? doc.file.name : null
+          file: doc.file ? doc.file.name : null,
+          url: doc.url || null,        // Preserve URL for PDF/image preview after page reload
+          mimeType: doc.mimeType || null,
         };
       });
       localStorage.setItem(`verificationDocuments_${user.id}`, JSON.stringify(toStore));
     }
   }, [documents, user?.id]);
 
-  // Check verification status immediately on page load
+  // Check verification status and load submitted documents on page load
   useEffect(() => {
     const checkStatus = async () => {
-      if (user && verificationStatus === 'pending') {
+      if (user) {
         setIsChecking(true);
+        // Always fetch latest status and submitted documents
         await fetchVerificationStatus();
         setIsChecking(false);
       }
     };
     checkStatus();
-  }, [user, verificationStatus, fetchVerificationStatus]);
+  }, [user, fetchVerificationStatus]);
+
+  // Pre-populate documents from backend kycDocuments when user data is refreshed
+  // This ensures users who already submitted KYC docs don't see empty upload slots
+  useEffect(() => {
+    if (!user?.kycDocuments) return;
+
+    const kycDocs = user.kycDocuments;
+    const hasSubmittedDocs = Object.values(kycDocs).some(
+      (doc) => doc && typeof doc === 'object' && doc.url
+    );
+
+    if (!hasSubmittedDocs) return;
+
+    // Map backend kycDocuments structure to frontend document state
+    const docMappings = ['governmentId', 'profilePhoto', 'addressProof'];
+    if (user?.role === 'farmer') {
+      docMappings.push('landOwnership', 'farmRegistration');
+    }
+
+    const restoredDocs = {};
+    let hasAnyDoc = false;
+
+    docMappings.forEach((docId) => {
+      const backendDoc = kycDocs[docId];
+      if (backendDoc && backendDoc.url) {
+        restoredDocs[docId] = {
+          file: null, // Cannot restore actual File object from URL
+          status: 'submitted',
+          fileName: backendDoc.fileName || 'Uploaded document',
+          url: backendDoc.url,
+          mimeType: backendDoc.mimeType || 'application/pdf',
+        };
+        hasAnyDoc = true;
+      }
+    });
+
+    if (hasAnyDoc) {
+      setDocuments((prev) => ({ ...prev, ...restoredDocs }));
+
+      // Also restore submission timestamp from backend
+      if (user.kycSubmittedAt) {
+        setSubmittedAt(new Date(user.kycSubmittedAt));
+        localStorage.setItem(
+          `verificationSubmittedAt_${user.id}`,
+          new Date(user.kycSubmittedAt).toISOString()
+        );
+      }
+
+      // Restore aadhar number if stored in kycDocuments
+      if (kycDocs.aadharNumber) {
+        setPersonalDetails((prev) => ({
+          ...prev,
+          aadharNumber: kycDocs.aadharNumber,
+        }));
+      }
+    }
+  }, [user?.kycDocuments, user?.kycSubmittedAt, user?.role, user?.id]);
 
   useEffect(() => {
     // If already verified, redirect to dashboard and clear submission state
@@ -192,10 +285,31 @@ export default function VerificationProgress() {
       return;
     }
     
-    if (!personalDetails.aadharNumber || !personalDetails.city || !personalDetails.state || !personalDetails.pincode) {
-      addToast('Please fill in all required personal details', 'error');
+    // Validate personal details with field-level error tracking
+    const errors = {};
+    if (!personalDetails.aadharNumber) errors.aadharNumber = true;
+    if (!personalDetails.address) errors.address = true;
+    if (!personalDetails.city) errors.city = true;
+    if (!personalDetails.state) errors.state = true;
+    if (!personalDetails.pincode) errors.pincode = true;
+    // Farmer-specific validation
+    if (user?.role === 'farmer') {
+      if (!personalDetails.farmName) errors.farmName = true;
+      if (!personalDetails.farmArea) errors.farmArea = true;
+      if (!personalDetails.experience && personalDetails.experience !== 0) errors.experience = true;
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      addToast('Please fill in all required personal details including address', 'error');
+      // Scroll to the personal details section so the user can see the missing fields
+      const detailsSection = document.getElementById('personal-details-section');
+      if (detailsSection) {
+        detailsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
+    setValidationErrors({});
 
     setIsSubmitting(true);
     try {
@@ -209,11 +323,24 @@ export default function VerificationProgress() {
       
       // Add personal details
       formData.append('aadharNumber', personalDetails.aadharNumber);
+      formData.append('address', personalDetails.address || '');
       formData.append('city', personalDetails.city);
       formData.append('state', personalDetails.state);
       formData.append('pincode', personalDetails.pincode);
+      
+      // Add farmer-specific fields
+      if (user?.role === 'farmer') {
+        formData.append('farmName', personalDetails.farmName || '');
+        formData.append('farmArea', personalDetails.farmArea || '');
+        formData.append('experience', personalDetails.experience || '');
+      }
 
       const _result = await submitVerificationDocuments(formData);
+      
+      // CRITICAL: Refresh user data to get kycDocuments from backend
+      // submitVerificationDocuments already tries to update user, but this ensures it
+      await refreshUser();
+      
       const now = new Date();
       setSubmittedAt(now);
       
@@ -234,7 +361,10 @@ export default function VerificationProgress() {
       addToast('Documents submitted successfully for verification!', 'success');
     } catch (error) {
       console.error('Submission error:', error);
-      addToast(error?.message || 'Failed to submit documents. Please try again.', 'error');
+      const errorMsg = error?.response?.data?.message
+        || error?.message
+        || 'Failed to submit documents. Please check your connection and try again.';
+      addToast(errorMsg, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -243,29 +373,16 @@ export default function VerificationProgress() {
   const handleDeleteAccount = async () => {
     try {
       setIsDeleting(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/auth/delete-account', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        addToast('Your account has been permanently deleted.', 'success');
-        // Clear auth data
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem(`verificationDocuments_${user?.id}`);
-        localStorage.removeItem(`verificationSubmittedAt_${user?.id}`);
-        localStorage.removeItem(`showCongratulation_${user?.id}`);
-        // Redirect to home
-        setTimeout(() => navigate('/'), 1500);
-      } else {
-        const data = await response.json();
-        addToast(data.message || 'Failed to delete account', 'error');
-      }
+      await authServiceExtended.deleteAccount();
+      addToast('Your account has been permanently deleted.', 'success');
+      // Clear auth data
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem(`verificationDocuments_${user?.id}`);
+      localStorage.removeItem(`verificationSubmittedAt_${user?.id}`);
+      localStorage.removeItem(`showCongratulation_${user?.id}`);
+      // Redirect to home
+      setTimeout(() => navigate('/'), 1500);
     } catch (error) {
       console.error('Delete account error:', error);
       addToast('Failed to delete account. Please try again.', 'error');
@@ -376,7 +493,13 @@ export default function VerificationProgress() {
                     <h3 className="font-semibold text-gray-900">Documents</h3>
                   </div>
                   <p className="text-2xl font-bold text-gray-900">
-                    {Object.values(documents).filter(d => d.file !== null).length}/{requiredDocuments.length}
+                    {(() => {
+                      // Count documents from live state: either newly uploaded (file) or previously submitted (status === 'submitted')
+                      const uploadedCount = Object.values(documents).filter(
+                        d => d.file !== null || d.status === 'submitted'
+                      ).length;
+                      return `${uploadedCount}/${requiredDocuments.length}`;
+                    })()}
                   </p>
                   <p className="text-sm text-gray-600 mt-2">Documents uploaded</p>
                 </div>
@@ -518,6 +641,19 @@ export default function VerificationProgress() {
                               />
                             </div>
                           </label>
+                          {documents[doc.id]?.url && (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDocument({
+                                url: documents[doc.id].url,
+                                fileName: documents[doc.id].fileName,
+                                mimeType: documents[doc.id].mimeType || 'application/pdf',
+                              })}
+                              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
+                            >
+                              <Eye className="w-4 h-4" /> View Document
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -543,9 +679,20 @@ export default function VerificationProgress() {
                 </Card>
 
                 {/* Personal Details Section */}
-                <Card className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                <Card id="personal-details-section" className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
                   <div className="p-6">
                     <h3 className="text-xl font-bold text-gray-900 mb-4">📋 Personal Details</h3>
+
+                    {/* NA Address Notice for Farmers */}
+                    {hasNAAddress && (
+                      <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p className="text-sm font-semibold text-amber-900 mb-1">⚠️ Address Details Required</p>
+                        <p className="text-xs text-amber-800">
+                          You marked your address as N/A during registration. Please provide your complete address details below for verification.
+                        </p>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -555,10 +702,35 @@ export default function VerificationProgress() {
                           type="text"
                           placeholder="Enter 12-digit Aadhar number"
                           value={personalDetails.aadharNumber}
-                          onChange={(e) => setPersonalDetails({...personalDetails, aadharNumber: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onChange={(e) => {
+                            setPersonalDetails({...personalDetails, aadharNumber: e.target.value});
+                            if (validationErrors.aadharNumber) setValidationErrors(prev => ({...prev, aadharNumber: false}));
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.aadharNumber ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                           required
                         />
+                        {validationErrors.aadharNumber && (
+                          <p className="text-xs text-red-600 mt-1">Aadhar number is required</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Street Address *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="House/Flat No., Street, Area"
+                          value={personalDetails.address || ''}
+                          onChange={(e) => {
+                            setPersonalDetails({...personalDetails, address: e.target.value});
+                            if (validationErrors.address) setValidationErrors(prev => ({...prev, address: false}));
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.address ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                          required
+                        />
+                        {validationErrors.address && (
+                          <p className="text-xs text-red-600 mt-1">Street address is required</p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -568,10 +740,16 @@ export default function VerificationProgress() {
                           type="text"
                           placeholder="Enter city name"
                           value={personalDetails.city}
-                          onChange={(e) => setPersonalDetails({...personalDetails, city: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onChange={(e) => {
+                            setPersonalDetails({...personalDetails, city: e.target.value});
+                            if (validationErrors.city) setValidationErrors(prev => ({...prev, city: false}));
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.city ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                           required
                         />
+                        {validationErrors.city && (
+                          <p className="text-xs text-red-600 mt-1">City is required</p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -581,10 +759,16 @@ export default function VerificationProgress() {
                           type="text"
                           placeholder="Enter state name"
                           value={personalDetails.state}
-                          onChange={(e) => setPersonalDetails({...personalDetails, state: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onChange={(e) => {
+                            setPersonalDetails({...personalDetails, state: e.target.value});
+                            if (validationErrors.state) setValidationErrors(prev => ({...prev, state: false}));
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.state ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                           required
                         />
+                        {validationErrors.state && (
+                          <p className="text-xs text-red-600 mt-1">State is required</p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -594,12 +778,84 @@ export default function VerificationProgress() {
                           type="text"
                           placeholder="Enter 6-digit pincode"
                           value={personalDetails.pincode}
-                          onChange={(e) => setPersonalDetails({...personalDetails, pincode: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onChange={(e) => {
+                            setPersonalDetails({...personalDetails, pincode: e.target.value});
+                            if (validationErrors.pincode) setValidationErrors(prev => ({...prev, pincode: false}));
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.pincode ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                           required
                         />
+                        {validationErrors.pincode && (
+                          <p className="text-xs text-red-600 mt-1">Pincode is required</p>
+                        )}
                       </div>
                     </div>
+
+                    {/* Farmer-specific fields */}
+                    {user?.role === 'farmer' && (
+                      <div className="mt-6 pt-6 border-t border-blue-200">
+                        <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                          🌾 Farm Details
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Farm Name *
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Enter your farm name"
+                              value={personalDetails.farmName || ''}
+                              onChange={(e) => {
+                                setPersonalDetails({...personalDetails, farmName: e.target.value});
+                                if (validationErrors.farmName) setValidationErrors(prev => ({...prev, farmName: false}));
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.farmName ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                            />
+                            {validationErrors.farmName && (
+                              <p className="text-xs text-red-600 mt-1">Farm name is required</p>
+                            )}
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Farm Area *
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="e.g., 5 acres"
+                              value={personalDetails.farmArea || ''}
+                              onChange={(e) => {
+                                setPersonalDetails({...personalDetails, farmArea: e.target.value});
+                                if (validationErrors.farmArea) setValidationErrors(prev => ({...prev, farmArea: false}));
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.farmArea ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                            />
+                            {validationErrors.farmArea && (
+                              <p className="text-xs text-red-600 mt-1">Farm area is required</p>
+                            )}
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Experience (years) *
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="Years of farming"
+                              value={personalDetails.experience || ''}
+                              onChange={(e) => {
+                                setPersonalDetails({...personalDetails, experience: e.target.value});
+                                if (validationErrors.experience) setValidationErrors(prev => ({...prev, experience: false}));
+                              }}
+                              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.experience ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                            />
+                            {validationErrors.experience && (
+                              <p className="text-xs text-red-600 mt-1">Experience is required</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </Card>
 
@@ -685,9 +941,9 @@ export default function VerificationProgress() {
               </p>
               {submittedAt && (
                 <p className="text-sm text-blue-700 mb-6">
-                  Submitted on: {new Date(submittedAt).toLocaleDateString('en-IN', { 
-                    year: 'numeric', 
-                    month: 'long', 
+                  Submitted on: {new Date(submittedAt).toLocaleDateString('en-IN', {
+                    year: 'numeric',
+                    month: 'long',
                     day: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
@@ -701,8 +957,8 @@ export default function VerificationProgress() {
                       <span className="text-2xl">{doc.icon}</span>
                       <div className="text-left">
                         <p className="font-semibold text-gray-900">{doc.label}</p>
-                        <Badge 
-                          label={getDocumentStatus(documents[doc.id])} 
+                        <Badge
+                          label={getDocumentStatus(documents[doc.id])}
                           variant={getDocumentBadgeVariant(documents[doc.id])}
                           className="mt-2"
                         />
@@ -714,6 +970,34 @@ export default function VerificationProgress() {
               <p className="text-sm text-blue-700 mb-6">
                 You will receive an email notification once your account is verified or if resubmission is needed.
               </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => {
+                    // Reset all document statuses from 'submitted' to 'pending'
+                    const resetDocs = {};
+                    Object.entries(documents).forEach(([key, doc]) => {
+                      resetDocs[key] = {
+                        ...doc,
+                        status: 'pending',
+                        file: null,
+                        fileName: ''
+                      };
+                    });
+                    setDocuments(resetDocs);
+                    setSubmittedAt(null);
+                    // Clear localStorage entries for this user
+                    if (user?.id) {
+                      localStorage.removeItem(`verificationSubmittedAt_${user.id}`);
+                      localStorage.removeItem(`verificationDocuments_${user.id}`);
+                    }
+                    addToast('You can now re-upload your documents.', 'info');
+                  }}
+                >
+                  Resubmit Documents
+                </Button>
+              </div>
             </Card>
           )}
 
@@ -768,6 +1052,13 @@ export default function VerificationProgress() {
             </div>
           </Card>
         </div>
+      )}
+      {/* Document Preview Modal */}
+      {selectedDocument && (
+        <DocumentPreviewModal
+          document={selectedDocument}
+          onClose={() => setSelectedDocument(null)}
+        />
       )}
     </PageTransition>
   );

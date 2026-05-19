@@ -1,0 +1,213 @@
+/* OrderDetails Page Styles */
+
+.order-details-container {
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #ffffff, #f0fdf4, #ffffff);
+  padding: 3rem 1rem;
+}
+
+/* Animation for modal entrance */
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out;
+}
+
+/* Payment status badge animations */
+@keyframes pulse-status {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.payment-status-pending {
+  animation: pulse-status 2s ease-in-out infinite;
+}
+
+/* Timeline line animation */
+@keyframes draw-timeline {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: 100%;
+    opacity: 1;
+  }
+}
+
+.timeline-line {
+  animation: draw-timeline 0.6s ease-out;
+}
+
+/* Price breakdown smooth reveal */
+@keyframes slide-up {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.price-breakdown-item {
+  animation: slide-up 0.4s ease-out;
+  animation-fill-mode: both;
+}
+
+.price-breakdown-item:nth-child(1) { animation-delay: 0.1s; }
+.price-breakdown-item:nth-child(2) { animation-delay: 0.2s; }
+.price-breakdown-item:nth-child(3) { animation-delay: 0.3s; }
+.price-breakdown-item:nth-child(4) { animation-delay: 0.4s; }
+
+/* Item card hover effect */
+.order-item-card {
+  transition: all 0.3s ease;
+  border-radius: 0.75rem;
+}
+
+.order-item-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.1);
+}
+
+/* Payment modal styles */
+.payment-modal-overlay {
+  backdrop-filter: blur(4px);
+}
+
+.payment-input-focus {
+  transition: all 0.3s ease;
+}
+
+.payment-input-focus:focus-within {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .order-details-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .payment-modal-overlay {
+    padding: 1rem;
+  }
+}
+
+/* Status badge colors */
+.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+
+.status-completed {
+  background-color: #d1fae5;
+  color: #065f46;
+  border-color: #6ee7b7;
+}
+
+.status-cancelled {
+  background-color: #fee2e2;
+  color: #7f1d1d;
+  border-color: #fca5a5;
+}
+
+/* COD info card gradient */
+.cod-info-card {
+  background: linear-gradient(135deg, #dbeafe 0%, #a5f3fc 100%);
+  border: 2px solid #0284c7;
+}
+
+.cod-payment-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #3b82f6, #0ea5e9);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+/* Timeline styling */
+.timeline-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background-color: #10b981;
+  position: relative;
+}
+
+.timeline-dot::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(16, 185, 129, 0.2);
+}
+
+.timeline-content {
+  flex-grow: 1;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.timeline-content:last-child {
+  border-bottom: none;
+}
+
+/* Loading skeleton */
+.skeleton-loader {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Back button styling */
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  color: #4b5563;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+/* Print-friendly styles */
+@media print {
+  .back-button,
+  .payment-modal-overlay {
+    display: none;
+  }
+
+  .order-details-container {
+    background: white;
+    padding: 0;
+  }
+}

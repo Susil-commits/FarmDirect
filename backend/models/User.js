@@ -45,6 +45,10 @@ const userSchema = new mongoose.Schema(
       enum: ['active', 'suspended', 'banned'],
       default: 'active'
     },
+    suspensionReason: {
+      type: String,
+      default: ''
+    },
     profilePicture: {
       type: String,
       default: null
@@ -89,36 +93,21 @@ const userSchema = new mongoose.Schema(
     // KYC and verification
     kycStatus: {
       type: String,
-      enum: ['pending', 'verified', 'rejected'],
-      default: 'pending'
+      enum: ['not_submitted', 'pending', 'verified', 'rejected'],
+      default: 'not_submitted'
     },
     kycSubmittedAt: Date,
     kycVerifiedAt: Date,
     kycRejectionReason: String,
     kycComments: String,
-    // KYC Documents - Store document details
+    kycResultSeen: {
+      type: Boolean,
+      default: false
+    },
+    // KYC Documents - Store document details with file URLs
     kycDocuments: {
-      aadharNumber: String,
-      governmentId: {
-        fileName: String,
-        uploadedAt: Date
-      },
-      profilePhoto: {
-        fileName: String,
-        uploadedAt: Date
-      },
-      addressProof: {
-        fileName: String,
-        uploadedAt: Date
-      },
-      landOwnership: {  // For farmers
-        fileName: String,
-        uploadedAt: Date
-      },
-      farmRegistration: {  // For farmers
-        fileName: String,
-        uploadedAt: Date
-      }
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
     },
     // KYC Personal Details
     kycDetails: {
@@ -208,7 +197,14 @@ const userSchema = new mongoose.Schema(
         type: Boolean,
         default: true
       }
-    }
+    },
+    // Blocked users (for messaging)
+    blockedUsers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      }
+    ]
   },
   { timestamps: true }
 );

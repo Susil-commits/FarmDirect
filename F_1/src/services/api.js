@@ -1,14 +1,15 @@
 import axios from 'axios';
-import { isTokenExpired, decodeToken } from '../utils/jwtUtils.js';
+import { isTokenExpired } from '../utils/jwtUtils.js';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  // NOTE: Do NOT set Content-Type here. Axios auto-detects:
+  // - For plain objects: sets application/json automatically
+  // - For FormData: lets browser set multipart/form-data with correct boundary
+  // Setting it manually breaks file uploads (multer can't parse without boundary)
 });
 
 // Track if we're already refreshing to avoid multiple refresh requests
@@ -64,6 +65,16 @@ const refreshAuthToken = async () => {
 api.interceptors.request.use(
   async (config) => {
     let token = localStorage.getItem('token');
+    
+    // DEBUG: Log FormData requests to trace multipart upload issues
+    if (config.data instanceof FormData) {
+      console.log('🔍 [api.js] FormData request to:', config.url);
+      console.log('🔍 [api.js] Content-Type:', config.headers['Content-Type']);
+      console.log('🔍 [api.js] FormData entries:');
+      for (const [key, value] of config.data.entries()) {
+        console.log(`  - ${key}: ${value instanceof File ? `File(${value.name}, ${value.size} bytes, ${value.type})` : value}`);
+      }
+    }
     
     // Check if token exists and will expire soon (within 5 minutes)
     if (token && isTokenExpired(token, 300)) {

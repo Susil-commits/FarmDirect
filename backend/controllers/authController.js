@@ -9,7 +9,7 @@ import axios from 'axios';
 // @access Public
 export const register = async (req, res, next) => {
   try {
-    const { firstName, lastName, email, password, role, phone, location, photo } = req.body;
+    const { firstName, lastName, email, password, role, phone, location, photo, address, city, state, pincode } = req.body;
 
     // Check if user already exists
     const userExists = await User.findOne({ email });
@@ -23,8 +23,8 @@ export const register = async (req, res, next) => {
     // Create full name from firstName and lastName
     const fullName = `${firstName} ${lastName}`.trim();
 
-    // Create user
-    const user = await User.create({
+    // Build user object with optional address fields
+    const userData = {
       name: fullName,
       firstName,
       lastName,
@@ -34,7 +34,16 @@ export const register = async (req, res, next) => {
       phone,
       location,
       profilePicture: photo || null, // Store photo as profilePicture
-    });
+    };
+
+    // Add address fields if provided (may be "NA" for farmers without formal address)
+    if (address !== undefined) userData.address = address;
+    if (city !== undefined) userData.city = city;
+    if (state !== undefined) userData.state = state;
+    if (pincode !== undefined) userData.pincode = pincode;
+
+    // Create user
+    const user = await User.create(userData);
 
     // Generate token
     const token = generateToken(user._id);
@@ -53,7 +62,11 @@ export const register = async (req, res, next) => {
         role: user.role,
         phone: user.phone,
         location: user.location,
-        kycStatus: user.kycStatus, // Include KYC verification status (should be 'pending')
+        address: user.address,
+        city: user.city,
+        state: user.state,
+        pincode: user.pincode,
+        kycStatus: user.kycStatus, // Include KYC verification status (should be 'not_submitted')
         photo: user.profilePicture, // Return as photo
       },
       serverStartTime: getServerStartTime()
@@ -100,13 +113,18 @@ export const login = async (req, res, next) => {
     // Find user and select password
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Guard against social auth users who have no password
+    if (!user.password) {
+      return res.status(400).json({ message: 'This account uses social login. Please sign in with Google or GitHub.' });
     }
 
     // Compare password
     const isPasswordCorrect = await comparePassword(password, user.password);
     if (!isPasswordCorrect) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ message: 'Invalid password' });
     }
 
     // Generate token
@@ -120,13 +138,21 @@ export const login = async (req, res, next) => {
       user: {
         id: user._id,
         name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         role: user.role,
         phone: user.phone,
         location: user.location,
+        address: user.address,
+        city: user.city,
+        state: user.state,
+        pincode: user.pincode,
         verified: user.verified,
-        kycStatus: user.kycStatus, // Include KYC verification status
-        photo: user.profilePicture, // Include photo
+        kycStatus: user.kycStatus,
+        kycResultSeen: user.kycResultSeen,
+        kycRejectionReason: user.kycRejectionReason,
+        photo: user.profilePicture,
       },
       serverStartTime: getServerStartTime()
     });
@@ -140,24 +166,6 @@ export const login = async (req, res, next) => {
 // @access Private
 export const getCurrentUser = async (req, res, next) => {
   try {
-    // Handle admin user (hardcoded for testing)
-    if (req.user._id === 'admin_id_12345') {
-      return res.status(200).json({
-        message: 'User fetched successfully',
-        user: {
-          id: 'admin_id_12345',
-          name: 'Admin User',
-          email: 'admin@123',
-          role: 'admin',
-          phone: '+91 9999999999',
-          location: 'India',
-          kycStatus: 'verified',
-          verified: true
-        },
-        serverStartTime: getServerStartTime()
-      });
-    }
-
     // Handle regular users from database
     const user = await User.findById(req.user._id);
     if (!user) {
@@ -204,7 +212,7 @@ export const updateProfile = async (req, res, next) => {
 
     res.status(200).json({
       message: 'Profile updated successfully',
-      token: localStorage.token || generateToken(user._id), // Include token for consistency
+      token: generateToken(user._id),
       user: {
         ...user.toObject(),
         photo: user.profilePicture, // Return as photo for frontend
@@ -460,11 +468,18 @@ export const refreshTokenHandler = async (req, res, next) => {
 export const submitKYCDocuments = async (req, res, next) => {
   try {
     const userId = req.user._id || req.user.id;
-    const { documents, aadharNumber, city, state, pincode } = req.body;
+    const { aadharNumber, address, city, state, pincode, farmName, farmArea, experience } = req.body;
 
-    console.log('📝 submitKYCDocuments called for user:', userId);
-    console.log('📄 Documents received:', documents);
-    console.log('👤 Personal details received:', { aadharNumber, city, state, pincode });
+    // CRITICAL: If files were sent but upload failed, return error
+    // Don't silently proceed - the user needs to know their upload failed
+    if (req.uploadError) {
+      console.error('❌ File upload failed:', req.uploadError);
+      return res.status(500).json({
+        success: false,
+        message: 'File upload to storage failed. Please try again.',
+        error: req.uploadError
+      });
+    }
     
     // Find user
     const user = await User.findById(userId);
@@ -473,27 +488,57 @@ export const submitKYCDocuments = async (req, res, next) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    console.log(`👤 User found: ${user.email}, role: ${user.role}, current kycStatus: ${user.kycStatus}`);
-
-    // Update user's KYC documents and status
+    // ALWAYS update KYC status and submission time — even if no files were uploaded
+    // This ensures the admin can see the user in the pending KYC list
     user.kycStatus = 'pending';
     user.kycVerifiedAt = null; // Clear verification date
     user.kycSubmittedAt = new Date(); // Record submission time
     
-    // Store document file names
-    if (documents) {
+    // Store document URLs and metadata from local uploads
+    if (req.uploadedFiles && req.uploadedFiles.length > 0) {
+      // Dynamically map all uploaded files by their fieldName
+      // This supports both buyer docs (governmentId, businessRegistration, bankDetails, taxId, addressProof)
+      // and farmer docs (governmentId, landOwnership, bankAccount, farmRegistration, landSurvey)
+      const kycDocs = {
+        aadharNumber: aadharNumber || user.kycDocuments?.aadharNumber,
+      };
+      
+      req.uploadedFiles.forEach(file => {
+        const docType = file.fieldName || 'unknown';
+        kycDocs[docType] = {
+          fileName: file.fileName,
+          url: file.url,
+          fileSize: file.fileSize,
+          mimeType: file.mimeType,
+          uploadedAt: new Date()
+        };
+      });
+      
+      // Also try to match by known document types for backward compatibility
+      const knownTypes = ['governmentId', 'profilePhoto', 'addressProof', 'landOwnership',
+                          'farmRegistration', 'businessRegistration', 'bankDetails', 'taxId',
+                          'bankAccount', 'landSurvey'];
+      knownTypes.forEach(type => {
+        if (!kycDocs[type]) {
+          const matched = buildDocumentObject(req.uploadedFiles, type);
+          if (matched) {
+            kycDocs[type] = matched;
+          }
+        }
+      });
+      
+      user.kycDocuments = kycDocs;
+    } else {
+      // No new files uploaded — preserve existing documents if any
+      // Only update aadharNumber if provided; keep all existing doc fields
       user.kycDocuments = {
-        aadharNumber: aadharNumber,
-        governmentId: documents.governmentId ? { fileName: documents.governmentId.fileName, uploadedAt: new Date() } : null,
-        profilePhoto: documents.profilePhoto ? { fileName: documents.profilePhoto.fileName, uploadedAt: new Date() } : null,
-        addressProof: documents.addressProof ? { fileName: documents.addressProof.fileName, uploadedAt: new Date() } : null,
-        landOwnership: documents.landOwnership ? { fileName: documents.landOwnership.fileName, uploadedAt: new Date() } : null,
-        farmRegistration: documents.farmRegistration ? { fileName: documents.farmRegistration.fileName, uploadedAt: new Date() } : null,
+        ...(user.kycDocuments || {}),
+        ...(aadharNumber ? { aadharNumber } : {}),
       };
     }
     
     // Store personal details
-    if (aadharNumber || city || state || pincode) {
+    if (aadharNumber || address || city || state || pincode || farmName || farmArea || experience) {
       user.kycDetails = {
         aadharNumber: aadharNumber,
       };
@@ -502,6 +547,7 @@ export const submitKYCDocuments = async (req, res, next) => {
       if (!user.addresses) user.addresses = [];
       if (user.addresses.length === 0) {
         user.addresses.push({
+          streetAddress: address || '',
           city: city,
           state: state,
           pincode: pincode,
@@ -510,16 +556,28 @@ export const submitKYCDocuments = async (req, res, next) => {
       } else {
         user.addresses[0] = {
           ...user.addresses[0],
+          streetAddress: address || user.addresses[0].streetAddress || '',
           city: city,
           state: state,
           pincode: pincode
         };
       }
+
+      // Also update top-level address fields for backward compatibility
+      if (address) user.address = address;
+      if (city) user.city = city;
+      if (state) user.state = state;
+      if (pincode) user.pincode = pincode;
+      
+      // Save farmer-specific fields (only for farmer role)
+      if (user.role === 'farmer') {
+        if (farmName) user.farmName = farmName;
+        if (farmArea) user.farmArea = farmArea;
+        if (experience !== undefined && experience !== '') user.experience = Number(experience);
+      }
     }
     
     await user.save();
-
-    console.log(`✅ KYC submitted for user: ${user.email}, status: pending, submitted at: ${user.kycSubmittedAt}`);
 
     res.status(200).json({
       success: true,
@@ -542,6 +600,38 @@ export const submitKYCDocuments = async (req, res, next) => {
   }
 };
 
+/**
+ * Helper function to build document object from uploaded files
+ * Matches files by fieldName (form field name) first, then falls back to filename matching
+ */
+const buildDocumentObject = (uploadedFiles, docType) => {
+  if (!uploadedFiles || uploadedFiles.length === 0) {
+    return null;
+  }
+  
+  // First try to match by fieldName (exact match from form field)
+  let file = uploadedFiles.find(f => f.fieldName === docType);
+  
+  // Fallback: try matching by filename containing docType
+  if (!file) {
+    file = uploadedFiles.find(f => f.fileName && f.fileName.toLowerCase().includes(docType.toLowerCase()));
+  }
+  
+  // No fallback to first file - only return a match if we actually found one
+  if (!file) {
+    return null;
+  }
+
+  return {
+    fileName: file.fileName,
+    url: file.url,
+    publicId: file.publicId,
+    fileSize: file.fileSize,
+    mimeType: file.mimeType,
+    uploadedAt: new Date()
+  };
+};
+
 // @route POST /api/auth/delete-account
 // @desc Delete user account (user-initiated)
 // @access Private
@@ -549,7 +639,6 @@ export const deleteAccount = async (req, res, next) => {
   try {
     const userId = req.user._id || req.user.id;
     
-    console.log('🗑️ Delete account requested for user:', userId);
 
     // Find user
     const user = await User.findById(userId);
@@ -571,28 +660,22 @@ export const deleteAccount = async (req, res, next) => {
     if (user.role === 'farmer') {
       // Delete farmer's crop listings
       await CropListing.deleteMany({ farmerId: userId });
-      console.log('🌾 Deleted crop listings for farmer');
     }
 
     // Delete user's orders
     await Order.deleteMany({ $or: [{ buyerId: userId }, { farmerId: userId }] });
-    console.log('📦 Deleted orders');
 
     // Delete user's reviews
     await Review.deleteMany({ $or: [{ reviewerId: userId }, { revieweeId: userId }] });
-    console.log('⭐ Deleted reviews');
 
     // Delete wishlist items
     await Wishlist.deleteMany({ userId: userId });
-    console.log('❤️ Deleted wishlist items');
 
     // Delete notifications
     await Notification.deleteMany({ userId: userId });
-    console.log('🔔 Deleted notifications');
 
     // Delete user
     await User.findByIdAndDelete(userId);
-    console.log(`✅ User deleted: ${userEmail}`);
 
     res.status(200).json({
       success: true,

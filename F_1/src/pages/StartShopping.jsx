@@ -90,8 +90,8 @@ export default function StartShopping() {
         </div>
 
         {/* Hero Section */}
-        <section 
-          className="py-24 px-4 bg-gradient-to-br from-blue-50 via-cyan-50 to-emerald-50 relative overflow-hidden"
+        <section
+          className="py-24 px-4 relative overflow-hidden"
           aria-label="Hero section - Fresh Produce Marketplace"
         >
           <div className="max-w-6xl mx-auto relative z-10">
@@ -106,20 +106,21 @@ export default function StartShopping() {
               </div>
             </ScrollAnimation>
 
-            {/* Hero Image */}
+            {/* Hero Video Banner */}
             <ScrollAnimation className="scroll-slide mt-16">
-              <div className="rounded-3xl overflow-hidden glass premium-glow h-80 md:h-96 flex items-center justify-center shadow-2xl transform hover:scale-105 transition-transform duration-300 border-2 border-white/50 relative">
+              <div className="rounded-3xl overflow-hidden h-80 md:h-96 flex items-center justify-center shadow-2xl transform hover:scale-105 transition-transform duration-300 relative">
                 {imageLoading && (
                   <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse"></div>
                 )}
-                <img
-                  src={imageError ? HERO_IMAGE.fallback : HERO_IMAGE.src}
-                  alt={HERO_IMAGE.alt}
-                  loading="eager"
-                  onLoad={() => setImageLoading(false)}
+                <video
+                  src="/mixkit-wheat-field.mp4"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  onLoadedData={() => setImageLoading(false)}
                   onError={handleImageError}
                   className={`w-full h-full object-cover ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
-                  decoding="async"
                 />
               </div>
             </ScrollAnimation>

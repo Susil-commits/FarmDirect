@@ -1,6 +1,15 @@
 import { verifyToken } from '../utils/jwt.js';
 import User from '../models/User.js';
 
+// Routes that suspended/banned users can still access
+const suspendedAllowedPaths = [
+  '/api/notifications',   // So users can see why they were suspended
+  '/api/auth/me',         // So users can check their account status
+  '/api/auth/logout',     // So users can log out
+  '/api/users/profile',   // So users can view their profile
+  '/api/contact'          // So users can contact support
+];
+
 export const protect = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
@@ -14,30 +23,31 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({ message: 'Invalid or expired token' });
     }
 
-    // Handle hardcoded admin account
-    if (decoded.id === 'admin_id_12345') {
-      req.user = {
-        _id: 'admin_id_12345',
-        role: 'admin',
-        email: 'admin@123'
-      };
-      return next();
-    }
-
     const user = await User.findById(decoded.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    if (user.status === 'banned' || user.status === 'suspended') {
-      return res.status(403).json({ message: 'User account is suspended or banned' });
-    }
-
+    // Attach user to request BEFORE checking status (needed even for suspended users)
     req.user = {
       _id: user._id,
       role: user.role,
-      email: user.email
+      email: user.email,
+      status: user.status
     };
+
+    // Suspended/banned users can only access allowed paths (notifications, profile, contact)
+    if (user.status === 'banned' || user.status === 'suspended') {
+      const isAllowed = suspendedAllowedPaths.some(p => req.originalUrl.startsWith(p));
+      if (!isAllowed) {
+        return res.status(403).json({
+          message: `Your account is ${user.status}. Go to notifications to learn why or contact support.`,
+          accountStatus: user.status,
+          suspensionReason: user.suspensionReason
+        });
+      }
+    }
+
     next();
   } catch (error) {
     res.status(500).json({ message: 'Authentication failed', error: error.message });
@@ -59,14 +69,16 @@ export const authorize = (...roles) => {
 };
 
 // Middleware: Check if user has completed KYC verification
+// Applies to farmers (for crop listing) and buyers (for ordering)
 export const requireKYC = async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ message: 'Not authenticated' });
     }
 
-    if (req.user.role !== 'farmer') {
-      return next(); // KYC only applies to farmers
+    // KYC required for farmers and buyers (admin exempt)
+    if (req.user.role === 'admin') {
+      return next();
     }
 
     const user = await User.findById(req.user._id);

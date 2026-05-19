@@ -7,10 +7,12 @@ import Button from '../components/common/Button';
 import Avatar from '../components/common/Avatar';
 import Card from '../components/common/Card';
 import LogoutConfirmationModal from '../components/common/LogoutConfirmationModal';
+import { adminService } from '../services/appService.js';
 import {
-  Shield, Mail, Phone, MapPin, Clock, Users, TrendingUp, Activity,
-  Settings, LogOut, Camera, Lock, Bell, FileText, BarChart3, Package,
-  CalendarDays, Zap, Award, CheckCircle, AlertTriangle
+  Shield, Mail, Phone, Users, TrendingUp, Activity,
+  Settings, LogOut, Camera, Lock, Bell, BarChart3, Package,
+  CalendarDays, Zap, CheckCircle, AlertTriangle, Loader2,
+  UserCheck, Sprout, ShoppingCart, Star, Clock3, Globe
 } from 'lucide-react';
 
 export default function AdminProfile() {
@@ -25,27 +27,80 @@ export default function AdminProfile() {
     totalFarmers: 0,
     totalBuyers: 0,
     totalCrops: 0,
+    totalOrders: 0,
+    totalReviews: 0,
     pendingFarmers: 0,
     activeSessions: 0
   });
   const [statsLoading, setStatsLoading] = useState(true);
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [statsError, setStatsError] = useState(null);
+
+  // Derive real user data — no hardcoded values
+  const joinDate = user?.createdAt 
+    ? new Date(user.createdAt).toISOString().split('T')[0]
+    : null;
+  
+  const membershipDuration = user?.createdAt
+    ? (() => {
+        const created = new Date(user.createdAt);
+        const now = new Date();
+        const diffMs = now - created;
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        if (diffDays < 30) return `${diffDays} days`;
+        const diffMonths = Math.floor(diffDays / 30);
+        if (diffMonths < 12) return `~${diffMonths} month${diffMonths > 1 ? 's' : ''}`;
+        const years = Math.floor(diffMonths / 12);
+        const months = diffMonths % 12;
+        return `~${years} year${years > 1 ? 's' : ''}${months > 0 ? ` ${months} month${months > 1 ? 's' : ''}` : ''}`;
+      })()
+    : null;
+
+  const adminLevel = user?.role === 'admin' ? 'Super Admin' : 'Administrator';
+  const department = user?.department || user?.bio || 'Platform Administration';
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
-    department: 'Platform Administration',
-    joinDate: '2024-01-15',
-    photo: user?.photo || null,
+    department: department,
+    joinDate: joinDate || '',
+    photo: user?.photo || user?.profilePicture || null,
   });
+
+  // Sync formData when user data loads
+  useEffect(() => {
+    if (user) {
+      const actualJoinDate = user?.createdAt 
+        ? new Date(user.createdAt).toISOString().split('T')[0]
+        : '';
+      setFormData({
+        name: user?.name || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
+        department: user?.department || user?.bio || 'Platform Administration',
+        joinDate: actualJoinDate,
+        photo: user?.photo || user?.profilePicture || null,
+      });
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (files) {
       const file = files[0];
+      const MAX_FILE_SIZE = 5 * 1024 * 1024;
+      if (file.size > MAX_FILE_SIZE) {
+        addToast('File size must be less than 5MB', 'error');
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormData(prev => ({ ...prev, photo: reader.result }));
+      };
+      reader.onerror = () => {
+        addToast('Error reading file', 'error');
       };
       reader.readAsDataURL(file);
     } else {
@@ -60,7 +115,7 @@ export default function AdminProfile() {
       }
       addToast('Profile updated successfully', 'success');
       setIsEditing(false);
-    } catch (error) {
+    } catch {
       addToast('Failed to update profile', 'error');
     }
   };
@@ -76,59 +131,114 @@ export default function AdminProfile() {
     addToast('Logged out successfully', 'info');
   };
 
-  // Fetch real-time stats
+  // Fetch real-time stats from backend
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setStatsLoading(true);
-        const token = localStorage.getItem('token');
+        setStatsError(null);
 
-        // Fetch users by role
-        const usersRes = await fetch('http://localhost:5000/api/admin/users', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const usersData = await usersRes.json();
+        const statsRes = await adminService.getDashboardStats();
+        const statsData = statsRes.data?.data || statsRes.data || {};
 
-        // Fetch crops
-        const cropsRes = await fetch('http://localhost:5000/api/admin/crops', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const cropsData = await cropsRes.json();
+        // Extract values from the dashboard stats response
+        const users = statsData.users || {};
+        const crops = statsData.crops || {};
+        const orders = statsData.orders || {};
+        const reviews = statsData.reviews || {};
 
-        // Fetch pending farmer verifications
-        const pendingRes = await fetch('http://localhost:5000/api/admin/approvals?status=pending&role=farmer', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const pendingData = await pendingRes.json();
-
-        const allUsers = usersData.data || [];
-        const allCrops = cropsData.data || [];
-        const pendingFarmers = pendingData.data || [];
-
-        const farmers = allUsers.filter(u => u.role === 'farmer').length;
-        const buyers = allUsers.filter(u => u.role === 'buyer').length;
+        // Count active sessions from login history
+        let activeSessions = 0;
+        try {
+          const loginHistory = JSON.parse(localStorage.getItem('loginHistory') || '[]');
+          const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+          activeSessions = loginHistory.filter(entry => entry.timestamp > oneDayAgo).length;
+        } catch {
+          activeSessions = 1; // at least current session
+        }
 
         setStats({
-          totalUsers: allUsers.length,
-          totalFarmers: farmers,
-          totalBuyers: buyers,
-          totalCrops: allCrops.length,
-          pendingFarmers: pendingFarmers.length,
-          activeSessions: Math.floor(Math.random() * 50) + 10 // Simulated active sessions
+          totalUsers: users.total || 0,
+          totalFarmers: users.farmers || 0,
+          totalBuyers: users.buyers || 0,
+          totalCrops: crops.total || 0,
+          totalOrders: orders.total || 0,
+          totalReviews: reviews.total || 0,
+          pendingFarmers: users.pendingKYC || 0,
+          activeSessions: activeSessions
         });
         setStatsLoading(false);
       } catch (error) {
         console.error('Error fetching stats:', error);
+        setStatsError('Failed to load dashboard stats');
         setStatsLoading(false);
       }
     };
 
     fetchStats();
-    
-    // Refresh stats every 30 seconds for real-time updates
-    const interval = setInterval(fetchStats, 30000);
-    return () => clearInterval(interval);
+    let active = true;
+    const interval = setInterval(() => { if (active) fetchStats(); }, 30000);
+    const onVis = () => { active = !document.hidden; if (active) fetchStats(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => { clearInterval(interval); document.removeEventListener('visibilitychange', onVis); };
   }, []);
+
+  // Fetch real activity logs from audit trail
+  useEffect(() => {
+    const fetchActivity = async () => {
+      if (activeTab !== 'activity') return;
+      try {
+        setActivityLoading(true);
+        const res = await adminService.getAuditLogs({ limit: 10 });
+        setActivityLogs(res.data?.logs || []);
+      } catch (err) {
+        console.warn('Activity logs unavailable:', err.message);
+        setActivityLogs([]);
+      } finally {
+        setActivityLoading(false);
+      }
+    };
+
+    fetchActivity();
+  }, [activeTab]);
+
+  // Format relative time
+  const getRelativeTime = (timestamp) => {
+    if (!timestamp) return 'Unknown';
+    const now = new Date();
+    const date = new Date(timestamp);
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 30) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    const diffMonths = Math.floor(diffDays / 30);
+    return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
+  };
+
+  // Map audit action to display text and icon
+  const getActivityDisplay = (log) => {
+    const actionMap = {
+      'approve_kyc': { label: 'Approved KYC verification', icon: CheckCircle, bgClass: 'bg-emerald-500/20', textClass: 'text-emerald-400' },
+      'reject_kyc': { label: 'Rejected KYC verification', icon: AlertTriangle, bgClass: 'bg-orange-500/20', textClass: 'text-orange-400' },
+      'freeze_user': { label: 'Froze user account', icon: Lock, bgClass: 'bg-red-500/20', textClass: 'text-red-400' },
+      'unfreeze_user': { label: 'Unfroze user account', icon: CheckCircle, bgClass: 'bg-green-500/20', textClass: 'text-green-400' },
+      'delete_user': { label: 'Deleted user account', icon: AlertTriangle, bgClass: 'bg-red-500/20', textClass: 'text-red-400' },
+      'approve_crop': { label: 'Approved crop listing', icon: Sprout, bgClass: 'bg-emerald-500/20', textClass: 'text-emerald-400' },
+      'reject_crop': { label: 'Rejected crop listing', icon: AlertTriangle, bgClass: 'bg-orange-500/20', textClass: 'text-orange-400' },
+      'freeze_crop': { label: 'Froze crop listing', icon: Lock, bgClass: 'bg-red-500/20', textClass: 'text-red-400' },
+      'delete_crop': { label: 'Deleted crop listing', icon: AlertTriangle, bgClass: 'bg-red-500/20', textClass: 'text-red-400' },
+      'update_order': { label: 'Updated order status', icon: ShoppingCart, bgClass: 'bg-blue-500/20', textClass: 'text-blue-400' },
+      'send_announcement': { label: 'Sent platform announcement', icon: Globe, bgClass: 'bg-indigo-500/20', textClass: 'text-indigo-400' },
+      'change_role': { label: 'Changed user role', icon: Shield, bgClass: 'bg-purple-500/20', textClass: 'text-purple-400' },
+    };
+
+    const mapped = actionMap[log.action] || { label: log.action?.replace(/_/g, ' ') || 'Admin action', icon: Activity, bgClass: 'bg-slate-500/20', textClass: 'text-slate-400' };
+    return mapped;
+  };
 
   if (!user || user.role !== 'admin') {
     return (
@@ -178,16 +288,18 @@ export default function AdminProfile() {
                 <h1 className="text-5xl font-black mb-2">{user?.name || 'Administrator'}</h1>
                 <div className="flex items-center gap-3 flex-wrap mb-4">
                   <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition">
-                    <Shield size={16} /> Platform Administrator
+                    <Shield size={16} /> {department}
                   </span>
                   <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold bg-green-400/20 backdrop-blur-sm border border-green-400/30 text-green-100">
                     <CheckCircle size={16} /> Active & Verified
                   </span>
                   <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold bg-blue-400/20 backdrop-blur-sm border border-blue-400/30 text-blue-100">
-                    <Zap size={16} /> Super Admin
+                    <Zap size={16} /> {adminLevel}
                   </span>
                 </div>
-                <p className="text-blue-100 text-sm">Member since {formData.joinDate}</p>
+                {joinDate && (
+                  <p className="text-blue-100 text-sm">Member since {joinDate} &bull; {membershipDuration} active</p>
+                )}
               </div>
 
               {/* Quick Stats */}
@@ -198,7 +310,7 @@ export default function AdminProfile() {
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                   <p className="text-blue-100 text-xs font-semibold uppercase tracking-wide">Total Users</p>
-                  <p className="text-3xl font-bold text-white mt-1">{stats.totalUsers.toLocaleString()}</p>
+                  <p className="text-3xl font-bold text-white mt-1">{statsLoading ? '...' : stats.totalUsers.toLocaleString()}</p>
                 </div>
               </div>
             </div>
@@ -210,10 +322,10 @@ export default function AdminProfile() {
           {/* Tab Navigation */}
           <div className="bg-gradient-to-r from-slate-700 to-slate-800 rounded-2xl shadow-2xl p-2 mb-8 flex gap-2 overflow-x-auto border border-slate-600">
             {[
-              { id: 'overview', label: '📊 Overview', icon: BarChart3 },
-              { id: 'profile', label: '👤 Profile Info', icon: Shield },
-              { id: 'activity', label: '⚡ Activity', icon: Activity },
-              { id: 'settings', label: '⚙️ Settings', icon: Settings }
+              { id: 'overview', label: 'Overview', icon: BarChart3 },
+              { id: 'profile', label: 'Profile Info', icon: Shield },
+              { id: 'activity', label: 'Activity', icon: Activity },
+              { id: 'settings', label: 'Settings', icon: Settings }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -233,9 +345,17 @@ export default function AdminProfile() {
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
+              {/* Stats Error Banner */}
+              {statsError && (
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center gap-3">
+                  <AlertTriangle size={20} className="text-amber-400 flex-shrink-0" />
+                  <p className="text-amber-200 text-sm">{statsError} — showing available data</p>
+                </div>
+              )}
+
               {/* Quick Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="bg-gradient-to-br from-blue-600 to-blue-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
+                <Card _glass={false} className="bg-gradient-to-br from-blue-600 to-blue-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
                   <div className="p-8">
                     <div className="flex items-center justify-between mb-4">
                       <div className="bg-white/20 p-4 rounded-lg backdrop-blur-sm">
@@ -244,12 +364,12 @@ export default function AdminProfile() {
                       <TrendingUp size={24} className="text-blue-200" />
                     </div>
                     <p className="text-blue-100 text-sm font-semibold uppercase tracking-wide">Total Users</p>
-                    <p className="text-5xl font-black mt-2">{statsLoading ? '...' : stats.totalUsers.toLocaleString()}</p>
+                    <p className="text-5xl font-black mt-2">{statsLoading ? <Loader2 size={36} className="animate-spin" /> : stats.totalUsers.toLocaleString()}</p>
                     <p className="text-blue-200 text-xs mt-3">Farmers: {stats.totalFarmers} | Buyers: {stats.totalBuyers}</p>
                   </div>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-green-600 to-emerald-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
+                <Card _glass={false} className="bg-gradient-to-br from-green-600 to-emerald-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
                   <div className="p-8">
                     <div className="flex items-center justify-between mb-4">
                       <div className="bg-white/20 p-4 rounded-lg backdrop-blur-sm">
@@ -258,29 +378,71 @@ export default function AdminProfile() {
                       <TrendingUp size={24} className="text-emerald-200" />
                     </div>
                     <p className="text-emerald-100 text-sm font-semibold uppercase tracking-wide">Total Crops</p>
-                    <p className="text-5xl font-black mt-2">{statsLoading ? '...' : stats.totalCrops.toLocaleString()}</p>
+                    <p className="text-5xl font-black mt-2">{statsLoading ? <Loader2 size={36} className="animate-spin" /> : stats.totalCrops.toLocaleString()}</p>
                     <p className="text-emerald-200 text-xs mt-3">Active listings on platform</p>
                   </div>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-purple-600 to-pink-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
+                <Card _glass={false} className="bg-gradient-to-br from-purple-600 to-pink-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
                   <div className="p-8">
                     <div className="flex items-center justify-between mb-4">
                       <div className="bg-white/20 p-4 rounded-lg backdrop-blur-sm">
-                        <CheckCircle size={28} />
+                        <UserCheck size={28} />
                       </div>
                       <TrendingUp size={24} className="text-pink-200" />
                     </div>
                     <p className="text-pink-100 text-sm font-semibold uppercase tracking-wide">Pending Verification</p>
-                    <p className="text-5xl font-black mt-2">{statsLoading ? '...' : stats.pendingFarmers.toLocaleString()}</p>
+                    <p className="text-5xl font-black mt-2">{statsLoading ? <Loader2 size={36} className="animate-spin" /> : stats.pendingFarmers.toLocaleString()}</p>
                     <p className="text-pink-200 text-xs mt-3">Farmer approvals pending</p>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Additional Stats Row */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card _glass={false} className="bg-gradient-to-br from-amber-600 to-orange-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
+                  <div className="p-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="bg-white/20 p-4 rounded-lg backdrop-blur-sm">
+                        <ShoppingCart size={28} />
+                      </div>
+                    </div>
+                    <p className="text-amber-100 text-sm font-semibold uppercase tracking-wide">Total Orders</p>
+                    <p className="text-5xl font-black mt-2">{statsLoading ? <Loader2 size={36} className="animate-spin" /> : stats.totalOrders.toLocaleString()}</p>
+                    <p className="text-amber-200 text-xs mt-3">Platform transactions</p>
+                  </div>
+                </Card>
+
+                <Card _glass={false} className="bg-gradient-to-br from-cyan-600 to-teal-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
+                  <div className="p-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="bg-white/20 p-4 rounded-lg backdrop-blur-sm">
+                        <Star size={28} />
+                      </div>
+                    </div>
+                    <p className="text-cyan-100 text-sm font-semibold uppercase tracking-wide">Total Reviews</p>
+                    <p className="text-5xl font-black mt-2">{statsLoading ? <Loader2 size={36} className="animate-spin" /> : stats.totalReviews.toLocaleString()}</p>
+                    <p className="text-cyan-200 text-xs mt-3">User feedback & ratings</p>
+                  </div>
+                </Card>
+
+                <Card _glass={false} className="bg-gradient-to-br from-rose-600 to-red-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
+                  <div className="p-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="bg-white/20 p-4 rounded-lg backdrop-blur-sm">
+                        <Clock3 size={28} />
+                      </div>
+                    </div>
+                    <p className="text-rose-100 text-sm font-semibold uppercase tracking-wide">Membership</p>
+                    <p className="text-3xl font-black mt-2">{membershipDuration || 'New'}</p>
+                    <p className="text-rose-200 text-xs mt-3">Since {joinDate || 'joining'}</p>
                   </div>
                 </Card>
               </div>
 
               {/* User Breakdown */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="bg-slate-700/50 border border-slate-600 text-white">
+                <Card _glass={false} className="bg-slate-700 border border-slate-600 text-white">
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-6">
                       <div className="bg-gradient-to-br from-emerald-400 to-green-600 p-3 rounded-lg">
@@ -295,7 +457,7 @@ export default function AdminProfile() {
                       </div>
                       <div className="w-full bg-slate-600 rounded-full h-2">
                         <div 
-                          className="bg-gradient-to-r from-emerald-400 to-green-500 h-2 rounded-full" 
+                          className="bg-gradient-to-r from-emerald-400 to-green-500 h-2 rounded-full transition-all duration-700" 
                           style={{ width: stats.totalUsers > 0 ? `${(stats.totalFarmers / stats.totalUsers) * 100}%` : '0%' }}
                         ></div>
                       </div>
@@ -306,7 +468,7 @@ export default function AdminProfile() {
                   </div>
                 </Card>
 
-                <Card className="bg-slate-700/50 border border-slate-600 text-white">
+                <Card _glass={false} className="bg-slate-700 border border-slate-600 text-white">
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-6">
                       <div className="bg-gradient-to-br from-blue-400 to-indigo-600 p-3 rounded-lg">
@@ -321,7 +483,7 @@ export default function AdminProfile() {
                       </div>
                       <div className="w-full bg-slate-600 rounded-full h-2">
                         <div 
-                          className="bg-gradient-to-r from-blue-400 to-indigo-500 h-2 rounded-full" 
+                          className="bg-gradient-to-r from-blue-400 to-indigo-500 h-2 rounded-full transition-all duration-700" 
                           style={{ width: stats.totalUsers > 0 ? `${(stats.totalBuyers / stats.totalUsers) * 100}%` : '0%' }}
                         ></div>
                       </div>
@@ -332,7 +494,7 @@ export default function AdminProfile() {
                   </div>
                 </Card>
 
-                <Card className="bg-slate-700/50 border border-slate-600 text-white">
+                <Card _glass={false} className="bg-slate-700 border border-slate-600 text-white">
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-6">
                       <div className="bg-gradient-to-br from-orange-400 to-pink-600 p-3 rounded-lg">
@@ -347,7 +509,7 @@ export default function AdminProfile() {
                       </div>
                       <div className="w-full bg-slate-600 rounded-full h-2">
                         <div 
-                          className="bg-gradient-to-r from-orange-400 to-pink-500 h-2 rounded-full" 
+                          className="bg-gradient-to-r from-orange-400 to-pink-500 h-2 rounded-full transition-all duration-700" 
                           style={{ width: stats.totalFarmers > 0 ? Math.min((stats.totalCrops / (stats.totalFarmers * 2)) * 100, 100) : '0%' }}
                         ></div>
                       </div>
@@ -368,7 +530,7 @@ export default function AdminProfile() {
                 <>
                   {/* Info Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card className="bg-gradient-to-br from-blue-600/20 to-blue-700/20 border border-blue-500/30 text-white hover:shadow-2xl transition duration-300">
+                    <Card _glass={false} className="bg-gradient-to-br from-blue-600 to-blue-700 border border-blue-500/30 text-white hover:shadow-2xl transition duration-300">
                       <div className="p-8">
                         <div className="flex items-center gap-4 mb-4">
                           <div className="bg-blue-500/30 p-4 rounded-lg backdrop-blur-sm border border-blue-400/30">
@@ -381,7 +543,7 @@ export default function AdminProfile() {
                       </div>
                     </Card>
 
-                    <Card className="bg-gradient-to-br from-emerald-600/20 to-emerald-700/20 border border-emerald-500/30 text-white hover:shadow-2xl transition duration-300">
+                    <Card _glass={false} className="bg-gradient-to-br from-emerald-600 to-emerald-700 border border-emerald-500/30 text-white hover:shadow-2xl transition duration-300">
                       <div className="p-8">
                         <div className="flex items-center gap-4 mb-4">
                           <div className="bg-emerald-500/30 p-4 rounded-lg backdrop-blur-sm border border-emerald-400/30">
@@ -394,7 +556,7 @@ export default function AdminProfile() {
                       </div>
                     </Card>
 
-                    <Card className="bg-gradient-to-br from-purple-600/20 to-purple-700/20 border border-purple-500/30 text-white hover:shadow-2xl transition duration-300">
+                    <Card _glass={false} className="bg-gradient-to-br from-purple-600 to-purple-700 border border-purple-500/30 text-white hover:shadow-2xl transition duration-300">
                       <div className="p-8">
                         <div className="flex items-center gap-4 mb-4">
                           <div className="bg-purple-500/30 p-4 rounded-lg backdrop-blur-sm border border-purple-400/30">
@@ -402,12 +564,12 @@ export default function AdminProfile() {
                           </div>
                           <p className="text-sm font-bold text-purple-200 uppercase tracking-wide">Admin Level</p>
                         </div>
-                        <p className="text-2xl font-bold">Super Admin</p>
+                        <p className="text-2xl font-bold">{adminLevel}</p>
                         <p className="text-xs text-purple-200 mt-3">Full platform access</p>
                       </div>
                     </Card>
 
-                    <Card className="bg-gradient-to-br from-orange-600/20 to-orange-700/20 border border-orange-500/30 text-white hover:shadow-2xl transition duration-300">
+                    <Card _glass={false} className="bg-gradient-to-br from-orange-600 to-orange-700 border border-orange-500/30 text-white hover:shadow-2xl transition duration-300">
                       <div className="p-8">
                         <div className="flex items-center gap-4 mb-4">
                           <div className="bg-orange-500/30 p-4 rounded-lg backdrop-blur-sm border border-orange-400/30">
@@ -415,8 +577,8 @@ export default function AdminProfile() {
                           </div>
                           <p className="text-sm font-bold text-orange-200 uppercase tracking-wide">Member Since</p>
                         </div>
-                        <p className="text-2xl font-bold">{formData.joinDate}</p>
-                        <p className="text-xs text-orange-200 mt-3">~2 years active</p>
+                        <p className="text-2xl font-bold">{formData.joinDate || 'N/A'}</p>
+                        <p className="text-xs text-orange-200 mt-3">{membershipDuration ? `${membershipDuration} active` : 'Recently joined'}</p>
                       </div>
                     </Card>
                   </div>
@@ -430,7 +592,7 @@ export default function AdminProfile() {
                   </button>
                 </>
               ) : (
-                <Card className="bg-slate-700/50 border border-slate-600 text-white">
+                <Card _glass={false} className="bg-slate-700 border border-slate-600 text-white">
                   <div className="p-8">
                     <h2 className="text-3xl font-bold mb-8 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
                       Edit Admin Profile
@@ -486,7 +648,7 @@ export default function AdminProfile() {
                       </div>
 
                       {/* Photo Upload */}
-                      <div className="bg-gradient-to-br from-blue-600/20 to-indigo-600/20 p-8 rounded-xl border-2 border-dashed border-blue-500/50">
+                      <div className="bg-gradient-to-br from-blue-600/40 to-indigo-600/40 p-8 rounded-xl border-2 border-dashed border-blue-500/50">
                         <div className="text-center">
                           <Camera size={40} className="mx-auto mb-4 text-blue-400" />
                           <h3 className="text-lg font-bold text-white mb-2">Upload Profile Photo</h3>
@@ -532,29 +694,53 @@ export default function AdminProfile() {
           {/* Activity Tab */}
           {activeTab === 'activity' && (
             <div className="space-y-6">
-              <Card className="bg-slate-700/50 border border-slate-600">
+              <Card _glass={false} className="bg-slate-700 border border-slate-600">
                 <div className="p-8">
                   <h2 className="text-2xl font-bold text-white mb-8">Recent Admin Activity</h2>
 
-                  <div className="space-y-4">
-                    {[
-                      { action: 'Verified 5 farmers', time: '2 hours ago', icon: CheckCircle, color: 'emerald' },
-                      { action: 'Reviewed user complaints', time: '5 hours ago', icon: AlertTriangle, color: 'orange' },
-                      { action: 'Updated system settings', time: '1 day ago', icon: Settings, color: 'blue' },
-                      { action: 'Generated monthly report', time: '2 days ago', icon: FileText, color: 'indigo' },
-                      { action: 'Monitored platform activity', time: '3 days ago', icon: Activity, color: 'purple' }
-                    ].map((item, idx) => (
-                      <div key={idx} className="flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition border border-slate-600/50">
-                        <div className={`bg-${item.color}-500/20 p-3 rounded-lg`}>
-                          <item.icon size={20} className={`text-${item.color}-400`} />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-white font-semibold">{item.action}</p>
-                          <p className="text-slate-400 text-sm">{item.time}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  {activityLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 size={32} className="animate-spin text-blue-400" />
+                      <span className="ml-3 text-slate-300">Loading activity logs...</span>
+                    </div>
+                  ) : activityLogs.length > 0 ? (
+                    <div className="space-y-4">
+                      {activityLogs.slice(0, 10).map((log, idx) => {
+                        const display = getActivityDisplay(log);
+                        return (
+                          <div key={log._id || idx} className="flex items-center gap-4 p-4 bg-slate-800 rounded-lg hover:bg-slate-700 transition border border-slate-600">
+                            <div className={`${display.bgClass} p-3 rounded-lg`}>
+                              <display.icon size={20} className={display.textClass} />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-white font-semibold">{display.label}</p>
+                              <p className="text-slate-400 text-sm">
+                                {log.adminEmail && <span className="text-blue-400">{log.adminEmail}</span>}
+                                {log.resourceType && <span> &bull; {log.resourceType}</span>}
+                                {log.reason && <span className="text-slate-500"> — "{log.reason}"</span>}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-slate-400 text-xs">{getRelativeTime(log.timestamp)}</p>
+                              {log.status && (
+                                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                  log.status === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                                }`}>
+                                  {log.status}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Activity size={48} className="mx-auto mb-4 text-slate-500" />
+                      <p className="text-slate-400 text-lg font-semibold">No activity logs available</p>
+                      <p className="text-slate-500 text-sm mt-2">Audit trail will appear here as you perform admin actions</p>
+                    </div>
+                  )}
                 </div>
               </Card>
             </div>
@@ -565,7 +751,7 @@ export default function AdminProfile() {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Security Settings */}
-                <Card className="bg-gradient-to-br from-red-600/20 to-red-700/20 border border-red-500/30">
+                <Card _glass={false} className="bg-gradient-to-br from-red-600/40 to-red-700/40 border border-red-500/30">
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-6">
                       <Lock className="text-red-400" size={28} />
@@ -583,7 +769,7 @@ export default function AdminProfile() {
                 </Card>
 
                 {/* Notification Settings */}
-                <Card className="bg-gradient-to-br from-blue-600/20 to-blue-700/20 border border-blue-500/30">
+                <Card _glass={false} className="bg-gradient-to-br from-blue-600/40 to-blue-700/40 border border-blue-500/30">
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-6">
                       <Bell className="text-blue-400" size={28} />

@@ -12,73 +12,43 @@ const orderSchema = new mongoose.Schema(
       ref: 'User',
       required: true
     },
-    // Support multiple items from different farmers
-    items: [
-      {
-        cropId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'CropListing',
-          required: true
-        },
-        farmerId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'User',
-          required: true
-        },
-        cropName: String,
-        quantity: {
-          type: Number,
-          required: true,
-          min: 1
-        },
-        unitPrice: {
-          type: Number,
-          required: true
-        },
-        totalPrice: {
-          type: Number,
-          required: true
-        }
-      }
-    ],
-    // Delivery details
-    deliveryAddress: {
-      streetAddress: String,
-      area: String,
-      city: String,
-      state: String,
-      pincode: String,
-      latitude: Number,
-      longitude: Number
-    },
-    // Pricing
-    subtotal: {
-      type: Number,
+    farmerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
       required: true
     },
-    taxAmount: {
-      type: Number,
-      default: 0
+    cropId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'CropListing',
+      required: true
     },
-    discountAmount: {
+    cropName: String,
+    quantity: {
       type: Number,
-      default: 0
+      required: true,
+      min: 1
     },
-    deliveryCharges: {
+    unitPrice: {
       type: Number,
-      default: 0
+      required: true
     },
     totalAmount: {
       type: Number,
       required: true
     },
-    // Order status workflow
+    // Pickup location (from crop listing)
+    pickupLocation: String,
+    // Farmer's contact number
+    farmerContact: String,
+    // Buyer's contact number
+    buyerContact: String,
+    // Order status workflow - simplified for direct farmer-buyer
     orderStatus: {
       type: String,
-      enum: ['pending', 'verification_pending', 'verification_completed', 'admin_approval_pending', 'admin_approved', 'ready_for_delivery', 'shipped', 'delivered', 'cancelled', 'returned'],
-      default: 'pending'
+      enum: ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'completed', 'cancelled'],
+      default: 'confirmed'
     },
-    // Payment details (COD Only)
+    // Payment method (COD only - handled between farmer and buyer directly)
     paymentMethod: {
       type: String,
       enum: ['cod'],
@@ -86,98 +56,10 @@ const orderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'completed', 'failed'],
+      enum: ['pending', 'completed'],
       default: 'pending'
     },
-    paymentId: String,
-    // Verification Call Details
-    verificationCall: {
-      status: {
-        type: String,
-        enum: ['pending', 'completed', 'rejected'],
-        default: 'pending'
-      },
-      callInitiatedAt: Date,
-      verifiedAt: Date,
-      verificationNotes: String,
-      verifiedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      },
-      attempts: {
-        type: Number,
-        default: 0
-      }
-    },
-    // Admin Approval Details
-    adminApproval: {
-      status: {
-        type: String,
-        enum: ['pending', 'approved', 'rejected', 'hold'],
-        default: 'pending'
-      },
-      approvedAt: Date,
-      approvedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      },
-      rejectionReason: String,
-      notes: String
-    },
-    // Additional Charges & Fines
-    additionalCharges: {
-      amount: {
-        type: Number,
-        default: 0
-      },
-      reason: String,
-      appliedAt: Date,
-      appliedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      }
-    },
-    issueFine: {
-      amount: {
-        type: Number,
-        default: 0
-      },
-      reason: String,
-      ratingReduction: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 5
-      },
-      appliedAt: Date,
-      appliedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      }
-    },
-    // Total with charges
-    chargesAmount: {
-      type: Number,
-      default: 0
-    },
-    fineAmount: {
-      type: Number,
-      default: 0
-    },
-    totalWithCharges: {
-      type: Number,
-      required: true
-    },
-    // Final payment tracking
-    paymentReceived: {
-      amount: {
-        type: Number,
-        default: 0
-      },
-      receivedAt: Date,
-      notes: String
-    },
-    // Timeline/tracking
+    // Timeline/tracking - farmer updates this
     timeline: [
       {
         event: String,
@@ -185,16 +67,13 @@ const orderSchema = new mongoose.Schema(
         timestamp: {
           type: Date,
           default: Date.now
-        },
-        location: String
+        }
       }
     ],
-    estimatedDeliveryDate: Date,
-    actualDeliveryDate: Date,
-    trackingNumber: String,
-    // Notes and feedback
+    // Notes
     notes: String,
-    // Review/rating
+    specialInstructions: String,
+    // Review/rating (after order completed)
     review: {
       rating: {
         type: Number,
@@ -202,44 +81,50 @@ const orderSchema = new mongoose.Schema(
         max: 5
       },
       comment: String,
-      images: [String],
       reviewedAt: Date
     },
-    // Additional metadata
-    couponCode: String,
-    specialInstructions: String,
-    returnRequested: Boolean,
-    returnReason: String,
     cancelledAt: Date,
-    cancellationReason: String
+    cancellationReason: String,
+    cancelledBy: {
+      type: String,
+      enum: ['buyer', 'farmer', 'admin'],
+    },
+    completedAt: Date
   },
   { timestamps: true }
 );
 
-// Auto-add timeline entry when status changes and calculate final total
+// Auto-add timeline entry when status changes
 orderSchema.pre('save', function (next) {
   if (this.isModified('orderStatus')) {
+    const statusDescriptions = {
+      'confirmed': 'Order confirmed - farmer will prepare your order',
+      'preparing': 'Farmer is preparing your order',
+      'ready_for_pickup': 'Order is ready for pickup',
+      'picked_up': 'Order has been picked up',
+      'completed': 'Order completed successfully',
+      'cancelled': 'Order has been cancelled'
+    };
     this.timeline.push({
       event: this.orderStatus.toUpperCase(),
-      description: `Order ${this.orderStatus}`,
+      description: statusDescriptions[this.orderStatus] || `Order ${this.orderStatus}`,
       timestamp: new Date()
     });
+    if (this.orderStatus === 'completed') {
+      this.completedAt = new Date();
+    }
   }
-  
-  // Calculate total with charges and fines
-  this.chargesAmount = this.additionalCharges?.amount || 0;
-  this.fineAmount = this.issueFine?.amount || 0;
-  this.totalWithCharges = this.totalAmount + this.chargesAmount + this.fineAmount;
-  
   next();
 });
 
 // Indexes for faster queries
 orderSchema.index({ buyerId: 1 });
-// Note: orderNumber index is created automatically by unique: true
+orderSchema.index({ farmerId: 1 });
+orderSchema.index({ cropId: 1 });
 orderSchema.index({ orderStatus: 1 });
 orderSchema.index({ createdAt: -1 });
-orderSchema.index({ 'items.farmerId': 1 });
+orderSchema.index({ buyerId: 1, createdAt: -1 });
+orderSchema.index({ farmerId: 1, createdAt: -1 });
 
 const Order = mongoose.model('Order', orderSchema);
 export default Order;

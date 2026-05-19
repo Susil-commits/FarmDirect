@@ -4,18 +4,22 @@ import PageTransition from '../components/common/PageTransition.jsx';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import ScrollAnimation from '../components/common/ScrollAnimation';
-import { Mail, Phone, MapPin, Globe, MessageSquare, Send, CheckCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe, MessageSquare, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import contactService from '../services/contactService';
 
 export default function Contact() {
   // Navigation handled by context
+  const { navigate } = useRouter();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    type: 'inquiry',
+    inquiryType: 'General',
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,17 +27,62 @@ export default function Contact() {
       ...prev,
       [name]: value
     }));
+    setError(''); // Clear error when user starts typing
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would normally send the data to your backend
-    console.log('Form submitted:', formData);
-    setSubmitted(true);
-    setTimeout(() => {
-      setFormData({ name: '', email: '', phone: '', type: 'inquiry', message: '' });
-      setSubmitted(false);
-    }, 3000);
+    setLoading(true);
+    setError('');
+
+    try {
+      // Validate form data
+      if (!formData.name.trim()) {
+        setError('Please enter your full name');
+        setLoading(false);
+        return;
+      }
+      if (!formData.email.trim()) {
+        setError('Please enter your email address');
+        setLoading(false);
+        return;
+      }
+      if (!formData.message.trim()) {
+        setError('Please enter your message');
+        setLoading(false);
+        return;
+      }
+      if (formData.message.trim().length < 10) {
+        setError('Message must be at least 10 characters long');
+        setLoading(false);
+        return;
+      }
+
+      // Submit to backend
+      const response = await contactService.submitQuery({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim() || '',
+        inquiryType: formData.inquiryType,
+        message: formData.message.trim()
+      });
+
+      if (response.success) {
+        setSubmitted(true);
+        // Reset form after 3 seconds
+        setTimeout(() => {
+          setFormData({ name: '', email: '', phone: '', inquiryType: 'General', message: '' });
+          setSubmitted(false);
+        }, 3000);
+      } else {
+        setError(response.message || 'Error submitting form. Please try again.');
+      }
+    } catch (err) {
+      console.error('Form submission error:', err);
+      setError(err.message || 'Error submitting form. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const contactInfo = [
@@ -93,6 +142,18 @@ export default function Contact() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white">
+        {/* Back Button */}
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
+          <div className="max-w-6xl mx-auto">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold transition-colors cursor-pointer"
+            >
+              ← Back to Home
+            </button>
+          </div>
+        </div>
+
         {/* Hero Section */}
         <div className="bg-gradient-to-br from-green-600 via-emerald-600 to-green-700 text-white py-16 px-4">
           <div className="max-w-4xl mx-auto text-center">
@@ -133,11 +194,18 @@ export default function Contact() {
                     <CheckCircle size={48} className="text-green-600 mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-green-900 mb-2">Thank You!</h3>
                     <p className="text-green-800">
-                      We've received your message and will respond within 2 hours.
+                      We've received your message and will respond within 24 hours.
                     </p>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-4">
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                        <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+                        <p className="text-red-700">{error}</p>
+                      </div>
+                    )}
+
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
                       <input
@@ -145,8 +213,8 @@ export default function Contact() {
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        required
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-200 bg-white text-gray-900 placeholder-gray-500"
+                        disabled={loading}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-200 bg-white text-gray-900 placeholder-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         placeholder="Your name"
                       />
                     </div>
@@ -158,8 +226,8 @@ export default function Contact() {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        required
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-200 bg-white text-gray-900 placeholder-gray-500"
+                        disabled={loading}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-200 bg-white text-gray-900 placeholder-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         placeholder="your@email.com"
                       />
                     </div>
@@ -171,7 +239,8 @@ export default function Contact() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-200 bg-white text-gray-900 placeholder-gray-500"
+                        disabled={loading}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-200 bg-white text-gray-900 placeholder-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         placeholder="+91 98765 43210"
                       />
                     </div>
@@ -179,16 +248,17 @@ export default function Contact() {
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Inquiry Type *</label>
                       <select
-                        name="type"
-                        value={formData.type}
+                        name="inquiryType"
+                        value={formData.inquiryType}
                         onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-200 bg-white text-gray-900"
+                        disabled={loading}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-200 bg-white text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
                       >
-                        <option value="inquiry">General Inquiry</option>
-                        <option value="support">Customer Support</option>
-                        <option value="partnership">Partnership</option>
-                        <option value="farmer">Farmer Partnership</option>
-                        <option value="feedback">Feedback</option>
+                        <option value="General">General Inquiry</option>
+                        <option value="Support">Customer Support</option>
+                        <option value="Partnership">Partnership</option>
+                        <option value="Farmer Partnership">Farmer Partnership</option>
+                        <option value="Feedback">Feedback</option>
                       </select>
                     </div>
 
@@ -198,10 +268,10 @@ export default function Contact() {
                         name="message"
                         value={formData.message}
                         onChange={handleChange}
-                        required
+                        disabled={loading}
                         rows="5"
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-200 resize-none bg-white text-gray-900 placeholder-gray-500"
-                        placeholder="Tell us how we can help..."
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-200 resize-none bg-white text-gray-900 placeholder-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        placeholder="Tell us how we can help... (minimum 10 characters)"
                       />
                     </div>
 
@@ -209,10 +279,20 @@ export default function Contact() {
                       type="submit"
                       variant="primary"
                       size="lg"
+                      disabled={loading}
                       className="w-full flex items-center justify-center gap-2"
                     >
-                      <Send size={18} />
-                      Send Message
+                      {loading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send size={18} />
+                          Send Message
+                        </>
+                      )}
                     </Button>
                   </form>
                 )}
@@ -262,6 +342,22 @@ export default function Contact() {
             </div>
           </ScrollAnimation>
 
+          {/* Footer */}
+          <ScrollAnimation className="scroll-slide mt-16 pt-8 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+              <button
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold transition-colors cursor-pointer"
+              >
+                ← Back to Home
+              </button>
+              <div className="flex gap-6 text-sm">
+                <button onClick={() => navigate('/about')} className="text-gray-600 hover:text-gray-900 transition">About</button>
+                <button onClick={() => navigate('/support')} className="text-gray-600 hover:text-gray-900 transition">Support</button>
+                <button onClick={() => navigate('/privacy')} className="text-gray-600 hover:text-gray-900 transition">Privacy</button>
+              </div>
+            </div>
+          </ScrollAnimation>
 
         </div>
       </div>

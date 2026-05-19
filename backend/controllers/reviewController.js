@@ -112,6 +112,7 @@ export const getReviews = asyncHandler(async (req, res) => {
   }
   
   const reviews = await Review.find({ cropId })
+    .lean()
     .populate('userId', 'firstName lastName profilePicture')
     .skip(skip)
     .limit(parseInt(limit))
@@ -172,11 +173,12 @@ export const getFarmerReviews = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
   
   // Get all crops by farmer
-  const crops = await CropListing.find({ farmerId });
+  const crops = await CropListing.find({ farmerId }).lean();
   const cropIds = crops.map(crop => crop._id);
   
   // Get reviews for these crops
   const reviews = await Review.find({ cropId: { $in: cropIds } })
+    .lean()
     .populate('userId', 'firstName lastName profilePicture')
     .skip(skip)
     .limit(parseInt(limit))

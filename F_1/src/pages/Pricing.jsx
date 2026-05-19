@@ -1,8 +1,11 @@
 import React from 'react';
 import { Check } from 'lucide-react';
+import { useRouter } from '../context/RouterContext';
 import PageTransition from '../components/common/PageTransition';
 
 export default function Pricing() {
+  const { navigate } = useRouter();
+
   const plans = [
     {
       name: 'Basic Farmer',
@@ -124,6 +127,23 @@ export default function Pricing() {
                 <h3 className="text-lg font-bold text-gray-900 mb-2">How is pricing calculated?</h3>
                 <p className="text-gray-700">Monthly subscription fees are billed in advance. Commission is deducted from seller payments at the time of transaction settlement.</p>
               </div>
+
+          {/* Footer */}
+          <div className="mt-16 pt-8 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+              <button
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold transition-colors cursor-pointer"
+              >
+                ← Back to Home
+              </button>
+              <div className="flex gap-6 text-sm">
+                <button onClick={() => navigate('/support')} className="text-gray-600 hover:text-gray-900 transition">Support</button>
+                <button onClick={() => navigate('/privacy')} className="text-gray-600 hover:text-gray-900 transition">Privacy</button>
+                <button onClick={() => navigate('/contact')} className="text-gray-600 hover:text-gray-900 transition">Contact</button>
+              </div>
+            </div>
+          </div>
             </div>
           </div>
         </div>

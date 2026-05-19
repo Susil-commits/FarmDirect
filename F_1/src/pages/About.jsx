@@ -7,7 +7,7 @@ import ScrollAnimation from '../components/common/ScrollAnimation';
 import { Users, Target, Heart, Zap, Globe, Award, TrendingUp, Shield, Code, Layers } from 'lucide-react';
 
 export default function About() {
-
+  const { navigate } = useRouter();
 
   const values = [
     {
@@ -59,6 +59,18 @@ export default function About() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white">
+        {/* Back Button */}
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
+          <div className="max-w-6xl mx-auto">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold transition-colors cursor-pointer"
+            >
+              ← Back to Home
+            </button>
+          </div>
+        </div>
+
         {/* Hero Section */}
         <div className="bg-gradient-to-br from-green-600 via-emerald-600 to-green-700 text-white py-16 px-4">
           <div className="max-w-4xl mx-auto text-center">
@@ -209,7 +221,7 @@ export default function About() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 max-w-7xl mx-auto px-2">
               {[
                 { phase: 'Phase 1', title: 'Planning & Design', timeline: 'Aug - Sep 2024', desc: 'Requirements, architecture, database, UI wireframes, tech stack', icon: '📋', bgColor: 'bg-blue-500', details: ['Requirements', 'Architecture', 'Database', 'Wireframes', 'Tech Stack'] },
-                { phase: 'Phase 2', title: 'Backend Dev', timeline: 'Oct - Nov 2024', desc: 'APIs, JWT auth, RBAC, MongoDB, Cloudinary, payments', icon: '⚙️', bgColor: 'bg-green-500', details: ['50+ APIs', 'Authentication', 'RBAC', 'DB Models', 'Upload'] },
+                { phase: 'Phase 2', title: 'Backend Dev', timeline: 'Oct - Nov 2024', desc: 'APIs, JWT auth, RBAC, MongoDB, File Storage, payments', icon: '⚙️', bgColor: 'bg-green-500', details: ['50+ APIs', 'Authentication', 'RBAC', 'DB Models', 'Upload'] },
                 { phase: 'Phase 3', title: 'Frontend Dev', timeline: 'Nov - Dec 2024', desc: 'React, Tailwind CSS, components, marketplace UI, dashboards', icon: '🎨', bgColor: 'bg-purple-500', details: ['React', 'Responsive', 'State Mgmt', 'Components', 'Navigation'] },
                 { phase: 'Phase 4', title: 'Integration & Test', timeline: 'Dec 2024 - Jan 2025', desc: 'API integration, testing, performance tuning, security checks', icon: '✅', bgColor: 'bg-yellow-500', details: ['API Tests', 'Unit Tests', 'E2E Tests', 'Optimize', 'Security'] },
                 { phase: 'Phase 5', title: 'Deployment', timeline: 'Jan - Feb 2025', desc: 'Production deployment, API docs, guides, documentation, report', icon: '🚀', bgColor: 'bg-red-500', details: ['Deploy', 'API Docs', 'Guides', 'Docs', 'Report'] }

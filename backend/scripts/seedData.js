@@ -11,91 +11,8 @@ import connectDB from '../config/db.js';
 
 dotenv.config();
 
-const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/300?text=Farm+Product';
-
 // Farmer names and details
-const farmerData = [
-  {
-    firstName: 'Rajesh',
-    lastName: 'Kumar',
-    farmName: 'Golden Harvest Farm',
-    farmArea: '45 acres',
-    bio: 'Organic farming expert with 20 years of experience',
-    city: 'Punjab'
-  },
-  {
-    firstName: 'Priya',
-    lastName: 'Singh',
-    farmName: 'Green Valley Produce',
-    farmArea: '32 acres',
-    bio: 'Specializes in vegetables and spices',
-    city: 'Haryana'
-  },
-  {
-    firstName: 'Amit',
-    lastName: 'Patel',
-    farmName: 'Patel Family Orchard',
-    farmArea: '28 acres',
-    bio: 'Fresh fruits direct from farm to table',
-    city: 'Gujarat'
-  },
-  {
-    firstName: 'Savitri',
-    lastName: 'Sharma',
-    farmName: 'Sharma Dairy Farm',
-    farmArea: '50 acres',
-    bio: 'Premium dairy and organic milk production',
-    city: 'Madhya Pradesh'
-  },
-  {
-    firstName: 'Vikram',
-    lastName: 'Reddy',
-    farmName: 'Reddy Spice Farms',
-    farmArea: '18 acres',
-    bio: 'Authentic spices sourced directly',
-    city: 'Karnataka'
-  },
-  {
-    firstName: 'Anita',
-    lastName: 'Gupta',
-    farmName: 'Gupta Rice Mills',
-    farmArea: '65 acres',
-    bio: 'High-quality grains and pulses',
-    city: 'Uttar Pradesh'
-  },
-  {
-    firstName: 'Deepak',
-    lastName: 'Yadav',
-    farmName: 'Yadav Herb Garden',
-    farmArea: '15 acres',
-    bio: 'Medicinal and culinary herbs',
-    city: 'Rajasthan'
-  },
-  {
-    firstName: 'Meera',
-    lastName: 'Iyer',
-    farmName: 'Iyer Coconut Estate',
-    farmArea: '35 acres',
-    bio: 'Coconut and tropical fruits',
-    city: 'Tamil Nadu'
-  },
-  {
-    firstName: 'Suresh',
-    lastName: 'Nair',
-    farmName: 'Nair Spice Estate',
-    farmArea: '22 acres',
-    bio: 'Black pepper, cardamom, and more',
-    city: 'Kerala'
-  },
-  {
-    firstName: 'Lisa',
-    lastName: 'Menon',
-    farmName: 'Menon Organic Foods',
-    farmArea: '40 acres',
-    bio: 'Certified organic vegetables',
-    city: 'Maharashtra'
-  }
-];
+const farmerData = [];
 
 // Buyer names
 const buyerData = [
@@ -115,7 +32,7 @@ const buyerData = [
 const cropTypes = [
   {
     cropName: 'Fresh Tomatoes',
-    category: 'Vegetables',
+    category: 'vegetables',
     basePrice: 30,
     description: 'Fresh, juicy tomatoes picked daily from our farm. Perfect for salads and cooking.',
     quantity: 100,
@@ -124,7 +41,7 @@ const cropTypes = [
   },
   {
     cropName: 'Organic Spinach',
-    category: 'Vegetables',
+    category: 'vegetables',
     basePrice: 45,
     description: 'Nutritious organic spinach leaves. Rich in iron and vitamins.',
     quantity: 50,
@@ -133,7 +50,7 @@ const cropTypes = [
   },
   {
     cropName: 'Bananas',
-    category: 'Fruits',
+    category: 'fruits',
     basePrice: 40,
     description: 'Golden, sweet bananas. Great source of natural energy.',
     quantity: 80,
@@ -142,7 +59,7 @@ const cropTypes = [
   },
   {
     cropName: 'Mangoes',
-    category: 'Fruits',
+    category: 'fruits',
     basePrice: 120,
     description: 'Premium Alphonso mangoes. King of fruits!',
     quantity: 60,
@@ -151,7 +68,7 @@ const cropTypes = [
   },
   {
     cropName: 'Turmeric Powder',
-    category: 'Spices',
+    category: 'spices',
     basePrice: 250,
     description: 'Pure, unadulterated turmeric powder. No additives.',
     quantity: 30,
@@ -160,7 +77,7 @@ const cropTypes = [
   },
   {
     cropName: 'Black Pepper',
-    category: 'Spices',
+    category: 'spices',
     basePrice: 400,
     description: 'Fresh ground black pepper. Premium quality.',
     quantity: 20,
@@ -169,7 +86,7 @@ const cropTypes = [
   },
   {
     cropName: 'Organic Rice',
-    category: 'Grains',
+    category: 'grains',
     basePrice: 60,
     description: 'Basmati rice, pesticide-free and high quality.',
     quantity: 200,
@@ -178,7 +95,7 @@ const cropTypes = [
   },
   {
     cropName: 'Chickpeas (Chana)',
-    category: 'Pulses',
+    category: 'pulses',
     basePrice: 80,
     description: 'Protein-rich chickpeas. Perfect for dals and curries.',
     quantity: 100,
@@ -187,7 +104,7 @@ const cropTypes = [
   },
   {
     cropName: 'Fresh Milk',
-    category: 'Dairy',
+    category: 'dairy',
     basePrice: 50,
     description: 'Fresh, pure milk collected daily from our dairy farm.',
     quantity: 500,
@@ -196,7 +113,7 @@ const cropTypes = [
   },
   {
     cropName: 'Coriander Seeds',
-    category: 'Spices',
+    category: 'spices',
     basePrice: 180,
     description: 'Fresh coriander seeds with strong aroma.',
     quantity: 25,
@@ -205,7 +122,7 @@ const cropTypes = [
   },
   {
     cropName: 'Onions',
-    category: 'Vegetables',
+    category: 'vegetables',
     basePrice: 25,
     description: 'Fresh onions, perfect for cooking.',
     quantity: 150,
@@ -214,7 +131,7 @@ const cropTypes = [
   },
   {
     cropName: 'Cauliflower',
-    category: 'Vegetables',
+    category: 'vegetables',
     basePrice: 35,
     description: 'Fresh cauliflower heads. Great for curries and stir-fries.',
     quantity: 60,
@@ -223,7 +140,7 @@ const cropTypes = [
   },
   {
     cropName: 'Cucumber',
-    category: 'Vegetables',
+    category: 'vegetables',
     basePrice: 20,
     description: 'Crisp and refreshing cucumbers. Rich in water and minerals.',
     quantity: 80,
@@ -232,7 +149,7 @@ const cropTypes = [
   },
   {
     cropName: 'Carrots',
-    category: 'Vegetables',
+    category: 'vegetables',
     basePrice: 28,
     description: 'Sweet and crunchy carrots. Good for health.',
     quantity: 100,
@@ -241,7 +158,7 @@ const cropTypes = [
   },
   {
     cropName: 'Apples',
-    category: 'Fruits',
+    category: 'fruits',
     basePrice: 150,
     description: 'Select red apples. Fresh and crispy.',
     quantity: 70,
@@ -250,7 +167,7 @@ const cropTypes = [
   },
   {
     cropName: 'Oranges',
-    category: 'Fruits',
+    category: 'fruits',
     basePrice: 60,
     description: 'Fresh oranges loaded with vitamin C.',
     quantity: 90,
@@ -259,7 +176,7 @@ const cropTypes = [
   },
   {
     cropName: 'Garlic',
-    category: 'Vegetables',
+    category: 'vegetables',
     basePrice: 80,
     description: 'Fresh garlic bulbs. Pungent and aromatic.',
     quantity: 40,
@@ -268,7 +185,7 @@ const cropTypes = [
   },
   {
     cropName: 'Ginger',
-    category: 'Spices',
+    category: 'spices',
     basePrice: 90,
     description: 'Fresh ginger roots. Great for immunity.',
     quantity: 35,
@@ -277,7 +194,7 @@ const cropTypes = [
   },
   {
     cropName: 'Wheat Flour',
-    category: 'Grains',
+    category: 'grains',
     basePrice: 50,
     description: 'Pure, pesticide-free wheat flour.',
     quantity: 150,
@@ -286,7 +203,7 @@ const cropTypes = [
   },
   {
     cropName: 'Moong Dal',
-    category: 'Pulses',
+    category: 'pulses',
     basePrice: 120,
     description: 'Split and polished moong dal.',
     quantity: 80,
@@ -386,7 +303,7 @@ async function seedDatabase() {
         quantity: cropType.quantity + Math.random() * 100,
         unit: cropType.unit,
         description: cropType.description,
-        images: [PLACEHOLDER_IMAGE],
+        images: [],
         discount: cropType.discount,
         specifications: {
           size: 'Medium',
@@ -490,7 +407,7 @@ async function seedDatabase() {
         userId: buyer._id,
         rating: Math.floor(Math.random() * 5) + 1,
         comment: 'High quality product, fresh and delicious. Highly recommended! Great customer service.',
-        images: [PLACEHOLDER_IMAGE]
+        images: []
       });
 
       reviews.push(review);

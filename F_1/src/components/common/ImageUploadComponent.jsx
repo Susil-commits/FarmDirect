@@ -1,5 +1,5 @@
 /**
- * Example: Image Upload Component using Cloudinary via Backend
+ * Example: Image Upload Component using Local Storage via Backend
  * Shows how to handle file uploads in your React components
  */
 
@@ -57,7 +57,7 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
   };
 
   /**
-   * Handle upload to Cloudinary (via backend)
+   * Handle upload to server (via backend)
    */
   const handleUpload = async () => {
     if (files.length === 0) {
@@ -101,7 +101,7 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
   return (
     <Card>
       <div className="p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Upload Images to Cloudinary</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Upload Images</h3>
 
         {/* Error Message */}
         {error && (
@@ -115,7 +115,7 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
         {success && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
             <Check size={20} className="text-green-600" />
-            <p className="text-green-700 text-sm">✓ Files uploaded successfully to Cloudinary!</p>
+            <p className="text-green-700 text-sm">✓ Files uploaded successfully!</p>
           </div>
         )}
 
@@ -187,18 +187,18 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
               {uploading ? (
                 <>
                   <Upload size={18} className="animate-pulse" />
-                  Uploading to Cloudinary...
+                  Uploading...
                 </>
               ) : (
                 <>
                   <Upload size={18} />
-                  Upload {previews.length} {previews.length === 1 ? 'File' : 'Files'} to Cloudinary
+                  Upload {previews.length} {previews.length === 1 ? 'File' : 'Files'}
                 </>
               )}
             </Button>
 
             <p className="text-xs text-gray-500 mt-2">
-              💡 Files are optimized and stored on Cloudinary CDN for fast delivery worldwide
+              💡 Files are stored securely on the server
             </p>
           </div>
         )}
@@ -222,7 +222,7 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
  * 
  * <ImageUploadComponent 
  *   onUploadSuccess={(urls) => {
- *     console.log('Uploaded to Cloudinary:', urls);
+ *     console.log('Uploaded files:', urls);
  *     // Store URLs in your form state
  *     setFormData(prev => ({ ...prev, images: urls }));
  *   }}

@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import User from '../models/User.js';
 import CropListing from '../models/CropListing.js';
 import Order from '../models/Order.js';
@@ -7,6 +10,8 @@ import Notification from '../models/Notification.js';
 import AuditLog from '../models/AuditLog.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { invalidationStrategies } from '../utils/cache.js';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Public community stats (no auth required)
 export const getPublicCommunityStats = asyncHandler(async (req, res) => {
@@ -60,10 +65,13 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
   // Count PENDING KYC (not yet approved/rejected)
   const pendingKYC = await User.countDocuments({ kycStatus: 'pending' });
   
-  // Revenue calculation (if you have a Transaction model)
-  const orders = await Order.find({ orderStatus: 'delivered' });
-  const totalRevenue = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-  
+  // Revenue calculation using MongoDB aggregation (avoids pulling all orders into memory)
+  const revenueResult = await Order.aggregate([
+    { $match: { orderStatus: 'delivered' } },
+    { $group: { _id: null, totalRevenue: { $sum: '$totalAmount' }, count: { $sum: 1 } } }
+  ]);
+  const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
+  const deliveredOrderCount = revenueResult.length > 0 ? revenueResult[0].count : 0;
   // Return REAL data only - no mock data fallback
   res.status(200).json({
     success: true,
@@ -119,7 +127,8 @@ export const getAllUsers = asyncHandler(async (req, res) => {
     .select('-password')
     .skip(skip)
     .limit(parseInt(limit))
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
   
   const total = await User.countDocuments(query);
   
@@ -135,10 +144,11 @@ export const getAllUsers = asyncHandler(async (req, res) => {
   });
 });
 
-// Suspend/Block user
+// Suspend/Block/Unfreeze user
 export const toggleUserStatus = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   const { status, reason } = req.body;
+  const adminUser = req.user;
   
   if (!['active', 'suspended', 'banned'].includes(status)) {
     return res.status(400).json({
@@ -147,33 +157,76 @@ export const toggleUserStatus = asyncHandler(async (req, res) => {
     });
   }
   
+  const previousUser = await User.findById(userId).select('-password');
+  if (!previousUser) {
+    return res.status(404).json({
+      success: false,
+      message: 'User not found'
+    });
+  }
+  
   const user = await User.findByIdAndUpdate(
     userId,
-    { status, suspensionReason: reason, updatedAt: new Date() },
+    { status, suspensionReason: status !== 'active' ? reason : '', updatedAt: new Date() },
     { new: true }
   ).select('-password');
   
-  // Send notification if suspending or banning
-  if (status === 'suspended' || status === 'banned') {
-    try {
-      import('../models/Notification.js').then(async (NotifModule) => {
-        const Notification = NotifModule.default;
-        await Notification.create({
-          userId: userId,
-          title: status === 'suspended' ? 'Account Suspended' : 'Account Banned',
-          message: `Your account has been ${status}. Reason: ${reason || 'Your account violated our terms of service'}. Please contact support for more information.`,
-          type: 'general',
-          priority: 'high'
-        });
-      });
-    } catch (err) {
-      console.error('Notification creation error:', err);
-    }
+  // Build notification title & message based on status
+  let notifTitle, notifMessage, auditAction;
+  
+  if (status === 'suspended') {
+    notifTitle = 'Account Suspended ⚠️';
+    notifMessage = `Your account has been suspended. Reason: ${reason || 'Violation of platform terms'}. Contact support at support@farmdirect.com for more information.`;
+    auditAction = 'USER_SUSPENDED';
+  } else if (status === 'banned') {
+    notifTitle = 'Account Banned 🚫';
+    notifMessage = `Your account has been permanently banned. Reason: ${reason || 'Severe violation of platform terms'}. This action cannot be reversed.`;
+    auditAction = 'USER_BANNED';
+  } else {
+    // Unfrozen / reactivated
+    notifTitle = 'Account Reactivated ✅';
+    notifMessage = `Your account has been reactivated. You now have full access to the platform again. Welcome back!`;
+    auditAction = 'USER_UPDATED';
+  }
+  
+  // Send in-app notification
+  try {
+    await Notification.create({
+      userId: userId,
+      title: notifTitle,
+      message: notifMessage,
+      type: 'general',
+      priority: 'high'
+    });
+  } catch (err) {
+    console.error('Notification creation error:', err);
+  }
+  
+  // Create audit log
+  try {
+    await AuditLog.create({
+      adminId: adminUser._id,
+      adminEmail: adminUser.email,
+      action: auditAction,
+      resourceType: 'User',
+      resourceId: userId,
+      resourceDetails: `${user.firstName} ${user.lastName} (${user.email})`,
+      changes: {
+        before: { status: previousUser.status },
+        after: { status: user.status }
+      },
+      reason: status !== 'active' ? reason : 'Account reactivated by admin',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent') || 'Unknown',
+      status: 'success'
+    });
+  } catch (auditErr) {
+    console.error('Audit log creation error:', auditErr);
   }
   
   res.status(200).json({
     success: true,
-    message: `User ${status} successfully`,
+    message: `User ${status === 'active' ? 'reactivated' : status} successfully`,
     data: user
   });
 });
@@ -182,6 +235,7 @@ export const toggleUserStatus = asyncHandler(async (req, res) => {
 export const deleteUser = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   const { reason } = req.body;
+  const adminUser = req.user;
   
   const user = await User.findById(userId);
   
@@ -193,35 +247,56 @@ export const deleteUser = asyncHandler(async (req, res) => {
   }
   
   const userName = `${user.firstName} ${user.lastName}`;
+  const userEmail = user.email;
+  const userRole = user.role;
   
-  console.log(`🗑️ Admin deleting user: ${userName} (${user.email})`);
 
-  // Delete all related data
-  if (user.role === 'farmer') {
-    // Delete farmer's crop listings
-    await CropListing.deleteMany({ farmerId: userId });
-    console.log('🌾 Deleted crop listings');
+  // ─── Send in-app notification BEFORE deletion ───
+  try {
+    await Notification.create({
+      userId: userId,
+      title: 'Account Deleted 🗑️',
+      message: `Your FarmDirect account has been permanently deleted. Reason: ${reason || 'Violation of platform terms of service'}. If you believe this was done in error, contact support.`,
+      type: 'general',
+      priority: 'high'
+    });
+  } catch (notifErr) {
+    console.error('Deletion notification error:', notifErr);
   }
 
-  // Delete orders where user is buyer or farmer
+  // ─── Delete all associated data ───
+  if (userRole === 'farmer') {
+    await CropListing.deleteMany({ farmerId: userId });
+  }
+
   await Order.deleteMany({ $or: [{ buyerId: userId }, { farmerId: userId }] });
-  console.log('📦 Deleted orders');
 
-  // Delete reviews
   await Review.deleteMany({ $or: [{ reviewerId: userId }, { revieweeId: userId }] });
-  console.log('⭐ Deleted reviews');
 
-  // Delete wishlist items
   await Wishlist.deleteMany({ userId: userId });
-  console.log('❤️ Deleted wishlist items');
 
-  // Delete notifications
   await Notification.deleteMany({ userId: userId });
-  console.log('🔔 Deleted notifications');
 
-  // Delete user
+  // ─── Delete the user ───
   await User.findByIdAndDelete(userId);
-  console.log(`✅ User deleted: ${user.email}`);
+
+  // ─── Create audit log (AFTER deletion so it's not cascaded) ───
+  try {
+    await AuditLog.create({
+      adminId: adminUser._id,
+      adminEmail: adminUser.email,
+      action: 'USER_DELETED',
+      resourceType: 'User',
+      resourceId: userId,
+      resourceDetails: `${userName} (${userEmail})`,
+      reason: reason || 'Deleted by admin',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent') || 'Unknown',
+      status: 'success'
+    });
+  } catch (auditErr) {
+    console.error('Audit log error:', auditErr);
+  }
   
   res.status(200).json({
     success: true,
@@ -229,93 +304,143 @@ export const deleteUser = asyncHandler(async (req, res) => {
   });
 });
 
-// Approve farmer KYC
-export const approveFarmerKYC = asyncHandler(async (req, res) => {
-  const { farmerId } = req.params;
+// Approve user KYC (handles both farmers and buyers)
+export const approveUserKYC = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
   const { comments } = req.body;
   
-  const farmer = await User.findByIdAndUpdate(
-    farmerId,
+  const user = await User.findByIdAndUpdate(
+    userId,
     {
       kycStatus: 'verified',
       kycVerifiedAt: new Date(),
       kycComments: comments,
-      status: 'active'
+      status: 'active',
+      kycResultSeen: false // Show congrats page on next login
     },
     { new: true }
   ).select('-password');
   
-  if (!farmer) {
+  if (!user) {
     return res.status(404).json({
       success: false,
-      message: 'Farmer not found'
+      message: 'User not found'
     });
   }
   
-  // Send approval notification
+  // Send role-specific approval notification
   try {
-    import('../models/Notification.js').then(async (NotifModule) => {
-      const Notification = NotifModule.default;
-      await Notification.create({
-        userId: farmerId,
-        title: 'KYC Approved ✅',
-        message: `Congratulations! Your KYC has been approved. Your account is now active and you can start listing crops on FarmDirect. ${comments ? `Admin notes: ${comments}` : ''}`,
-        type: 'general',
-        priority: 'high'
-      });
+    const roleMessage = user.role === 'farmer'
+      ? 'You can now list your crops on the marketplace and start selling!'
+      : 'You can now browse the marketplace and place orders!';
+    await Notification.create({
+      userId: userId,
+      title: 'KYC Approved ✅',
+      message: `Congratulations! Your KYC has been approved. ${roleMessage} ${comments ? `Admin notes: ${comments}` : ''}`,
+      type: 'general',
+      priority: 'high'
     });
   } catch (err) {
     console.error('Notification creation error:', err);
   }
+
+  // Create audit log
+  try {
+    await AuditLog.create({
+      adminId: req.user._id,
+      adminEmail: req.user.email,
+      action: 'KYC_APPROVED',
+      resourceType: 'KYC',
+      resourceId: userId,
+      resourceDetails: `${user.firstName} ${user.lastName} (${user.email})`,
+      reason: comments || 'KYC documents verified',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent') || 'Unknown',
+      status: 'success'
+    });
+  } catch (auditErr) {
+    console.error('Audit log error:', auditErr);
+  }
   
   res.status(200).json({
     success: true,
-    message: 'Farmer KYC approved',
-    data: farmer
+    message: 'User KYC approved',
+    data: user
   });
 });
 
-// Reject farmer KYC
-export const rejectFarmerKYC = asyncHandler(async (req, res) => {
-  const { farmerId } = req.params;
+// Reject user KYC (handles both farmers and buyers)
+export const rejectUserKYC = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
   const { reason } = req.body;
   
-  const farmer = await User.findByIdAndUpdate(
-    farmerId,
+  const user = await User.findByIdAndUpdate(
+    userId,
     {
       kycStatus: 'rejected',
-      kycRejectionReason: reason
+      kycRejectionReason: reason,
+      kycResultSeen: false // Show sorry page on next login
     },
     { new: true }
   ).select('-password');
   
-  if (!farmer) {
+  if (!user) {
     return res.status(404).json({
       success: false,
-      message: 'Farmer not found'
+      message: 'User not found'
     });
   }
   
-  // Send rejection notification
+  // Send rejection notification (static import - already imported at top of file)
   try {
-    import('../models/Notification.js').then(async (NotifModule) => {
-      const Notification = NotifModule.default;
-      await Notification.create({
-        userId: farmerId,
-        title: 'KYC Rejected ❌',
-        message: `Your KYC application has been rejected. Reason: ${reason}. Please contact support to reapply with correct documents.`,
-        type: 'general',
-        priority: 'high'
-      });
+    await Notification.create({
+      userId: userId,
+      title: 'KYC Rejected ❌',
+      message: `Your KYC application has been rejected. Reason: ${reason}. You can delete your account or re-submit your documents for verification.`,
+      type: 'general',
+      priority: 'high'
     });
   } catch (err) {
     console.error('Notification creation error:', err);
   }
+
+  // Create audit log
+  try {
+    await AuditLog.create({
+      adminId: req.user._id,
+      adminEmail: req.user.email,
+      action: 'KYC_REJECTED',
+      resourceType: 'KYC',
+      resourceId: userId,
+      resourceDetails: `${user.firstName} ${user.lastName} (${user.email})`,
+      reason: reason || 'KYC documents rejected',
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent') || 'Unknown',
+      status: 'success'
+    });
+  } catch (auditErr) {
+    console.error('Audit log error:', auditErr);
+  }
   
   res.status(200).json({
     success: true,
-    message: 'Farmer KYC rejected',
-    data: farmer
+    message: 'User KYC rejected',
+    data: user
+  });
+});
+
+// Mark KYC result as seen (called after user views congrats/sorry page)
+export const markKYCResultSeen = asyncHandler(async (req, res) => {
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    { kycResultSeen: true },
+    { new: true }
+  ).select('-password');
+  
+  res.status(200).json({
+    success: true,
+    message: 'KYC result marked as seen',
+    data: user
   });
 });
 
@@ -325,7 +450,6 @@ export const debugGetAllUsersKYCStatus = asyncHandler(async (req, res) => {
     .select('firstName lastName email role kycStatus status createdAt')
     .sort({ createdAt: -1 });
 
-  console.log(`🔍 Total users in database: ${users.length}`);
   
   const summary = {
     total: users.length,
@@ -375,7 +499,6 @@ export const getPendingKYC = asyncHandler(async (req, res) => {
     queryRole = 'farmer'; // Default to farmer
   }
   
-  console.log(`📋 Fetching pending KYC for role: ${queryRole} (received: ${role})`);
   
   const users = await User.find({
     role: queryRole,
@@ -384,15 +507,14 @@ export const getPendingKYC = asyncHandler(async (req, res) => {
     .select('-password')
     .skip(skip)
     .limit(parseInt(limit))
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
   
   const total = await User.countDocuments({
     role: queryRole,
     kycStatus: 'pending'
   });
 
-  console.log(`✅ Found ${total} pending KYC users for role: ${queryRole}`);
-  console.log('Users:', users.map(u => ({ id: u._id, email: u.email, name: u.firstName, role: u.role, kycStatus: u.kycStatus })));
 
   // Return REAL data only - no mock data
   res.status(200).json({
@@ -420,7 +542,6 @@ export const getRejectedKYC = asyncHandler(async (req, res) => {
     queryRole = 'buyer';
   }
   
-  console.log(`📋 Fetching REJECTED KYC for role: ${queryRole}`);
   
   const users = await User.find({
     role: queryRole,
@@ -429,14 +550,14 @@ export const getRejectedKYC = asyncHandler(async (req, res) => {
     .select('-password')
     .skip(skip)
     .limit(parseInt(limit))
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
   
   const total = await User.countDocuments({
     role: queryRole,
     kycStatus: 'rejected'
   });
 
-  console.log(`✅ Found ${total} rejected KYC users for role: ${queryRole}`);
 
   res.status(200).json({
     success: true,
@@ -496,13 +617,31 @@ export const approveCrop = asyncHandler(async (req, res) => {
     cropId,
     { listingApprovalStatus: 'approved', updatedAt: new Date() },
     { new: true }
-  );
+  ).populate('farmerId', 'name email');
   
   if (!crop) {
     return res.status(404).json({
       success: false,
       message: 'Crop not found'
     });
+  }
+
+  // Send approval notification to farmer
+  try {
+    await Notification.create({
+      userId: crop.farmerId._id,
+      title: 'Crop Approved ✅',
+      message: `Your crop listing "${crop.cropName}" has been approved and is now visible to buyers!`,
+      type: 'general',
+      priority: 'high',
+      link: `/my-crops`,
+      data: {
+        cropId: crop._id,
+        cropName: crop.cropName
+      }
+    });
+  } catch (err) {
+    console.error('Notification creation error:', err);
   }
   
   res.status(200).json({
@@ -521,13 +660,32 @@ export const rejectCrop = asyncHandler(async (req, res) => {
     cropId,
     { listingApprovalStatus: 'rejected', rejectionReason: reason },
     { new: true }
-  );
+  ).populate('farmerId', 'name email');
   
   if (!crop) {
     return res.status(404).json({
       success: false,
       message: 'Crop not found'
     });
+  }
+
+  // Send rejection notification to farmer
+  try {
+    await Notification.create({
+      userId: crop.farmerId._id,
+      title: 'Crop Rejected ❌',
+      message: `Your crop listing "${crop.cropName}" has been rejected. Reason: ${reason || 'Not specified'}. You can review the details and resubmit.`,
+      type: 'general',
+      priority: 'high',
+      link: `/my-crops`,
+      data: {
+        cropId: crop._id,
+        cropName: crop.cropName,
+        rejectionReason: reason
+      }
+    });
+  } catch (err) {
+    console.error('Notification creation error:', err);
   }
   
   res.status(200).json({
@@ -576,33 +734,129 @@ export const getAllOrders = asyncHandler(async (req, res) => {
 // Update order status
 export const updateOrderStatus = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
-  const { orderStatus } = req.body;
-  
-  const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
-  
+  const { orderStatus, cancellationReason } = req.body;
+
+  const validStatuses = ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'completed', 'cancelled'];
+
   if (!validStatuses.includes(orderStatus)) {
     return res.status(400).json({
       success: false,
-      message: 'Invalid order status'
+      message: `Invalid order status. Must be one of: ${validStatuses.join(', ')}`
     });
   }
-  
-  const order = await Order.findByIdAndUpdate(
-    orderId,
-    { orderStatus, updatedAt: new Date() },
-    { new: true }
-  ).populate('buyerId', 'email').populate('items.cropId', 'cropName');
-  
+
+  const order = await Order.findById(orderId);
   if (!order) {
     return res.status(404).json({
       success: false,
       message: 'Order not found'
     });
   }
-  
+
+  // Validate status transitions (same rules as farmer update)
+  const validTransitions = {
+    confirmed: ['preparing', 'cancelled'],
+    preparing: ['ready_for_pickup', 'cancelled'],
+    ready_for_pickup: ['picked_up', 'cancelled'],
+    picked_up: ['completed'],
+    completed: [],
+    cancelled: [],
+  };
+
+  if (!validTransitions[order.orderStatus]?.includes(orderStatus)) {
+    return res.status(400).json({
+      success: false,
+      message: `Cannot transition from "${order.orderStatus}" to "${orderStatus}"`
+    });
+  }
+
+  const statusDescriptions = {
+    preparing: 'Admin: Order preparation started',
+    ready_for_pickup: 'Admin: Order marked ready for pickup',
+    picked_up: 'Admin: Order marked as picked up',
+    completed: 'Admin: Order marked as completed',
+    cancelled: 'Admin: Order cancelled',
+  };
+
+  order.orderStatus = orderStatus;
+  order.timeline.push({
+    event: orderStatus.toUpperCase(),
+    description: statusDescriptions[orderStatus] || `Admin updated status to ${orderStatus}`,
+    timestamp: new Date(),
+  });
+
+  if (orderStatus === 'cancelled') {
+    order.cancelledBy = 'admin';
+    if (cancellationReason) {
+      order.cancellationReason = cancellationReason;
+    }
+    // Restore crop quantity
+    await CropListing.findByIdAndUpdate(order.cropId, {
+      $inc: { quantity: order.quantity }
+    });
+  }
+
+  if (orderStatus === 'completed') {
+    order.completedAt = new Date();
+    order.paymentStatus = 'completed';
+  }
+
+  await order.save();
+
+  // Populate for response
+  await order.populate('buyerId', 'firstName lastName name phone email city state');
+  await order.populate('farmerId', 'firstName lastName name phone farmName city state');
+  await order.populate('cropId', 'cropName images price unit');
+
+  // Notify both buyer and farmer
+  try {
+    const notifyUsers = [];
+    if (order.buyerId?._id) notifyUsers.push(order.buyerId._id);
+    if (order.farmerId?._id) notifyUsers.push(order.farmerId._id);
+
+    for (const userId of notifyUsers) {
+      await Notification.create({
+        userId,
+        title: `Order #${order.orderNumber} - Admin Update`,
+        message: `Admin updated order #${order.orderNumber} to "${orderStatus}". ${statusDescriptions[orderStatus] || ''}`,
+        type: 'order',
+        relatedId: order._id,
+        priority: 'high',
+        actionUrl: `/order/${order._id}`,
+        data: {
+          orderId: order._id,
+          orderNumber: order.orderNumber,
+          status: orderStatus,
+        },
+      });
+    }
+  } catch (notifErr) {
+    console.error('Failed to create admin status notification:', notifErr);
+  }
+
+  // Log admin action
+  try {
+    await AuditLog.create({
+      adminId: req.user._id,
+      adminEmail: req.user.email,
+      action: 'UPDATE_ORDER_STATUS',
+      resourceType: 'order',
+      resourceId: order._id,
+      status: 'success',
+      changes: {
+        previousStatus: order.orderStatus,
+        newStatus: orderStatus,
+        cancellationReason: cancellationReason || null,
+      },
+      timestamp: new Date(),
+    });
+  } catch (auditErr) {
+    console.error('Failed to log admin action:', auditErr);
+  }
+
   res.status(200).json({
     success: true,
-    message: 'Order status updated',
+    message: 'Order status updated by admin',
     data: order
   });
 });
@@ -747,8 +1001,8 @@ export const getFarmerAnalytics = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: 'Farmer not found' });
   }
 
-  const crops = await CropListing.find({ farmerId: farmer._id });
-  const orders = await Order.find({ 'items.farmerId': farmer._id });
+  const crops = await CropListing.find({ farmerId: farmer._id }).lean();
+  const orders = await Order.find({ 'items.farmerId': farmer._id }).lean();
 
   const totalEarnings = orders.reduce((sum, o) => sum + o.totalAmount, 0);
   const totalOrders = orders.length;
@@ -780,7 +1034,7 @@ export const getBuyerAnalytics = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: 'Buyer not found' });
   }
 
-  const orders = await Order.find({ buyerId: buyer._id });
+  const orders = await Order.find({ buyerId: buyer._id }).lean();
   const totalSpent = orders.reduce((sum, o) => sum + o.totalAmount, 0);
   const completedOrders = orders.filter(o => o.orderStatus === 'delivered').length;
 
@@ -1100,4 +1354,227 @@ export const deleteCrop = asyncHandler(async (req, res) => {
     message: 'Crop deleted successfully',
     data: { id: cropId }
   });
+});
+
+// ========== DOCUMENT & IMAGE VISIBILITY FOR ADMINS ==========
+
+/**
+ * Get all documents and images for a specific user (farmer or buyer)
+ * Includes: KYC documents, farm images, crop images
+ */
+export const getUserDocuments = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await User.findById(userId).select(
+    'firstName lastName email role kycStatus farmImages kycDocuments'
+  );
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: 'User not found'
+    });
+  }
+
+  // Fetch user's crops if farmer
+  let cropImages = [];
+  if (user.role === 'farmer') {
+    const crops = await CropListing.find({ farmerId: userId }).select('cropName images').lean();
+    cropImages = crops.map(crop => ({
+      cropName: crop.cropName,
+      images: crop.images || []
+    }));
+  }
+
+  // Format KYC documents
+  const kycDocuments = [];
+  if (user.kycDocuments) {
+    Object.entries(user.kycDocuments).forEach(([docType, docData]) => {
+      if (docData && docData.url) {
+        kycDocuments.push({
+          type: docType,
+          fileName: docData.fileName,
+          url: docData.url,
+          publicId: docData.publicId,
+          fileSize: docData.fileSize,
+          mimeType: docData.mimeType,
+          uploadedAt: docData.uploadedAt
+        });
+      }
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    data: {
+      user: {
+        id: user._id,
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        role: user.role,
+        kycStatus: user.kycStatus
+      },
+      documents: {
+        kycDocuments: kycDocuments,
+        farmImages: user.farmImages || [],
+        cropImages: cropImages
+      }
+    }
+  });
+});
+
+/**
+ * Search and list users with documents for admin review
+ * Supports filtering by role and KYC verification status
+ */
+export const searchDocuments = asyncHandler(async (req, res) => {
+  const { role, kycStatus, page = 1, limit = 20 } = req.query;
+
+  const query = {};
+  if (role) query.role = role;
+  if (kycStatus) query.kycStatus = kycStatus;
+
+  const skip = (page - 1) * limit;
+
+  const users = await User.find(query)
+    .select('firstName lastName email role kycStatus kycSubmittedAt kycDocuments farmImages')
+    .skip(skip)
+    .limit(parseInt(limit))
+    .sort({ kycSubmittedAt: -1 });
+
+  // Get document counts for each user
+  const usersWithDocCounts = await Promise.all(
+    users.map(async (user) => {
+      let kycDocCount = 0;
+      if (user.kycDocuments) {
+        kycDocCount = Object.values(user.kycDocuments).filter(doc => doc && doc.url).length;
+      }
+
+      let farmImageCount = 0;
+      if (user.farmImages) {
+        farmImageCount = user.farmImages.length;
+      }
+
+      let cropImageCount = 0;
+      if (user.role === 'farmer') {
+        const cropCount = await CropListing.countDocuments({
+          farmerId: user._id,
+          images: { $exists: true, $ne: [] }
+        });
+        cropImageCount = cropCount;
+      }
+
+      return {
+        id: user._id,
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        role: user.role,
+        kycStatus: user.kycStatus,
+        kycSubmittedAt: user.kycSubmittedAt,
+        documentCounts: {
+          kycDocuments: kycDocCount,
+          farmImages: farmImageCount,
+          cropImages: cropImageCount
+        }
+      };
+    })
+  );
+
+  const total = await User.countDocuments(query);
+
+  res.status(200).json({
+    success: true,
+    users: usersWithDocCounts,
+    pagination: {
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / limit)
+    }
+  });
+});
+
+/**
+ * @desc    Serve a local document with proper Content-Type headers for inline viewing
+ * @route   GET /api/admin/documents/proxy
+ * @access  Private/Admin
+ * @param   ?url=<local_url> - The local file URL (e.g., /uploads/kyc_documents/123-file.pdf)
+ * @description Reads the file from local disk and serves it with proper Content-Type
+ *              and Content-Disposition: inline headers for browser preview.
+ */
+export const proxyDocument = asyncHandler(async (req, res) => {
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).json({
+      success: false,
+      message: 'URL parameter is required'
+    });
+  }
+
+  // Only allow local upload URLs (security: prevent path traversal)
+  if (!url.startsWith('/uploads/')) {
+    return res.status(400).json({
+      success: false,
+      message: 'Only local upload URLs are supported'
+    });
+  }
+
+  try {
+    // Resolve the absolute file path from the relative URL
+    const filePath = path.join(__dirname, '..', url.replace(/\//g, path.sep));
+
+    // Security check: ensure the resolved path is within the uploads directory
+    const uploadsDir = path.join(__dirname, '..', 'uploads');
+    if (!filePath.startsWith(uploadsDir)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        message: 'File not found'
+      });
+    }
+
+    // Determine MIME type from file extension
+    const ext = path.extname(filePath).toLowerCase();
+    const mimeTypes = {
+      '.pdf': 'application/pdf',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+      '.webp': 'image/webp',
+      '.svg': 'image/svg+xml',
+      '.doc': 'application/msword',
+      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      '.xls': 'application/vnd.ms-excel',
+      '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      '.csv': 'text/csv',
+    };
+    const contentType = mimeTypes[ext] || 'application/octet-stream';
+    const isPDF = ext === '.pdf';
+
+    const fileBuffer = fs.readFileSync(filePath);
+
+    // Set proper headers for inline viewing
+    res.set({
+      'Content-Type': isPDF ? 'application/pdf' : contentType,
+      'Content-Disposition': 'inline',
+      'Content-Length': fileBuffer.length,
+      'Cache-Control': 'public, max-age=3600',
+      'Access-Control-Allow-Origin': '*'
+    });
+
+    res.send(fileBuffer);
+  } catch (error) {
+    console.error('Document proxy error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to serve document'
+    });
+  }
 });

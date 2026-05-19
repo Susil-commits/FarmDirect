@@ -44,6 +44,7 @@ export const addToWishlist = async (req, res, next) => {
 export const getWishlist = async (req, res, next) => {
   try {
     const wishlist = await Wishlist.find({ userId: req.user._id })
+      .lean()
       .populate('cropId')
       .sort({ addedAt: -1 });
 

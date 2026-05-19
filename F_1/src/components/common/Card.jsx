@@ -2,12 +2,12 @@ export default function Card({ children, className = '', hover = true, animated 
   const hoverClass = hover ? 'premium-hover' : '';
   const animatedClass = animated ? 'stagger-item' : '';
   
-  const variantClass = {
+  const variantClass = _glass ? {
     default: 'glass',
     deep: 'glass-deep',
     light: 'glass-light',
     green: 'glass-green',
-  }[variant];
+  }[variant] : '';
   
   return (
     <div className={`${variantClass} rounded-xl transition-smooth ${hoverClass} ${animatedClass} ${className}`}>

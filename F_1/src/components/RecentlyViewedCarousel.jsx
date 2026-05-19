@@ -95,7 +95,7 @@ export default function RecentlyViewedCarousel() {
           {recentlyViewed.map((product) => (
             <div key={product.id} className="carousel-item">
               <div className="item-image-wrapper">
-                {product.image && product.image.startsWith('http') ? (
+                {product.image && (product.image.startsWith('http') || product.image.startsWith('/')) ? (
                   <img
                     src={product.image}
                     alt={product.name}

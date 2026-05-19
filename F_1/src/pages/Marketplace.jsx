@@ -1,29 +1,24 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Heart, Filter, ShoppingCart, Loader, AlertCircle, CheckCircle, Check } from 'lucide-react';
+import { MapPin, Heart, Filter, Loader, AlertCircle, Check } from 'lucide-react';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
 import FarmerBadge from '../components/common/FarmerBadge';
-import QuantitySelector from '../components/QuantitySelector';
 import ProductBadge from '../components/ProductBadge';
 import RecentlyViewedCarousel from '../components/RecentlyViewedCarousel';
 import FilterPanel from '../components/FilterPanel';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
 import { useRouter } from '../context/RouterContext';
-import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
-import { calculateBadges } from '../utils/badgeCalculation';
+import { useToast } from '../context/ToastContext';
 import { cropService } from '../services/appService';
 import '../styles/Marketplace.css';
 
 export default function Marketplace() {
   const { navigate } = useRouter();
-  const { _isAuthenticated } = useAuth();
-  const { addToCart } = useCart();
-  const { wishlist, addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
-  const [toast, setToast] = useState(null);
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addToast } = useToast();
   
   const [filters, setFilters] = useState({
     cropType: '',
@@ -31,7 +26,7 @@ export default function Marketplace() {
     location: '',
     verifiedFarmersOnly: false,
     organicOnly: false,
-    sortBy: 'newest' // 'newest', 'popular', 'rating', 'price-low', 'price-high'
+    sortBy: 'newest'
   });
   const [crops, setCrops] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +38,7 @@ export default function Marketplace() {
   });
 
   const locations = ['Punjab', 'Himachal', 'Haryana', 'Karnataka', 'Maharashtra', 'Uttar Pradesh', 'Delhi', 'West Bengal'];
-  const cropTypes = ['Vegetables', 'Fruits', 'Grains', 'Herbs', 'Organic'];
+  const cropTypes = ['vegetables', 'fruits', 'grains', 'herbs', 'other'];
   const sortOptions = [
     { value: 'newest', label: '🆕 Newest First' },
     { value: 'popular', label: '🔥 Most Popular' },
@@ -52,40 +47,19 @@ export default function Marketplace() {
     { value: 'price-high', label: '💳 Price: High to Low' },
   ];
 
-  // Toast notifications
-  const showToast = (message, type = 'success', duration = 3000) => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), duration);
-  };
-
   // Reset scroll position to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Fetch marketplace stats
+  // Compute marketplace stats from crops data
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const usersRes = await fetch('/api/admin/users', {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        }).then(r => r.ok ? r.json() : null);
-        
-        const farmers = usersRes?.data?.filter(u => u.role === 'farmer')?.length || 0;
-        const products = crops.length;
-        
-        setMarketplaceStats({
-          farmers: farmers || 10,
-          products: products || 25,
-          reviews: crops.reduce((sum, c) => sum + (c.totalReviews || 0), 0)
-        });
-      } catch (error) {
-        console.error('Error fetching marketplace stats:', error);
-      }
-    };
-
-    fetchStats();
+    const uniqueFarmers = new Set(crops.map(c => String(c.farmerId || c.farmer?._id || c.farmer || '')).filter(Boolean));
+    setMarketplaceStats({
+      farmers: uniqueFarmers.size || 10,
+      products: crops.length || 25,
+      reviews: crops.reduce((sum, c) => sum + (c.totalReviews || 0), 0)
+    });
   }, [crops]);
 
   // Fetch crops from API
@@ -100,7 +74,7 @@ export default function Marketplace() {
           maxPrice: filters.priceRange[1],
           location: filters.location || undefined,
         });
-        setCrops(response.data?.crops || response.crops || []);
+        setCrops(response.crops || response.data?.crops || []);
       } catch (err) {
         console.error('Failed to fetch crops:', err);
         setError('Unable to load crops. Please try again later.');
@@ -114,8 +88,8 @@ export default function Marketplace() {
 
   const filteredCrops = crops.filter(crop => {
     const priceMatch = crop.price >= filters.priceRange[0] && crop.price <= filters.priceRange[1];
-    const locationMatch = !filters.location || crop.location === filters.location;
-    const typeMatch = !filters.cropType || crop.category === filters.cropType;
+    const locationMatch = !filters.location || crop.location === filters.location || crop.pickupLocation === filters.location;
+    const typeMatch = !filters.cropType || crop.category === filters.cropType || crop.cropType === filters.cropType;
     const verifiedMatch = !filters.verifiedFarmersOnly || crop.farmer_verified;
     const organicMatch = !filters.organicOnly || crop.certifications?.includes('Organic') || crop.category === 'Organic';
     
@@ -145,12 +119,13 @@ export default function Marketplace() {
   }).length;
 
   const toggleWishlist = (crop) => {
-    if (isInWishlist(crop.id)) {
-      removeFromWishlist(crop.id);
-      showToast(`Removed from wishlist`, 'info');
+    const cropId = crop._id || crop.id;
+    if (isInWishlist(cropId)) {
+      removeFromWishlist(cropId);
+      addToast(`Removed from wishlist`, 'info');
     } else {
       addToWishlist(crop);
-      showToast(`❤️ Added to wishlist`, 'success');
+      addToast(`❤️ Added to wishlist`, 'success');
     }
   };
 
@@ -158,26 +133,11 @@ export default function Marketplace() {
     navigate(`/crop/${cropId}`);
   };
 
-  const handleAddToCart = (crop, quantity = 1) => {
-    addToCart(crop, quantity);
-    showToast(`✅ ${quantity}x ${crop.name} added to cart!`, 'success');
-  };
 
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-6 px-4 relative">
         <div className="absolute inset-0 premium-gradient pointer-events-none"></div>
-        
-        {/* Toast Notification */}
-        {toast && (
-          <div className={`fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 animate-slide-in-right ${
-            toast.type === 'success' ? 'bg-green-500' :
-            toast.type === 'error' ? 'bg-red-500' :
-            'bg-blue-500'
-          } text-white font-medium flex items-center gap-2`}>
-            {toast.message}
-          </div>
-        )}
         
         <div className="max-w-7xl mx-auto relative z-10">
           
@@ -187,7 +147,7 @@ export default function Marketplace() {
               <h1 className="text-4xl font-bold text-gray-900 animate-slide-in-left mb-1">Fresh Produce Marketplace</h1>
               <p className="text-gray-600 text-lg flex items-center gap-2">
                 <span className="text-2xl">💡</span>
-                Browse premium crops at the best prices. <strong>Login only when placing an order.</strong>
+                Browse premium crops at the best prices. <strong>Mark interested to connect with farmers directly.</strong>
               </p>
               
               {/* Trust Badges */}
@@ -311,12 +271,11 @@ export default function Marketplace() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {filteredCrops.map((crop, index) => (
                         <CropCard
-                          key={crop.id}
+                          key={crop._id || crop.id}
                           crop={crop}
-                          isFavorite={isInWishlist(crop.id)}
+                          isFavorite={isInWishlist(crop._id || crop.id)}
                           onToggleFavorite={() => toggleWishlist(crop)}
-                          onViewCrop={() => handleViewCrop(crop.id)}
-                          onAddToCart={() => handleAddToCart(crop)}
+                          onViewCrop={() => handleViewCrop(crop._id || crop.id)}
                           index={index}
                         />
                       ))}
@@ -342,53 +301,59 @@ export default function Marketplace() {
           </div>
         </div>
       </div>
+
     </PageTransition>
   );
 }
 
-// Enhanced Crop Card Component - Clean Design
-function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, onAddToCart, index }) {
+// Enhanced Crop Card Component - Direct Farmer-Buyer Interest Model
+function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, index }) {
   const staggerDelay = index * 0.08;
-  const availableQty = crop.quantity || 100;
+  const cropImage = crop.images?.[0] || crop.image;
+  const [imgError, setImgError] = useState(false);
+  const showFallback = !cropImage || imgError || !(cropImage.startsWith('http') || cropImage.startsWith('/'));
 
   return (
-    <Card 
-      hover 
+    <Card
+      hover
       animated={true}
       className="crop-card stagger-item"
-      style={{ 
+      style={{
         animationDelay: `${staggerDelay}s`,
         '--card-delay': staggerDelay
       }}
     >
       <div className="p-4 relative group flex flex-col h-full">
-        {/* Dark Background Image Section */}
-        <div className="relative mb-4 overflow-hidden rounded-lg group -m-4 mb-4 bg-gradient-to-br from-slate-800 to-slate-900 min-h-48 flex items-center justify-center cursor-pointer"
+        {/* Image Section */}
+        <div className="relative mb-4 overflow-hidden rounded-lg group -m-4 mb-4 bg-gradient-to-br from-green-50 to-emerald-100 min-h-48 flex items-center justify-center cursor-pointer"
              onClick={onViewCrop}>
-          {crop.image && crop.image.startsWith('http') ? (
+          {!showFallback && (
             <img
-              src={crop.image}
-              alt={crop.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              src={cropImage}
+              alt={crop.cropName || crop.name}
+              className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
-              onError={(e) => e.target.style.display = 'none'}
+              onError={() => setImgError(true)}
             />
-          ) : (
-            <div className="flex flex-col items-center justify-center w-full h-full">
+          )}
+          {showFallback && (
+            <div className="flex-col items-center justify-center w-full h-48 flex">
               <span className="text-7xl animate-bounce-soft group-hover:scale-110 transition-transform duration-300">
-                {crop.image || '🌾'}
+                🌾
               </span>
             </div>
           )}
           
-          {/* Overlay on hover */}
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300"></div>
-
           {/* Badges */}
           <div className="absolute top-2 left-2 flex gap-2 z-10">
             {crop.farmer_verified && (
               <div className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                 <Check size={12} /> Verified
+              </div>
+            )}
+            {crop.cropType && (
+              <div className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                {crop.cropType}
               </div>
             )}
           </div>
@@ -416,7 +381,7 @@ function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, onAddToCart,
         <div className="space-y-3 flex-1 flex flex-col">
           {/* Product Name */}
           <h3 className="text-lg font-bold text-gray-900 line-clamp-2">
-            {crop.name}
+            {crop.cropName || crop.name}
           </h3>
           
           {/* Farmer Badge */}
@@ -429,7 +394,7 @@ function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, onAddToCart,
                 {crop.farmerName || 'Farmer'}
               </p>
               <p className="text-xs text-gray-500 flex items-center gap-1">
-                <MapPin size={12} /> {crop.location || 'Location'}
+                <MapPin size={12} /> {crop.pickupLocation || crop.location || 'Location'}
               </p>
             </div>
           </div>
@@ -452,31 +417,16 @@ function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, onAddToCart,
             <p className="text-2xl font-bold text-green-700 mt-1">₹{Math.floor(crop.price)}</p>
           </div>
 
-          {/* Stock Status */}
-          <div className={`text-xs font-bold rounded-lg p-2 text-center ${
-            availableQty > 20 
-              ? 'bg-green-100 text-green-700' 
-              : availableQty > 5 
-              ? 'bg-yellow-100 text-yellow-700' 
-              : 'bg-red-100 text-red-700'
-          }`}>
-            {availableQty > 20 ? '✅ In Stock' : availableQty > 0 ? '⚠️ Limited' : '❌ Out of Stock'}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-2 pt-3 border-t border-gray-200 mt-auto">
+          {/* Details Button */}
+          <div className="pt-3 border-t border-gray-200 mt-auto">
             <button
-              onClick={() => onAddToCart(crop)}
-              disabled={availableQty <= 0}
-              className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold py-2 px-3 rounded-lg transition-colors text-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewCrop();
+              }}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg transition-colors text-sm"
             >
-              <ShoppingCart size={16} className="inline mr-1" /> Add
-            </button>
-            <button
-              onClick={onViewCrop}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-3 rounded-lg transition-colors text-sm"
-            >
-              Details
+              View Details
             </button>
           </div>
         </div>

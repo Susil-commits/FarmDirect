@@ -79,10 +79,19 @@ export default function Login() {
       }
 
       // Give auth context time to update state (100ms) then navigate
-      const verificationStatus = response.user?.kycStatus || 'pending';
+      const verificationStatus = response.user?.kycStatus || 'not_submitted';
       
-      if (verificationStatus !== 'verified') {
-        console.log('⏳ User not verified, redirecting to verification');
+      // Check if this is an existing user who has already interacted with KYC
+      const isExistingKYCUser = !!(response.user?.kycSubmittedAt || (response.user?.kycDocuments && Object.keys(response.user.kycDocuments).length > 0));
+      
+      if (verificationStatus === 'not_submitted' && !isExistingKYCUser) {
+        console.log('📋 KYC not submitted, redirecting to pending verification (hello page)');
+        navigate('/pending-verification');
+      } else if (verificationStatus === 'not_submitted' && isExistingKYCUser) {
+        console.log('📋 Existing KYC user with not_submitted status, redirecting to document submission');
+        navigate('/verification/progress');
+      } else if (verificationStatus === 'pending' || verificationStatus === 'rejected') {
+        console.log('⏳ KYC pending/rejected, redirecting to document submission');
         navigate('/verification/progress');
       } else if (redirectPath) {
         console.log('🔗 Redirecting to saved path:', redirectPath);
@@ -103,6 +112,7 @@ export default function Login() {
       setIsLoading(false);
       
       let errorMessage = 'Login failed';
+      const statusCode = error?.response?.status;
       
       // Parse different error formats from backend
       const errorData = error?.response?.data || error;
@@ -115,8 +125,10 @@ export default function Login() {
         errorMessage = error.message;
       }
 
-      // Specific error handling
-      if (errorMessage.toLowerCase().includes('invalid') || errorMessage.toLowerCase().includes('not found')) {
+      // Specific error handling based on status code
+      if (statusCode === 404) {
+        errorMessage = 'You are not a user. Please register first.';
+      } else if (statusCode === 401) {
         errorMessage = 'Email or password is incorrect. Please try again.';
       } else if (errorMessage.toLowerCase().includes('unverified') || errorMessage.toLowerCase().includes('verification')) {
         errorMessage = 'Your account is pending verification. Please check your email.';
@@ -135,7 +147,7 @@ export default function Login() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center py-12 px-4 relative">
-        <Card variant="deep" className="w-full max-w-md animate-scale-in relative z-10 bg-white/20 backdrop-blur-lg border border-white/10 shadow-2xl">
+        <Card variant="deep" animated={false} className="w-full max-w-md animate-scale-in relative z-10 bg-white/20 backdrop-blur-lg border border-white/10 shadow-2xl">
           <div className="p-10">
             {/* Back Button */}
             <div className="mb-6">

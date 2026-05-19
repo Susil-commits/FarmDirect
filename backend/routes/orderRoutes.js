@@ -1,33 +1,46 @@
 import express from 'express';
 import {
+  startOrder,
   createOrder,
   getOrders,
   getOrderById,
   updateOrderStatus,
   addOrderReview,
-  completeVerificationCall,
-  adminApprovalOrder,
-  addAdditionalCharges,
-  issueFineToOrder,
-  markPaymentReceived,
+  cancelOrder,
+  denyOrder,
+  markOrderReceived,
+  getOrderStatus,
+  trackOrder,
+  getOrderStats,
 } from '../controllers/orderController.js';
-import { protect, authorize } from '../middleware/auth.js';
+import { protect, authorize, requireKYC } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // All order routes require authentication
-router.post('/', protect, createOrder);
-router.get('/my-orders', protect, getOrders); // Get current user's orders
+router.post('/start', protect, authorize('farmer'), requireKYC, startOrder);
+router.post('/', protect, authorize('buyer'), requireKYC, createOrder);
 router.get('/', protect, getOrders);
+router.get('/stats/summary', protect, getOrderStats);
 router.get('/:id', protect, getOrderById);
-router.put('/:id/status', protect, updateOrderStatus);
-router.post('/:id/review', protect, addOrderReview);
 
-// COD Verification Workflow - Admin only
-router.put('/:id/verification-call', protect, authorize('admin'), completeVerificationCall); // Complete verification call
-router.put('/:id/admin-approval', protect, authorize('admin'), adminApprovalOrder); // Admin approval
-router.put('/:id/additional-charges', protect, authorize('admin'), addAdditionalCharges); // Add charges for buyer issues
-router.put('/:id/issue-fine', protect, authorize('admin'), issueFineToOrder); // Issue fine (reduces rating)
-router.put('/:id/payment-received', protect, authorize('admin'), markPaymentReceived); // Mark COD payment as received
+// Order status management (Farmer + Admin)
+router.put('/:id/status', protect, authorize('farmer', 'admin'), updateOrderStatus);
+
+// Review (Buyer only)
+router.post('/:id/review', protect, authorize('buyer'), addOrderReview);
+
+// Cancel (Both buyer and farmer can cancel)
+router.patch('/:id/cancel', protect, authorize('buyer', 'farmer', 'admin'), cancelOrder);
+
+// Deny (Farmer rejects a cart-based order)
+router.post('/:id/deny', protect, authorize('farmer'), denyOrder);
+
+// Mark as Received (Buyer confirms receipt)
+router.patch('/:id/receive', protect, authorize('buyer'), markOrderReceived);
+
+// Tracking
+router.get('/:id/status', protect, getOrderStatus);
+router.get('/:id/track', protect, trackOrder);
 
 export default router;

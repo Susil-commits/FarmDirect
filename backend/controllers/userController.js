@@ -1,9 +1,11 @@
 import User from '../models/User.js';
+import CropListing from '../models/CropListing.js';
+import Order from '../models/Order.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
 // Get user profile
 export const getUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).select('-password');
+  const user = await User.findById(req.user._id).select('-password').lean();
   
   if (!user) {
     return res.status(404).json({
@@ -122,7 +124,8 @@ export const getFarmerProfile = asyncHandler(async (req, res) => {
   const { farmerId } = req.params;
   
   const farmer = await User.findById(farmerId)
-    .select('firstName lastName farmName rating totalReviews profilePicture bio address cropsGrown');
+    .lean()
+    .select('firstName lastName farmName rating totalReviews profilePicture bio address cropsGrown kycStatus city state createdAt');
   
   if (!farmer || farmer.role !== 'farmer') {
     return res.status(404).json({
@@ -130,10 +133,18 @@ export const getFarmerProfile = asyncHandler(async (req, res) => {
       message: 'Farmer not found'
     });
   }
+
+  // Compute real stats from DB
+  const totalListings = await CropListing.countDocuments({ farmerId: farmer._id });
+  const totalSales = await Order.countDocuments({ farmerId: farmer._id, status: 'completed' });
+
+  const farmerData = farmer;
+  farmerData.totalListings = totalListings;
+  farmerData.totalSales = totalSales;
   
   res.status(200).json({
     success: true,
-    data: farmer
+    data: farmerData
   });
 });
 
@@ -154,6 +165,7 @@ export const getAllBuyers = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
   
   const buyers = await User.find(query)
+    .lean()
     .select('-password')
     .skip(skip)
     .limit(parseInt(limit))
@@ -194,6 +206,7 @@ export const getAllFarmers = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
   
   const farmers = await User.find(query)
+    .lean()
     .select('-password')
     .skip(skip)
     .limit(parseInt(limit))

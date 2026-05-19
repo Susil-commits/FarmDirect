@@ -242,25 +242,15 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authService.register(userData);
       
-      // Store tokens if provided (auto-login after registration)
-      if (response.token) {
-        localStorage.setItem('token', response.token);
-      }
-      if (response.refreshToken) {
-        localStorage.setItem('refreshToken', response.refreshToken);
-      }
-      if (response.serverStartTime) {
-        localStorage.setItem('serverStartTime', response.serverStartTime.toString());
-      }
-      if (response.user) {
-        localStorage.setItem('userData', JSON.stringify(response.user));
-        setUser(response.user);
-        setSessionActive(true);
-      }
+      // DO NOT auto-login after registration.
+      // The user must explicitly login via the login page after registration.
+      // Previously, storing the token here caused App.jsx to redirect
+      // unverified users directly to VerificationProgress instead of
+      // showing the login page.
       
       // Update stats
       const currentStats = JSON.parse(
-        localStorage.getItem('farmStats') || 
+        localStorage.getItem('farmStats') ||
         '{"farmers": 5000, "customers": 50000, "varieties": 100, "deliveryDays": "3-5"}'
       );
       
@@ -472,47 +462,58 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
-      
       console.log('📤 Submitting verification documents...');
       
-      // If documents is FormData, convert to JSON
-      let payload = {};
+      let data;
+      
       if (documents instanceof FormData) {
-        // Extract file names from FormData
-        for (let [key, value] of documents.entries()) {
-          if (value instanceof File) {
-            payload[key] = { fileName: value.name, size: value.size };
-          }
-        }
+        // Send FormData directly with actual files (multipart/form-data)
+        console.log('📎 Sending FormData with files:',
+          Array.from(documents.entries()).map(([k, v]) =>
+            v instanceof File ? `${k}: ${v.name} (${v.size} bytes)` : `${k}: ${v}`
+          ).join(', ')
+        );
+        data = await authService.submitKYCFormData(documents);
       } else {
-        payload = documents;
+        // Fallback for JSON payload
+        console.log('📄 Sending JSON payload');
+        data = await authService.submitKYC(documents);
       }
 
-      // Call backend API to submit KYC documents
-      const response = await fetch('/api/auth/submit-kyc', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ documents: payload })
-      });
-
-      console.log('📡 API Response Status:', response.status);
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to submit documents');
-      }
-
-      const data = await response.json();
+      console.log('📡 API Response:', data);
       
       // Update context state
       setVerificationData(documents);
       setVerificationStatus('pending');
       localStorage.setItem('verificationStatus', 'pending');
-      localStorage.setItem('verificationData', JSON.stringify(payload));
+      
+      // Store file metadata for UI display (not the actual files)
+      if (documents instanceof FormData) {
+        const metadata = {};
+        for (let [key, value] of documents.entries()) {
+          if (value instanceof File) {
+            metadata[key] = { fileName: value.name, size: value.size };
+          } else {
+            metadata[key] = value;
+          }
+        }
+        localStorage.setItem('verificationData', JSON.stringify(metadata));
+      } else {
+        localStorage.setItem('verificationData', JSON.stringify(documents));
+      }
+      
+      // CRITICAL: Update user with fresh data from backend (includes kycDocuments)
+      // The backend returns the updated user with kycDocuments in the response
+      if (data?.user) {
+        const updatedUser = { ...user, ...data.user };
+        setUser(updatedUser);
+        localStorage.setItem('userData', JSON.stringify(updatedUser));
+        console.log('✅ User updated with kycDocuments:', Object.keys(data.user.kycDocuments || {}));
+      } else {
+        // Fallback: fetch fresh user data from backend
+        console.log('⚠️ No user in response, fetching fresh data...');
+        await refreshUser();
+      }
       
       console.log('✅ Verification documents submitted to backend:', data);
       return { status: 'success', message: 'Documents submitted for verification' };
@@ -522,6 +523,31 @@ export const AuthProvider = ({ children }) => {
       throw err;
     } finally {
       setLoading(false);
+    }
+  }, [user]);
+
+  // Refresh user data from backend (useful after KYC submission, profile updates, etc.)
+  const refreshUser = useCallback(async () => {
+    try {
+      const response = await authService.getCurrentUser();
+      const userData = response.user || response.data?.user || response;
+      
+      if (userData) {
+        setUser(userData);
+        localStorage.setItem('userData', JSON.stringify(userData));
+        
+        const verifyStatus = userData?.kycStatus || null;
+        setVerificationStatus(verifyStatus);
+        if (verifyStatus) {
+          localStorage.setItem('verificationStatus', verifyStatus);
+        }
+        
+        console.log('🔄 User refreshed from backend, kycDocuments:', Object.keys(userData.kycDocuments || {}));
+        return userData;
+      }
+    } catch (err) {
+      console.error('Error refreshing user:', err);
+      return null;
     }
   }, []);
 
@@ -637,6 +663,7 @@ export const AuthProvider = ({ children }) => {
     initiateGitHubLogin,
     submitVerificationDocuments,
     fetchVerificationStatus,
+    refreshUser,
     
     // Utilities - Existing
     setUser,

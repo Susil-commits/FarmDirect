@@ -1,18 +1,14 @@
 import React from 'react';
-import { CheckCircle, Mail, MapPin, Eye, MessageSquare, User } from 'lucide-react';
+import { CheckCircle, MapPin } from 'lucide-react';
 import Avatar from './Avatar';
-import Button from './Button';
 
 /**
  * FarmerDetailCard Component
- * Large detailed display of farmer info for crop detail page
- * Shows: photo, name, stats, bio, certifications, action buttons
+ * Displays farmer info for crop detail page
+ * Shows: photo, name, stats, bio, certifications
  */
-export default function FarmerDetailCard({ 
-  farmer,
-  onViewProfile = null,
-  onMessage = null,
-  onViewAllProducts = null
+export default function FarmerDetailCard({
+  farmer
 }) {
   if (!farmer) {
     return (
@@ -38,9 +34,9 @@ export default function FarmerDetailCard({
       <div className="flex flex-col items-center text-center mb-6">
         {/* Avatar */}
         <div className="mb-4">
-          <Avatar 
-            user={farmerData} 
-            size="lg" 
+          <Avatar
+            user={farmerData}
+            size="lg"
             className="border-4 border-white shadow-md"
           />
         </div>
@@ -75,7 +71,7 @@ export default function FarmerDetailCard({
         <div className="text-center">
           <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Member Since</p>
           <p className="text-sm font-bold text-gray-900">
-            {farmerData.joinedDate || 'Jan 2023'}
+            {farmerData.joinedDate || 'N/A'}
           </p>
         </div>
 
@@ -83,7 +79,7 @@ export default function FarmerDetailCard({
         <div className="text-center">
           <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Total Sales</p>
           <p className="text-sm font-bold text-gray-900">
-            {farmerData.totalSales || '245'}
+            {farmerData.totalSales ?? 0}
           </p>
         </div>
 
@@ -91,7 +87,7 @@ export default function FarmerDetailCard({
         <div className="text-center">
           <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Active Listings</p>
           <p className="text-sm font-bold text-gray-900">
-            {farmerData.totalListings || '12'}
+            {farmerData.totalListings ?? 0}
           </p>
         </div>
       </div>
@@ -100,9 +96,9 @@ export default function FarmerDetailCard({
       <div className="mb-6 pb-6 border-b border-green-200">
         <div className="flex items-center justify-center gap-2">
           <span className="text-xl">⭐</span>
-          <span className="text-2xl font-bold text-amber-500">{farmerData.rating || '4.8'}</span>
+          <span className="text-2xl font-bold text-amber-500">{farmerData.rating ?? 0}</span>
           <span className="text-gray-600 font-medium">
-            from {farmerData.reviewCount || '234'} reviews
+            from {farmerData.reviewCount ?? 0} reviews
           </span>
         </div>
       </div>
@@ -122,7 +118,7 @@ export default function FarmerDetailCard({
           <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-3">Certifications</p>
           <div className="flex flex-wrap gap-2 justify-center">
             {farmerData.certifications.map((cert, idx) => (
-              <span 
+              <span
                 key={idx}
                 className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold"
               >
@@ -130,45 +126,6 @@ export default function FarmerDetailCard({
               </span>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Action Buttons */}
-      <div className="grid grid-cols-1 gap-2">
-        <Button
-          variant="primary"
-          size="sm"
-          className="w-full flex items-center justify-center gap-2"
-          onClick={onViewAllProducts}
-        >
-          <Eye size={16} /> View All Products
-        </Button>
-        
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full flex items-center justify-center gap-2"
-          onClick={onMessage}
-        >
-          <MessageSquare size={16} /> Message Farmer
-        </Button>
-
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full flex items-center justify-center gap-2"
-          onClick={onViewProfile}
-        >
-          <User size={16} /> View Profile
-        </Button>
-      </div>
-
-      {/* Footer: Email Icon (Optional) */}
-      {farmerData.email && (
-        <div className="text-center mt-4 pt-4 border-t border-green-200">
-          <p className="text-xs text-gray-500 flex items-center justify-center gap-1">
-            <Mail size={12} /> {farmerData.email}
-          </p>
         </div>
       )}
     </div>

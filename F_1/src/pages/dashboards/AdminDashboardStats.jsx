@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
+import { adminService } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import Card from '../../components/common/Card';
 import LogoutConfirmationModal from '../../components/common/LogoutConfirmationModal';
@@ -17,7 +18,6 @@ export default function AdminDashboardStats() {
     pendingFarmers: 0
   });
   const [_loading, _setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Reset scroll position to top on page load
@@ -32,33 +32,18 @@ export default function AdminDashboardStats() {
   const fetchData = async () => {
     try {
       _setLoading(true);
-      setError(null);
-      const token = localStorage.getItem('token');
-
-      const response = await fetch('/api/admin/dashboard/stats', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const data = await adminService.getDashboardStats();
+      setStats({
+        totalUsers: data.data?.users?.total || 0,
+        farmers: data.data?.users?.farmers || 0,
+        buyers: data.data?.users?.buyers || 0,
+        admins: data.data?.users?.admins || 0,
+        totalCrops: data.data?.crops?.total || 0,
+        activeCrops: data.data?.crops?.active || 0,
+        pendingFarmers: data.data?.pendingKYC || 0
       });
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Dashboard stats fetched:', data);
-        
-        setStats({
-          totalUsers: data.data?.users?.total || 0,
-          farmers: data.data?.users?.farmers || 0,
-          buyers: data.data?.users?.buyers || 0,
-          admins: data.data?.users?.admins || 0,
-          totalCrops: data.data?.crops?.total || 0,
-          activeCrops: data.data?.crops?.active || 0,
-          pendingFarmers: data.data?.pendingKYC || 0
-        });
-      } else {
-        console.error('❌ Failed to fetch stats:', response.status);
-        setError('Failed to load dashboard stats');
-      }
     } catch (error) {
       console.error('❌ Error fetching data:', error);
-      setError(error.message);
     } finally {
       _setLoading(false);
     }
@@ -153,27 +138,34 @@ export default function AdminDashboardStats() {
                   <h2 className="text-2xl font-bold text-gray-800">Quick Navigation</h2>
                 </div>
                 <p className="text-gray-600 mb-6">Access other sections of the admin panel:</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex flex-wrap gap-3 justify-center">
                   <button
                     onClick={() => navigate('/admin/approvals')}
-                    className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg hover:shadow-md transition"
+                    className="flex-1 min-w-[180px] p-3 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg hover:shadow-md transition"
                   >
-                    <p className="font-bold text-blue-700 text-lg">👤 KYC Approvals</p>
-                    <p className="text-sm text-blue-600 mt-1">Approve/Reject pending KYC</p>
+                    <p className="font-bold text-blue-700 text-sm whitespace-nowrap">👤 KYC Approvals</p>
+                    <p className="text-xs text-blue-600 mt-0.5 whitespace-nowrap">Approve/Reject pending KYC</p>
                   </button>
                   <button
                     onClick={() => navigate('/admin/management')}
-                    className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-lg hover:shadow-md transition"
+                    className="flex-1 min-w-[180px] p-3 bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 rounded-lg hover:shadow-md transition"
                   >
-                    <p className="font-bold text-purple-700 text-lg">🛡️ User Management</p>
-                    <p className="text-sm text-purple-600 mt-1">Freeze/Delete users</p>
+                    <p className="font-bold text-purple-700 text-sm whitespace-nowrap">🛡️ User Management</p>
+                    <p className="text-xs text-purple-600 mt-0.5 whitespace-nowrap">Freeze/Delete users</p>
                   </button>
                   <button
                     onClick={() => navigate('/admin/crops')}
-                    className="p-4 bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 rounded-lg hover:shadow-md transition"
+                    className="flex-1 min-w-[180px] p-3 bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 rounded-lg hover:shadow-md transition"
                   >
-                    <p className="font-bold text-green-700 text-lg">🌾 Crop Moderation</p>
-                    <p className="text-sm text-green-600 mt-1">Freeze/Delete crops</p>
+                    <p className="font-bold text-green-700 text-sm whitespace-nowrap">🌾 Crop Moderation</p>
+                    <p className="text-xs text-green-600 mt-0.5 whitespace-nowrap">Freeze/Delete crops</p>
+                  </button>
+                  <button
+                    onClick={() => navigate('/admin/orders')}
+                    className="flex-1 min-w-[180px] p-3 bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-200 rounded-lg hover:shadow-md transition"
+                  >
+                    <p className="font-bold text-orange-700 text-sm whitespace-nowrap">📦 Order Management</p>
+                    <p className="text-xs text-orange-600 mt-0.5 whitespace-nowrap">View all orders & statuses</p>
                   </button>
                 </div>
               </div>

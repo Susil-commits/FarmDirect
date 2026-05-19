@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import { useToast } from '../context/ToastContext';
+import { adminService, authServiceExtended } from '../services/appService';
 import PageTransition from '../components/common/PageTransition.jsx';
 import Button from '../components/common/Button';
 import Avatar from '../components/common/Avatar';
@@ -82,27 +83,37 @@ export default function UserProfile() {
     addToast('Logged out successfully', 'info');
   };
 
-  const handleFreezeAccount = () => {
-    addToast('Your account has been temporarily frozen. Contact support to reactivate.', 'success');
-    setShowFreezeModal(false);
-    // Call backend API to freeze account
-    // await userService.freezeAccount(user.id);
+  const handleFreezeAccount = async () => {
+    try {
+      await adminService.toggleUserStatus(user.id, 'frozen', 'User requested account freeze');
+      addToast('Your account has been temporarily frozen. Contact support to reactivate.', 'success');
+      setShowFreezeModal(false);
+      setTimeout(() => {
+        logout();
+        navigate('/');
+      }, 2000);
+    } catch (error) {
+      addToast(error?.message || 'Failed to freeze account. Please try again.', 'error');
+    }
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     if (deleteConfirmation.toLowerCase() !== 'delete my account') {
       addToast('Please type the correct text to confirm', 'error');
       return;
     }
-    addToast('Your account and all associated data have been permanently deleted.', 'success');
-    setShowDeleteModal(false);
-    setDeleteConfirmation('');
-    setTimeout(() => {
-      logout();
-      navigate('/');
-    }, 1500);
-    // Call backend API to delete account
-    // await userService.deleteAccount(user.id);
+    try {
+      await authServiceExtended.deleteAccount();
+      addToast('Your account and all associated data have been permanently deleted.', 'success');
+      setShowDeleteModal(false);
+      setDeleteConfirmation('');
+      setTimeout(() => {
+        logout();
+        navigate('/');
+      }, 1500);
+    } catch (error) {
+      addToast(error?.message || 'Failed to delete account. Please try again.', 'error');
+    }
   };
 
   if (!user) {
