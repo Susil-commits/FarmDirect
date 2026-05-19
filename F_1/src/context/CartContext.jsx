@@ -31,6 +31,46 @@ export function CartProvider({ children }) {
     }
   }, [cart]);
 
+  // ─── Global event listeners for crop deletion / update ────────────────
+  // When a crop is deleted by the farmer, remove it from all carts
+  useEffect(() => {
+    const handleCropDeleted = (e) => {
+      const deletedId = e.detail?.cropId;
+      if (!deletedId) return;
+      setCart(prev => prev.filter(item => (item._id || item.id) !== deletedId));
+    };
+
+    // When a crop is updated by the farmer, refresh cached data in cart items
+    const handleCropUpdated = (e) => {
+      const updated = e.detail?.crop;
+      if (!updated?._id) return;
+      setCart(prev => prev.map(item => {
+        if ((item._id || item.id) === updated._id) {
+          return {
+            ...item,
+            name: updated.cropName || updated.name || item.name,
+            cropName: updated.cropName || updated.cropName || item.cropName,
+            price: updated.price ?? item.price,
+            images: updated.images || item.images,
+            image: updated.images?.[0] || item.image,
+            quantity: item.quantity, // keep user's cart quantity, not the stock quantity
+            unit: updated.unit || item.unit,
+            pickupLocation: updated.pickupLocation || item.pickupLocation,
+            description: updated.description || item.description,
+          };
+        }
+        return item;
+      }));
+    };
+
+    window.addEventListener('crop-deleted', handleCropDeleted);
+    window.addEventListener('crop-updated', handleCropUpdated);
+    return () => {
+      window.removeEventListener('crop-deleted', handleCropDeleted);
+      window.removeEventListener('crop-updated', handleCropUpdated);
+    };
+  }, []);
+
   const addToCart = useCallback((product, quantity = 1) => {
     setCart(prev => {
       const productId = product._id || product.id;

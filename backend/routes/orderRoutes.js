@@ -24,8 +24,8 @@ router.get('/', protect, getOrders);
 router.get('/stats/summary', protect, getOrderStats);
 router.get('/:id', protect, getOrderById);
 
-// Order status management (Farmer + Admin)
-router.put('/:id/status', protect, authorize('farmer', 'admin'), updateOrderStatus);
+// Order status management (Farmer + Admin + Buyer for pickup/completion)
+router.put('/:id/status', protect, authorize('farmer', 'admin', 'buyer'), updateOrderStatus);
 
 // Review (Buyer only)
 router.post('/:id/review', protect, authorize('buyer'), addOrderReview);

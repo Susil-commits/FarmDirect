@@ -1,113 +1,167 @@
 import { MessageCircle, Search } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import Avatar from '../common/Avatar';
+import '../../styles/Messages.css';
+
+const AVATAR_COLORS = [
+  'bg-green-500', 'bg-emerald-500', 'bg-teal-500',
+  'bg-blue-500', 'bg-indigo-500', 'bg-purple-500',
+  'bg-pink-500', 'bg-orange-500', 'bg-amber-500',
+];
+
+function getInitial(name) {
+  if (!name) return '?';
+  return name.charAt(0).toUpperCase();
+}
+
+function getColorClass(name) {
+  if (!name) return 'bg-gray-400';
+  return AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
+}
+
+function formatTime(dateStr) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  if (isToday) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+  if (diffDays < 7) {
+    return date.toLocaleDateString('en-US', { weekday: 'short' });
+  }
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
 
 export default function ConversationList({
-  conversations,
+  conversations = [],
   currentChat,
   onSelectConversation,
   loading,
+  className = '',
 }) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredConversations = useMemo(() => {
     if (!searchQuery.trim()) return conversations;
 
+    const query = searchQuery.toLowerCase();
     return conversations.filter((conv) => {
-      const name = `${conv.otherUser.firstName} ${conv.otherUser.lastName}`.toLowerCase();
-      const lastMessage = conv.lastMessage?.content?.toLowerCase() || '';
-      return name.includes(searchQuery.toLowerCase()) ||
-        lastMessage.includes(searchQuery.toLowerCase());
+      const otherUser = conv?.otherUser || {};
+      const name = `${otherUser.firstName || ''} ${otherUser.lastName || ''}`.toLowerCase();
+      const preview = conv?.lastMessage?.content?.toLowerCase() || '';
+      return name.includes(query) || preview.includes(query);
     });
   }, [conversations, searchQuery]);
 
-  if (loading) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-gray-500">Loading conversations...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className={`chat-sidebar ${className}`}>
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Messages</h2>
-
-        {/* Search */}
-        <div className="relative">
-          <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
+      <div className="chat-sidebar-header">
+        <h2>Messages</h2>
+        <div className="chat-search-wrapper">
+          <Search size={18} />
           <input
             type="text"
+            className="chat-search-input"
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
       </div>
 
-      {/* Conversations List */}
-      <div className="flex-1 overflow-y-auto">
-        {filteredConversations.length > 0 ? (
-          filteredConversations.map((conversation) => (
-            <button
-              key={conversation.conversationId}
-              onClick={() =>
-                onSelectConversation(conversation.otherUser._id)
-              }
-              className={`w-full p-4 flex gap-3 items-start border-b border-gray-100 hover:bg-gray-50 transition text-left ${
-                currentChat === conversation.otherUser._id ? 'bg-green-50' : ''
-              }`}
-            >
-              {/* Avatar */}
-              <div className="flex-shrink-0 mt-1">
-                <Avatar user={conversation.otherUser} size="md" />
-              </div>
+      {/* List */}
+      <div className="conversation-list">
+        {loading ? (
+          <div className="conversation-empty">
+            <div
+              className="chat-spinner"
+              style={{
+                width: 32,
+                height: 32,
+                border: '3px solid #e5e7eb',
+                borderTopColor: '#22c55e',
+                borderRadius: '50%',
+              }}
+            />
+            <p style={{ marginTop: '0.75rem' }}>Loading conversations...</p>
+          </div>
+        ) : filteredConversations.length > 0 ? (
+          filteredConversations.map((conversation, index) => {
+            const otherUser = conversation?.otherUser || {};
+            const displayName =
+              [otherUser.firstName, otherUser.lastName].filter(Boolean).join(' ') ||
+              'Unknown User';
+            const hasPhoto = !!(
+              otherUser.photo ||
+              otherUser.profilePhoto ||
+              otherUser.profilePicture
+            );
+            const key = conversation.conversationId || otherUser._id || index;
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-baseline gap-2 mb-1">
-                  <h3 className="font-semibold text-gray-900 truncate">
-                    {conversation.otherUser.firstName}{' '}
-                    {conversation.otherUser.lastName}
-                  </h3>
-                  {conversation.lastMessage && (
-                    <span className="text-xs text-gray-500 flex-shrink-0">
-                      {new Date(
-                        conversation.lastMessage.createdAt
-                      ).toLocaleDateString('en-IN', {
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </span>
+            return (
+              <button
+                key={key}
+                onClick={() => otherUser._id && onSelectConversation(otherUser._id)}
+                className={`conversation-item ${currentChat === otherUser._id ? 'active' : ''}`}
+              >
+                {/* Avatar */}
+                <div className="conversation-avatar-wrapper">
+                  {hasPhoto ? (
+                    <img
+                      src={
+                        otherUser.photo ||
+                        otherUser.profilePhoto ||
+                        otherUser.profilePicture
+                      }
+                      alt={displayName}
+                      className="conversation-avatar"
+                    />
+                  ) : (
+                    <div
+                      className={`conversation-avatar-fallback ${getColorClass(displayName)}`}
+                    >
+                      {getInitial(otherUser.firstName || otherUser.name)}
+                    </div>
                   )}
                 </div>
 
-                {/* Last message preview */}
-                <p className="text-sm text-gray-600 truncate">
-                  {conversation.lastMessage?.content || 'No messages yet'}
-                </p>
-
-                {/* Unread count */}
-                {conversation.unreadCount > 0 && (
-                  <div className="mt-1">
-                    <span className="inline-block bg-green-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-                      {conversation.unreadCount}
-                    </span>
+                {/* Content */}
+                <div className="conversation-content">
+                  <div className="conversation-top-row">
+                    <span className="conversation-name">{displayName}</span>
+                    {conversation.lastMessage?.createdAt && (
+                      <span className="conversation-time">
+                        {formatTime(conversation.lastMessage.createdAt)}
+                      </span>
+                    )}
                   </div>
-                )}
-              </div>
-            </button>
-          ))
+                  <div className="conversation-preview-row">
+                    <span className="conversation-preview">
+                      {conversation.unreadCount > 0
+                        ? `${conversation.unreadCount} new message${conversation.unreadCount > 1 ? 's' : ''}`
+                        : conversation.lastMessage?.content || 'No messages yet'}
+                    </span>
+                    {conversation.unreadCount > 0 && (
+                      <span className="conversation-unread-badge">
+                        {conversation.unreadCount > 99
+                          ? '99+'
+                          : conversation.unreadCount}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })
         ) : (
-          <div className="h-full flex flex-col items-center justify-center text-gray-500 p-8">
-            <MessageCircle size={48} className="mb-4 text-gray-300" />
-            <p className="text-center">
+          <div className="conversation-empty">
+            <MessageCircle size={48} />
+            <p>
               {searchQuery
                 ? 'No conversations found'
-                : 'No conversations yet'}
+                : 'No conversations yet.\nStart chatting with a farmer or buyer!'}
             </p>
           </div>
         )}

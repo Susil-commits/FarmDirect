@@ -1,3 +1,7 @@
+/* LoginPrompt Modal Styles
+   Premium authentication prompt
+   Keyframes deferred to index.css globals */
+
 .login-prompt-overlay {
   position: fixed;
   top: 0;
@@ -5,20 +9,13 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 .login-prompt-modal {
@@ -27,8 +24,9 @@
   position: relative;
   padding: 0;
   overflow: hidden;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-xl, 16px);
+  box-shadow: var(--shadow-2xl, 0 20px 60px rgba(0, 0, 0, 0.3));
+  background: white;
 }
 
 .login-prompt-header {
@@ -53,6 +51,12 @@
   width: 40px;
   height: 40px;
   flex-shrink: 0;
+  border-radius: 50%;
+  transition: background-color var(--transition-fast, 0.2s ease);
+}
+
+.close-button:hover {
+  background-color: var(--gray-100, #f3f4f6);
 }
 
 .login-prompt-content {
@@ -63,15 +67,8 @@
 .prompt-icon {
   font-size: 3rem;
   animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+  display: inline-block;
+  margin-bottom: 0.5rem;
 }
 
 .login-prompt-buttons {
@@ -82,7 +79,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: rgba(0, 0, 0, 0.3);
+  color: var(--gray-400, rgba(0, 0, 0, 0.3));
   font-size: 0.875rem;
   margin: 12px 0;
 }
@@ -92,7 +89,7 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--gray-200, rgba(0, 0, 0, 0.1));
 }
 
 .login-prompt-footer {
@@ -104,8 +101,8 @@
 /* Trust signals styling */
 .login-prompt-footer p {
   margin: 0;
-  color: #047857;
-  font-weight: 500;
+  color: var(--primary-800, #047857);
+  font-weight: var(--font-weight-medium, 500);
 }
 
 /* Responsive adjustments */
@@ -125,5 +122,15 @@
 
   .prompt-icon {
     font-size: 2.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-prompt-overlay {
+    animation: none;
+  }
+
+  .prompt-icon {
+    animation: none;
   }
 }

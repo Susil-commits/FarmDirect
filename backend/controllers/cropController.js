@@ -205,6 +205,7 @@ export const updateCrop = async (req, res, next) => {
       specifications: rawSpecs,
       status,
       availability,
+      existingImageUrls: rawExistingUrls,
     } = req.body;
 
     const updateFields = {};
@@ -227,9 +228,27 @@ export const updateCrop = async (req, res, next) => {
     if (status !== undefined && req.user.role === 'admin') updateFields.status = status;
     if (availability !== undefined) updateFields.availability = availability;
 
-    // Handle images from multer middleware (req.uploadedFiles)
-    if (req.uploadedFiles && req.uploadedFiles.length > 0) {
-      updateFields.images = req.uploadedFiles.map(f => f.url);
+    // Handle image updates: merge existing kept URLs with new uploads
+    // existingImageUrls: sent by frontend to indicate which existing images were kept
+    // If not sent at all (legacy client), preserve behavior by not touching images
+    let existingUrls = [];
+    if (rawExistingUrls !== undefined) {
+      try {
+        existingUrls = typeof rawExistingUrls === 'string'
+          ? JSON.parse(rawExistingUrls)
+          : rawExistingUrls;
+      } catch {
+        existingUrls = [];
+      }
+    }
+
+    const newUploadUrls = (req.uploadedFiles && req.uploadedFiles.length > 0)
+      ? req.uploadedFiles.map(f => f.url)
+      : [];
+
+    // Only set images when either existingUrls was explicitly sent OR new uploads exist
+    if (rawExistingUrls !== undefined || newUploadUrls.length > 0) {
+      updateFields.images = [...existingUrls, ...newUploadUrls];
     }
 
     crop = await CropListing.findByIdAndUpdate(
@@ -248,10 +267,15 @@ export const updateCrop = async (req, res, next) => {
 };
 
 // @route DELETE /api/crops/:id
-// @desc Delete crop listing (Farmer only - owner)
+// @desc Delete crop listing (Farmer only - owner) with cascade cleanup
 // @access Private
 export const deleteCrop = async (req, res, next) => {
   try {
+    // Import models at the top for cascade (using dynamic import to avoid circular deps)
+    const Order = (await import('../models/Order.js')).default;
+    const Wishlist = (await import('../models/Wishlist.js')).default;
+    const Review = (await import('../models/Review.js')).default;
+
     const crop = await CropListing.findById(req.params.id);
 
     if (!crop) {
@@ -263,9 +287,17 @@ export const deleteCrop = async (req, res, next) => {
       return res.status(403).json({ message: 'Not authorized to delete this crop' });
     }
 
+    // Cascade delete all related records to keep DB clean and marketplace in sync
+    await Promise.all([
+      Order.deleteMany({ cropId: req.params.id }),
+      Wishlist.deleteMany({ cropId: req.params.id }),
+      Review.deleteMany({ cropId: req.params.id }),
+      Notification.deleteMany({ relatedId: req.params.id }),
+    ]);
+
     await CropListing.findByIdAndDelete(req.params.id);
 
-    res.status(200).json({ message: 'Crop deleted successfully' });
+    res.status(200).json({ message: 'Crop deleted successfully. All related orders, wishlists, and reviews cleaned up.' });
   } catch (error) {
     next(error);
   }
@@ -300,7 +332,10 @@ export const getMyListings = async (req, res, next) => {
   try {
     const crops = await CropListing.find({ farmerId: req.user._id })
       .lean()
-      .populate('interestedBuyers.buyerId', 'firstName lastName name phone email city state')
+      .populate(
+        'interestedBuyers.buyerId',
+        'firstName lastName name phone email city state address pincode profilePicture bio kycStatus kycDocuments kycDetails kycVerifiedAt kycSubmittedAt verified emailVerified rating totalReviews createdAt'
+      )
       .sort({ createdAt: -1 });
 
     res.status(200).json({ crops });

@@ -57,10 +57,10 @@ app.use(cors({
   credentials: true,
 }));
 
-// 3. Global rate limiter — 200 requests per 15 min per IP (generous, won't affect normal use)
+// 3. Global rate limiter — 600 requests per 15 min per IP (accommodates polling SPA with multiple contexts)
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200,
+  max: 600,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please try again later.' },
@@ -76,6 +76,18 @@ const authLimiter = rateLimit({
   message: { success: false, message: 'Too many authentication attempts, please try again later.' },
 });
 app.use('/api/auth', authLimiter);
+
+// 4b. Lightweight polling endpoints — these are called frequently (15-30s intervals), so use a
+//     very generous per-minute burst window to never interfere with normal UI polling.
+const pollingLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 120,            // 120 req/min = 2 req/sec sustained
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests, please slow down.' },
+});
+app.use('/api/messages/unread', pollingLimiter);
+app.use('/api/notifications/unread', pollingLimiter);
 
 // 5. Body parsing
 app.use(express.json());
@@ -146,7 +158,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🛡️  Rate limiting: 200 req/15min (global), 30 req/15min (auth)`);
+  console.log(`🛡️  Rate limiting: 600 req/15min (global), 120 req/min (polling), 30 req/15min (auth)`);
 });
 
 export default app;

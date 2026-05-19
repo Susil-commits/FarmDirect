@@ -37,6 +37,7 @@ export default function EditCrop() {
   const [submitting, setSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState([]);
   const [newImages, setNewImages] = useState([]);
+  const [existingImageUrls, setExistingImageUrls] = useState([]); // track existing URLs kept
 
   // Fetch existing crop data
   useEffect(() => {
@@ -65,11 +66,13 @@ export default function EditCrop() {
           availability: cropData.availability || 'available',
         });
 
-        // Set existing image previews
+        // Set existing image previews and track existing URLs for sync
         if (cropData.images && cropData.images.length > 0) {
-          setImagePreview(cropData.images.map(img =>
+          const urls = cropData.images.map(img =>
             typeof img === 'string' ? img : img.url || img
-          ));
+          );
+          setImagePreview(urls);
+          setExistingImageUrls(urls);
         }
 
         setError(null);
@@ -111,12 +114,18 @@ export default function EditCrop() {
   };
 
   const removeImage = (index) => {
-    // If it's a new image (beyond existing), revoke URL
-    const existingCount = crop?.images?.length || 0;
+    const removedUrl = imagePreview[index];
+    // If it's a new image (beyond existing URLs), revoke blob URL
+    const existingCount = existingImageUrls.length;
     if (index >= existingCount) {
-      URL.revokeObjectURL(imagePreview[index]);
+      if (removedUrl && removedUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(removedUrl);
+      }
       const newIndex = index - existingCount;
       setNewImages(prev => prev.filter((_, i) => i !== newIndex));
+    } else {
+      // This was an existing image URL — remove from kept list
+      setExistingImageUrls(prev => prev.filter((_, i) => i !== index));
     }
     setImagePreview(prev => prev.filter((_, i) => i !== index));
   };
@@ -144,21 +153,30 @@ export default function EditCrop() {
         availability: formData.availability,
       };
 
+      // Always send existing image URLs so backend knows which were kept/removed
+      updateData.existingImageUrls = existingImageUrls;
+
+      let response;
       // If there are new images, use FormData
       if (newImages.length > 0) {
         const formDataObj = new FormData();
         Object.keys(updateData).forEach(key => {
-          if (key === 'specifications') {
+          if (key === 'specifications' || key === 'existingImageUrls') {
             formDataObj.append(key, JSON.stringify(updateData[key]));
           } else {
             formDataObj.append(key, updateData[key]);
           }
         });
         newImages.forEach(file => formDataObj.append('images', file));
-        await cropService.updateCrop(cropId, formDataObj);
+        response = await cropService.updateCropWithFiles(cropId, formDataObj);
       } else {
-        await cropService.updateCrop(cropId, updateData);
+        // JSON edit (no new images) — use regular api (not directApi) for token refresh support
+        response = await cropService.updateCrop(cropId, updateData);
       }
+
+      // Dispatch global event so cart & wishlist contexts refresh their cached data
+      const updatedCrop = (response?.crop) || { _id: cropId, ...updateData };
+      window.dispatchEvent(new CustomEvent('crop-updated', { detail: { crop: updatedCrop } }));
 
       setSuccess('Crop updated successfully!');
       setTimeout(() => {

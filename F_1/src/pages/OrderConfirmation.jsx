@@ -37,8 +37,9 @@ export default function OrderConfirmation() {
         return;
       }
 
+      // api.js interceptor unwraps to response.data, so response = { order: {...} }
       const response = await orderService.getOrderById(orderId);
-      const orderData = response.order || response.data?.order || response.data;
+      const orderData = response.order;
       setOrder(orderData);
       localStorage.removeItem('lastOrderId');
     } catch (err) {
@@ -352,7 +353,22 @@ export default function OrderConfirmation() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-6 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-4">
-                    <span className="text-4xl">{getItemEmoji(order.cropName)}</span>
+                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-green-100 flex items-center justify-center shrink-0">
+                      {order.cropId?.images?.[0] ? (
+                        <img
+                          src={order.cropId.images[0]}
+                          alt={order.cropName || 'Crop Item'}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                        />
+                      ) : null}
+                      <span
+                        className="text-3xl"
+                        style={{ display: order.cropId?.images?.[0] ? 'none' : 'flex' }}
+                      >
+                        {getItemEmoji(order.cropName)}
+                      </span>
+                    </div>
                     <div>
                       <p className="font-bold text-gray-900 text-lg">{order.cropName || 'Crop Item'}</p>
                       <p className="text-sm text-gray-600">

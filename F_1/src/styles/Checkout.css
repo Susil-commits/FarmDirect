@@ -1,22 +1,15 @@
-/* Checkout Page Styles */
+/* Checkout Page Styles
+   Premium multi-step checkout experience
+   Keyframes deferred to index.css globals */
 
 .checkout-container {
-  animation: fadeIn 0.6s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  animation: fadeIn var(--transition-smooth, 0.6s ease-out);
 }
 
 /* Step Indicator Styling */
 .step-circle {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all var(--transition-bounce, 0.3s cubic-bezier(0.4, 0, 0.2, 1));
+  box-shadow: var(--shadow-card, 0 2px 8px rgba(0, 0, 0, 0.1));
 }
 
 .step-circle:hover {
@@ -28,24 +21,26 @@
   animation: pulse 1.5s ease-in-out infinite;
 }
 
+/* Custom pulse for step indicator (different from global pulse which uses opacity) */
 @keyframes pulse {
   0%, 100% {
     box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
   }
   50% {
-    box-shadow: 0 2px 16px rgba(22, 163, 74, 0.6);
+    box-shadow: 0 2px 20px rgba(22, 163, 74, 0.6);
   }
 }
 
 /* Step Line */
 .step-line {
-  transition: background-color 0.3s ease;
+  transition: background-color var(--transition-base, 0.3s ease);
 }
 
 /* Form Input Styling */
 .form-input {
-  transition: all 0.3s ease;
+  transition: all var(--transition-base, 0.3s ease);
   background: white;
+  border-radius: var(--radius-md, 8px);
 }
 
 .form-input:focus {
@@ -55,163 +50,91 @@
 
 /* Delivery Option Card */
 .delivery-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: slideInUp 0.4s ease-out forwards;
+  transition: all var(--transition-bounce, 0.3s cubic-bezier(0.4, 0, 0.2, 1));
+  animation: slideInUp var(--transition-base, 0.4s ease-out) forwards;
   opacity: 0;
+  border-radius: var(--radius-lg, 12px);
 }
 
-.delivery-card:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.delivery-card:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+.delivery-card:nth-child(1) { animation-delay: 0.1s; }
+.delivery-card:nth-child(2) { animation-delay: 0.2s; }
 
 .delivery-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card-hover, 0 12px 24px rgba(0, 0, 0, 0.1));
 }
 
 .delivery-card.active {
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  background: linear-gradient(135deg, var(--primary-50, #f0fdf4) 0%, var(--primary-100, #dcfce7) 100%);
+  border-color: var(--primary-main, #22c55e);
 }
 
 /* Payment Option Card */
 .payment-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: slideInUp 0.4s ease-out forwards;
+  transition: all var(--transition-bounce, 0.3s cubic-bezier(0.4, 0, 0.2, 1));
+  animation: slideInUp var(--transition-base, 0.4s ease-out) forwards;
   opacity: 0;
+  border-radius: var(--radius-lg, 12px);
 }
 
-.payment-card:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.payment-card:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.payment-card:nth-child(3) {
-  animation-delay: 0.3s;
-}
+.payment-card:nth-child(1) { animation-delay: 0.1s; }
+.payment-card:nth-child(2) { animation-delay: 0.2s; }
+.payment-card:nth-child(3) { animation-delay: 0.3s; }
 
 .payment-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card-hover, 0 12px 24px rgba(0, 0, 0, 0.1));
 }
 
 .payment-card.active {
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  background: linear-gradient(135deg, var(--primary-50, #f0fdf4) 0%, var(--primary-100, #dcfce7) 100%);
+  border-color: var(--primary-main, #22c55e);
 }
 
 /* Radio Button Styling */
 .radio-btn {
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
 .radio-btn.checked {
-  animation: scaleIn 0.3s ease-out;
-}
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0.5);
-  }
-  to {
-    transform: scale(1);
-  }
+  animation: scaleIn var(--transition-base, 0.3s ease-out);
 }
 
 /* Order Summary Sidebar */
 .order-summary {
-  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  background: linear-gradient(135deg, var(--gray-50, #f9fafb) 0%, var(--gray-100, #f3f4f6) 100%);
   border: 1px solid rgba(34, 197, 94, 0.1);
-  border-radius: 16px;
-  transition: all 0.3s ease;
+  border-radius: var(--radius-xl, 16px);
+  transition: all var(--transition-base, 0.3s ease);
 }
 
 .order-summary:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-card-hover, 0 8px 24px rgba(0, 0, 0, 0.08));
 }
 
 /* Summary Item */
 .summary-item {
-  animation: slideInLeft 0.4s ease-out forwards;
+  animation: slideInLeft var(--transition-base, 0.4s ease-out) forwards;
   opacity: 0;
 }
 
-.summary-item:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.summary-item:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.summary-item:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
+.summary-item:nth-child(1) { animation-delay: 0.1s; }
+.summary-item:nth-child(2) { animation-delay: 0.2s; }
+.summary-item:nth-child(3) { animation-delay: 0.3s; }
 
 /* Price Display */
 .price-display {
-  animation: slideInRight 0.4s ease-out;
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  animation: slideInRight var(--transition-base, 0.4s ease-out);
 }
 
 .total-price {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, var(--primary-dark, #10b981) 0%, var(--primary-700, #059669) 100%);
   color: white;
-  padding: 12px 16px;
-  border-radius: 8px;
+  padding: 14px 18px;
+  border-radius: var(--radius-md, 8px);
   font-weight: 700;
-  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes popIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  animation: popIn var(--transition-bounce, 0.4s cubic-bezier(0.34, 1.56, 0.64, 1));
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
 }
 
 /* Trust Signals */
@@ -219,29 +142,27 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 0;
+  padding: 8px 0;
   font-size: 0.875rem;
-  color: #047857;
-  animation: slideInLeft 0.4s ease-out;
+  color: var(--primary-800, #047857);
+  animation: slideInLeft var(--transition-base, 0.4s ease-out);
+  transition: color var(--transition-fast, 0.2s ease);
 }
 
-.trust-badge:nth-child(1) {
-  animation-delay: 0;
-}
+.trust-badge:nth-child(1) { animation-delay: 0; }
+.trust-badge:nth-child(2) { animation-delay: 0.1s; }
+.trust-badge:nth-child(3) { animation-delay: 0.2s; }
 
-.trust-badge:nth-child(2) {
-  animation-delay: 0.1s;
-}
-
-.trust-badge:nth-child(3) {
-  animation-delay: 0.2s;
+.trust-badge:hover {
+  color: var(--primary-main, #22c55e);
 }
 
 /* Button Styles */
 .btn-place-order {
   position: relative;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base, 0.3s ease);
+  border-radius: var(--radius-md, 8px);
 }
 
 .btn-place-order::before {
@@ -315,5 +236,33 @@
 
   .flex.gap-4 {
     gap: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkout-container,
+  .delivery-card,
+  .payment-card,
+  .summary-item,
+  .price-display,
+  .total-price,
+  .trust-badge,
+  .radio-btn.checked {
+    animation: none;
+    opacity: 1;
+  }
+
+  .step-circle.active {
+    animation: none;
+  }
+
+  .delivery-card:hover,
+  .payment-card:hover,
+  .form-input:focus {
+    transform: none;
+  }
+
+  .btn-place-order::before {
+    display: none;
   }
 }

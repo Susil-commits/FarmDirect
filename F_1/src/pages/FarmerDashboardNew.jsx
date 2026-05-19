@@ -11,7 +11,8 @@ import CancelWithReason from '../components/modals/CancelWithReason';
 import {
   Package, TrendingUp, ShoppingCart, AlertCircle, Eye, Edit2, Trash2,
   IndianRupee, BarChart3, PieChart, TrendingDown, CheckCircle, Clock,
-  Users, Phone, MapPin, Truck, XCircle, Play, Ban, Loader
+  Users, Phone, MapPin, Truck, XCircle, Play, Ban, Loader, Plus,
+  Mail, Shield, FileText, Star, Calendar, UserCheck, Image, Award, Hash, BadgeCheck
 } from 'lucide-react';
 import '../styles/FarmerDashboard.css';
 
@@ -116,6 +117,8 @@ export default function FarmerDashboardNew() {
         await cropService.deleteCrop(cropId);
         setCrops(crops.filter(c => c._id !== cropId));
         addToast('Crop deleted', 'success');
+        // Dispatch global event so cart & wishlist contexts remove this crop
+        window.dispatchEvent(new CustomEvent('crop-deleted', { detail: { cropId } }));
       } catch {
         addToast('Error deleting crop', 'error');
       }
@@ -125,13 +128,21 @@ export default function FarmerDashboardNew() {
   const handleStartOrder = async (cropId, buyerId) => {
     try {
       setStartOrderLoading(prev => ({ ...prev, [buyerId]: true }));
-      await orderService.startOrder({ cropId, buyerId });
-      addToast('Order started successfully! Buyer has been notified.', 'success');
-      // Refresh data
-      await fetchFarmerData();
-      setExpandedCrop(null);
+      const result = await orderService.startOrder({ cropId, buyerId });
+      // api.js interceptor unwraps to response.data, so result = { message, order }
+      const createdOrder = result.order;
+      addToast(result.message || 'Order started successfully! Buyer has been notified.', 'success');
+      if (createdOrder?._id) {
+        localStorage.setItem('lastOrderId', createdOrder._id);
+        // Navigate to OrderConfirmation for the congratulations/success UI
+        navigate('/order-confirmation');
+      } else {
+        await fetchFarmerData();
+        setExpandedCrop(null);
+      }
     } catch (err) {
-      addToast(err.response?.data?.message || 'Failed to start order', 'error');
+      // Error is already unwrapped by api.js interceptor: err = { message: '...' }
+      addToast(err?.message || 'Failed to start order', 'error');
     } finally {
       setStartOrderLoading(prev => ({ ...prev, [buyerId]: false }));
     }
@@ -308,6 +319,9 @@ export default function FarmerDashboardNew() {
                     </button>
                   ))}
                 </div>
+                <Button onClick={() => navigate('/create-crop')} variant="primary" className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" /> Add Crop
+                </Button>
               </div>
               {filteredCrops.length === 0 ? (
                 <Card className="p-12 text-center"><Package className="w-12 h-12 text-gray-400 mx-auto mb-4" /><p className="text-gray-600">No crops found</p><Button onClick={() => navigate('/create-crop')} variant="primary" className="mt-4">Add Your First Crop</Button></Card>
@@ -363,36 +377,150 @@ export default function FarmerDashboardNew() {
                               {isExpanded ? 'Hide' : 'View'} Interested Buyers ({interestedCount})
                             </button>
                             {isExpanded && (
-                              <div className="mt-3 space-y-2">
+                              <div className="mt-3 space-y-3">
                                 {(crop.interestedBuyers || [])
                                   .filter(b => b.status === 'interested')
                                   .map((buyer, idx) => {
                                     const buyerData = typeof buyer.buyerId === 'object' ? buyer.buyerId : {};
                                     const buyerId = buyer.buyerId?._id || buyer.buyerId;
                                     const isStarting = startOrderLoading[buyerId];
+                                    const fullName = [buyerData.firstName, buyerData.lastName].filter(Boolean).join(' ') || buyerData.name || 'Buyer';
+                                    const kycDocs = buyerData.kycDocuments || {};
+                                    const kycDetails = buyerData.kycDetails || {};
+                                    const kycStatus = buyerData.kycStatus || 'not_submitted';
+                                    const profilePic = buyerData.profilePicture || buyerData.profilePhotoUrl || kycDetails?.profilePhotoUrl;
+
                                     return (
-                                      <div key={idx} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                        <div className="flex items-center justify-between">
-                                          <div>
-                                            <p className="font-semibold text-gray-900">
-                                              {buyerData.firstName || buyerData.name || 'Buyer'} {buyerData.lastName || ''}
-                                            </p>
-                                            <p className="text-sm text-gray-600 flex items-center gap-1">
-                                              <Phone className="w-3 h-3" /> {buyerData.phone || 'N/A'}
-                                            </p>
-                                            <p className="text-sm text-gray-600">
-                                              {[buyerData.city, buyerData.state].filter(Boolean).join(', ') || 'Location N/A'}
+                                      <div key={idx} className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                        {/* Header: Avatar + Name + KYC Badge */}
+                                        <div className="flex items-start gap-3 mb-3">
+                                          {profilePic ? (
+                                            <img src={profilePic} alt={fullName} className="w-12 h-12 rounded-full object-cover border-2 border-green-200" />
+                                          ) : (
+                                            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-lg border-2 border-green-200">
+                                              {(buyerData.firstName || buyerData.name || '?').charAt(0).toUpperCase()}
+                                            </div>
+                                          )}
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                              <h4 className="font-bold text-gray-900 text-base">{fullName}</h4>
+                                              {kycStatus === 'verified' && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                                                  <BadgeCheck className="w-3 h-3" /> KYC Verified
+                                                </span>
+                                              )}
+                                              {kycStatus === 'pending' && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold">
+                                                  <Clock className="w-3 h-3" /> KYC Pending
+                                                </span>
+                                              )}
+                                              {kycStatus === 'rejected' && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
+                                                  <XCircle className="w-3 h-3" /> KYC Rejected
+                                                </span>
+                                              )}
+                                              {kycStatus === 'not_submitted' && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">
+                                                  <Shield className="w-3 h-3" /> No KYC
+                                                </span>
+                                              )}
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-0.5">
+                                              Interested on {new Date(buyer.interestedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </p>
                                           </div>
-                                          <span className="text-xs text-gray-500">
-                                            {new Date(buyer.interestedAt).toLocaleDateString()}
-                                          </span>
                                         </div>
-                                        <div className="mt-3 pt-3 border-t border-blue-200">
+
+                                        {/* Contact Details Grid */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3 p-3 bg-gray-50 rounded-lg">
+                                          <div className="flex items-center gap-2 text-sm">
+                                            <Phone className="w-4 h-4 text-green-600 shrink-0" />
+                                            <span className="text-gray-700">{buyerData.phone || 'N/A'}</span>
+                                          </div>
+                                          <div className="flex items-center gap-2 text-sm">
+                                            <Mail className="w-4 h-4 text-green-600 shrink-0" />
+                                            <span className="text-gray-700 truncate">{buyerData.email || 'N/A'}</span>
+                                          </div>
+                                          {(buyerData.city || buyerData.state || buyerData.address) && (
+                                            <div className="flex items-start gap-2 text-sm sm:col-span-2">
+                                              <MapPin className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
+                                              <span className="text-gray-700">
+                                                {[buyerData.address, buyerData.city, buyerData.state, buyerData.pincode].filter(Boolean).join(', ') || 'Location N/A'}
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+
+                                        {/* KYC Documents Section */}
+                                        {(kycDocs.aadharCard || kycDocs.panCard || kycDocs.governmentId || kycDetails?.aadharNumber || kycDetails?.governmentIdNumber) && (
+                                          <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                            <h5 className="text-sm font-semibold text-blue-800 mb-2 flex items-center gap-1">
+                                              <FileText className="w-4 h-4" /> KYC Documents
+                                            </h5>
+                                            <div className="space-y-1.5 text-sm">
+                                              {kycDetails?.aadharNumber && (
+                                                <div className="flex items-center gap-2">
+                                                  <Hash className="w-3.5 h-3.5 text-blue-600" />
+                                                  <span className="text-gray-700">Aadhar: ****{kycDetails.aadharNumber.slice(-4)}</span>
+                                                </div>
+                                              )}
+                                              {kycDetails?.governmentIdType && (
+                                                <div className="flex items-center gap-2">
+                                                  <Award className="w-3.5 h-3.5 text-blue-600" />
+                                                  <span className="text-gray-700">{kycDetails.governmentIdType}: {kycDetails.governmentIdNumber ? '****' + kycDetails.governmentIdNumber.slice(-4) : 'N/A'}</span>
+                                                </div>
+                                              )}
+                                              {kycDetails?.dateOfBirth && (
+                                                <div className="flex items-center gap-2">
+                                                  <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                                                  <span className="text-gray-700">DOB: {new Date(kycDetails.dateOfBirth).toLocaleDateString('en-IN')}</span>
+                                                </div>
+                                              )}
+                                            </div>
+                                            {/* Doc Links */}
+                                            {Object.entries(kycDocs).filter(([,v]) => v && typeof v === 'string' && v.startsWith('http')).length > 0 && (
+                                              <div className="flex flex-wrap gap-2 mt-2">
+                                                {Object.entries(kycDocs).filter(([,v]) => v && typeof v === 'string' && v.startsWith('http')).map(([key, url]) => (
+                                                  <a key={key} href={url} target="_blank" rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-blue-300 rounded text-xs text-blue-700 hover:bg-blue-100 transition">
+                                                    <Image className="w-3 h-3" /> {key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}
+                                                  </a>
+                                                ))}
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+
+                                        {/* Verification & Account Stats */}
+                                        <div className="flex flex-wrap items-center gap-3 mb-3 text-xs text-gray-600">
+                                          <span className="flex items-center gap-1">
+                                            <UserCheck className="w-3.5 h-3.5" />
+                                            {buyerData.verified ? 'Account Verified' : 'Not Verified'}
+                                          </span>
+                                          <span className="flex items-center gap-1">
+                                            <Mail className="w-3.5 h-3.5" />
+                                            {buyerData.emailVerified ? 'Email Verified' : 'Email Unverified'}
+                                          </span>
+                                          {buyerData.rating > 0 && (
+                                            <span className="flex items-center gap-1">
+                                              <Star className="w-3.5 h-3.5 text-yellow-500" />
+                                              {buyerData.rating?.toFixed(1)} ({buyerData.totalReviews || 0} reviews)
+                                            </span>
+                                          )}
+                                          {buyerData.createdAt && (
+                                            <span className="flex items-center gap-1">
+                                              <Calendar className="w-3.5 h-3.5" />
+                                              Member since {new Date(buyerData.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                                            </span>
+                                          )}
+                                        </div>
+
+                                        {/* Action Buttons */}
+                                        <div className="flex gap-2 pt-2 border-t border-gray-100">
                                           <button
                                             onClick={() => handleStartOrder(crop._id, buyerId)}
                                             disabled={isStarting}
-                                            className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm flex items-center justify-center gap-2 transition"
+                                            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm flex items-center justify-center gap-2 transition"
                                           >
                                             {isStarting ? (
                                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -401,6 +529,14 @@ export default function FarmerDashboardNew() {
                                             )}
                                             Start Order
                                           </button>
+                                          {buyerData.phone && (
+                                            <a
+                                              href={`tel:${buyerData.phone}`}
+                                              className="px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-semibold text-sm flex items-center gap-1 transition"
+                                            >
+                                              <Phone className="w-4 h-4" /> Call
+                                            </a>
+                                          )}
                                         </div>
                                       </div>
                                     );
@@ -436,23 +572,41 @@ export default function FarmerDashboardNew() {
                     return (
                       <Card key={order._id} className="p-6">
                         <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <h4 className="font-bold text-gray-900 text-lg">
-                              Order #{order.orderNumber || order._id?.slice(-6)}
-                            </h4>
-                            <p className="text-sm text-gray-600">
-                              {order.cropName || 'Crop'} • {order.quantity} {order.unit || 'kg'} • ₹{order.totalAmount?.toLocaleString()}
-                            </p>
-                            <p className="text-sm text-gray-500 mt-1">
-                              Buyer: {order.buyerId?.firstName || order.buyerId?.name || 'N/A'} • 
-                              <Phone className="w-3 h-3 inline mx-1" />
-                              {order.buyerContact || order.buyerId?.phone || 'N/A'}
-                            </p>
-                            {order.pickupLocation && (
-                              <p className="text-sm text-gray-500 flex items-center gap-1">
-                                <MapPin className="w-3 h-3" /> Pickup: {order.pickupLocation}
+                          <div className="flex items-start gap-4">
+                            <div className="w-16 h-16 rounded-lg overflow-hidden bg-green-100 flex items-center justify-center shrink-0">
+                              {order.cropId?.images?.[0] ? (
+                                <img
+                                  src={order.cropId.images[0]}
+                                  alt={order.cropName || 'Crop'}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                                />
+                              ) : null}
+                              <span
+                                className="text-2xl"
+                                style={{ display: order.cropId?.images?.[0] ? 'none' : 'flex' }}
+                              >
+                                🌾
+                              </span>
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 text-lg">
+                                Order #{order.orderNumber || order._id?.slice(-6)}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                {order.cropName || 'Crop'} • {order.quantity} {order.unit || 'kg'} • ₹{order.totalAmount?.toLocaleString()}
                               </p>
-                            )}
+                              <p className="text-sm text-gray-500 mt-1">
+                                Buyer: {order.buyerId?.firstName || order.buyerId?.name || 'N/A'} •
+                                <Phone className="w-3 h-3 inline mx-1" />
+                                {order.buyerContact || order.buyerId?.phone || 'N/A'}
+                              </p>
+                              {order.pickupLocation && (
+                                <p className="text-sm text-gray-500 flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" /> Pickup: {order.pickupLocation}
+                                </p>
+                              )}
+                            </div>
                           </div>
                           <div className="text-right">
                             <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${STATUS_COLORS[order.orderStatus] || 'bg-gray-100 text-gray-800'}`}>

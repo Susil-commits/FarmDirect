@@ -1,10 +1,54 @@
-import { Send, Loader, AlertCircle, Shield, MoreVertical, Trash2 } from 'lucide-react';
+import {
+  Send,
+  Loader,
+  AlertCircle,
+  MoreVertical,
+  Trash2,
+  Shield,
+  ArrowLeft,
+  Leaf,
+} from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import ChatBubble from './ChatBubble';
-import Avatar from '../common/Avatar';
 import { useChat } from '../../context/ChatContext';
+import '../../styles/Messages.css';
 
-export default function ChatPanel({ receiverId, receiverData, cropContext }) {
+const AVATAR_COLORS = [
+  'bg-green-500', 'bg-emerald-500', 'bg-teal-500',
+  'bg-blue-500', 'bg-indigo-500', 'bg-purple-500',
+  'bg-pink-500', 'bg-orange-500', 'bg-amber-500',
+];
+
+function getInitial(name) {
+  if (!name) return '?';
+  return name.charAt(0).toUpperCase();
+}
+
+function getColorClass(name) {
+  if (!name) return 'bg-gray-400';
+  return AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
+}
+
+function formatLastSeen(dateStr) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return 'online';
+  if (diffMin < 60) return `last seen ${diffMin}m ago`;
+  const diffHrs = Math.floor(diffMin / 60);
+  if (diffHrs < 24) return `last seen ${diffHrs}h ago`;
+  return `last seen ${date.toLocaleDateString()}`;
+}
+
+export default function ChatPanel({
+  receiverId,
+  receiverData,
+  cropContext,
+  onBack,
+  className = '',
+}) {
   const {
     messages,
     loading,
@@ -18,28 +62,48 @@ export default function ChatPanel({ receiverId, receiverData, cropContext }) {
   const [sending, setSending] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+  const menuRef = useRef(null);
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Mark conversation as read
+  // Mark conversation as read when viewing
   useEffect(() => {
     if (receiverId) {
       markConversationAsRead(receiverId);
     }
   }, [receiverId, markConversationAsRead]);
 
+  // Focus input when receiver changes
+  useEffect(() => {
+    if (receiverId) {
+      inputRef.current?.focus();
+    }
+  }, [receiverId]);
+
+  // Close menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
-
     if (!messageInput.trim()) return;
 
     try {
       setSending(true);
       await sendMessage(receiverId, messageInput.trim(), cropContext?.cropId || null);
       setMessageInput('');
+      inputRef.current?.focus();
     } catch (err) {
       console.error('Failed to send message:', err);
     } finally {
@@ -58,71 +122,128 @@ export default function ChatPanel({ receiverId, receiverData, cropContext }) {
   };
 
   const handleCopyMessage = (content) => {
-    navigator.clipboard.writeText(content);
+    navigator.clipboard.writeText(content).catch(() => {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = content;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    });
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage(e);
+    }
+  };
+
+  // Get display info from receiverData or fallback
+  const displayName =
+    receiverData?.name ||
+    [receiverData?.firstName, receiverData?.lastName].filter(Boolean).join(' ') ||
+    'User';
+  const displayRole = receiverData?.role === 'farmer' ? 'Farmer' : 'Buyer';
+  const displayRoleIcon = receiverData?.role === 'farmer' ? '🌾' : '👤';
+  const photoUrl =
+    receiverData?.photo ||
+    receiverData?.profilePhoto ||
+    receiverData?.profilePicture ||
+    receiverData?.avatar ||
+    null;
+
+  // Empty state - no chat selected
   if (!receiverId) {
     return (
-      <div className="h-full flex items-center justify-center bg-gray-50 text-gray-500">
-        <div className="text-center">
-          <p className="text-lg mb-2">Select a conversation to start chatting</p>
-          <p className="text-sm">Or find a farmer/buyer to begin a new conversation</p>
+      <div className={`chat-panel-empty ${className}`}>
+        <div className="chat-panel-empty-content">
+          <div className="chat-panel-empty-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </div>
+          <h3>Your Messages</h3>
+          <p>Select a conversation from the left to start chatting with farmers and buyers.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className={`chat-panel ${className}`}>
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200 p-4 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          {receiverData && <Avatar user={receiverData} size="md" />}
-          <div>
-            <h3 className="font-semibold text-gray-900">
-              {receiverData?.name || `${receiverData?.firstName || ''} ${receiverData?.lastName || ''}`.trim() || 'User'}
-            </h3>
-            <p className="text-xs text-gray-600">
-              {receiverData?.role === 'farmer' ? '🌾 Farmer' : '👤 Buyer'}
-            </p>
+      <div className="chat-header">
+        <div className="chat-header-user">
+          {/* Mobile back button */}
+          {onBack && (
+            <button onClick={onBack} className="chat-mobile-back">
+              <ArrowLeft size={20} />
+            </button>
+          )}
+          {/* Avatar */}
+          {photoUrl ? (
+            <img src={photoUrl} alt={displayName} className="chat-header-avatar" />
+          ) : (
+            <div className={`chat-header-avatar-fallback ${getColorClass(displayName)}`}>
+              {getInitial(receiverData?.firstName || receiverData?.name)}
+            </div>
+          )}
+          {/* Info */}
+          <div className="chat-header-info">
+            <div className="chat-header-name">
+              {displayName}
+              <span className="chat-header-role">
+                {displayRoleIcon} {displayRole}
+              </span>
+            </div>
+            <div className="chat-header-subtitle">
+              {receiverData?.lastSeen
+                ? formatLastSeen(receiverData.lastSeen)
+                : receiverData?.updatedAt
+                ? formatLastSeen(receiverData.updatedAt)
+                : ''}
+            </div>
             {cropContext?.cropId && (
-              <p className="text-xs text-green-700 font-medium mt-0.5">
-                🌱 About Crop #{typeof cropContext.cropId === 'string' ? cropContext.cropId.slice(-6) : cropContext.cropId}
-              </p>
+              <span className="chat-crop-context">
+                <Leaf size={10} />
+                Crop #{typeof cropContext.cropId === 'string' ? cropContext.cropId.slice(-6) : cropContext.cropId}
+              </span>
             )}
           </div>
         </div>
 
-        {/* Menu */}
-        <div className="relative">
+        {/* Actions Menu */}
+        <div className="chat-header-actions" ref={menuRef}>
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-2 hover:bg-green-200 rounded-lg transition"
+            className="chat-header-action-btn"
+            title="More options"
           >
-            <MoreVertical size={20} className="text-gray-600" />
+            <MoreVertical size={20} />
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+            <div className="chat-header-dropdown">
               <button
                 onClick={() => {
-                  alert('Block feature coming soon');
                   setShowMenu(false);
+                  alert('Block feature coming soon');
                 }}
-                className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2"
               >
                 <Shield size={16} />
-                <span>Block user</span>
+                Block user
               </button>
               <button
                 onClick={() => {
-                  alert('Clear chat feature coming soon');
                   setShowMenu(false);
+                  alert('Clear chat feature coming soon');
                 }}
-                className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                className="danger"
               >
                 <Trash2 size={16} />
-                <span>Clear chat</span>
+                Clear chat
               </button>
             </div>
           )}
@@ -130,21 +251,19 @@ export default function ChatPanel({ receiverId, receiverData, cropContext }) {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        {loading ? (
-          <div className="flex justify-center items-center h-full">
-            <Loader size={32} className="animate-spin text-green-600" />
-          </div>
-        ) : error ? (
-          <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-            <AlertCircle size={20} />
+      <div className={`chat-messages ${loading && messages.length === 0 ? 'chat-messages-loading' : ''} ${!loading && messages.length === 0 ? 'chat-messages-empty' : ''}`}>
+        {loading && messages.length === 0 ? (
+          <Loader size={32} className="chat-spinner" />
+        ) : error && messages.length === 0 ? (
+          <div className="chat-error-banner">
+            <AlertCircle size={18} />
             <span>{error}</span>
           </div>
         ) : messages.length > 0 ? (
           <>
-            {messages.map((message) => (
+            {messages.map((message, index) => (
               <ChatBubble
-                key={message._id}
+                key={message._id || `msg-${index}`}
                 message={message}
                 onDelete={handleDeleteMessage}
                 onCopy={handleCopyMessage}
@@ -153,30 +272,34 @@ export default function ChatPanel({ receiverId, receiverData, cropContext }) {
             <div ref={messagesEndRef} />
           </>
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            <p>No messages yet. Start the conversation!</p>
+          <div>
+            <p>No messages yet.</p>
+            <p style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#9ca3af' }}>
+              Send the first message to start the conversation!
+            </p>
           </div>
         )}
       </div>
 
       {/* Input */}
-      <form
-        onSubmit={handleSendMessage}
-        className="p-4 border-t border-gray-200 bg-gray-50"
-      >
-        <div className="flex gap-2">
+      <div className="chat-input-area">
+        <form onSubmit={handleSendMessage} className="chat-input-form">
           <input
+            ref={inputRef}
             type="text"
+            className="chat-input-field"
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             disabled={sending}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100"
+            autoComplete="off"
           />
           <button
             type="submit"
+            className="chat-send-btn"
             disabled={sending || !messageInput.trim()}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition flex items-center gap-2"
+            title="Send message"
           >
             {sending ? (
               <Loader size={18} className="animate-spin" />
@@ -184,8 +307,8 @@ export default function ChatPanel({ receiverId, receiverData, cropContext }) {
               <Send size={18} />
             )}
           </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

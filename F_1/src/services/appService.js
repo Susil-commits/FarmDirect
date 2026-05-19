@@ -32,7 +32,10 @@ export const cropService = {
   getCropById: (id) => api.get(`/crops/${id}`),
   // Use directApi for create/update with FormData to avoid Vite proxy corrupting multipart boundaries
   createCrop: (data) => directApi.post('/crops', data).then(r => r.data),
-  updateCrop: (id, data) => directApi.put(`/crops/${id}`, data).then(r => r.data),
+  // JSON update (no files) uses regular api which supports token refresh
+  updateCrop: (id, data) => api.put(`/crops/${id}`, data),
+  // FormData update (with file uploads) uses directApi to bypass Vite proxy
+  updateCropWithFiles: (id, formData) => directApi.put(`/crops/${id}`, formData).then(r => r.data),
   deleteCrop: (id) => api.delete(`/crops/${id}`),
   searchCrops: (query, filters) => api.get('/data/crops/search', { params: { q: query, ...filters } }),
   getFarmerCrops: (farmerId, params) => api.get(`/crops/farmer/${farmerId}`, { params }),
