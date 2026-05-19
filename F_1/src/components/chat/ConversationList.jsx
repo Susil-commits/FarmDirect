@@ -139,9 +139,7 @@ export default function ConversationList({
                   </div>
                   <div className="conversation-preview-row">
                     <span className="conversation-preview">
-                      {conversation.unreadCount > 0
-                        ? `${conversation.unreadCount} new message${conversation.unreadCount > 1 ? 's' : ''}`
-                        : conversation.lastMessage?.content || 'No messages yet'}
+                      {conversation.lastMessage?.content || 'No messages yet'}
                     </span>
                     {conversation.unreadCount > 0 && (
                       <span className="conversation-unread-badge">
