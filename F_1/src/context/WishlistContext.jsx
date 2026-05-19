@@ -78,6 +78,56 @@ export function WishlistProvider({ children }) {
     }
   }, [wishlist]);
 
+  // ─── Global event listeners for crop deletion / update ────────────────
+  // When a crop is deleted, remove it from wishlist state + localStorage
+  useEffect(() => {
+    const handleCropDeleted = (e) => {
+      const deletedId = e.detail?.cropId;
+      if (!deletedId) return;
+      setWishlist(prev => {
+        const filtered = prev.filter(item => (item._id || item.id) !== deletedId);
+        localStorage.setItem('farm-wishlist', JSON.stringify(filtered));
+        return filtered;
+      });
+    };
+
+    // When a crop is updated, refresh cached crop data in wishlist items
+    const handleCropUpdated = (e) => {
+      const updated = e.detail?.crop;
+      if (!updated?._id) return;
+      setWishlist(prev => {
+        const refreshed = prev.map(item => {
+          if ((item._id || item.id) === updated._id) {
+            return {
+              ...item,
+              name: updated.cropName || updated.name || item.name,
+              price: updated.price ?? item.price,
+              images: updated.images || item.images,
+              image: updated.images?.[0] || item.image,
+              quantity: updated.quantity ?? item.quantity,
+              unit: updated.unit || item.unit,
+              pickupLocation: updated.pickupLocation || item.pickupLocation,
+              location: updated.pickupLocation || item.location,
+              description: updated.description || item.description,
+              cropType: updated.cropType || item.cropType,
+              category: updated.category || item.category,
+            };
+          }
+          return item;
+        });
+        localStorage.setItem('farm-wishlist', JSON.stringify(refreshed));
+        return refreshed;
+      });
+    };
+
+    window.addEventListener('crop-deleted', handleCropDeleted);
+    window.addEventListener('crop-updated', handleCropUpdated);
+    return () => {
+      window.removeEventListener('crop-deleted', handleCropDeleted);
+      window.removeEventListener('crop-updated', handleCropUpdated);
+    };
+  }, []);
+
   const addToWishlist = useCallback(async (product) => {
     const productId = product._id || product.id;
     const normalizedProduct = {

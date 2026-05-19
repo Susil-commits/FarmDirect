@@ -60,8 +60,10 @@ export default function SearchBar() {
   };
 
   const handleResultClick = (crop) => {
-    addToRecentSearches(crop.name);
-    navigate(`/crop/${crop.id}`);
+    const cropName = crop.cropName || crop.name || 'Unknown';
+    const cropId = crop._id || crop.id;
+    addToRecentSearches(cropName);
+    navigate(`/crop/${cropId}`);
     setIsOpen(false);
     clearQuery();
   };
@@ -157,28 +159,41 @@ export default function SearchBar() {
                       <span>Search Results ({searchResults.length})</span>
                     </div>
                     <div className="dropdown-list">
-                      {searchResults.map((crop) => (
-                        <button
-                          key={crop.id}
-                          onClick={() => handleResultClick(crop)}
-                          className="dropdown-item result-item"
-                          role="option"
-                        >
-                          <div className="result-image">
-                            {crop.image && (crop.image.startsWith('http') || crop.image.startsWith('/')) ? (
-                              <img src={crop.image} alt={crop.name} />
-                            ) : (
-                              <span>{crop.image || '🥬'}</span>
-                            )}
-                          </div>
-                          <div className="result-info">
-                            <p className="result-name">{crop.name}</p>
-                            <p className="result-meta">
-                              {crop.category} • ₹{crop.price}/kg
-                            </p>
-                          </div>
-                        </button>
-                      ))}
+                      {searchResults.map((crop) => {
+                        const cropId = crop._id || crop.id;
+                        const cropName = crop.cropName || crop.name || 'Unknown';
+                        const cropImage = crop.images?.[0] || crop.image || null;
+                        const farmerName = crop.farmerId
+                          ? (typeof crop.farmerId === 'object'
+                            ? [crop.farmerId.firstName, crop.farmerId.lastName].filter(Boolean).join(' ') || crop.farmerId.farmName || crop.farmerId.name
+                            : crop.farmerId)
+                          : (crop.farmer || '');
+                        const category = crop.category || 'General';
+                        const price = crop.price || 0;
+
+                        return (
+                          <button
+                            key={cropId}
+                            onClick={() => handleResultClick(crop)}
+                            className="dropdown-item result-item"
+                            role="option"
+                          >
+                            <div className="result-image">
+                              {cropImage && (cropImage.startsWith('http') || cropImage.startsWith('/')) ? (
+                                <img src={cropImage} alt={cropName} />
+                              ) : (
+                                <span>{cropImage || '🥬'}</span>
+                              )}
+                            </div>
+                            <div className="result-info">
+                              <p className="result-name">{cropName}</p>
+                              <p className="result-meta">
+                                {category} • ₹{price}/kg{farmerName ? ` • ${farmerName}` : ''}
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 ) : (

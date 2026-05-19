@@ -231,8 +231,8 @@ export default function Home() {
               </div>
             </ScrollAnimation>
 
-            {/* Hero Image with Enhanced Effects */}
-            <div className="rounded-2xl h-64 md:h-80 flex items-center justify-center animate-slide-in-right hover-lift overflow-hidden glass premium-glow relative group bg-gray-200">
+            {/* Hero Image Banner */}
+            <div className="rounded-2xl h-64 md:h-80 flex items-center justify-center animate-slide-in-right overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-300 relative group bg-gray-200">
               {imageError ? (
                 <div className="flex flex-col items-center justify-center text-center p-4">
                   <Leaf size={48} className="text-green-600 mb-2" />
@@ -252,7 +252,6 @@ export default function Home() {
                     onError={() => {
                       setImageError(true);
                       setImageLoading(false);
-                      console.warn('Hero image failed to load, showing fallback');
                     }}
                     decoding="async"
                   />
@@ -266,22 +265,45 @@ export default function Home() {
 
 
 
-        {/* Features */}
-        <section id="features" className="py-16 px-4 relative">
-          <div className="absolute inset-0 premium-gradient"></div>
+        {/* Features - with Video Background */}
+        <section id="features" className="py-20 px-4 relative overflow-hidden">
+          {/* Video Background - no dark overlay, video fully visible */}
+          <div className="absolute inset-0 z-0">
+            <video
+              src="/mixkit-wheat-field.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            />
+            {/* Subtle light overlay only for slight text contrast */}
+            <div className="absolute inset-0 bg-white/5"></div>
+          </div>
+
           <div className="max-w-6xl mx-auto relative z-10">
             <ScrollAnimation className="scroll-slide mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 text-center animate-slide-in-down">Why Choose FarmDirect?</h2>
+              <h2 className="text-4xl font-bold text-gray-900 text-center animate-slide-in-down drop-shadow-md">
+                Why Choose FarmDirect?
+              </h2>
+              <p className="text-gray-800 text-center text-lg mt-3 max-w-2xl mx-auto font-medium">
+                Experience the difference of buying directly from farmers
+              </p>
             </ScrollAnimation>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {features.map((feat, i) => (
-                <Card key={i} variant="green" animated={true}>
-                  <div className="p-8 text-center">
-                    <div className="flex justify-center mb-4">{feat.icon}</div>
-                    <h3 className="font-bold text-lg text-gray-900 mb-2">{feat.title}</h3>
-                    <p className="text-gray-600">{feat.desc}</p>
+                <div
+                  key={i}
+                  className="bg-white/50 backdrop-blur-sm border border-white/40 rounded-2xl p-8 text-center hover:bg-white/70 hover:scale-105 transition-all duration-300 shadow-lg group"
+                >
+                  <div className="flex justify-center mb-4">
+                    <div className="p-3 bg-green-100/80 rounded-xl group-hover:bg-green-200/80 transition-colors">
+                      {feat.icon}
+                    </div>
                   </div>
-                </Card>
+                  <h3 className="font-bold text-xl text-gray-900 mb-3 drop-shadow-sm">{feat.title}</h3>
+                  <p className="text-gray-700 text-sm leading-relaxed">{feat.desc}</p>
+                </div>
               ))}
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { ArrowRight, ShoppingCart, ArrowLeft } from 'lucide-react';
+import { ArrowRight, ShoppingCart, ArrowLeft, Leaf } from 'lucide-react';
 import { useState, useCallback, useEffect } from 'react';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
@@ -106,22 +106,32 @@ export default function StartShopping() {
               </div>
             </ScrollAnimation>
 
-            {/* Hero Video Banner */}
+            {/* Hero Image Banner */}
             <ScrollAnimation className="scroll-slide mt-16">
-              <div className="rounded-3xl overflow-hidden h-80 md:h-96 flex items-center justify-center shadow-2xl transform hover:scale-105 transition-transform duration-300 relative">
-                {imageLoading && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse"></div>
+              <div className="rounded-2xl h-64 md:h-80 flex items-center justify-center shadow-2xl transform hover:scale-105 transition-transform duration-300 overflow-hidden relative group bg-gray-200">
+                {imageError ? (
+                  <div className="flex flex-col items-center justify-center text-center p-4">
+                    <Leaf size={48} className="text-green-600 mb-2" />
+                    <p className="text-gray-600">Fresh Produce Available</p>
+                  </div>
+                ) : (
+                  <>
+                    {imageLoading && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse"></div>
+                    )}
+                    <img
+                      src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=600&fit=crop"
+                      alt="Fresh produce from farmers"
+                      className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+                      loading="eager"
+                      onLoad={() => setImageLoading(false)}
+                      onError={handleImageError}
+                      decoding="async"
+                    />
+                    {/* Animated glow overlay on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
+                  </>
                 )}
-                <video
-                  src="/mixkit-wheat-field.mp4"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  onLoadedData={() => setImageLoading(false)}
-                  onError={handleImageError}
-                  className={`w-full h-full object-cover ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
-                />
               </div>
             </ScrollAnimation>
           </div>

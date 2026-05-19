@@ -73,7 +73,8 @@ export default function CheckoutNew() {
       setLoading(true);
       const total = calculateTotal();
 
-      const order = await orderService.createOrder({
+      // api.js interceptor unwraps to response.data, so result = { message, order }
+      const result = await orderService.createOrder({
         cropId: crop._id,
         quantity: formData.quantity,
         unitPrice: crop.price,
@@ -81,14 +82,14 @@ export default function CheckoutNew() {
         paymentMethod: 'cod'
       });
 
-      const createdOrder = order.data?.data || order.data?.order || order.data;
+      const createdOrder = result.order;
       setOrderData(createdOrder);
       localStorage.setItem('lastOrderId', createdOrder._id);
       setStep(3); // Go to confirmation
-      addToast('Order placed successfully!', 'success');
+      addToast(result.message || 'Order placed successfully!', 'success');
     } catch (err) {
-      const message = err.response?.data?.message || 'Error placing order';
-      addToast(message, 'error');
+      // Error is already unwrapped by api.js interceptor: err = { message: '...' }
+      addToast(err?.message || 'Error placing order', 'error');
     } finally {
       setLoading(false);
     }

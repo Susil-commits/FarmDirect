@@ -10,7 +10,7 @@ import ScrollAnimation from '../components/common/ScrollAnimation';
 import CancelWithReason from '../components/modals/CancelWithReason';
 import {
   ShoppingCart, Heart, Truck, CheckCircle, IndianRupee, Star,
-  Clock, ArrowRight, XCircle, Leaf, MapPin, Phone, Package, Loader
+  Clock, ArrowRight, XCircle, Leaf, MapPin, Phone, Package, Loader, ThumbsUp
 } from 'lucide-react';
 import '../styles/BuyerDashboard.css';
 
@@ -57,6 +57,7 @@ export default function BuyerDashboardNew() {
   const [cancelTargetOrder, setCancelTargetOrder] = useState(null);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [receiveLoading, setReceiveLoading] = useState({});
+  const [pickedUpLoading, setPickedUpLoading] = useState({});
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -138,6 +139,19 @@ export default function BuyerDashboardNew() {
       setCancelLoading(false);
       setCancelModalOpen(false);
       setCancelTargetOrder(null);
+    }
+  };
+
+  const handleMarkPickedUp = async (orderId) => {
+    setPickedUpLoading(prev => ({ ...prev, [orderId]: true }));
+    try {
+      await orderService.updateOrderStatus(orderId, 'picked_up');
+      addToast('Order marked as picked up! Complete the order by marking it as received.', 'success');
+      await fetchBuyerData();
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Failed to mark order as picked up', 'error');
+    } finally {
+      setPickedUpLoading(prev => ({ ...prev, [orderId]: false }));
     }
   };
 
@@ -503,6 +517,23 @@ export default function BuyerDashboardNew() {
                             )}
                             Cancel
                           </Button>
+                          {/* Mark as Picked Up - only for ready_for_pickup orders */}
+                          {order.orderStatus === 'ready_for_pickup' && (
+                            <Button
+                              onClick={() => handleMarkPickedUp(order._id)}
+                              variant="outline"
+                              size="sm"
+                              disabled={pickedUpLoading[order._id]}
+                              className="text-purple-600 border-purple-300 hover:bg-purple-50"
+                            >
+                              {pickedUpLoading[order._id] ? (
+                                <Loader className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <ThumbsUp className="w-4 h-4 mr-1" />
+                              )}
+                              Picked Up
+                            </Button>
+                          )}
                           {/* Mark as Received - only for picked_up orders */}
                           {order.orderStatus === 'picked_up' && (
                             <Button
@@ -517,7 +548,7 @@ export default function BuyerDashboardNew() {
                               ) : (
                                 <CheckCircle className="w-4 h-4 mr-1" />
                               )}
-                              Received
+                              Completed
                             </Button>
                           )}
                           <Button

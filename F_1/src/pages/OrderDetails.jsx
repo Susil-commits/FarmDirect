@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from '../context/RouterContext';
+import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../context/ToastContext';
 import PageTransition from '../components/common/PageTransition';
 import Card from '../components/common/Card';
 import ScrollAnimation from '../components/common/ScrollAnimation';
 import Button from '../components/common/Button';
 import { orderService } from '../services/appService';
-import { 
-  Package, Truck, CheckCircle, Clock, MapPin, Phone, 
-  Calendar, IndianRupee, AlertCircle, Leaf
+import {
+  Package, Truck, CheckCircle, Clock, MapPin, Phone,
+  Calendar, IndianRupee, AlertCircle, Leaf, ThumbsUp, Loader
 } from 'lucide-react';
 import '../styles/OrderDetails.css';
 
@@ -33,14 +34,14 @@ const STATUS_COLORS = {
 };
 
 export default function OrderDetails() {
-  const pathname = window.location.pathname;
-  const orderId = pathname.split('/')[2];
-  
-  const { navigate } = useRouter();
+  const { navigate, params } = useRouter();
+  const { user } = useAuth();
+  const orderId = params.id;
   const { addToast } = useToast();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -50,12 +51,41 @@ export default function OrderDetails() {
   const fetchOrderDetails = async () => {
     try {
       setLoading(true);
+      // api.js interceptor unwraps to response.data, so response = { order: {...} }
       const response = await orderService.getOrderDetails(orderId);
-      setOrder(response.data || response);
+      setOrder(response.order);
     } catch {
       addToast('Failed to load order details', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const isBuyer = user?.role === 'buyer';
+
+  const handleMarkPickedUp = async () => {
+    setActionLoading(true);
+    try {
+      await orderService.updateOrderStatus(orderId, 'picked_up');
+      addToast('Order marked as picked up! Complete by marking as received.', 'success');
+      await fetchOrderDetails();
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Failed to mark as picked up', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleMarkReceived = async () => {
+    setActionLoading(true);
+    try {
+      await orderService.markOrderReceived(orderId);
+      addToast('Order marked as completed! Thank you for your purchase.', 'success');
+      await fetchOrderDetails();
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Failed to mark as received', 'error');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -89,8 +119,8 @@ export default function OrderDetails() {
               <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Order Not Found</h2>
               <p className="text-gray-600 mb-6">The order doesn't exist or has been deleted.</p>
-              <Button onClick={() => navigate(-1)} variant="primary">
-                Go Back
+              <Button onClick={() => navigate('/orders')} variant="primary">
+                View My Orders
               </Button>
             </Card>
           </div>
@@ -109,8 +139,13 @@ export default function OrderDetails() {
           {/* Header */}
           <ScrollAnimation className="scroll-slide mb-8">
             <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition mb-4"
+              onClick={() => {
+                const userRole = JSON.parse(localStorage.getItem('userData') || '{}').role;
+                if (userRole === 'farmer') navigate('/farmer/dashboard');
+                else if (userRole === 'buyer') navigate('/buyer/dashboard');
+                else navigate('/orders');
+              }}
+              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition mb-4 cursor-pointer"
             >
               ← Back
             </button>
@@ -222,8 +257,16 @@ export default function OrderDetails() {
               
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-green-200 to-emerald-200 rounded-lg flex items-center justify-center shrink-0 text-3xl">
-                    🌾
+                  <div className="w-20 h-20 bg-gradient-to-br from-green-200 to-emerald-200 rounded-lg flex items-center justify-center shrink-0 text-3xl overflow-hidden">
+                    {order.cropId?.images?.[0] ? (
+                      <img
+                        src={order.cropId.images[0]}
+                        alt={order.cropName || 'Crop'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                      />
+                    ) : null}
+                    <span style={{ display: order.cropId?.images?.[0] ? 'none' : 'flex' }} className="w-full h-full items-center justify-center">🌾</span>
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-gray-900">{order.cropName || 'Crop'}</h3>
@@ -306,6 +349,55 @@ export default function OrderDetails() {
               </Card>
             </div>
           </ScrollAnimation>
+
+          {/* Buyer Action Buttons */}
+          {isBuyer && !isCancelled && !isCompleted && (
+            <ScrollAnimation className="scroll-slide mb-8">
+              <Card className="p-6 md:p-8 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200">
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Truck className="w-5 h-5 text-orange-600" />
+                  Update Order Status
+                </h2>
+                <div className="flex gap-4 flex-wrap">
+                  {order.orderStatus === 'ready_for_pickup' && (
+                    <Button
+                      onClick={handleMarkPickedUp}
+                      variant="primary"
+                      disabled={actionLoading}
+                      className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
+                    >
+                      {actionLoading ? (
+                        <Loader className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <ThumbsUp className="w-4 h-4" />
+                      )}
+                      Mark as Picked Up
+                    </Button>
+                  )}
+                  {order.orderStatus === 'picked_up' && (
+                    <Button
+                      onClick={handleMarkReceived}
+                      variant="primary"
+                      disabled={actionLoading}
+                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                    >
+                      {actionLoading ? (
+                        <Loader className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <CheckCircle className="w-4 h-4" />
+                      )}
+                      Mark as Completed
+                    </Button>
+                  )}
+                  {order.orderStatus !== 'ready_for_pickup' && order.orderStatus !== 'picked_up' && (
+                    <p className="text-gray-600 text-sm">
+                      Action buttons will appear when the farmer updates the order status to "Ready for Pickup".
+                    </p>
+                  )}
+                </div>
+              </Card>
+            </ScrollAnimation>
+          )}
 
           {/* Cancelled Notice */}
           {isCancelled && (

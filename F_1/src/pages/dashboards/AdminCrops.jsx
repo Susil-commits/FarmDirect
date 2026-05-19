@@ -55,8 +55,11 @@ export default function AdminCrops() {
 
     try {
       setActionLoading(true);
-      await adminService.deleteCrop(selectedCrop._id, deleteReason);
+      const deletedCropId = selectedCrop._id;
+      await adminService.deleteCrop(deletedCropId, deleteReason);
       alert(`✅ Crop "${selectedCrop.cropName}" has been deleted`);
+      // Dispatch global event so cart & wishlist contexts remove this crop
+      window.dispatchEvent(new CustomEvent('crop-deleted', { detail: { cropId: deletedCropId } }));
       setShowDeleteModal(false);
       setDeleteReason('');
       await fetchData();

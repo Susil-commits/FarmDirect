@@ -9,7 +9,7 @@ import Button from '../components/common/Button';
 import ScrollAnimation from '../components/common/ScrollAnimation';
 import {
   MapPin, Phone, Truck, Package, CheckCircle, Clock,
-  User, MessageCircle, ArrowLeft, IndianRupee, Leaf
+  User, MessageCircle, ArrowLeft, IndianRupee, Leaf, ThumbsUp, Loader
 } from 'lucide-react';
 import '../styles/OrderTracking.css';
 
@@ -31,6 +31,7 @@ export default function OrderTrackingNew() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -61,6 +62,34 @@ export default function OrderTrackingNew() {
       addToast('Failed to load orders', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMarkPickedUp = async () => {
+    if (!selectedOrder) return;
+    setActionLoading(true);
+    try {
+      await orderService.updateOrderStatus(selectedOrder._id, 'picked_up');
+      addToast('Order marked as picked up! Complete by marking as received.', 'success');
+      await fetchOrders();
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Failed to mark as picked up', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleMarkReceived = async () => {
+    if (!selectedOrder) return;
+    setActionLoading(true);
+    try {
+      await orderService.markOrderReceived(selectedOrder._id);
+      addToast('Order marked as completed! Thank you for your purchase.', 'success');
+      await fetchOrders();
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Failed to mark as received', 'error');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -332,7 +361,39 @@ export default function OrderTrackingNew() {
                       </Card>
 
                       {/* Actions */}
-                      <div className="flex gap-3">
+                      <div className="flex gap-3 flex-wrap">
+                        {/* Mark as Picked Up - only when ready_for_pickup */}
+                        {selectedOrder.orderStatus === 'ready_for_pickup' && (
+                          <Button
+                            onClick={handleMarkPickedUp}
+                            variant="primary"
+                            disabled={actionLoading}
+                            className="flex-1 flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700"
+                          >
+                            {actionLoading ? (
+                              <Loader className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <ThumbsUp className="w-4 h-4" />
+                            )}
+                            Mark as Picked Up
+                          </Button>
+                        )}
+                        {/* Mark as Completed - only when picked_up */}
+                        {selectedOrder.orderStatus === 'picked_up' && (
+                          <Button
+                            onClick={handleMarkReceived}
+                            variant="primary"
+                            disabled={actionLoading}
+                            className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700"
+                          >
+                            {actionLoading ? (
+                              <Loader className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <CheckCircle className="w-4 h-4" />
+                            )}
+                            Mark as Completed
+                          </Button>
+                        )}
                         {selectedOrder.orderStatus === 'completed' && (
                           <Button
                             onClick={() => navigate(`/order/${selectedOrder._id}`)}

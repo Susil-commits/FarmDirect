@@ -231,6 +231,22 @@ export default function AdminOrders() {
                           <div className={`p-2 rounded-lg ${STATUS_COLORS[order.orderStatus]?.split(' ')[0] || 'bg-gray-100'}`}>
                             <StatusIcon className={`w-5 h-5 ${STATUS_COLORS[order.orderStatus]?.split(' ')[1] || 'text-gray-600'}`} />
                           </div>
+                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-green-100 flex items-center justify-center shrink-0">
+                            {order.cropId?.images?.[0] ? (
+                              <img
+                                src={order.cropId.images[0]}
+                                alt={order.cropName || 'Crop'}
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                              />
+                            ) : null}
+                            <span
+                              className="text-lg"
+                              style={{ display: order.cropId?.images?.[0] ? 'none' : 'flex' }}
+                            >
+                              🌾
+                            </span>
+                          </div>
                           <div>
                             <div className="flex items-center gap-2">
                               <h3 className="font-bold text-gray-900 text-lg">
@@ -241,7 +257,7 @@ export default function AdminOrders() {
                               </span>
                             </div>
                             <p className="text-sm text-gray-600 mt-1">
-                              {order.cropName || 'Crop'} • {order.quantity} {order.unit || 'kg'} • 
+                              {order.cropName || 'Crop'} • {order.quantity} {order.unit || 'kg'} •
                               <span className="font-semibold ml-1">₹{order.totalAmount?.toLocaleString()}</span>
                             </p>
                             <p className="text-xs text-gray-500 mt-1">

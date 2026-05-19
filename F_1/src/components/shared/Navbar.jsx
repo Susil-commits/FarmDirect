@@ -228,13 +228,13 @@ export default function Navbar() {
             {user && (
               <button
                 onClick={() => handleNavigate('/messages')}
-                className="relative p-2 text-gray-600 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition duration-200 cursor-pointer"
+                className="relative p-2 text-gray-600 hover:text-red-500 hover:bg-red-50 rounded-lg transition duration-200 cursor-pointer"
                 title={chatUnreadCount > 0 ? `${chatUnreadCount} unread message${chatUnreadCount > 1 ? 's' : ''}` : "View messages"}
                 aria-label={chatUnreadCount > 0 ? `View ${chatUnreadCount} messages` : "View messages"}
               >
                 <MessageCircle size={20} />
                 {chatUnreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center font-bold px-1 animate-pulse">
+                  <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-red-600 text-white text-xs rounded-full flex items-center justify-center font-bold px-1 animate-pulse">
                     {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
                   </span>
                 )}

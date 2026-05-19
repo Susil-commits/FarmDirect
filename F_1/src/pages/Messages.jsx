@@ -1,18 +1,19 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
 import { useChat } from '../context/ChatContext';
-import { userService } from '../services/appService';
 import ConversationList from '../components/chat/ConversationList';
 import ChatPanel from '../components/chat/ChatPanel';
 import PageTransition from '../components/common/PageTransition';
+import '../styles/Messages.css';
 
 export default function Messages() {
   const { user } = useAuth();
   const { navigate, params } = useRouter();
   const { conversations, currentChat, loading, fetchConversations, setCurrentChat, fetchMessages } = useChat();
-  const [receiverData, setReceiverData] = useState(null);
-  const [cropContext, setCropContext] = useState(null);
+
+  // derived: show chat panel only when a conversation is active
+  const showPanel = !!currentChat;
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -26,60 +27,60 @@ export default function Messages() {
     fetchConversations();
   }, [fetchConversations]);
 
-  // Handle external navigation from CropDetail "Chat with Farmer" button
-  const initExternalChat = useCallback(async (receiverId, cropId, farmerName) => {
-    if (!receiverId || !user) return;
-
-    try {
-      // Try fetching farmer profile for accurate receiver data
-      const farmerRes = await userService.getFarmerProfile(receiverId);
-      const farmerData = farmerRes.data?.data || farmerRes.data || farmerRes;
-      const receiverInfo = {
-        _id: receiverId,
-        name: farmerName || farmerData?.name || `${farmerData?.firstName || ''} ${farmerData?.lastName || ''}`.trim() || 'Farmer',
-        role: 'farmer',
-        profilePicture: farmerData?.profilePicture || null,
-      };
-
-      setReceiverData(receiverInfo);
-      if (cropId) {
-        setCropContext({ cropId, cropName: null });
-      }
-      setCurrentChat(receiverId);
-    } catch {
-      // Fallback: use name from URL params
-      setReceiverData({ _id: receiverId, name: farmerName || 'Farmer', role: 'farmer' });
-      if (cropId) {
-        setCropContext({ cropId, cropName: null });
-      }
-      setCurrentChat(receiverId);
-    }
-  }, [user, setCurrentChat]);
-
-  // Handle external chat init from URL params
+  // Handle external navigation from URL params (e.g., "Chat with Farmer" button)
   useEffect(() => {
     const receiverId = params?.receiver;
-    const cropId = params?.crop;
-    const farmerName = params?.name;
-
     if (receiverId && user) {
-      initExternalChat(receiverId, cropId, farmerName);
+      setCurrentChat(receiverId);
     }
-  }, [params?.receiver, params?.crop, params?.name, user, initExternalChat]);
+  }, [params?.receiver, user, setCurrentChat]);
 
-  // Load receiver data when chat changes (from conversation list selection)
+  // Derive receiverData and cropContext from currentChat + conversations (or URL params as fallback)
+  const { receiverData, cropContext } = useMemo(() => {
+    if (!currentChat) return { receiverData: null, cropContext: null };
+
+    // Try to find from loaded conversations first
+    const conversation = conversations.find(
+      (conv) => conv.otherUser?._id === currentChat
+    );
+    if (conversation) {
+      return {
+        receiverData: conversation.otherUser,
+        cropContext: conversation.cropContext || null,
+      };
+    }
+
+    // Fallback: build from URL params (for externally-initiated chats before conversations load)
+    if (params?.receiver === currentChat) {
+      return {
+        receiverData: {
+          _id: currentChat,
+          name: params?.name || 'User',
+          role: 'farmer',
+        },
+        cropContext: params?.crop ? { cropId: params.crop, cropName: null } : null,
+      };
+    }
+
+    return { receiverData: { _id: currentChat, name: 'User', role: 'farmer' }, cropContext: null };
+  }, [currentChat, conversations, params]);
+
+  // Fetch messages when chat changes
   useEffect(() => {
     if (currentChat) {
-      const conversation = conversations.find(
-        (conv) => conv.otherUser._id === currentChat
-      );
-      if (conversation) {
-        setReceiverData(conversation.otherUser);
-        setCropContext(conversation.cropContext || null);
-        fetchMessages(currentChat);
-      }
+      fetchMessages(currentChat);
     }
-  }, [currentChat, conversations, fetchMessages]);
+  }, [currentChat, fetchMessages]);
+
+  // Handle conversation selection from sidebar
+  const handleSelectConversation = (userId) => {
+    setCurrentChat(userId);
+  };
+
+  // Handle back button on mobile — clear current chat to go back to list
+  const handleBackToList = () => {
+    setCurrentChat(null);
+  };
 
   if (!user) {
     return null;
@@ -87,22 +88,25 @@ export default function Messages() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gray-50 pt-16">
-        <div className="h-[calc(100vh-4rem)] flex">
-          {/* Sidebar - Conversations List */}
-          <div className="w-full md:w-80 border-r border-gray-200 overflow-hidden">
-            <ConversationList
-              conversations={conversations}
-              currentChat={currentChat}
-              onSelectConversation={setCurrentChat}
-              loading={loading}
-            />
-          </div>
+      <div className="messages-page">
+        {/* Sidebar - Conversations List */}
+        <div className={`chat-sidebar ${showPanel ? 'hidden-on-mobile' : ''}`}>
+          <ConversationList
+            conversations={conversations}
+            currentChat={currentChat}
+            onSelectConversation={handleSelectConversation}
+            loading={loading}
+          />
+        </div>
 
-          {/* Main Chat Area - Hidden on mobile when no chat selected */}
-          <div className={`flex-1 ${!currentChat ? 'hidden md:flex' : 'flex'}`}>
-            <ChatPanel receiverId={currentChat} receiverData={receiverData} cropContext={cropContext} />
-          </div>
+        {/* Main Chat Panel */}
+        <div className={`chat-panel-wrapper ${!showPanel ? 'hidden-on-mobile' : ''}`}>
+          <ChatPanel
+            receiverId={currentChat}
+            receiverData={receiverData}
+            cropContext={cropContext}
+            onBack={handleBackToList}
+          />
         </div>
       </div>
     </PageTransition>

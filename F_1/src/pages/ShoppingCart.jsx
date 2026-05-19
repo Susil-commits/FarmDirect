@@ -67,6 +67,7 @@ export default function ShoppingCart() {
     try {
       let successCount = 0;
       let failedItems = [];
+      let lastCreatedOrderId = null;
 
       for (const item of cart) {
         try {
@@ -77,12 +78,21 @@ export default function ShoppingCart() {
             totalAmount: (item.price * (item.quantity || 1)),
             paymentMethod: 'cod',
           };
-          await orderService.createOrder(orderData);
+          // api.js interceptor unwraps to response.data, so result = { message, order }
+          const result = await orderService.createOrder(orderData);
+          if (result?.order?._id) {
+            lastCreatedOrderId = result.order._id;
+          }
           successCount++;
         } catch (err) {
           console.error(`Failed to create order for ${item.cropName}:`, err);
           failedItems.push(item.cropName || 'Unknown item');
         }
+      }
+
+      // Save the last successfully created order ID for OrderConfirmation page
+      if (lastCreatedOrderId) {
+        localStorage.setItem('lastOrderId', lastCreatedOrderId);
       }
 
       if (successCount > 0) {
@@ -98,6 +108,7 @@ export default function ShoppingCart() {
 
       if (successCount > 0) {
         clearCart();
+        navigate('/order-confirmation');
       }
     } catch (err) {
       console.error('Checkout error:', err);

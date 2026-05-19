@@ -16,6 +16,10 @@ const api = axios.create({
 let isRefreshing = false;
 let failedQueue = [];
 
+// Guard to prevent rapid refresh attempts when backend is unreachable
+let lastRefreshAttempt = 0;
+const REFRESH_COOLDOWN_MS = 10000; // 10 second cooldown between refresh attempts
+
 const processQueue = (error, token = null) => {
   failedQueue.forEach(prom => {
     if (error) {
@@ -32,9 +36,25 @@ const processQueue = (error, token = null) => {
  * Requires backend endpoint: POST /auth/refresh-token
  */
 const refreshAuthToken = async () => {
+  // Cooldown guard: don't hammer the refresh endpoint if it just failed
+  const now = Date.now();
+  if (now - lastRefreshAttempt < REFRESH_COOLDOWN_MS) {
+    // Still within cooldown — reject silently to avoid redirect loops
+    throw new Error('Refresh cooldown active');
+  }
+  lastRefreshAttempt = now;
+
+  // Guard: do NOT call the refresh endpoint if there is no refresh token.
+  // This prevents 400 errors when calling refresh-token on public pages
+  // where the user isn't logged in (the interceptor fires on any 401).
+  const storedRefreshToken = localStorage.getItem('refreshToken');
+  if (!storedRefreshToken) {
+    throw new Error('No refresh token available');
+  }
+
   try {
     const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
-      refreshToken: localStorage.getItem('refreshToken')
+      refreshToken: storedRefreshToken
     }, {
       withCredentials: true
     });
@@ -52,11 +72,12 @@ const refreshAuthToken = async () => {
 
     return token;
   } catch (error) {
-    // Refresh failed - user must login again
+    // Refresh failed — clear auth data silently. Do NOT hard-redirect (window.location.href)
+    // because that causes infinite reload loops when the backend is unreachable.
+    // Instead, clear tokens and let the app's AuthContext handle the logout + redirect.
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userData');
-    window.location.href = '/login';
     throw error;
   }
 };

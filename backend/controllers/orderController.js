@@ -28,6 +28,11 @@ export const startOrder = async (req, res, next) => {
       return res.status(400).json({ message: 'This crop is no longer available' });
     }
 
+    // Validate crop has sufficient quantity
+    if (!crop.quantity || crop.quantity <= 0) {
+      return res.status(400).json({ message: 'Insufficient quantity available for this crop' });
+    }
+
     // Check if buyer has marked interest
     const interestEntry = crop.interestedBuyers.find(
       (ib) => ib.buyerId.toString() === buyerId && ib.status === 'interested'
@@ -83,8 +88,9 @@ export const startOrder = async (req, res, next) => {
       ],
     });
 
-    // Update crop: mark interest as ordered
+    // Update crop: reduce quantity, mark interest as ordered
     await CropListing.findByIdAndUpdate(cropId, {
+      $inc: { quantity: -orderQty, sold: orderQty },
       $set: {
         'interestedBuyers.$[elem].status': 'ordered',
         'interestedBuyers.$[elem].orderId': order._id,
@@ -92,6 +98,11 @@ export const startOrder = async (req, res, next) => {
     }, {
       arrayFilters: [{ 'elem.buyerId': buyerId }],
     });
+
+    // If quantity becomes 0, mark as not available
+    if (crop.quantity - orderQty <= 0) {
+      await CropListing.findByIdAndUpdate(cropId, { availability: 'not_available' });
+    }
 
     // Notify buyer that farmer has started the order
     try {
@@ -309,7 +320,7 @@ export const getOrderById = async (req, res, next) => {
 };
 
 // @route PUT /api/orders/:id/status
-// @desc Update order status (Farmer only - manages preparation/delivery flow)
+// @desc Update order status (Farmer manages preparation; Buyer marks pickup & completion)
 // @access Private
 export const updateOrderStatus = async (req, res, next) => {
   try {
@@ -327,12 +338,16 @@ export const updateOrderStatus = async (req, res, next) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // Only farmer (or admin) can update order status
-    if (
-      order.farmerId.toString() !== req.user._id.toString() &&
-      req.user.role !== 'admin'
-    ) {
-      return res.status(403).json({ message: 'Only the farmer can update order status' });
+    const isFarmer = order.farmerId.toString() === req.user._id.toString();
+    const isBuyer = order.buyerId.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    // Farmer/Admin can do all transitions; Buyer can only do ready_for_pickup -> picked_up and picked_up -> completed
+    const buyerAllowedTransitions = ['ready_for_pickup', 'picked_up'];
+    const isBuyerTransition = isBuyer && buyerAllowedTransitions.includes(order.orderStatus);
+
+    if (!isFarmer && !isAdmin && !isBuyerTransition) {
+      return res.status(403).json({ message: 'Not authorized to update this order status' });
     }
 
     // Validate status transitions
@@ -369,6 +384,55 @@ export const updateOrderStatus = async (req, res, next) => {
     if (status === 'completed') {
       order.completedAt = new Date();
       order.paymentStatus = 'completed';
+
+      // Update crop inventory & analytics on order completion
+      const crop = await CropListing.findById(order.cropId);
+      if (crop) {
+        const updateFields = {};
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // If quantity reaches 0, mark as soldOut and not_available (wiped from marketplace)
+        if (crop.quantity <= 0) {
+          updateFields.status = 'soldOut';
+          updateFields.availability = 'not_available';
+        }
+
+        // Update daily sales analytics
+        const todaySalesEntry = crop.dailySales.find(
+          (ds) => new Date(ds.date).toDateString() === today.toDateString()
+        );
+        if (todaySalesEntry) {
+          // Update existing today entry via positional operator
+          await CropListing.findByIdAndUpdate(order.cropId, {
+            ...updateFields,
+            $inc: {
+              'dailySales.$[elem].quantity': order.quantity,
+              'dailySales.$[elem].revenue': order.totalAmount,
+              'monthlyStats.totalRevenue': order.totalAmount,
+              'monthlyStats.totalUnits': order.quantity,
+            },
+          }, {
+            arrayFilters: [{ 'elem.date': { $gte: today, $lt: new Date(today.getTime() + 86400000) } }],
+          });
+        } else {
+          // Push new daily sales entry
+          await CropListing.findByIdAndUpdate(order.cropId, {
+            ...updateFields,
+            $push: {
+              dailySales: {
+                date: today,
+                quantity: order.quantity,
+                revenue: order.totalAmount,
+              },
+            },
+            $inc: {
+              'monthlyStats.totalRevenue': order.totalAmount,
+              'monthlyStats.totalUnits': order.quantity,
+            },
+          });
+        }
+      }
     }
 
     await order.save();
@@ -391,6 +455,28 @@ export const updateOrderStatus = async (req, res, next) => {
       });
     } catch (notifErr) {
       console.error('Failed to create status notification:', notifErr);
+    }
+
+    // If completed, also notify the farmer
+    if (status === 'completed') {
+      try {
+        await Notification.create({
+          userId: order.farmerId,
+          title: 'Order Completed ✅',
+          message: `Order #${order.orderNumber} for "${order.cropName}" has been completed. Payment of ₹${order.totalAmount} has been processed.`,
+          type: 'order',
+          relatedId: order._id,
+          priority: 'high',
+          actionUrl: `/farmer/orders/${order._id}`,
+          data: {
+            orderId: order._id,
+            orderNumber: order.orderNumber,
+            status: 'completed',
+          },
+        });
+      } catch (notifErr) {
+        console.error('Failed to create farmer completion notification:', notifErr);
+      }
     }
 
     res.status(200).json({
@@ -488,10 +574,11 @@ export const cancelOrder = async (req, res, next) => {
 
     await order.save();
 
-    // Restore crop quantity
+    // Restore crop quantity and re-activate listing
     await CropListing.findByIdAndUpdate(order.cropId, {
       $inc: { quantity: order.quantity, sold: -order.quantity },
       availability: 'available',
+      status: 'active',
     });
 
     // Notify the OTHER party
@@ -632,10 +719,11 @@ export const denyOrder = async (req, res, next) => {
 
     await order.save();
 
-    // Restore crop quantity
+    // Restore crop quantity and re-activate listing
     await CropListing.findByIdAndUpdate(order.cropId, {
       $inc: { quantity: order.quantity, sold: -order.quantity },
       availability: 'available',
+      status: 'active',
     });
 
     // Notify buyer
@@ -695,6 +783,52 @@ export const markOrderReceived = async (req, res, next) => {
     });
 
     await order.save();
+
+    // Update crop inventory & analytics on order completion
+    const crop = await CropListing.findById(order.cropId);
+    if (crop) {
+      const updateFields = {};
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // If quantity reaches 0, mark as soldOut and not_available (wiped from marketplace)
+      if (crop.quantity <= 0) {
+        updateFields.status = 'soldOut';
+        updateFields.availability = 'not_available';
+      }
+
+      const todaySalesEntry = crop.dailySales.find(
+        (ds) => new Date(ds.date).toDateString() === today.toDateString()
+      );
+      if (todaySalesEntry) {
+        await CropListing.findByIdAndUpdate(order.cropId, {
+          ...updateFields,
+          $inc: {
+            'dailySales.$[elem].quantity': order.quantity,
+            'dailySales.$[elem].revenue': order.totalAmount,
+            'monthlyStats.totalRevenue': order.totalAmount,
+            'monthlyStats.totalUnits': order.quantity,
+          },
+        }, {
+          arrayFilters: [{ 'elem.date': { $gte: today, $lt: new Date(today.getTime() + 86400000) } }],
+        });
+      } else {
+        await CropListing.findByIdAndUpdate(order.cropId, {
+          ...updateFields,
+          $push: {
+            dailySales: {
+              date: today,
+              quantity: order.quantity,
+              revenue: order.totalAmount,
+            },
+          },
+          $inc: {
+            'monthlyStats.totalRevenue': order.totalAmount,
+            'monthlyStats.totalUnits': order.quantity,
+          },
+        });
+      }
+    }
 
     // Notify farmer
     try {

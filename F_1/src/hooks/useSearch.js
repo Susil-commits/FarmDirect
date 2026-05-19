@@ -17,20 +17,58 @@ export function useSearch(crops = []) {
     setQuery(value);
   }, []);
 
-  // Filter crops based on query
+  // Filter crops based on query — prioritizes prefix (startsWith) matches
   const searchResults = useMemo(() => {
     if (!query.trim()) return [];
 
     const lowerQuery = query.toLowerCase();
-    
-    return crops.filter(crop => {
-      const nameMatch = crop.name?.toLowerCase().includes(lowerQuery);
-      const descMatch = crop.description?.toLowerCase().includes(lowerQuery);
-      const categoryMatch = crop.category?.toLowerCase().includes(lowerQuery);
-      const farmerMatch = crop.farmer?.toLowerCase().includes(lowerQuery);
-      
-      return nameMatch || descMatch || categoryMatch || farmerMatch;
-    }).slice(0, 10); // Return top 10 results
+
+    // Safely extract the crop name from either cropName (DB field) or name (transformed)
+    const getCropName = (crop) => (crop.cropName || crop.name || '').toLowerCase();
+    const getDescription = (crop) => (crop.description || '').toLowerCase();
+    const getCategory = (crop) => (crop.category || '').toLowerCase();
+
+    // Farmer name can come from populated farmerId object or a flat farmer string
+    const getFarmerText = (crop) => {
+      const f = crop.farmerId;
+      if (f && typeof f === 'object') {
+        return [f.firstName, f.lastName, f.name, f.farmName]
+          .filter(Boolean).join(' ').toLowerCase();
+      }
+      return (crop.farmer || '').toLowerCase();
+    };
+
+    // Split into prefix matches (startsWith) and substring matches (includes)
+    const prefixMatches = [];
+    const substringMatches = [];
+
+    for (const crop of crops) {
+      const nameText = getCropName(crop);
+      const descText = getDescription(crop);
+      const catText = getCategory(crop);
+      const farmerText = getFarmerText(crop);
+
+      const isPrefixMatch =
+        nameText.startsWith(lowerQuery) ||
+        descText.startsWith(lowerQuery) ||
+        catText.startsWith(lowerQuery) ||
+        farmerText.startsWith(lowerQuery);
+
+      const isSubstringMatch =
+        nameText.includes(lowerQuery) ||
+        descText.includes(lowerQuery) ||
+        catText.includes(lowerQuery) ||
+        farmerText.includes(lowerQuery);
+
+      if (isPrefixMatch) {
+        prefixMatches.push(crop);
+      } else if (isSubstringMatch) {
+        substringMatches.push(crop);
+      }
+    }
+
+    // Prefix matches first, then substring matches — limit to 10 total
+    return [...prefixMatches, ...substringMatches].slice(0, 10);
   }, [query, crops]);
 
   // Add to recent searches

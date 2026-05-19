@@ -711,8 +711,9 @@ export const getAllOrders = asyncHandler(async (req, res) => {
   }
   
   const orders = await Order.find(query)
-    .populate('buyerId', 'firstName lastName email')
-    .populate('items.cropId', 'cropName')
+    .populate('buyerId', 'firstName lastName email phone city state')
+    .populate('farmerId', 'firstName lastName name farmName phone city state')
+    .populate('cropId', 'cropName images price unit')
     .skip(skip)
     .limit(parseInt(limit))
     .sort({ createdAt: -1 });
@@ -790,15 +791,63 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
     if (cancellationReason) {
       order.cancellationReason = cancellationReason;
     }
-    // Restore crop quantity
+    // Restore crop quantity and re-activate listing
     await CropListing.findByIdAndUpdate(order.cropId, {
-      $inc: { quantity: order.quantity }
+      $inc: { quantity: order.quantity, sold: -order.quantity },
+      availability: 'available',
+      status: 'active',
     });
   }
 
   if (orderStatus === 'completed') {
     order.completedAt = new Date();
     order.paymentStatus = 'completed';
+
+    // Update crop inventory & analytics on order completion
+    const crop = await CropListing.findById(order.cropId);
+    if (crop) {
+      const updateFields = {};
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // If quantity reaches 0, mark as soldOut and not_available (wiped from marketplace)
+      if (crop.quantity <= 0) {
+        updateFields.status = 'soldOut';
+        updateFields.availability = 'not_available';
+      }
+
+      const todaySalesEntry = crop.dailySales.find(
+        (ds) => new Date(ds.date).toDateString() === today.toDateString()
+      );
+      if (todaySalesEntry) {
+        await CropListing.findByIdAndUpdate(order.cropId, {
+          ...updateFields,
+          $inc: {
+            'dailySales.$[elem].quantity': order.quantity,
+            'dailySales.$[elem].revenue': order.totalAmount,
+            'monthlyStats.totalRevenue': order.totalAmount,
+            'monthlyStats.totalUnits': order.quantity,
+          },
+        }, {
+          arrayFilters: [{ 'elem.date': { $gte: today, $lt: new Date(today.getTime() + 86400000) } }],
+        });
+      } else {
+        await CropListing.findByIdAndUpdate(order.cropId, {
+          ...updateFields,
+          $push: {
+            dailySales: {
+              date: today,
+              quantity: order.quantity,
+              revenue: order.totalAmount,
+            },
+          },
+          $inc: {
+            'monthlyStats.totalRevenue': order.totalAmount,
+            'monthlyStats.totalUnits': order.quantity,
+          },
+        });
+      }
+    }
   }
 
   await order.save();
