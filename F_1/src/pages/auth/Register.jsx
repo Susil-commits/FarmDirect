@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Mail, Lock, User, Phone, MapPin } from 'lucide-react';
+import { Mail, Lock, User, Phone, MapPin, Home, Building2, MapPinned, Hash } from 'lucide-react';
 import { useRouter } from '../../context/RouterContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -23,7 +23,12 @@ export default function Register() {
     confirmPassword: '',
     phone: '',
     location: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
   });
+  const [addressNA, setAddressNA] = useState(false); // For farmers who mark address as NA
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -73,6 +78,24 @@ export default function Register() {
       newErrors.location = 'Farm location is required for farmers';
     }
 
+    // Address validation - required unless NA is checked
+    if (!addressNA) {
+      if (!formData.address || !formData.address.trim()) {
+        newErrors.address = 'Address is required';
+      }
+      if (!formData.city || !formData.city.trim()) {
+        newErrors.city = 'City is required';
+      }
+      if (!formData.state || !formData.state.trim()) {
+        newErrors.state = 'State is required';
+      }
+      if (!formData.pincode || !formData.pincode.trim()) {
+        newErrors.pincode = 'Pincode is required';
+      } else if (!/^\d{6}$/.test(formData.pincode.trim())) {
+        newErrors.pincode = 'Pincode must be 6 digits';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -83,6 +106,18 @@ export default function Register() {
     // Clear error for this field
     if (errors[name]) {
       setErrors({ ...errors, [name]: '' });
+    }
+  };
+
+  const handleAddressNAToggle = () => {
+    const newNA = !addressNA;
+    setAddressNA(newNA);
+    if (newNA) {
+      // Clear address errors when marking NA
+      setErrors(prev => {
+        const { address, city, state, pincode, ...rest } = prev;
+        return rest;
+      });
     }
   };
 
@@ -106,7 +141,12 @@ export default function Register() {
         password: formData.password,
         phone: formData.phone,
         role: role,
-        ...(role === 'farmer' && { location: formData.location })
+        ...(role === 'farmer' && { location: formData.location }),
+        // Send address fields - if NA, send "NA" as value so backend knows
+        address: addressNA ? 'NA' : formData.address,
+        city: addressNA ? 'NA' : formData.city,
+        state: addressNA ? 'NA' : formData.state,
+        pincode: addressNA ? 'NA' : formData.pincode,
       });
 
       console.log('✅ Registration successful!');
@@ -121,7 +161,12 @@ export default function Register() {
         confirmPassword: '',
         phone: '',
         location: '',
+        address: '',
+        city: '',
+        state: '',
+        pincode: '',
       });
+      setAddressNA(false);
       
       // Clear the form ref to remove data from DOM
       if (formRef.current) {
@@ -146,8 +191,8 @@ export default function Register() {
       }
 
       // Parse specific errors
-      if (errorMessage.toLowerCase().includes('already') || errorMessage.toLowerCase().includes('exist') || errorMessage.toLowerCase().includes('email')) {
-        errorMessage = 'This email is already registered. Please login or use a different email.';
+      if (errorMessage.toLowerCase().includes('already') || errorMessage.toLowerCase().includes('exist') || errorMessage.toLowerCase().includes('email already')) {
+        errorMessage = 'Email already exists. Try a different email.';
         setErrors({ ...errors, email: 'Email already registered' });
       } else if (errorMessage.toLowerCase().includes('validation')) {
         errorMessage = 'Please check all fields and try again.';
@@ -168,7 +213,7 @@ export default function Register() {
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center py-12 px-4 relative">
         <div className="absolute inset-0 premium-gradient"></div>
-        <Card variant="deep" className="w-full max-w-md animate-scale-in relative z-10 bg-white/20 backdrop-blur-lg border border-white/10 shadow-2xl">
+        <Card variant="deep" animated={false} className="w-full max-w-md animate-scale-in relative z-10 bg-white/20 backdrop-blur-lg border border-white/10 shadow-2xl">
           <div className="p-10">
             {/* Back Button */}
             <div className="mb-6">
@@ -283,6 +328,87 @@ export default function Register() {
                   autoComplete="off"
                 />
               )}
+
+              {/* Address Section */}
+              <div className="border-t border-gray-200 pt-4 mt-2">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <Home size={16} className="text-green-600" />
+                    Address Details
+                  </h3>
+                  {role === 'farmer' && (
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={addressNA}
+                        onChange={handleAddressNAToggle}
+                        className="rounded cursor-pointer w-4 h-4 text-green-600"
+                      />
+                      <span className="text-xs text-gray-500">Mark as N/A</span>
+                    </label>
+                  )}
+                </div>
+
+                {!addressNA && (
+                  <div className="space-y-4">
+                    <Input
+                      label="Street Address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      required={!addressNA}
+                      error={errors.address}
+                      glass={true}
+                      autoComplete="street-address"
+                      placeholder="House/Flat No., Street, Area"
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input
+                        label="City"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                        required={!addressNA}
+                        error={errors.city}
+                        glass={true}
+                        autoComplete="address-level2"
+                        placeholder="Enter city"
+                      />
+                      <Input
+                        label="State"
+                        name="state"
+                        value={formData.state}
+                        onChange={handleChange}
+                        required={!addressNA}
+                        error={errors.state}
+                        glass={true}
+                        autoComplete="address-level1"
+                        placeholder="Enter state"
+                      />
+                    </div>
+                    <Input
+                      label="Pincode"
+                      name="pincode"
+                      value={formData.pincode}
+                      onChange={handleChange}
+                      required={!addressNA}
+                      error={errors.pincode}
+                      glass={true}
+                      autoComplete="postal-code"
+                      placeholder="6-digit pincode"
+                      maxLength={6}
+                    />
+                  </div>
+                )}
+
+                {addressNA && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-xs text-amber-800">
+                      ⚠️ You've marked address as N/A. You'll be asked to provide these details during verification.
+                    </p>
+                  </div>
+                )}
+              </div>
 
               <Input
                 label="Password"

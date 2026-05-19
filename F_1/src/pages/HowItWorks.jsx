@@ -1,8 +1,11 @@
 import React from 'react';
 import { CheckCircle, Users, TrendingUp, Award, Zap, Shield } from 'lucide-react';
+import { useRouter } from '../context/RouterContext';
 import PageTransition from '../components/common/PageTransition';
 
 export default function HowItWorks() {
+  const { navigate } = useRouter();
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-gray-50 py-12">
@@ -131,6 +134,23 @@ export default function HowItWorks() {
                   <p className="text-gray-600">{item.desc}</p>
                 </div>
               ))}
+
+          {/* Footer */}
+          <div className="mt-16 pt-8 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+              <button
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold transition-colors cursor-pointer"
+              >
+                ← Back to Home
+              </button>
+              <div className="flex gap-6 text-sm">
+                <button onClick={() => navigate('/pricing')} className="text-gray-600 hover:text-gray-900 transition">Pricing</button>
+                <button onClick={() => navigate('/support')} className="text-gray-600 hover:text-gray-900 transition">Support</button>
+                <button onClick={() => navigate('/contact')} className="text-gray-600 hover:text-gray-900 transition">Contact</button>
+              </div>
+            </div>
+          </div>
             </div>
           </div>
         </div>

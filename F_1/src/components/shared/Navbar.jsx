@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { Menu, X, ShoppingCart, Heart, User, LogOut, Search, Bell, Home, Grid, Settings, Compass, CheckCircle } from 'lucide-react';
+import { Menu, X, ShoppingCart, Heart, User, LogOut, Search, Bell, Home, Grid, Settings, Compass, CheckCircle, MessageCircle } from 'lucide-react';
 import { useRouter } from '../../context/RouterContext';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useChat } from '../../context/ChatContext';
 import Avatar from '../common/Avatar';
 import MiniCart from '../MiniCart';
 import SearchBar from '../SearchBar';
 import EmptyCartWishlistModal from '../common/EmptyCartWishlistModal';
 import NotificationEmptyModal from '../common/NotificationEmptyModal';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
+import NotificationPanel from '../common/NotificationPanel';
 import './Navbar.css';
 
 export default function Navbar() {
@@ -21,11 +23,13 @@ export default function Navbar() {
   const [emptyModalType, setEmptyModalType] = useState('cart'); // 'cart' or 'wishlist'
   const [showNotificationEmpty, setShowNotificationEmpty] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const { navigate, currentRoute } = useRouter();
   const { user, logout } = useAuth();
   const { getTotalItems: getCartTotal } = useCart();
   const { wishlist } = useWishlist();
   const { unreadCount } = useNotifications();
+  const { unreadCount: chatUnreadCount } = useChat();
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleUserMenu = () => setIsUserMenuOpen(!isUserMenuOpen);
@@ -98,10 +102,16 @@ export default function Navbar() {
     }
 
     if (user.role === 'buyer') {
-      return [
-        { id: 'marketplace', label: 'Marketplace', path: '/marketplace' },
-        { id: 'orders', label: 'My Orders', path: '/buyer/dashboard' },
-      ];
+      // Hide marketplace link on verification pages
+      const isVerificationPage = currentRoute && (
+        currentRoute.includes('/verification') || currentRoute.startsWith('/verify')
+      );
+      const items = [];
+      if (!isVerificationPage) {
+        items.push({ id: 'marketplace', label: 'Marketplace', path: '/marketplace' });
+      }
+      items.push({ id: 'orders', label: 'My Orders', path: '/buyer/dashboard' });
+      return items;
     }
 
     if (user.role === 'admin') {
@@ -156,8 +166,11 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Search Bar - Desktop */}
-          {user?.role === 'buyer' && (
+          {/* Search Bar - Desktop (hidden on verification pages) */}
+          {user?.role === 'buyer' &&
+           currentRoute &&
+           !currentRoute.includes('/verification') &&
+           !currentRoute.startsWith('/verify') && (
             <div className="hidden lg:flex items-center flex-1 max-w-sm mx-4">
               <SearchBar />
             </div>
@@ -214,17 +227,27 @@ export default function Navbar() {
             {/* Notifications - All authenticated users */}
             {user && (
               <button
-                onClick={() => {
-                  if (unreadCount === 0) {
-                    setShowNotificationEmpty(true);
-                  } else {
-                    // TODO: Navigate to notifications page or open notifications modal
-                    navigate('/notifications');
-                  }
-                }}
+                onClick={() => handleNavigate('/messages')}
+                className="relative p-2 text-gray-600 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition duration-200 cursor-pointer"
+                title={chatUnreadCount > 0 ? `${chatUnreadCount} unread message${chatUnreadCount > 1 ? 's' : ''}` : "View messages"}
+                aria-label={chatUnreadCount > 0 ? `View ${chatUnreadCount} messages` : "View messages"}
+              >
+                <MessageCircle size={20} />
+                {chatUnreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center font-bold px-1 animate-pulse">
+                    {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Notifications - All authenticated users */}
+            {user && (
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
                 className="relative p-2 text-gray-600 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition duration-200 cursor-pointer"
-                title={unreadCount > 0 ? `${unreadCount} new notification${unreadCount > 1 ? 's' : ''}` : "No new notifications"}
-                aria-label={unreadCount > 0 ? `View ${unreadCount} notifications` : "No notifications"}
+                title={unreadCount > 0 ? `${unreadCount} new notification${unreadCount > 1 ? 's' : ''}` : "View notifications"}
+                aria-label={unreadCount > 0 ? `View ${unreadCount} notifications` : "View notifications"}
               >
                 <Bell size={20} />
                 {unreadCount > 0 && (
@@ -384,26 +407,30 @@ export default function Navbar() {
                   <span className="text-sm font-medium">Home</span>
                 </button>
 
-                {/* Search */}
-                <button
-                  onClick={() => handleNavigate('/marketplace')}
-                  className="w-full px-6 py-3 flex items-center gap-4 text-gray-700 hover:text-green-600 hover:bg-white/10 transition-all duration-200 group cursor-pointer"
-                >
-                  <Search size={22} className="group-hover:scale-110 transition-transform" />
-                  <span className="text-sm font-medium">Search</span>
-                </button>
+                {/* Search - hidden on verification pages */}
+                {!(currentRoute && (currentRoute.includes('/verification') || currentRoute.startsWith('/verify'))) && (
+                  <button
+                    onClick={() => handleNavigate('/marketplace')}
+                    className="w-full px-6 py-3 flex items-center gap-4 text-gray-700 hover:text-green-600 hover:bg-white/10 transition-all duration-200 group cursor-pointer"
+                  >
+                    <Search size={22} className="group-hover:scale-110 transition-transform" />
+                    <span className="text-sm font-medium">Search</span>
+                  </button>
+                )}
 
-                {/* Categories */}
-                <button
-                  onClick={() => handleNavigate('/marketplace')}
-                  className="w-full px-6 py-3 flex items-center gap-4 text-gray-700 hover:text-green-600 hover:bg-white/10 transition-all duration-200 group cursor-pointer"
-                >
-                  <Grid size={22} className="group-hover:scale-110 transition-transform" />
-                  <span className="text-sm font-medium">Categories</span>
-                </button>
+                {/* Categories - hidden on verification pages */}
+                {!(currentRoute && (currentRoute.includes('/verification') || currentRoute.startsWith('/verify'))) && (
+                  <button
+                    onClick={() => handleNavigate('/marketplace')}
+                    className="w-full px-6 py-3 flex items-center gap-4 text-gray-700 hover:text-green-600 hover:bg-white/10 transition-all duration-200 group cursor-pointer"
+                  >
+                    <Grid size={22} className="group-hover:scale-110 transition-transform" />
+                    <span className="text-sm font-medium">Categories</span>
+                  </button>
+                )}
 
-                {/* Marketplace / Browse */}
-                {!user && (
+                {/* Marketplace / Browse - hidden on verification pages */}
+                {!user && !(currentRoute && (currentRoute.includes('/verification') || currentRoute.startsWith('/verify'))) && (
                   <button
                     onClick={handleMarketplaceAccess}
                     className="w-full px-6 py-3 flex items-center gap-4 text-gray-700 hover:text-green-600 hover:bg-white/10 transition-all duration-200 group cursor-pointer"
@@ -413,7 +440,7 @@ export default function Navbar() {
                   </button>
                 )}
 
-                {user?.role === 'buyer' && (
+                {user?.role === 'buyer' && !(currentRoute && (currentRoute.includes('/verification') || currentRoute.startsWith('/verify'))) && (
                   <button
                     onClick={() => handleNavigate('/marketplace')}
                     className="w-full px-6 py-3 flex items-center gap-4 text-gray-700 hover:text-green-600 hover:bg-white/10 transition-all duration-200 group cursor-pointer"
@@ -550,6 +577,14 @@ export default function Navbar() {
         <LogoutConfirmationModal
           onConfirm={handleConfirmLogout}
           onCancel={handleCancelLogout}
+        />
+      )}
+
+      {/* Notification Panel */}
+      {user && (
+        <NotificationPanel
+          isOpen={showNotifications}
+          onClose={() => setShowNotifications(false)}
         />
       )}
     </nav>

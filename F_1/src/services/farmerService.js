@@ -1,122 +1,38 @@
-import axios from 'axios';
-
-const API_BASE = '/api/farmer';
+import api from './api.js';
+import directApi from './directApi.js';
 
 const farmerService = {
   // Dashboard
-  getDashboardStats: async () => {
-    try {
-      const response = await axios.get(`${API_BASE}/dashboard/stats`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
+  getDashboardStats: () => api.get('/farmer/dashboard/stats'),
 
   // Analytics
-  getCropAnalytics: async (period = 'month') => {
-    try {
-      const response = await axios.get(`${API_BASE}/analytics/crops`, {
-        params: { period }
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  getRevenueAnalytics: async (period = 'month') => {
-    try {
-      const response = await axios.get(`${API_BASE}/analytics/revenue`, {
-        params: { period }
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  getCategoryBreakdown: async (period = 'month') => {
-    try {
-      const response = await axios.get(`${API_BASE}/crops/categories-breakdown`, {
-        params: { period }
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  getTopPerformingCrops: async (limit = 10) => {
-    try {
-      const response = await axios.get(`${API_BASE}/crops/top-performing`, {
-        params: { limit }
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
+  getCropAnalytics: (period = 'month') => api.get('/farmer/analytics/crops', { params: { period } }),
+  getRevenueAnalytics: (period = 'month') => api.get('/farmer/analytics/revenue', { params: { period } }),
+  getCategoryBreakdown: (period = 'month') => api.get('/farmer/crops/categories-breakdown', { params: { period } }),
+  getTopPerformingCrops: (limit = 10) => api.get('/farmer/crops/top-performing', { params: { limit } }),
 
   // Inventory
-  getLowStockItems: async () => {
-    try {
-      const response = await axios.get(`${API_BASE}/inventory/low-stock`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
+  getLowStockItems: () => api.get('/farmer/inventory/low-stock'),
+  updateLowStockThreshold: (cropId, threshold) => api.post('/farmer/inventory/update-threshold', { cropId, threshold }),
 
-  updateLowStockThreshold: async (cropId, threshold) => {
-    try {
-      const response = await axios.post(`${API_BASE}/inventory/update-threshold`, {
-        cropId,
-        threshold
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  },
-
-  // Bulk Operations
-  bulkUploadCrops: async (file) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const response = await axios.post(`${API_BASE}/crops/bulk-upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+  // Bulk Operations — use directApi to bypass Vite proxy for file uploads
+  bulkUploadCrops: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return directApi.post('/farmer/crops/bulk-upload', formData).then(r => r.data);
   },
 
   getExportTemplate: async () => {
-    try {
-      const response = await axios.get(`${API_BASE}/crops/export-template`, {
-        responseType: 'blob'
-      });
-      
-      // Create download link
-      const url = window.URL.createObjectURL(response.data);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'crop-upload-template.csv');
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      return { success: true, message: 'Template downloaded' };
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+    const response = await api.get('/farmer/crops/export-template', { responseType: 'blob' });
+    const url = window.URL.createObjectURL(response);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'crop-upload-template.csv');
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    return { success: true, message: 'Template downloaded' };
   }
 };
 

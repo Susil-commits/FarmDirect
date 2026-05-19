@@ -27,7 +27,7 @@ export default function SearchBar() {
     const fetchCrops = async () => {
       try {
         const response = await cropService.getAllCrops();
-        setCrops(response.data?.crops || response.crops || []);
+        setCrops(response.crops || response.data?.crops || []);
       } catch (error) {
         console.error('Failed to fetch crops for search:', error);
       }
@@ -165,7 +165,7 @@ export default function SearchBar() {
                           role="option"
                         >
                           <div className="result-image">
-                            {crop.image && crop.image.startsWith('http') ? (
+                            {crop.image && (crop.image.startsWith('http') || crop.image.startsWith('/')) ? (
                               <img src={crop.image} alt={crop.name} />
                             ) : (
                               <span>{crop.image || '🥬'}</span>

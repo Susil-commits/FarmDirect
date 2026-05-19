@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from '../../context/RouterContext';
 import { useAuth } from '../../context/AuthContext';
+import { authServiceExtended } from '../../services/appService';
 import OnboardingWizard from '../onboarding/OnboardingWizard';
 import {
   WelcomeStep,
@@ -69,32 +70,32 @@ export default function OnboardingFlow() {
         validate: async (data) => {
           const errors = {};
 
-          if (!stepData.fullName?.trim()) {
+          if (!data.fullName?.trim()) {
             errors.fullName = 'Full name is required';
           }
 
-          if (!stepData.email?.trim()) {
+          if (!data.email?.trim()) {
             errors.email = 'Email is required';
-          } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(stepData.email)) {
+          } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
             errors.email = 'Please enter a valid email';
           }
 
-          if (!stepData.phone?.trim()) {
+          if (!data.phone?.trim()) {
             errors.phone = 'Phone number is required';
           }
 
-          if (!stepData.password) {
+          if (!data.password) {
             errors.password = 'Password is required';
-          } else if (stepData.password.length < 8) {
+          } else if (data.password.length < 8) {
             errors.password = 'Password must be at least 8 characters';
           }
 
-          if (stepData.password !== stepData.confirmPassword) {
+          if (data.password !== data.confirmPassword) {
             errors.confirmPassword = 'Passwords do not match';
           }
 
           return errors;
-        },
+        }
       },
       {
         id: 'profile',
@@ -106,7 +107,8 @@ export default function OnboardingFlow() {
     ];
 
     // Add buyer-specific steps
-    if (data.role === 'buyer' || data.role === 'both') {
+    const role = commonSteps[0]?.role || userRole;
+    if (role === 'buyer' || role === 'both') {
       commonSteps.splice(3, 0, {
         id: 'address',
         label: 'Address',
@@ -133,7 +135,7 @@ export default function OnboardingFlow() {
     }
 
     // Add farmer-specific steps
-    if (data.role === 'farmer' || data.role === 'both') {
+    if (role === 'farmer' || role === 'both') {
       commonSteps.push({
         id: 'farm',
         label: 'Farm',
@@ -193,18 +195,7 @@ export default function OnboardingFlow() {
 
     try {
       // Call API to complete onboarding
-      const response = await fetch('/api/auth/complete-onboarding', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to complete onboarding');
-      }
+      await authServiceExtended.completeOnboarding(formData);
 
       // Refresh user data and navigate to role-based dashboard
       await refreshAll();

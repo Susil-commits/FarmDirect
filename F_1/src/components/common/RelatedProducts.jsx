@@ -123,7 +123,7 @@ function RelatedProductCard({
     >
       {/* Image */}
       <div className="relative h-40 bg-gray-100 overflow-hidden">
-        {product.image && product.image.startsWith('http') ? (
+        {product.image && (product.image.startsWith('http') || product.image.startsWith('/')) ? (
           <img
             src={product.image}
             alt={product.name}

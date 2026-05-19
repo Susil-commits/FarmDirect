@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
+import { adminService } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import Card from '../../components/common/Card';
 import LogoutConfirmationModal from '../../components/common/LogoutConfirmationModal';
-import { Package, AlertTriangle, LogOut, Menu, Search, Eye, Trash2, Users, BarChart3, Lock, Unlock } from 'lucide-react';
+import { Package, AlertTriangle, LogOut, Menu, Search, Eye, Trash2, Users, BarChart3, Lock, Unlock, CheckCircle, XCircle } from 'lucide-react';
 
 export default function AdminCrops() {
   const { user, logout } = useAuth();
@@ -15,10 +16,13 @@ export default function AdminCrops() {
   const [loading, setLoading] = useState(true);
   const [showFreezeModal, setShowFreezeModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [selectedCrop, setSelectedCrop] = useState(null);
   const [freezeReason, setFreezeReason] = useState('');
   const [deleteReason, setDeleteReason] = useState('');
+  const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
@@ -28,16 +32,8 @@ export default function AdminCrops() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-
-      const cropsRes = await fetch('/api/admin/crops', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (cropsRes.ok) {
-        const data = await cropsRes.json();
-        setAllCrops(data.data || []);
-      }
+      const data = await adminService.getAllCrops();
+      setAllCrops(data.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -59,25 +55,11 @@ export default function AdminCrops() {
 
     try {
       setActionLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/crops/${selectedCrop._id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ reason: deleteReason })
-      });
-
-      if (response.ok) {
-        alert(`✅ Crop "${selectedCrop.cropName}" has been deleted`);
-        setShowDeleteModal(false);
-        setDeleteReason('');
-        await fetchData();
-      } else {
-        const data = await response.json();
-        alert(`❌ Error: ${data.message}`);
-      }
+      await adminService.deleteCrop(selectedCrop._id, deleteReason);
+      alert(`✅ Crop "${selectedCrop.cropName}" has been deleted`);
+      setShowDeleteModal(false);
+      setDeleteReason('');
+      await fetchData();
     } catch (error) {
       console.error('Error deleting crop:', error);
       alert('❌ Error deleting crop');
@@ -100,28 +82,63 @@ export default function AdminCrops() {
 
     try {
       setActionLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/crops/${selectedCrop._id}/freeze`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ reason: freezeReason })
-      });
-
-      if (response.ok) {
-        alert(`✅ Crop "${selectedCrop.cropName}" has been frozen`);
-        setShowFreezeModal(false);
-        setFreezeReason('');
-        await fetchData();
-      } else {
-        const data = await response.json();
-        alert(`❌ Error: ${data.message}`);
-      }
+      await adminService.freezeCrop(selectedCrop._id, freezeReason);
+      alert(`✅ Crop "${selectedCrop.cropName}" has been frozen`);
+      setShowFreezeModal(false);
+      setFreezeReason('');
+      await fetchData();
     } catch (error) {
       console.error('Error freezing crop:', error);
-      alert('❌ Error freezing crop');
+      alert(`❌ Error: ${error.response?.data?.message || 'Error freezing crop'}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Handle approve crop
+  const handleApproveClick = (crop) => {
+    setSelectedCrop(crop);
+    setShowApproveModal(true);
+  };
+
+  const handleSubmitApprove = async () => {
+    try {
+      setActionLoading(true);
+      await adminService.approveCrop(selectedCrop._id);
+      alert(`✅ Crop "${selectedCrop.cropName}" has been approved!`);
+      setShowApproveModal(false);
+      await fetchData();
+    } catch (error) {
+      console.error('Error approving crop:', error);
+      alert(`❌ Error: ${error.response?.data?.message || 'Error approving crop'}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Handle reject crop
+  const handleRejectClick = (crop) => {
+    setSelectedCrop(crop);
+    setRejectReason('');
+    setShowRejectModal(true);
+  };
+
+  const handleSubmitReject = async () => {
+    if (!rejectReason.trim()) {
+      alert('⚠️ Please provide a reason for rejection');
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      await adminService.rejectCrop(selectedCrop._id, rejectReason);
+      alert(`✅ Crop "${selectedCrop.cropName}" has been rejected`);
+      setShowRejectModal(false);
+      setRejectReason('');
+      await fetchData();
+    } catch (error) {
+      console.error('Error rejecting crop:', error);
+      alert(`❌ Error: ${error.response?.data?.message || 'Error rejecting crop'}`);
     } finally {
       setActionLoading(false);
     }
@@ -308,7 +325,45 @@ export default function AdminCrops() {
                           <p className="text-xs text-gray-600 line-clamp-2 mb-4">{crop.description}</p>
                         )}
 
-                        <div className="flex gap-2">
+                        <div className="mb-3 flex items-center gap-2">
+                          <span className="text-xs font-semibold text-gray-600">Status:</span>
+                          <span className={`px-2 py-1 rounded text-xs font-bold ${
+                            crop.listingApprovalStatus === 'approved' ? 'bg-green-100 text-green-800' :
+                            crop.listingApprovalStatus === 'rejected' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {crop.listingApprovalStatus?.toUpperCase() || 'PENDING'}
+                          </span>
+                        </div>
+
+                        {crop.listingApprovalStatus === 'rejected' && crop.rejectionReason && (
+                          <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                            <p className="font-semibold">Rejection Reason:</p>
+                            <p>{crop.rejectionReason}</p>
+                          </div>
+                        )}
+
+                        <div className="flex gap-2 flex-wrap">
+                          {crop.listingApprovalStatus === 'pending' && (
+                            <>
+                              <button 
+                                onClick={() => handleApproveClick(crop)}
+                                disabled={actionLoading}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-green-100 hover:bg-green-200 disabled:bg-gray-200 text-green-700 rounded-lg transition text-sm font-semibold"
+                                title="Approve crop"
+                              >
+                                <CheckCircle size={16} /> Approve
+                              </button>
+                              <button 
+                                onClick={() => handleRejectClick(crop)}
+                                disabled={actionLoading}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-100 hover:bg-red-200 disabled:bg-gray-200 text-red-700 rounded-lg transition text-sm font-semibold"
+                                title="Reject crop"
+                              >
+                                <XCircle size={16} /> Reject
+                              </button>
+                            </>
+                          )}
                           <button 
                             onClick={() => handleFreezeClick(crop)}
                             disabled={actionLoading}
@@ -430,6 +485,103 @@ export default function AdminCrops() {
                   className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition"
                 >
                   {actionLoading ? 'Processing...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Approve Crop Modal */}
+      {showApproveModal && selectedCrop && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="max-w-md w-full">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <CheckCircle size={24} className="text-green-600" /> Approve Crop
+              </h3>
+              <p className="text-sm text-gray-600 mb-6">
+                You are about to approve <strong>{selectedCrop.cropName}</strong>. This will make it visible to all buyers.
+              </p>
+              
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-6">
+                <p className="text-sm text-green-800">
+                  <strong>Farmer Notification:</strong> The farmer will be notified that their crop has been approved.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowApproveModal(false);
+                  }}
+                  disabled={actionLoading}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition disabled:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitApprove}
+                  disabled={actionLoading}
+                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition"
+                >
+                  {actionLoading ? 'Processing...' : 'Approve'}
+                </button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Reject Crop Modal */}
+      {showRejectModal && selectedCrop && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="max-w-md w-full">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <XCircle size={24} className="text-red-600" /> Reject Crop
+              </h3>
+              <p className="text-sm text-gray-600 mb-6">
+                You are about to reject <strong>{selectedCrop.cropName}</strong>. The farmer can resubmit after fixing the issues.
+              </p>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Rejection Reason *
+                </label>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Explain why this crop listing is being rejected..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm resize-none"
+                  rows="4"
+                  disabled={actionLoading}
+                />
+              </div>
+
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-6">
+                <p className="text-sm text-red-800">
+                  <strong>Farmer Notification:</strong> The farmer will be notified of the rejection with the reason provided.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setRejectReason('');
+                  }}
+                  disabled={actionLoading}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition disabled:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitReject}
+                  disabled={actionLoading || !rejectReason.trim()}
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition"
+                >
+                  {actionLoading ? 'Processing...' : 'Reject'}
                 </button>
               </div>
             </div>

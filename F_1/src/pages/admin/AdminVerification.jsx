@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Clock, Download, Eye, FileText, Lock, Trash2 } from 'lucide-react';
+import { adminService } from '../../services/appService';
+import { CheckCircle, XCircle, Clock, Eye, FileText, Lock, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 import Card from '../../components/common/Card';
@@ -32,16 +33,64 @@ export default function AdminVerification() {
   const fetchVerificationRequests = async () => {
     try {
       _setLoading(true);
-      // TODO: Replace with actual API call
-      // const response = await adminService.getPendingKYC();
-      // setVerificationRequests(response.data || []);
-      setVerificationRequests([]);
+      // Fetch both farmers and buyers for KYC review
+      const [pendingFarmers, pendingBuyers, rejectedFarmers, rejectedBuyers] = await Promise.all([
+        adminService.getPendingKYC({ role: 'farmer' }),
+        adminService.getPendingKYC({ role: 'buyer' }),
+        adminService.getRejectedKYC({ role: 'farmer' }),
+        adminService.getRejectedKYC({ role: 'buyer' })
+      ]);
+      
+      const mapUser = (u, status, extra = {}) => ({
+        ...u,
+        id: u._id || u.id,
+        name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim(),
+        email: u.email || '',
+        type: u.role || 'farmer',
+        status,
+        submittedDate: u.kycSubmittedAt ? new Date(u.kycSubmittedAt).toLocaleDateString() : 'N/A',
+        documents: mapKYCDocuments(u.kycDocuments || {}),
+        userId: u._id || u.id,
+        accountStatus: u.status || 'active',
+        ...extra
+      });
+      
+      const pendingFarmersList = (pendingFarmers.data?.data || pendingFarmers.data || []);
+      const pendingBuyersList = (pendingBuyers.data?.data || pendingBuyers.data || []);
+      const rejectedFarmersList = (rejectedFarmers.data?.data || rejectedFarmers.data || []);
+      const rejectedBuyersList = (rejectedBuyers.data?.data || rejectedBuyers.data || []);
+      
+      const pendingUsers = [
+        ...pendingFarmersList.map(u => mapUser(u, 'pending')),
+        ...pendingBuyersList.map(u => mapUser(u, 'pending'))
+      ];
+      const rejectedUsers = [
+        ...rejectedFarmersList.map(u => mapUser(u, 'rejected', { rejectionReason: u.kycRejectionReason || 'No reason provided' })),
+        ...rejectedBuyersList.map(u => mapUser(u, 'rejected', { rejectionReason: u.kycRejectionReason || 'No reason provided' }))
+      ];
+      
+      setVerificationRequests([...pendingUsers, ...rejectedUsers]);
     } catch (error) {
       console.error('Failed to fetch verification requests:', error);
       setVerificationRequests([]);
     } finally {
       _setLoading(false);
     }
+  };
+
+  const mapKYCDocuments = (kycDocs) => {
+    const docs = [];
+    if (kycDocs.governmentId?.url) docs.push({ name: 'Government ID', icon: '🆔', status: 'verified', url: kycDocs.governmentId.url });
+    if (kycDocs.profilePhoto?.url) docs.push({ name: 'Profile Photo', icon: '📷', status: 'verified', url: kycDocs.profilePhoto.url });
+    if (kycDocs.addressProof?.url) docs.push({ name: 'Address Proof', icon: '🏠', status: 'verified', url: kycDocs.addressProof.url });
+    if (kycDocs.landOwnership?.url) docs.push({ name: 'Land Ownership', icon: '🌾', status: 'verified', url: kycDocs.landOwnership.url });
+    if (kycDocs.farmRegistration?.url) docs.push({ name: 'Farm Registration', icon: '📋', status: 'verified', url: kycDocs.farmRegistration.url });
+    if (kycDocs.businessRegistration?.url) docs.push({ name: 'Business Registration', icon: '🏢', status: 'verified', url: kycDocs.businessRegistration.url });
+    if (kycDocs.bankDetails?.url) docs.push({ name: 'Bank Details', icon: '🏦', status: 'verified', url: kycDocs.bankDetails.url });
+    if (kycDocs.taxId?.url) docs.push({ name: 'Tax ID', icon: '🧾', status: 'verified', url: kycDocs.taxId.url });
+    if (kycDocs.bankAccount?.url) docs.push({ name: 'Bank Account', icon: '💳', status: 'verified', url: kycDocs.bankAccount.url });
+    if (kycDocs.landSurvey?.url) docs.push({ name: 'Land Survey', icon: '🗺️', status: 'verified', url: kycDocs.landSurvey.url });
+    return docs;
   };
 
   // Redirect non-admins
@@ -60,70 +109,91 @@ export default function AdminVerification() {
     );
   }
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (!selectedRequest) return;
-    setVerificationRequests(prev =>
-      prev.map(req =>
-        req.id === selectedRequest.id
-          ? { ...req, status: 'verified', verifiedDate: new Date().toLocaleDateString(), accountStatus: 'active' }
-          : req
-      )
-    );
-    
-    // Trigger congratulation modal for the verified user
-    if (selectedRequest.userId) {
-      localStorage.setItem(`showCongratulation_${selectedRequest.userId}`, 'true');
+    try {
+      await adminService.approveUserKYC(selectedRequest.userId || selectedRequest._id, {});
+      if (selectedRequest.userId || selectedRequest._id) {
+        localStorage.setItem(`showCongratulation_${selectedRequest.userId || selectedRequest._id}`, 'true');
+      }
+      setVerificationRequests(prev =>
+        prev.map(req =>
+          (req.id === selectedRequest.id || req._id === selectedRequest._id)
+            ? { ...req, status: 'verified', verifiedDate: new Date().toLocaleDateString(), accountStatus: 'active' }
+            : req
+        )
+      );
+      setSelectedRequest(null);
+      alert('Verification approved successfully! User will see congratulation on next login.');
+    } catch (error) {
+      console.error('Failed to approve verification:', error);
+      alert('Failed to approve verification: ' + (error.response?.data?.message || error.message));
     }
-    
-    setSelectedRequest(null);
-    alert('Verification approved successfully! User will see congratulation on next login.');
   };
 
-  const handleFreeze = () => {
+  const handleFreeze = async () => {
     if (!selectedRequest) {
       alert('Please select a user first');
       return;
     }
-    setVerificationRequests(prev =>
-      prev.map(req =>
-        req.id === selectedRequest.id
-          ? { ...req, accountStatus: 'frozen' }
-          : req
-      )
-    );
-    setShowFreezeModal(false);
-    alert(`Account for ${selectedRequest.name} has been frozen.`);
+    try {
+      await adminService.toggleUserStatus(selectedRequest.userId || selectedRequest._id, 'suspended', 'Account frozen by admin');
+      setVerificationRequests(prev =>
+        prev.map(req =>
+          (req.id === selectedRequest.id || req._id === selectedRequest._id)
+            ? { ...req, accountStatus: 'frozen' }
+            : req
+        )
+      );
+      setShowFreezeModal(false);
+      alert(`Account for ${selectedRequest.name} has been frozen.`);
+    } catch (error) {
+      console.error('Failed to freeze account:', error);
+      alert('Failed to freeze account: ' + (error.response?.data?.message || error.message));
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!selectedRequest) {
       alert('Please select a user first');
       return;
     }
-    setVerificationRequests(prev =>
-      prev.filter(req => req.id !== selectedRequest.id)
-    );
-    setShowDeleteModal(false);
-    setSelectedRequest(null);
-    alert(`Account for ${selectedRequest.name} has been deleted along with all associated data.`);
+    try {
+      await adminService.deleteUser(selectedRequest.userId || selectedRequest._id, 'Deleted by admin from verification panel');
+      setVerificationRequests(prev =>
+        prev.filter(req => req.id !== selectedRequest.id && req._id !== selectedRequest._id)
+      );
+      setShowDeleteModal(false);
+      setSelectedRequest(null);
+      alert(`Account for ${selectedRequest.name} has been deleted along with all associated data.`);
+    } catch (error) {
+      console.error('Failed to delete account:', error);
+      alert('Failed to delete account: ' + (error.response?.data?.message || error.message));
+    }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!selectedRequest || !rejectionReason.trim()) {
       alert('Please provide a rejection reason');
       return;
     }
-    setVerificationRequests(prev =>
-      prev.map(req =>
-        req.id === selectedRequest.id
-          ? { ...req, status: 'rejected', rejectionReason: rejectionReason }
-          : req
-      )
-    );
-    setSelectedRequest(null);
-    setRejectionReason('');
-    setShowRejectionModal(false);
-    alert('Verification rejected successfully!');
+    try {
+      await adminService.rejectUserKYC(selectedRequest.userId || selectedRequest._id, { reason: rejectionReason });
+      setVerificationRequests(prev =>
+        prev.map(req =>
+          (req.id === selectedRequest.id || req._id === selectedRequest._id)
+            ? { ...req, status: 'rejected', rejectionReason: rejectionReason }
+            : req
+        )
+      );
+      setSelectedRequest(null);
+      setRejectionReason('');
+      setShowRejectionModal(false);
+      alert('Verification rejected successfully!');
+    } catch (error) {
+      console.error('Failed to reject verification:', error);
+      alert('Failed to reject verification: ' + (error.response?.data?.message || error.message));
+    }
   };
 
   const filteredRequests = verificationRequests.filter(req => req.status === activeTab);
@@ -469,3 +539,4 @@ export default function AdminVerification() {
     </div>
   );
 }
+

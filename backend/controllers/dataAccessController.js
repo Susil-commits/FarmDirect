@@ -12,6 +12,7 @@ import User from '../models/User.js';
 export const getFarmerCrops = asyncHandler(async (req, res) => {
   // Farmers see only their own crops
   const crops = await CropListing.find({ farmerId: req.user._id })
+    .lean()
     .populate('farmerId', 'name email kycStatus')
     .sort({ createdAt: -1 });
 
@@ -25,13 +26,14 @@ export const getFarmerCrops = asyncHandler(async (req, res) => {
 export const getFarmerOrders = asyncHandler(async (req, res) => {
   // Farmers see orders where they are a seller
   const orders = await Order.find({ 'items.farmerId': req.user._id })
+    .lean()
     .populate('buyerId', 'name email phone')
     .populate('items.cropId', 'cropName price')
     .populate('items.farmerId', 'name email')
     .sort({ createdAt: -1 });
 
   const farmerOrders = orders.map(order => ({
-    ...order.toObject(),
+    ...order,
     items: order.items.filter(item => item.farmerId._id.toString() === req.user._id.toString())
   }));
 
@@ -49,10 +51,10 @@ export const getFarmerOrders = asyncHandler(async (req, res) => {
 
 export const getFarmerEarnings = asyncHandler(async (req, res) => {
   // Get farmer's total earnings
-  const orders = await Order.find({ 
+  const orders = await Order.find({
     'items.farmerId': req.user._id,
     orderStatus: 'completed'
-  }).populate('items.cropId');
+  }).lean().populate('items.cropId');
 
   let totalEarnings = 0;
   let orderCount = 0;
@@ -79,9 +81,10 @@ export const getFarmerEarnings = asyncHandler(async (req, res) => {
 // ============ BUYER ENDPOINTS ============
 export const getBuyerApprovedCrops = asyncHandler(async (req, res) => {
   // Buyers see only approved crops from verified farmers
-  const crops = await CropListing.find({ 
+  const crops = await CropListing.find({
     listingApprovalStatus: 'approved'
   })
+    .lean()
     .populate({
       path: 'farmerId',
       match: { kycStatus: 'verified' },
@@ -102,6 +105,7 @@ export const getBuyerApprovedCrops = asyncHandler(async (req, res) => {
 export const getBuyerOrders = asyncHandler(async (req, res) => {
   // Buyers see only their own orders
   const orders = await Order.find({ buyerId: req.user._id })
+    .lean()
     .populate({
       path: 'items.farmerId',
       select: 'name email phone rating'
@@ -167,6 +171,7 @@ export const getPublicApprovedCrops = asyncHandler(async (req, res) => {
   }
 
   const crops = await CropListing.find(query)
+    .lean()
     .populate({
       path: 'farmerId',
       match: { kycStatus: 'verified' },
@@ -208,7 +213,7 @@ export const getPublicFarmerProfile = asyncHandler(async (req, res) => {
   const crops = await CropListing.find({
     farmerId,
     listingApprovalStatus: 'approved'
-  }).select('cropName price description quantity images');
+  }).lean().select('cropName price description quantity images');
 
   res.status(200).json({
     success: true,
@@ -242,6 +247,7 @@ export const searchCrops = asyncHandler(async (req, res) => {
   if (sortBy === 'popular') sort = { 'popularity': -1 };
 
   const crops = await CropListing.find(query)
+    .lean()
     .populate({
       path: 'farmerId',
       match: { kycStatus: 'verified' },
@@ -270,6 +276,7 @@ export const getAdminAllCrops = asyncHandler(async (req, res) => {
   }
 
   const crops = await CropListing.find(query)
+    .lean()
     .populate('farmerId', 'name email kycStatus')
     .sort({ createdAt: -1 });
 
@@ -290,6 +297,7 @@ export const getAdminAllCrops = asyncHandler(async (req, res) => {
 export const getAdminAllOrders = asyncHandler(async (req, res) => {
   // Admin sees all orders with detailed info
   const orders = await Order.find()
+    .lean()
     .populate('buyerId', 'name email phone')
     .populate('items.farmerId', 'name email')
     .populate('items.cropId', 'cropName price')
@@ -324,6 +332,7 @@ export const getAdminUsersByRole = asyncHandler(async (req, res) => {
   }
 
   const users = await User.find({ role })
+    .lean()
     .select('-password')
     .sort({ createdAt: -1 });
 

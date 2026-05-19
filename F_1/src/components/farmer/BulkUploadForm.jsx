@@ -272,10 +272,10 @@ export default function BulkUploadForm({ onUploadSuccess, onDownloadTemplate }) 
           <div className="bg-gray-100 p-4 rounded-lg overflow-x-auto">
             <pre className="text-xs text-gray-800 font-mono">
 {`cropName,category,price,quantity,unit,description,discount
-Tomato,Vegetables,50,100,kg,Fresh red tomatoes,10
-Carrot,Vegetables,30,200,kg,Organic carrots,5
-Apple,Fruits,80,150,kg,Sweet red apples,0
-Wheat,Grains,25,500,kg,Fresh wheat grains,0`}
+Tomato,vegetables,50,100,kg,Fresh red tomatoes,10
+Carrot,vegetables,30,200,kg,Organic carrots,5
+Apple,fruits,80,150,kg,Sweet red apples,0
+Wheat,grains,25,500,kg,Fresh wheat grains,0`}
             </pre>
           </div>
         </div>

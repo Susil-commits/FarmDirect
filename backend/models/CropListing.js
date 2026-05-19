@@ -12,14 +12,21 @@ const cropListingSchema = new mongoose.Schema(
       required: [true, 'Crop name is required'],
       trim: true
     },
+    // Crop Type: Vegetables or Crops (Grains/Pulses/etc.)
+    cropType: {
+      type: String,
+      required: [true, 'Crop type is required'],
+      enum: ['vegetables', 'crops'],
+      default: 'vegetables'
+    },
     category: {
       type: String,
       required: [true, 'Category is required'],
-      enum: ['Vegetables', 'Fruits', 'Grains', 'Pulses', 'Spices', 'Dairy', 'Meat', 'Seeds', 'Herbs', 'Other']
+      enum: ['vegetables', 'fruits', 'grains', 'pulses', 'spices', 'dairy', 'meat', 'seeds', 'herbs', 'other']
     },
     price: {
       type: Number,
-      required: [true, 'Price is required'],
+      required: [true, 'Price per kg is required'],
       min: 0
     },
     originalPrice: {
@@ -47,6 +54,18 @@ const cropListingSchema = new mongoose.Schema(
         type: String
       }
     ],
+    // Pickup location (farmer's location for buyer to collect)
+    pickupLocation: {
+      type: String,
+      required: [true, 'Pickup location is required'],
+      trim: true
+    },
+    // Farmer's contact number for buyer to reach out
+    contactNumber: {
+      type: String,
+      required: [true, 'Contact number is required'],
+      trim: true
+    },
     discount: {
       type: Number,
       default: 0,
@@ -83,12 +102,43 @@ const cropListingSchema = new mongoose.Schema(
       enum: ['active', 'inactive', 'soldOut'],
       default: 'active'
     },
+    // Availability: available or not_available (after order completed)
+    availability: {
+      type: String,
+      enum: ['available', 'not_available'],
+      default: 'available'
+    },
     listingApprovalStatus: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],
-      default: 'pending'
+      default: 'approved' // Auto-approved since KYC is done
     },
     rejectionReason: String,
+    
+    // Interested buyers tracking
+    interestedBuyers: [
+      {
+        buyerId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+          required: true
+        },
+        status: {
+          type: String,
+          enum: ['interested', 'uninterested', 'ordered'],
+          default: 'interested'
+        },
+        interestedAt: {
+          type: Date,
+          default: Date.now
+        },
+        orderId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Order',
+          default: null
+        }
+      }
+    ],
     
     // Metrics
     views: {
@@ -139,13 +189,16 @@ const cropListingSchema = new mongoose.Schema(
 // Indexes for optimization
 cropListingSchema.index({ farmerId: 1 });
 cropListingSchema.index({ category: 1 });
+cropListingSchema.index({ cropType: 1 });
 cropListingSchema.index({ status: 1 });
+cropListingSchema.index({ availability: 1 });
 cropListingSchema.index({ listingApprovalStatus: 1 });
 cropListingSchema.index({ cropName: 'text', description: 'text' });
 cropListingSchema.index({ createdAt: -1 });
 cropListingSchema.index({ farmerId: 1, createdAt: -1 });
 cropListingSchema.index({ farmerId: 1, status: 1 });
-cropListingSchema.index({ quantity: 1 }); // For low-stock queries
+cropListingSchema.index({ quantity: 1 });
+cropListingSchema.index({ 'interestedBuyers.buyerId': 1 });
 
 const CropListing = mongoose.model('CropListing', cropListingSchema);
 export default CropListing;

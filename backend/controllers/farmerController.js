@@ -13,7 +13,7 @@ export const getDashboardStats = async (req, res, next) => {
     const farmerId = req.user._id;
     
     // Fetch all crops for this farmer
-    const crops = await CropListing.find({ farmerId });
+    const crops = await CropListing.find({ farmerId }).lean();
     
     // Fetch all orders where farmer is the seller
     const orders = await Order.find({ farmerId })

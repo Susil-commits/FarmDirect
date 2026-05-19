@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
+import { adminService } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import Card from '../../components/common/Card';
 import LogoutConfirmationModal from '../../components/common/LogoutConfirmationModal';
@@ -14,7 +15,9 @@ export default function AdminUsers() {
   const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterRole, setFilterRole] = useState('all');
+  const [filterVerified, setFilterVerified] = useState('all'); // 'all', 'verified', 'unverified'
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showPasswords, setShowPasswords] = useState({});
 
   // Reset scroll position to top on page load
   useEffect(() => {
@@ -28,16 +31,8 @@ export default function AdminUsers() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-
-      const usersRes = await fetch('/api/admin/users-with-crops', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (usersRes.ok) {
-        const data = await usersRes.json();
-        setAllUsers(data.data || []);
-      }
+      const data = await adminService.getUsersWithCrops();
+      setAllUsers(data.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -65,8 +60,6 @@ export default function AdminUsers() {
     );
   }
 
-  const [showPasswords, setShowPasswords] = useState({});
-
   const togglePasswordVisibility = (userId) => {
     setShowPasswords(prev => ({
       ...prev,
@@ -77,14 +70,8 @@ export default function AdminUsers() {
   const handleDeleteUser = async (userId) => {
     if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        await fetchData();
-      }
+      await adminService.deleteUser(userId);
+      await fetchData();
     } catch (error) {
       console.error('Error deleting user:', error);
     }
@@ -93,29 +80,29 @@ export default function AdminUsers() {
   const handleHideUser = async (userId) => {
     if (!window.confirm('Hide this user from the platform?')) return;
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/users/${userId}`, {
-        method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'hidden' })
-      });
-      if (response.ok) {
-        await fetchData();
-      }
+      await adminService.toggleUserStatus(userId, 'hidden');
+      await fetchData();
     } catch (error) {
       console.error('Error hiding user:', error);
     }
   };
 
   const filteredUsers = allUsers.filter(u => {
-    // Only show verified users (approved KYC)
-    const isVerified = u.kycStatus === 'verified' || u.role === 'admin';
+    // Filter by verification status
+    let verificationMatches = true;
+    if (filterVerified === 'verified') {
+      verificationMatches = u.kycStatus === 'verified' || u.role === 'admin';
+    } else if (filterVerified === 'unverified') {
+      verificationMatches = u.kycStatus !== 'verified' && u.role !== 'admin';
+    }
+    // 'all' shows both verified and unverified
+
     const matchesRole = filterRole === 'all' || u.role === filterRole;
     const matchesSearch = !searchQuery || 
       u.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.email?.toLowerCase().includes(searchQuery.toLowerCase());
-    return isVerified && matchesRole && matchesSearch;
+    return verificationMatches && matchesRole && matchesSearch;
   });
 
   return (
@@ -221,8 +208,8 @@ export default function AdminUsers() {
               })()}
 
               <Card className="bg-white">
-                <div className="p-4 flex gap-4">
-                  <div className="flex-1 relative">
+                <div className="p-4 flex gap-4 flex-wrap">
+                  <div className="flex-1 relative min-w-[250px]">
                     <Search className="absolute left-3 top-3 text-gray-400" size={18} />
                     <input
                       type="text"
@@ -240,6 +227,15 @@ export default function AdminUsers() {
                     <option value="all">All Users</option>
                     <option value="farmer">Farmers</option>
                     <option value="buyer">Buyers</option>
+                  </select>
+                  <select
+                    value={filterVerified}
+                    onChange={(e) => setFilterVerified(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="verified">Verified Only</option>
+                    <option value="unverified">Unverified Only</option>
                   </select>
                 </div>
               </Card>
@@ -262,7 +258,7 @@ export default function AdminUsers() {
                             <h3 className="text-lg font-bold text-gray-900">{usr.firstName} {usr.lastName}</h3>
                             <p className="text-sm text-gray-600">{usr.email}</p>
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 flex-wrap">
                             <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                               usr.status === 'active' ? 'bg-green-100 text-green-700' :
                               usr.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
@@ -275,6 +271,13 @@ export default function AdminUsers() {
                               'bg-blue-100 text-blue-700'
                             }`}>
                               {usr.role?.toUpperCase()}
+                            </span>
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                              usr.kycStatus === 'verified' ? 'bg-emerald-100 text-emerald-700' :
+                              usr.kycStatus === 'pending' ? 'bg-orange-100 text-orange-700' :
+                              'bg-red-100 text-red-700'
+                            }`}>
+                              KYC: {(usr.kycStatus || 'Pending').toUpperCase()}
                             </span>
                           </div>
                         </div>

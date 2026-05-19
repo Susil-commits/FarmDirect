@@ -1,6 +1,41 @@
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useMemo } from 'react';
 
 const RouterContext = createContext();
+
+// Route pattern definitions for parameter extraction
+const ROUTE_PATTERNS = [
+  { pattern: '/crop/', paramName: 'cropId' },
+  { pattern: '/edit-crop/', paramName: 'cropId' },
+  { pattern: '/farmer/', paramName: 'farmerId' },
+  { pattern: '/order/', paramName: 'id' },
+];
+
+function extractParams(routePath) {
+  const params = {};
+
+  // Extract path parameters from known route patterns
+  for (const { pattern, paramName } of ROUTE_PATTERNS) {
+    if (routePath.startsWith(pattern)) {
+      const value = routePath.slice(pattern.length).split('?')[0].split('#')[0];
+      if (value) {
+        params[paramName] = value;
+      }
+      break;
+    }
+  }
+
+  // Extract query parameters (e.g., /search?q=apple)
+  const queryIndex = routePath.indexOf('?');
+  if (queryIndex !== -1) {
+    const queryString = routePath.slice(queryIndex + 1);
+    const searchParams = new URLSearchParams(queryString);
+    for (const [key, value] of searchParams.entries()) {
+      params[key] = value;
+    }
+  }
+
+  return params;
+}
 
 export function RouterProvider({ children }) {
   // Initialize to home (/) on every refresh - routes are NOT persisted
@@ -8,20 +43,33 @@ export function RouterProvider({ children }) {
   const [currentRoute, setCurrentRoute] = useState('/');
 
   const navigate = (path) => {
+    // Handle browser back navigation (navigate(-1))
+    if (path === -1 || path === '-1') {
+      console.log('Navigate: browser back requested');
+      window.history.back();
+      return;
+    }
+
+    // Ensure path is a string
+    const routePath = String(path);
+
     // Skip loading if already on same page
-    console.log('Navigate called:', { from: currentRoute, to: path });
-    if (path === currentRoute) {
+    console.log('Navigate called:', { from: currentRoute, to: routePath });
+    if (routePath === currentRoute) {
       console.log('Same route, skipping navigation');
       return;
     }
     
-    console.log('Updating route to:', path);
-    setCurrentRoute(path);
+    console.log('Updating route to:', routePath);
+    setCurrentRoute(routePath);
     window.scrollTo(0, 0);
   };
 
+  // Compute params from currentRoute whenever it changes
+  const params = useMemo(() => extractParams(currentRoute), [currentRoute]);
+
   return (
-    <RouterContext.Provider value={{ currentRoute, navigate }}>
+    <RouterContext.Provider value={{ currentRoute, navigate, params }}>
       {children}
     </RouterContext.Provider>
   );

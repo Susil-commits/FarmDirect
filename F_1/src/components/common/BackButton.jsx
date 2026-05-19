@@ -5,10 +5,20 @@ export default function BackButton({ label = 'Go Back', className = '' }) {
   const { navigate } = useRouter();
 
   const handleBack = () => {
-    // Try to go to previous history, fallback to home
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
+    // Try to go back in browser history
+    // Using a try-catch as history.back() doesn't always work reliably
+    try {
+      const currentState = window.history.state;
+      // If we have a previous state, use back()
+      if (currentState !== null) {
+        window.history.back();
+      } else {
+        // Fallback to home if no history
+        navigate('/');
+      }
+    } catch (err) {
+      // Fallback to home if history access fails
+      console.log('History back failed, going to home');
       navigate('/');
     }
   };

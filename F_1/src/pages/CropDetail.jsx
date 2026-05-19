@@ -1,92 +1,52 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Heart, ShoppingCart, Star, User, MessageSquare, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { MapPin, Heart, Star, User, CheckCircle, AlertCircle, Loader, Phone, Leaf, Package, MessageCircle, ShoppingCart } from 'lucide-react';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
 import Timeline from '../components/common/Timeline';
 import FarmerDetailCard from '../components/common/FarmerDetailCard';
-import RelatedProducts from '../components/common/RelatedProducts';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
 import LoginPrompt from '../components/modals/LoginPrompt';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
 import { useRecentlyViewed } from '../context/RecentlyViewedContext';
 import { useToast } from '../context/ToastContext';
-import { cropService } from '../services/appService';
+import { useCart } from '../context/CartContext';
+import { cropService, wishlistService, userService } from '../services/appService';
 import '../styles/CropDetail.css';
 
 export default function CropDetail() {
   const { navigate, params } = useRouter();
-  const { isAuthenticated, setRedirectPath } = useAuth();
-  const { addToCart } = useCart();
+  const { isAuthenticated, setRedirectPath, user } = useAuth();
   const { addToRecentlyViewed } = useRecentlyViewed();
   const { addToast } = useToast();
+  const { addToCart } = useCart();
 
   const cropId = params?.cropId || 1;
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isInterested, setIsInterested] = useState(false);
+  const [interestLoading, setInterestLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  const [addedToCart, setAddedToCart] = useState(false);
 
   const [crop, setCrop] = useState(null);
   const [farmer, setFarmer] = useState(null);
+  const [farmerUserId, setFarmerUserId] = useState(null);
 
-  // Sample data for testing
-  const sampleCrop = {
-    id: 1,
-    name: 'Fresh Organic Tomatoes',
-    price: 45,
-    quantity: 150,
-    rating: 4.8,
-    reviews: 24,
-    harvestDate: '22 Mar, 2026',
-    farmLocation: 'Punjab, India',
-    image: 'https://images.unsplash.com/photo-1592841496694-e91a2dbe3534?w=800&h=800&fit=crop',
-    description: 'Fresh, organic tomatoes harvested directly from our farm. No chemical pesticides or fertilizers used. Sourced from sustainable farming practices.',
-    certifications: ['Organic', 'Farm Fresh', 'Pesticide Free', 'Non-GMO'],
-    specifications: {
-      'Harvest Date': '22 Mar, 2026',
-      'Weight per Unit': '1 kg',
-      'Shelf Life': '7-10 days',
-      'Storage': 'Room Temperature',
-      'Origin': 'Punjab, India',
-    },
-    reviews_list: [
-      {
-        name: 'Rajesh Kumar',
-        rating: 5,
-        text: 'Excellent quality tomatoes! Very fresh and delivered within 2 days. Will order again.',
-      },
-      {
-        name: 'Priya Singh',
-        rating: 4.5,
-        text: 'Great taste and good freshness. Reasonable price for organic produce.',
-      },
-    ],
+  const getTimeline = (cropData) => {
+    if (!cropData) return [];
+    const steps = [
+      { title: 'Listed by Farmer', completed: true, timestamp: cropData.createdAt ? new Date(cropData.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : null },
+      { title: 'Available for Interest', completed: cropData.availability === 'available', timestamp: null },
+    ];
+    if (cropData.availability === 'not_available') {
+      steps.push({ title: 'Sold Out', completed: true, timestamp: null });
+    }
+    return steps;
   };
-
-  const sampleFarmer = {
-    name: 'Rajesh Kumar Singh',
-    location: 'Ludhiana, Punjab',
-    joinedDate: 'Jan 2023',
-    totalListings: 12,
-    followers: 234,
-    rating: 4.8,
-    verified: true,
-    image: '👨‍🌾',
-    bio: 'Dedicated organic farmer with 15+ years of experience. Using sustainable farming methods to produce high-quality vegetables.',
-  };
-
-  const timeline = [
-    { title: 'Harvested', completed: true, timestamp: '22 Mar, 6:00 AM' },
-    { title: 'Packed & Ready to Ship', completed: true, timestamp: 'Today 9:00 AM' },
-    { title: 'In Transit', completed: false },
-    { title: 'Delivered to You', completed: false },
-  ];
 
   // Reset scroll position to top on page load
   useEffect(() => {
@@ -99,96 +59,154 @@ export default function CropDetail() {
       try {
         setLoading(true);
         setError(null);
-        let cropData;
-        // Try to fetch from API
-        try {
-          const response = await cropService.getCropById(cropId);
-          cropData = response.data || response;
-          setCrop(cropData);
-        } catch (_apiErr) {
-          // Use sample data for demo
-          console.log('Using sample crop data');
-          cropData = sampleCrop;
-          setCrop(cropData);
-        }
-        
+
+        const response = await cropService.getCropById(cropId);
+        const cropData = response.crop || response.data?.crop || response.data || response;
+        setCrop(cropData);
+
         // Track this view in recently viewed
         if (cropData) {
           addToRecentlyViewed(cropData);
         }
-        
-        setFarmer(sampleFarmer);
+
+        // Fetch farmer details if farmerId is available
+        // farmerId from populate() is an object, so extract _id or use the string directly
+        const rawFarmerId = cropData?.farmerId;
+        const farmerId = (typeof rawFarmerId === 'object' && rawFarmerId !== null)
+          ? (rawFarmerId._id || rawFarmerId.id)
+          : (rawFarmerId || cropData?.farmer?._id || cropData?.farmer);
+        if (farmerId && typeof farmerId === 'string') {
+          setFarmerUserId(farmerId);
+          try {
+            const farmerRes = await userService.getFarmerProfile(farmerId);
+            const farmerData = farmerRes.data?.data || farmerRes.data || farmerRes;
+            setFarmer({
+              name: farmerData.name || `${farmerData.firstName || ''} ${farmerData.lastName || ''}`.trim() || farmerData.farmName || 'Farmer',
+              location: [farmerData.city, farmerData.state].filter(Boolean).join(', ') || farmerData.address || 'India',
+              joinedDate: farmerData.createdAt ? new Date(farmerData.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A',
+              totalListings: farmerData.totalListings ?? 0,
+              totalSales: farmerData.totalSales ?? 0,
+              rating: farmerData.rating ?? 0,
+              reviewCount: farmerData.totalReviews ?? 0,
+              verified: farmerData.kycStatus === 'verified' || farmerData.verified || false,
+              image: farmerData.profilePicture || null,
+              bio: farmerData.bio || 'Dedicated farmer providing fresh, quality produce.',
+              id: farmerData._id || farmerId,
+            });
+          } catch (err) {
+            console.error('Could not fetch farmer profile, using populated data:', err);
+            // Fallback: use the already-populated farmer data from the crop response
+            const populatedFarmer = (typeof cropData?.farmerId === 'object' && cropData?.farmerId !== null)
+              ? cropData.farmerId
+              : null;
+            setFarmer({
+              name: populatedFarmer
+                ? (populatedFarmer.name || `${populatedFarmer.firstName || ''} ${populatedFarmer.lastName || ''}`.trim() || populatedFarmer.farmName || 'Farmer')
+                : 'Farmer',
+              location: populatedFarmer
+                ? ([populatedFarmer.city, populatedFarmer.state].filter(Boolean).join(', ') || populatedFarmer.location || 'India')
+                : (cropData?.pickupLocation || 'India'),
+              joinedDate: 'N/A',
+              totalListings: 0,
+              totalSales: 0,
+              rating: populatedFarmer?.rating || cropData?.rating || 0,
+              reviewCount: 0,
+              verified: false,
+              image: populatedFarmer?.avatar || null,
+              bio: 'Fresh produce from local farming.',
+            });
+          }
+        }
       } catch (err) {
         console.error('Failed to fetch crop:', err);
-        setError('Unable to load crop details');
+        setError('Unable to load crop details. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchCropDetails();
-  }, [cropId, addToRecentlyViewed]);
-
-  // Load wishlist from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('farm-wishlist');
-    if (saved) {
-      try {
-        const wishlist = new Set(JSON.parse(saved));
-        setIsWishlisted(wishlist.has(parseInt(cropId)));
-      } catch (e) {
-        console.error('Failed to load wishlist:', e);
-      }
-    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cropId]);
 
-  const toggleWishlist = () => {
-    const saved = localStorage.getItem('farm-wishlist');
-    const wishlist = saved ? new Set(JSON.parse(saved)) : new Set();
+  // Check wishlist status from API
+  useEffect(() => {
+    const checkWishlistStatus = async () => {
+      try {
+        const response = await wishlistService.checkWishlist(cropId);
+        setIsWishlisted(response.inWishlist || response.data?.inWishlist || false);
+      } catch {
+        setIsWishlisted(false);
+      }
+    };
+    if (cropId) checkWishlistStatus();
+  }, [cropId]);
 
-    if (isWishlisted) {
-      wishlist.delete(parseInt(cropId));
-      setIsWishlisted(false);
-      addToast('Removed from wishlist', 'info');
-    } else {
-      wishlist.add(parseInt(cropId));
-      setIsWishlisted(true);
-      addToast('Added to wishlist!', 'success');
+  // Check if user is interested in this crop
+  useEffect(() => {
+    const checkInterestStatus = async () => {
+      if (!isAuthenticated || user?.role !== 'buyer') return;
+      try {
+        const response = await cropService.getMyInterestedCrops();
+        const interestedCrops = response.crops || response.data?.crops || [];
+        const found = interestedCrops.some(c => (c._id || c.id) === cropId);
+        setIsInterested(found);
+      } catch {
+        setIsInterested(false);
+      }
+    };
+    if (cropId && isAuthenticated) checkInterestStatus();
+  }, [cropId, isAuthenticated, user]);
+
+  const toggleWishlist = async () => {
+    try {
+      if (isWishlisted) {
+        await wishlistService.removeFromWishlist(cropId);
+        setIsWishlisted(false);
+        addToast('Removed from wishlist', 'info');
+      } else {
+        await wishlistService.addToWishlist(cropId);
+        setIsWishlisted(true);
+        addToast('Added to wishlist!', 'success');
+      }
+    } catch {
+      addToast('Failed to update wishlist. Please try again.', 'error');
     }
-
-    localStorage.setItem('farm-wishlist', JSON.stringify([...wishlist]));
   };
 
-  const handleBuyNow = () => {
+  const handleMarkInterested = async () => {
     if (!isAuthenticated) {
-      // Save redirect path for post-login
       setRedirectPath(`/crop/${cropId}`);
       setShowLoginPrompt(true);
       return;
     }
-    // Proceed to checkout
-    navigate('/checkout');
-  };
 
-  const handleAddToCart = () => {
-    if (!crop) return;
+    if (user?.role !== 'buyer') {
+      addToast('Only buyers can mark interest in crops', 'warning');
+      return;
+    }
 
-    addToCart({
-      id: crop.id,
-      name: crop.name,
-      price: crop.price,
-      quantity: quantity,
-      icon: crop.image,
-      farmer: farmer?.name || 'Farmer',
-    });
+    if (user?.kycStatus !== 'verified') {
+      addToast('Please complete your KYC verification first', 'warning');
+      return;
+    }
 
-    setAddedToCart(true);
-    addToast(`${crop.name} added to cart! (${quantity} kg)`, 'success');
-
-    // Reset after 2 seconds
-    setTimeout(() => {
-      setAddedToCart(false);
-    }, 2000);
+    try {
+      setInterestLoading(true);
+      const response = await cropService.toggleInterest(cropId);
+      const newState = response.data?.interested ?? !isInterested;
+      setIsInterested(newState);
+      addToast(
+        newState
+          ? 'Interest marked! The farmer will be notified.'
+          : 'Interest removed.',
+        newState ? 'success' : 'info'
+      );
+    } catch {
+      addToast('Failed to update interest. Please try again.', 'error');
+    } finally {
+      setInterestLoading(false);
+    }
   };
 
   const handleLoginClick = () => {
@@ -200,6 +218,83 @@ export default function CropDetail() {
     setShowLoginPrompt(false);
     navigate('/auth/register');
   };
+
+  const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
+    if (user?.role !== 'buyer') {
+      addToast('Only buyers can add items to cart', 'warning');
+      return;
+    }
+
+    const cartProduct = {
+      _id: crop._id,
+      id: crop._id,
+      cropName: crop.cropName,
+      cropType: crop.cropType,
+      category: crop.category,
+      price: crop.price,
+      originalPrice: crop.originalPrice,
+      unit: crop.unit,
+      images: crop.images || [],
+      farmerId: crop.farmerId,
+      pickupLocation: crop.pickupLocation,
+      description: crop.description,
+      discount: crop.discount,
+      specifications: crop.specifications,
+      rating: crop.rating,
+      totalReviews: crop.totalReviews,
+      status: crop.status,
+      farmerName: farmer?.name || farmer?.firstName || '',
+      farmerFarmName: farmer?.farmName || '',
+      farmerRating: farmer?.rating || 0,
+      quantity: crop.quantity,
+    };
+
+    addToCart(cartProduct, quantity);
+    addToast(`${crop.cropName} added to cart (${quantity} ${crop.unit})`, 'success');
+  };
+
+  const handleChatWithFarmer = async () => {
+    if (!isAuthenticated) {
+      setRedirectPath(window.location.pathname + window.location.search);
+      setShowLoginPrompt(true);
+      return;
+    }
+
+    if (user?.role === 'farmer') {
+      addToast('Farmers can chat via the Messages page from your dashboard.', 'info');
+      return;
+    }
+
+    if (user?.kycStatus !== 'verified') {
+      addToast('KYC verification is required to message farmers. Please complete your verification first.', 'warning');
+      return;
+    }
+
+    if (!farmerUserId) {
+      addToast('Farmer information not available.', 'error');
+      return;
+    }
+
+    // Navigate to Messages page where the conversation will be initiated with the farmer
+    navigate(`/messages?receiver=${farmerUserId}&crop=${cropId}&name=${encodeURIComponent(farmer?.name || 'Farmer')}`);
+  };
+
+  // Derived values from crop data
+  const cropName = crop?.cropName || crop?.name || 'Unknown Crop';
+  const cropImage = crop?.images?.[0] || crop?.image || null;
+  const cropPrice = crop?.price || 0;
+  const cropQuantity = crop?.quantity || 0;
+  const cropUnit = crop?.unit || 'kg';
+  const cropType = crop?.cropType || crop?.category || null;
+  const pickupLocation = crop?.pickupLocation || crop?.farmLocation || 'Location not specified';
+  const contactNumber = crop?.contactNumber || null;
+  const availability = crop?.availability || 'available';
+  const isAvailable = availability === 'available';
 
   if (loading) {
     return (
@@ -261,28 +356,44 @@ export default function CropDetail() {
               {/* Main Image */}
               <Card className="mb-6 animate-slide-in-left">
                 <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-t-lg flex items-center justify-center hover-lift relative overflow-hidden" style={{ minHeight: '400px' }}>
-                  {crop.image && crop.image.startsWith('http') ? (
-                    // Real image from Cloudinary
+                  {cropImage ? (
                     <img
-                      src={crop.image}
-                      alt={crop.name}
+                      src={cropImage}
+                      alt={cropName}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                       loading="lazy"
                     />
                   ) : (
-                    // Fallback: emoji
-                    <span className="text-9xl animate-bounce-soft">{crop.image || '🌾'}</span>
+                    <span className="text-9xl animate-bounce-soft">
+                      {cropType === 'vegetables' ? '🥬' : cropType === 'crops' ? '🌾' : '🌿'}
+                    </span>
+                  )}
+                  {!isAvailable && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="bg-red-600 text-white px-6 py-3 rounded-lg text-xl font-bold">Sold Out</span>
+                    </div>
                   )}
                 </div>
                 <div className="p-6">
-                  <h1 className="text-4xl font-bold text-gray-900 mb-2 animate-slide-in-down">{crop.name}</h1>
+                  <div className="flex items-center gap-3 mb-2 flex-wrap">
+                    <h1 className="text-4xl font-bold text-gray-900 animate-slide-in-down">{cropName}</h1>
+                    {cropType && (
+                      <span className="px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full capitalize">
+                        {cropType}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-4 mb-4 animate-slide-in-down flex-wrap" style={{ animationDelay: '0.1s' }}>
                     <div className="flex items-center gap-1">
                       <span className="text-yellow-400 animate-float">⭐</span>
-                      <span className="font-semibold text-gray-900">{crop.rating}</span>
-                      <span className="text-gray-600 text-sm">({crop.reviews} reviews)</span>
+                      <span className="font-semibold text-gray-900">{crop.rating || 0}</span>
+                      <span className="text-gray-600 text-sm">({crop.totalReviews || 0} reviews)</span>
                     </div>
-                    <Badge label="In Stock" variant="success" />
+                    {isAvailable ? (
+                      <Badge label="Available" variant="success" />
+                    ) : (
+                      <Badge label="Not Available" variant="danger" />
+                    )}
                     {farmer?.verified && (
                       <Badge label="Verified Farmer" variant="primary" icon="✓" />
                     )}
@@ -291,34 +402,76 @@ export default function CropDetail() {
                   <div className="grid grid-cols-2 gap-4 mb-6 pb-6 border-b animate-slide-in-down" style={{ animationDelay: '0.2s' }}>
                     <div>
                       <p className="text-gray-600 text-sm mb-1">PRICE</p>
-                      <p className="text-4xl font-bold text-green-600">₹{crop.price}/kg</p>
+                      <p className="text-4xl font-bold text-green-600">₹{cropPrice}/{cropUnit}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600 text-sm mb-1">AVAILABLE</p>
-                      <p className="text-xl font-semibold text-gray-900">{crop.quantity} kg</p>
+                      <p className="text-gray-600 text-sm mb-1">AVAILABLE QTY</p>
+                      <p className="text-xl font-semibold text-gray-900">{cropQuantity} {cropUnit}</p>
                     </div>
                   </div>
 
-                  <div className="space-y-2 mb-6 animate-slide-in-down" style={{ animationDelay: '0.3s' }}>
-                    <p><strong>📅 Harvest Date:</strong> {crop.harvestDate}</p>
-                    <p className="flex items-center gap-2"><MapPin size={18} className="text-green-600" /> <strong>{crop.farmLocation}</strong></p>
+                  {/* Location & Contact */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6 animate-slide-in-down" style={{ animationDelay: '0.3s' }}>
+                    <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+                      <MapPin size={18} className="text-blue-600 shrink-0" />
+                      <div>
+                        <p className="text-xs text-gray-500">Pickup Location</p>
+                        <p className="font-semibold text-gray-900 text-sm">{pickupLocation}</p>
+                      </div>
+                    </div>
+                    {contactNumber && (
+                      <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                        <Phone size={18} className="text-green-600 shrink-0" />
+                        <div>
+                          <p className="text-xs text-gray-500">Contact Number</p>
+                          <p className="font-semibold text-gray-900 text-sm">{contactNumber}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <p className="text-gray-700 mb-6 leading-relaxed animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                    {crop.description}
-                  </p>
-
-                  {/* Certifications */}
-                  {crop.certifications && crop.certifications.length > 0 && (
-                    <ScrollAnimation className="scroll-slide mb-6">
-                      <p className="font-semibold text-gray-900 mb-3">✓ Certifications & Guarantees</p>
-                      <div className="flex flex-wrap gap-2">
-                        {crop.certifications.map(cert => (
-                          <Badge key={cert} label={cert} variant="primary" size="sm" />
-                        ))}
-                      </div>
-                    </ScrollAnimation>
+                  {/* Chat with Farmer Button - visible after marking interest */}
+                  {isAvailable && farmerUserId && (
+                    <div className="mb-6 animate-slide-in-down" style={{ animationDelay: '0.35s' }}>
+                      {isAuthenticated && isInterested ? (
+                        <>
+                          <button
+                            onClick={handleChatWithFarmer}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all duration-200 hover:shadow-lg active:scale-[0.98]"
+                          >
+                            <MessageCircle size={20} />
+                            💬 Chat with Farmer
+                          </button>
+                          {user?.kycStatus !== 'verified' && (
+                            <p className="text-xs text-amber-600 mt-1 text-center">
+                              ⚠️ KYC verification required to message farmers
+                            </p>
+                          )}
+                        </>
+                      ) : isAuthenticated ? (
+                        <button
+                          onClick={handleMarkInterested}
+                          disabled={interestLoading}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 hover:bg-green-50 text-gray-700 hover:text-green-700 font-semibold rounded-lg border border-gray-300 hover:border-green-400 transition-all duration-200"
+                        >
+                          <MessageCircle size={20} />
+                          {interestLoading ? 'Updating...' : '🌟 Mark Interest to Chat with Farmer'}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => { setRedirectPath(`/crop/${cropId}`); setShowLoginPrompt(true); }}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all duration-200 hover:shadow-lg active:scale-[0.98]"
+                        >
+                          <MessageCircle size={20} />
+                          💬 Login to Chat with Farmer
+                        </button>
+                      )}
+                    </div>
                   )}
+
+                  <p className="text-gray-700 mb-6 leading-relaxed animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                    {crop.description || 'No description provided.'}
+                  </p>
 
                   {/* Specifications */}
                   {crop.specifications && Object.keys(crop.specifications).length > 0 && (
@@ -335,10 +488,10 @@ export default function CropDetail() {
                     </ScrollAnimation>
                   )}
 
-                  {/* Delivery Timeline */}
+                  {/* Availability Timeline */}
                   <ScrollAnimation className="scroll-slide">
-                    <p className="font-semibold text-gray-900 mb-4">🚚 Expected Delivery Timeline</p>
-                    <Timeline steps={timeline} />
+                    <p className="font-semibold text-gray-900 mb-4">📦 Crop Status</p>
+                    <Timeline steps={getTimeline(crop)} />
                   </ScrollAnimation>
                 </div>
               </Card>
@@ -370,141 +523,110 @@ export default function CropDetail() {
                 </ScrollAnimation>
               )}
 
-              {/* Related Products Section */}
-              <RelatedProducts
-                products={[
-                  {
-                    id: 2,
-                    name: 'Organic Cucumbers',
-                    price: 35,
-                    quantity: 80,
-                    rating: 4.6,
-                    reviews: 18,
-                    image: 'https://images.unsplash.com/photo-1609137144813-2e231ebd96e3?w=400&h=400&fit=crop',
-                    farmer: crop.farmer || 'Local Farmer',
-                    farmer_verified: true,
-                  },
-                  {
-                    id: 3,
-                    name: 'Fresh Bell Peppers',
-                    price: 60,
-                    quantity: 50,
-                    rating: 4.7,
-                    reviews: 22,
-                    image: 'https://images.unsplash.com/photo-1599599810694-b9efb4ffd8b0?w=400&h=400&fit=crop',
-                    farmer: crop.farmer || 'Local Farmer',
-                    farmer_verified: true,
-                  },
-                  {
-                    id: 4,
-                    name: 'Organic Lettuce',
-                    price: 25,
-                    quantity: 100,
-                    rating: 4.5,
-                    reviews: 15,
-                    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=400&fit=crop',
-                    farmer: crop.farmer || 'Local Farmer',
-                    farmer_verified: true,
-                  },
-                  {
-                    id: 5,
-                    name: 'Fresh Carrots',
-                    price: 40,
-                    quantity: 120,
-                    rating: 4.9,
-                    reviews: 28,
-                    image: 'https://images.unsplash.com/photo-1447621334519-51cf6537b839?w=400&h=400&fit=crop',
-                    farmer: crop.farmer || 'Local Farmer',
-                    farmer_verified: true,
-                  },
-                ]}
-                title="More from this Farmer"
-                onProductClick={(id) => navigate(`/crop/${id}`)}
-                onAddToCart={(product) => {
-                  addToCart(product);
-                  addToast(`${product.name} added to cart!`, 'success');
-                }}
-                showFarmer={false}
-              />
             </div>
 
-            {/* Sidebar - Order & Farmer Info */}
-            <div className="space-y-6">
-              {/* Order Card */}
-              <Card variant="deep" animated={false} className="animate-slide-in-right sticky top-24">
+            {/* Sidebar - Interest & Farmer Info */}
+            <div className="space-y-6 lg:sticky lg:top-24">
+              {/* Interest Card */}
+              <Card variant="deep" animated={false} className="animate-slide-in-right">
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-6 animate-fade-in">🛒 Order Now</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-6 animate-fade-in">
+                    {isAvailable ? '🌿 Interested in this crop?' : '🚫 Currently Unavailable'}
+                  </h3>
 
-                  <div className="space-y-4 mb-6 animate-slide-in-down" style={{ animationDelay: '0.1s' }}>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Quantity (kg)</label>
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                          className="w-10 h-10 glass hover:bg-green-50 flex items-center justify-center transition-smooth active:scale-95 font-semibold text-gray-700 rounded-lg border border-green-200 cursor-pointer"
-                        >
-                          −
-                        </button>
-                        <input
-                          type="number"
-                          value={quantity}
-                          onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                          className="glass-input flex-1 px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-green-400 transition-smooth"
-                          min="1"
-                          max={crop.quantity}
-                        />
-                        <button
-                          onClick={() => setQuantity(quantity + 1)}
-                          className="w-10 h-10 glass hover:bg-green-50 flex items-center justify-center transition-smooth active:scale-95 font-semibold text-gray-700 rounded-lg border border-green-200 cursor-pointer"
-                        >
-                          +
-                        </button>
+                  {isAvailable && (
+                    <div className="space-y-4 mb-6 animate-slide-in-down" style={{ animationDelay: '0.1s' }}>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Estimated Quantity ({cropUnit})
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                            className="w-10 h-10 glass hover:bg-green-50 flex items-center justify-center transition-smooth active:scale-95 font-semibold text-gray-700 rounded-lg border border-green-200 cursor-pointer"
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            value={quantity}
+                            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                            className="glass-input flex-1 px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-green-400 transition-smooth"
+                            min="1"
+                            max={cropQuantity}
+                          />
+                          <button
+                            onClick={() => setQuantity(Math.min(cropQuantity, quantity + 1))}
+                            className="w-10 h-10 glass hover:bg-green-50 flex items-center justify-center transition-smooth active:scale-95 font-semibold text-gray-700 rounded-lg border border-green-200 cursor-pointer"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="p-4 glass-green rounded-xl border-2 border-green-400">
+                        <p className="text-gray-600 text-sm mb-1 font-medium">💰 Estimated Total</p>
+                        <p className="text-3xl font-bold text-green-600">₹{cropPrice * quantity}</p>
+                        <p className="text-xs text-gray-500 mt-1">Final price to be discussed with farmer</p>
                       </div>
                     </div>
-
-                    <div className="p-4 glass-green rounded-xl border-2 border-green-400">
-                      <p className="text-gray-600 text-sm mb-1 font-medium">💰 Total Price</p>
-                      <p className="text-3xl font-bold text-green-600">₹{crop.price * quantity}</p>
-                    </div>
-                  </div>
+                  )}
 
                   {!isAuthenticated && (
                     <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded animate-slide-in-down" style={{ animationDelay: '0.2s' }}>
                       <p className="text-sm text-blue-800 font-medium">
-                        👉 <strong>Login required to place order</strong>
+                        👉 <strong>Login required to mark interest</strong>
                       </p>
                     </div>
                   )}
 
+                  {isAuthenticated && user?.role === 'farmer' && (
+                    <div className="mb-4 p-3 bg-amber-50 border-l-4 border-amber-400 rounded">
+                      <p className="text-sm text-amber-800">
+                        ℹ️ As a farmer, you can view listings but only buyers can mark interest.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Mark Interested Button */}
                   <Button
-                    variant="primary"
+                    variant={isInterested ? 'outline' : 'primary'}
                     size="lg"
-                    className="w-full flex items-center gap-2 justify-center mb-3 animate-slide-in-down"
+                    className={`w-full flex items-center gap-2 justify-center mb-3 animate-slide-in-down ${
+                      isInterested ? 'border-green-500 text-green-700 hover:bg-green-50' : ''
+                    }`}
                     style={{ animationDelay: '0.2s' }}
-                    onClick={handleAddToCart}
-                    disabled={addedToCart}
+                    onClick={handleMarkInterested}
+                    disabled={interestLoading || !isAvailable}
                   >
-                    {addedToCart ? (
+                    {interestLoading ? (
                       <>
-                        <CheckCircle size={20} /> Added to Cart!
+                        <Loader size={20} className="animate-spin" /> Updating...
+                      </>
+                    ) : isInterested ? (
+                      <>
+                        <CheckCircle size={20} className="text-green-600" /> Interested ✓
+                      </>
+                    ) : isAvailable ? (
+                      <>
+                        <Leaf size={20} /> Mark Interested
                       </>
                     ) : (
                       <>
-                        <ShoppingCart size={20} /> Add to Cart
+                        <Package size={20} /> Sold Out
                       </>
                     )}
                   </Button>
 
-                  <Button
-                    variant="success"
-                    size="lg"
-                    className="w-full flex items-center gap-2 justify-center mb-3 animate-slide-in-down"
-                    style={{ animationDelay: '0.25s' }}
-                    onClick={handleBuyNow}
-                  >
-                    💳 {isAuthenticated ? 'Buy Now' : 'Login & Buy'}
-                  </Button>
+                  {isInterested && (
+                    <div className="mb-3 p-3 bg-green-50 border-l-4 border-green-500 rounded animate-fade-in">
+                      <p className="text-sm text-green-800">
+                        ✅ You've marked interest! The farmer has been notified with your details. They will contact you to finalize the order.
+                      </p>
+                    </div>
+                  )}
 
+                  {/* Wishlist Button */}
                   <Button
                     variant="outline"
                     size="lg"
@@ -515,16 +637,39 @@ export default function CropDetail() {
                     <Heart size={20} fill={isWishlisted ? 'currentColor' : 'none'} className={isWishlisted ? 'animate-scale-in text-red-600' : ''} />
                     {isWishlisted ? 'Saved ❤️' : 'Save for Later'}
                   </Button>
+
+                  {/* Add to Cart Button */}
+                  {isAvailable && (
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      className="w-full flex items-center gap-2 justify-center animate-slide-in-down bg-green-600 hover:bg-green-700"
+                      style={{ animationDelay: '0.35s' }}
+                      onClick={handleAddToCart}
+                    >
+                      <ShoppingCart size={20} />
+                      Add to Cart
+                    </Button>
+                  )}
+
+                  {contactNumber && (
+                    <div className="mt-4 p-3 bg-gray-50 rounded-lg text-center animate-fade-in">
+                      <p className="text-xs text-gray-500 mb-1">Need to talk directly?</p>
+                      <a
+                        href={`tel:${contactNumber}`}
+                        className="text-green-600 font-bold text-lg hover:text-green-700 flex items-center justify-center gap-2"
+                      >
+                        <Phone size={16} /> {contactNumber}
+                      </a>
+                    </div>
+                  )}
                 </div>
               </Card>
 
-              {/* Farmer Info Card - Enhanced with FarmerDetailCard */}
+              {/* Farmer Info Card */}
               {farmer && (
                 <FarmerDetailCard
                   farmer={farmer}
-                  onViewProfile={() => navigate(`/farmer/${farmer.id || 1}`)}
-                  onMessage={() => addToast('Farmer messaging coming soon!', 'info')}
-                  onViewAllProducts={() => navigate(`/farmer/${farmer.id || 1}/products`)}
                 />
               )}
             </div>
@@ -538,7 +683,7 @@ export default function CropDetail() {
         onClose={() => setShowLoginPrompt(false)}
         onLogin={handleLoginClick}
         onRegister={handleRegisterClick}
-        message="Please login to place an order and complete your purchase securely"
+        message="Please login to mark interest in this crop and connect with the farmer"
       />
     </PageTransition>
   );

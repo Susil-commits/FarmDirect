@@ -6,9 +6,9 @@ export const ANIMATION_DELAYS = {
 
 // Hero Section Image
 export const HERO_IMAGE = {
-  src: 'https://img-cdn.publive.online/fit-in/1200x675/filters:format(webp)/english-betterindia/media/media_files/2026/01/29/high-value-winter-crops-2026-01-29-17-55-43.png',
+  src: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=1200&h=675&fit=crop',
   alt: 'Fresh vegetables marketplace',
-  fallback: 'https://via.placeholder.com/1200x675?text=Fresh+Produce',
+  fallback: 'https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=1200&h=675&fit=crop',
 };
 
 // Benefits Section

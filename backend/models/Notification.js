@@ -17,12 +17,17 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['order', 'review', 'payment', 'promotion', 'general'],
+      enum: ['order', 'interest', 'review', 'payment', 'promotion', 'general'],
       default: 'general'
     },
     relatedId: {
       type: String, // Order ID, Crop ID, etc.
       default: null
+    },
+    // Additional data payload
+    data: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
     },
     actionUrl: {
       type: String,
@@ -48,5 +53,6 @@ const notificationSchema = new mongoose.Schema(
 // Index for finding unread notifications
 notificationSchema.index({ userId: 1, isRead: 1 });
 notificationSchema.index({ userId: 1, createdAt: -1 });
+notificationSchema.index({ type: 1 });
 
 export default mongoose.model('Notification', notificationSchema);

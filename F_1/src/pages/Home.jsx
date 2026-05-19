@@ -19,7 +19,7 @@ export default function Home() {
     particleSize: 6,
     duration: 600,
   });
-  const { ref: rippleRef, triggerRipple } = useRippleEffect({
+  const { ref: rippleRef } = useRippleEffect({
     rippleColor: 'rgba(34, 197, 94, 0.4)',
     duration: 600,
   });
@@ -120,10 +120,6 @@ export default function Home() {
   };
 
   // Handle hero image errors with fallback
-  const handleImageError = () => {
-    setImageError(true);
-    console.warn('Hero image failed to load, showing fallback');
-  };
 
   const features = [
     { icon: <Leaf className="w-8 h-8 text-green-600" />, title: 'Fresh Produce', desc: 'Direct from farms to your doorstep' },
@@ -247,15 +243,16 @@ export default function Home() {
                   {imageLoading && (
                     <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse"></div>
                   )}
-                  <img 
-                    src="https://t4.ftcdn.net/jpg/12/50/32/05/360_F_1250320539_mSBEKgn75R0ITYmIU0euFdPaWRw8tsnO.jpg" 
-                    alt="Fresh produce from farmers" 
+                  <img
+                    src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=600&fit=crop"
+                    alt="Fresh produce from farmers"
                     className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
                     loading="eager"
                     onLoad={() => setImageLoading(false)}
                     onError={() => {
                       setImageError(true);
                       setImageLoading(false);
+                      console.warn('Hero image failed to load, showing fallback');
                     }}
                     decoding="async"
                   />

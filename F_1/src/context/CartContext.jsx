@@ -1,77 +1,84 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
 
-  // Load cart from localStorage
+  // Load cart from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('farm-cart');
     if (saved) {
       try {
-        setCart(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        // Normalize: ensure items have _id
+        const normalized = parsed.map(item => ({
+          ...item,
+          _id: item._id || item.id,
+          id: item._id || item.id,
+        }));
+        setCart(normalized);
       } catch (e) {
         console.error('Failed to load cart:', e);
       }
     }
   }, []);
 
-  // Save cart to localStorage
+  // Save cart to localStorage on change
   useEffect(() => {
-    localStorage.setItem('farm-cart', JSON.stringify(cart));
+    if (cart.length > 0 || localStorage.getItem('farm-cart')) {
+      localStorage.setItem('farm-cart', JSON.stringify(cart));
+    }
   }, [cart]);
 
-  const addToCart = (product, quantity = 1) => {
+  const addToCart = useCallback((product, quantity = 1) => {
     setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
+      const productId = product._id || product.id;
+      const existing = prev.find(item => (item._id || item.id) === productId);
       if (existing) {
         return prev.map(item =>
-          item.id === product.id
+          (item._id || item.id) === productId
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      return [...prev, { ...product, quantity }];
+      return [...prev, {
+        ...product,
+        _id: productId,
+        id: productId,
+        quantity,
+      }];
     });
-  };
+  }, []);
 
-  const removeFromCart = (productId) => {
-    setCart(prev => prev.filter(item => item.id !== productId));
-  };
+  const removeFromCart = useCallback((productId) => {
+    setCart(prev => prev.filter(item => (item._id || item.id) !== productId));
+  }, []);
 
-  const updateQuantity = (productId, quantity) => {
+  const updateQuantity = useCallback((productId, quantity) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      setCart(prev => prev.filter(item => (item._id || item.id) !== productId));
     } else {
       setCart(prev =>
         prev.map(item =>
-          item.id === productId ? { ...item, quantity } : item
+          (item._id || item.id) === productId ? { ...item, quantity } : item
         )
       );
     }
-  };
+  }, []);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCart([]);
-  };
+    localStorage.removeItem('farm-cart');
+  }, []);
 
-  const completeOrder = () => {
-    // Increment successful purchases stat when order is completed
-    const currentStats = JSON.parse(localStorage.getItem('farmStats') || '{"farmers": 5000, "customers": 50000, "varieties": 100, "deliveryDays": "3-5"}');
-    // Stats are incremented on registration, not per purchase
-    // This is just a placeholder for order completion
-    clearCart();
-    return true;
-  };
+  const getTotalPrice = useCallback(() => {
+    return cart.reduce((total, item) => total + ((item.price || 0) * (item.quantity || 0)), 0);
+  }, [cart]);
 
-  const getTotalPrice = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
-
-  const getTotalItems = () => {
-    return cart.reduce((total, item) => total + item.quantity, 0);
-  };
+  const getTotalItems = useCallback(() => {
+    return cart.reduce((total, item) => total + (item.quantity || 0), 0);
+  }, [cart]);
 
   return (
     <CartContext.Provider
@@ -81,7 +88,6 @@ export function CartProvider({ children }) {
         removeFromCart,
         updateQuantity,
         clearCart,
-        completeOrder,
         getTotalPrice,
         getTotalItems,
       }}

@@ -1,0 +1,403 @@
+import React, { useState, useEffect } from 'react';
+import { useRouter } from '../context/RouterContext';
+import { useCart } from '../context/CartContext';
+import { useToast } from '../context/ToastContext';
+import PageTransition from '../components/common/PageTransition';
+import Card from '../components/common/Card';
+import Button from '../components/common/Button';
+import ScrollAnimation from '../components/common/ScrollAnimation';
+import PageLoader from '../components/common/PageLoader';
+import { cropService } from '../services/appService';
+import {
+  Search, X, Heart, MapPin, Star, IndianRupee, Filter,
+  ChevronDown, GridIcon, List, ArrowUpDown
+} from 'lucide-react';
+import '../styles/SearchResults.css';
+
+export default function SearchResults() {
+  const { navigate, params } = useRouter();
+  const { cart, addToCart } = useCart();
+  const { addToast } = useToast();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [filteredResults, setFilteredResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState('grid'); // grid or list
+
+  // Filters
+  const [filters, setFilters] = useState({
+    category: 'all',
+    priceRange: 'all',
+    rating: 0,
+    location: 'all',
+    sortBy: 'popular'
+  });
+
+  const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    // Get search query from URL params or localStorage
+    const query = localStorage.getItem('searchQuery') || params?.q || '';
+    if (query) {
+      setSearchQuery(query);
+      performSearch(query);
+    }
+  }, []);
+
+  const performSearch = async (query) => {
+    if (!query.trim()) {
+      addToast('Please enter a search term', 'error');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const data = await cropService.searchCrops(query, { limit: 50 });
+      const crops = data.data || [];
+      setResults(crops);
+      applyFilters(crops);
+      localStorage.setItem('searchQuery', query);
+    } catch (error) {
+      console.error('Search error:', error);
+      addToast('Error performing search', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const applyFilters = (crops = results) => {
+    let filtered = [...crops];
+
+    // Category filter
+    if (filters.category !== 'all') {
+      filtered = filtered.filter(c => c.category === filters.category);
+    }
+
+    // Price range filter
+    if (filters.priceRange !== 'all') {
+      const [min, max] = filters.priceRange.split('-').map(Number);
+      filtered = filtered.filter(c => c.price >= min && c.price <= max);
+    }
+
+    // Rating filter
+    if (filters.rating > 0) {
+      filtered = filtered.filter(c => (c.rating || 0) >= filters.rating);
+    }
+
+    // Location filter
+    if (filters.location !== 'all') {
+      filtered = filtered.filter(c => c.farmerId?.location === filters.location);
+    }
+
+    // Sorting
+    switch (filters.sortBy) {
+      case 'price-asc':
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-desc':
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case 'rating':
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        break;
+      case 'newest':
+        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        break;
+      default: // popular
+        filtered.sort((a, b) => (b.reviews?.length || 0) - (a.reviews?.length || 0));
+    }
+
+    setFilteredResults(filtered);
+  };
+
+  const handleFilterChange = (filterName, value) => {
+    const newFilters = { ...filters, [filterName]: value };
+    setFilters(newFilters);
+    applyFilters(results);
+  };
+
+  const categories = ['all', 'vegetables', 'fruits', 'grains', 'dairy', 'meat'];
+  const priceRanges = [
+    { label: 'All Prices', value: 'all' },
+    { label: '₹0 - ₹100', value: '0-100' },
+    { label: '₹100 - ₹500', value: '100-500' },
+    { label: '₹500 - ₹1000', value: '500-1000' },
+    { label: '₹1000+', value: '1000-9999' }
+  ];
+
+  if (loading) {
+    return (
+      <PageTransition>
+        <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4">
+          <div className="max-w-7xl mx-auto">
+            <Card className="p-12 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+              <p className="text-gray-600 mt-4">Searching crops...</p>
+            </Card>
+          </div>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  return (
+    <PageTransition>
+      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <ScrollAnimation className="scroll-slide mb-8">
+            <div className="flex items-center gap-3 mb-6">
+              <button onClick={() => navigate('/')} className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition">← Back</button>
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Search Results</h1>
+            <p className="text-gray-600">Found <strong>{filteredResults.length}</strong> results for "<strong>{searchQuery}</strong>"</p>
+          </ScrollAnimation>
+
+          {/* Search Bar */}
+          <ScrollAnimation className="scroll-slide mb-8">
+            <Card className="p-4">
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search crops, vegetables, fruits..."
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-green-600"
+                    onKeyPress={(e) => e.key === 'Enter' && performSearch(searchQuery)}
+                  />
+                </div>
+                <Button onClick={() => performSearch(searchQuery)} variant="primary">Search</Button>
+              </div>
+            </Card>
+          </ScrollAnimation>
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Filters Sidebar */}
+            <ScrollAnimation className="scroll-slide lg:col-span-1">
+              <Card className="p-6 sticky top-4">
+                <div className="flex items-center justify-between mb-6 lg:hidden">
+                  <h3 className="font-bold text-gray-900 flex items-center gap-2"><Filter className="w-5 h-5" />Filters</h3>
+                  <button onClick={() => setShowFilters(!showFilters)} className="text-gray-600 hover:text-gray-900">
+                    {showFilters ? <X className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  </button>
+                </div>
+
+                <div className={`space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+                  {/* Category Filter */}
+                  <div>
+                    <h4 className="font-bold text-gray-900 mb-3">Category</h4>
+                    <select
+                      value={filters.category}
+                      onChange={(e) => handleFilterChange('category', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-600"
+                    >
+                      {categories.map(cat => (
+                        <option key={cat} value={cat === 'all' ? 'all' : cat}>
+                          {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Price Filter */}
+                  <div>
+                    <h4 className="font-bold text-gray-900 mb-3">Price Range</h4>
+                    <div className="space-y-2">
+                      {priceRanges.map(range => (
+                        <label key={range.value} className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="priceRange"
+                            value={range.value}
+                            checked={filters.priceRange === range.value}
+                            onChange={(e) => handleFilterChange('priceRange', e.target.value)}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm text-gray-700">{range.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Rating Filter */}
+                  <div>
+                    <h4 className="font-bold text-gray-900 mb-3">Rating</h4>
+                    <div className="space-y-2">
+                      {[0, 4, 4.5].map(rating => (
+                        <label key={rating} className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="rating"
+                            value={rating}
+                            checked={filters.rating === rating}
+                            onChange={(e) => handleFilterChange('rating', Number(e.target.value))}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm text-gray-700">
+                            {rating === 0 ? 'All Ratings' : `${rating}⭐ & above`}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Sort By */}
+                  <div>
+                    <h4 className="font-bold text-gray-900 mb-3">Sort By</h4>
+                    <select
+                      value={filters.sortBy}
+                      onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-600"
+                    >
+                      <option value="popular">Most Popular</option>
+                      <option value="price-asc">Price: Low to High</option>
+                      <option value="price-desc">Price: High to Low</option>
+                      <option value="rating">Highest Rated</option>
+                      <option value="newest">Newest First</option>
+                    </select>
+                  </div>
+                </div>
+              </Card>
+            </ScrollAnimation>
+
+            {/* Results */}
+            <div className="lg:col-span-3">
+              <ScrollAnimation className="scroll-slide">
+                {/* View Mode Toggle */}
+                <div className="flex gap-2 mb-6">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition ${
+                      viewMode === 'grid' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    <GridIcon className="w-4 h-4" />
+                    Grid
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition ${
+                      viewMode === 'list' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    <List className="w-4 h-4" />
+                    List
+                  </button>
+                </div>
+
+                {filteredResults.length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-4">No crops found matching your search</p>
+                    <Button onClick={() => navigate('/marketplace')} variant="primary">Browse All</Button>
+                  </Card>
+                ) : (
+                  <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+                    {filteredResults.map(crop => (
+                      <Card key={crop._id} className={`p-6 hover:shadow-lg transition ${viewMode === 'list' ? 'flex items-center gap-6' : ''}`}>
+                        {/* Crop Image Placeholder */}
+                        {viewMode === 'grid' && <div className="w-full h-48 bg-gradient-to-br from-green-100 to-green-200 rounded-lg mb-4 flex items-center justify-center text-3xl">🌾</div>}
+
+                        <div className={viewMode === 'list' ? 'flex-1' : ''}>
+                          {/* Crop Header */}
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <h3 className="text-lg font-bold text-gray-900">{crop.name}</h3>
+                              <p className="text-sm text-gray-600">{crop.category}</p>
+                            </div>
+                            <button className="text-red-600 hover:text-red-700">
+                              <Heart className="w-5 h-5" />
+                            </button>
+                          </div>
+
+                          {/* Rating */}
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-4 h-4 ${
+                                    i < Math.floor(crop.rating || 0)
+                                      ? 'fill-yellow-400 text-yellow-400'
+                                      : 'text-gray-300'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-sm text-gray-600">({crop.reviews?.length || 0})</span>
+                          </div>
+
+                          {/* Description */}
+                          <p className="text-sm text-gray-600 mb-4 line-clamp-2">{crop.description}</p>
+
+                          {/* Farmer Info */}
+                          <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
+                            <MapPin className="w-4 h-4" />
+                            <span>{crop.farmerId?.location || 'Location unavailable'}</span>
+                          </div>
+
+                          {/* Price & Actions */}
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-xs text-gray-600">Price per kg</p>
+                              <p className="text-2xl font-bold text-green-600">₹{crop.price}</p>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => navigate(`/crop/${crop._id}`)}
+                                variant="outline"
+                                className="text-sm"
+                              >
+                                View
+                              </Button>
+                              <Button
+                                onClick={() => {
+                                  addToCart({
+                                    ...crop,
+                                    quantity: 1
+                                  });
+                                  addToast('Added to cart', 'success');
+                                }}
+                                variant="primary"
+                                className="text-sm"
+                              >
+                                Add to Cart
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </ScrollAnimation>
+            </div>
+          </div>
+
+          {/* Pagination */}
+          {filteredResults.length > 12 && (
+            <ScrollAnimation className="scroll-slide mt-12">
+              <div className="flex items-center justify-center gap-2">
+                <Button variant="outline">← Previous</Button>
+                {[1, 2, 3].map(page => (
+                  <Button
+                    key={page}
+                    variant={page === 1 ? 'primary' : 'outline'}
+                    className="w-10 h-10 p-0"
+                  >
+                    {page}
+                  </Button>
+                ))}
+                <Button variant="outline">Next →</Button>
+              </div>
+            </ScrollAnimation>
+          )}
+        </div>
+      </div>
+    </PageTransition>
+  );
+}

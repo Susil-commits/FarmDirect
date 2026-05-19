@@ -14,6 +14,7 @@ export const getNotifications = asyncHandler(async (req, res) => {
   }
   
   const notifications = await Notification.find(query)
+    .lean()
     .skip(skip)
     .limit(parseInt(limit))
     .sort({ createdAt: -1 });

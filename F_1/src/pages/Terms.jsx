@@ -1,7 +1,10 @@
 import React from 'react';
+import { useRouter } from '../context/RouterContext';
 import PageTransition from '../components/common/PageTransition';
 
 export default function Terms() {
+  const { navigate } = useRouter();
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-gray-50 py-12">
@@ -74,6 +77,23 @@ export default function Terms() {
               </section>
             </div>
 
+
+          {/* Footer */}
+          <div className="mt-16 pt-8 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+              <button
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold transition-colors cursor-pointer"
+              >
+                ← Back to Home
+              </button>
+              <div className="flex gap-6 text-sm">
+                <button onClick={() => navigate('/privacy')} className="text-gray-600 hover:text-gray-900 transition">Privacy</button>
+                <button onClick={() => navigate('/refund')} className="text-gray-600 hover:text-gray-900 transition">Refund Policy</button>
+                <button onClick={() => navigate('/contact')} className="text-gray-600 hover:text-gray-900 transition">Contact</button>
+              </div>
+            </div>
+          </div>
             <p className="text-gray-600 text-sm mt-8">Last updated: 2026</p>
           </div>
         </div>

@@ -64,7 +64,7 @@ export default function MiniCart({ isOpen, onClose }) {
                 <div key={item.id} className="cart-item">
                   {/* Item Image */}
                   <div className="item-image">
-                    {item.icon && item.icon.startsWith('http') ? (
+                    {item.icon && (item.icon.startsWith('http') || item.icon.startsWith('/')) ? (
                       <img src={item.icon} alt={item.name} className="w-full h-full object-cover" />
                     ) : (
                       <span className="text-2xl">{item.icon || '🥬'}</span>

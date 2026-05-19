@@ -1,23 +1,81 @@
 import CropListing from '../models/CropListing.js';
+import User from '../models/User.js';
+import Notification from '../models/Notification.js';
 
 // @route POST /api/crops
-// @desc Create a new crop listing (Farmer only)
+// @desc Create a new crop listing (Farmer only - KYC already verified)
 // @access Private
 export const createCrop = async (req, res, next) => {
   try {
-    const { name, category, price, quantity, description, specifications, harvestDate, certifications } = req.body;
-
-    const crop = await CropListing.create({
-      farmerId: req.user._id,
-      cropName: name, // Use correct field name from schema
+    // When using multer (multipart/form-data), fields come from req.body
+    // Images come from req.uploadedFiles (set by uploadCropImages middleware)
+    const {
+      cropName,
+      cropType,
       category,
       price,
       quantity,
+      unit,
       description,
+      pickupLocation,
+      contactNumber,
+      specifications: rawSpecs,
+    } = req.body;
+
+    // Parse specifications if sent as JSON string (FormData sends strings)
+    let specifications = {};
+    if (rawSpecs) {
+      try {
+        specifications = typeof rawSpecs === 'string' ? JSON.parse(rawSpecs) : rawSpecs;
+      } catch {
+        specifications = {};
+      }
+    }
+
+    // Extract image URLs from uploaded files
+    const imageUrls = req.uploadedFiles
+      ? req.uploadedFiles.map(f => f.url)
+      : [];
+
+    // Fetch user to validate farmer profile completeness
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Validate KYC verification (only gate - no additional checks needed)
+    if (user.kycStatus !== 'verified') {
+      return res.status(403).json({
+        message: 'KYC verification required',
+        kycStatus: user.kycStatus,
+        error: 'Complete your KYC verification before listing crops',
+      });
+    }
+
+    // Validate required fields
+    if (!cropName || !cropType || !price || !quantity || !pickupLocation || !contactNumber) {
+      return res.status(400).json({
+        message: 'Missing required fields',
+        error: 'cropName, cropType, price, quantity, pickupLocation, and contactNumber are required',
+      });
+    }
+
+    const crop = await CropListing.create({
+      farmerId: req.user._id,
+      cropName,
+      cropType: cropType || 'vegetables',
+      category: category || cropType || 'vegetables',
+      price,
+      quantity,
+      unit: unit || 'kg',
+      description: description || '',
+      pickupLocation,
+      contactNumber,
       specifications,
-      harvestDate,
-      certifications,
-      status: 'active', // Changed from 'pending_review' to 'active'
+      images: imageUrls,
+      status: 'active',
+      listingApprovalStatus: 'approved',
+      availability: 'available',
     });
 
     res.status(201).json({
@@ -30,16 +88,29 @@ export const createCrop = async (req, res, next) => {
 };
 
 // @route GET /api/crops
-// @desc Get all active crops with filters
+// @desc Get all available crops with filters
 // @access Public
 export const getCrops = async (req, res, next) => {
   try {
-    const { category, minPrice, maxPrice, search, page = 1, limit = 12 } = req.query;
+    const {
+      category,
+      cropType,
+      minPrice,
+      maxPrice,
+      search,
+      page = 1,
+      limit = 12,
+      sortBy = 'createdAt',
+    } = req.query;
 
-    const query = { status: 'active' };
+    const query = { status: 'active', availability: 'available' };
 
     if (category && category !== 'all') {
       query.category = category;
+    }
+
+    if (cropType && cropType !== 'all') {
+      query.cropType = cropType;
     }
 
     if (minPrice || maxPrice) {
@@ -49,16 +120,21 @@ export const getCrops = async (req, res, next) => {
     }
 
     if (search) {
-      query.$text = { $search: search };
+      query.$or = [
+        { cropName: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } },
+      ];
     }
 
     const skip = (page - 1) * limit;
 
     const crops = await CropListing.find(query)
-      .populate('farmerId', 'name avatar rating location')
+      .lean()
+      .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
       .skip(skip)
       .limit(Number(limit))
-      .sort({ createdAt: -1 });
+      .sort({ [sortBy]: -1 });
 
     const total = await CropListing.countDocuments(query);
 
@@ -85,11 +161,8 @@ export const getCropById = async (req, res, next) => {
       { $inc: { views: 1 } },
       { new: true }
     ).populate([
-      { path: 'farmerId', select: 'name avatar rating location bio' },
-      {
-        path: 'reviews',
-        populate: { path: 'userId', select: 'name avatar' },
-      },
+      { path: 'farmerId', select: 'firstName lastName name avatar rating farmName location city state phone' },
+      { path: 'interestedBuyers.buyerId', select: 'firstName lastName name phone email city state' },
     ]);
 
     if (!crop) {
@@ -118,21 +191,50 @@ export const updateCrop = async (req, res, next) => {
       return res.status(403).json({ message: 'Not authorized to update this crop' });
     }
 
-    // Update allowed fields
-    const { name, category, price, quantity, description, specifications, certifications, status } = req.body;
+    // Update allowed fields (images come from req.uploadedFiles via multer middleware)
+    const {
+      cropName,
+      cropType,
+      category,
+      price,
+      quantity,
+      unit,
+      description,
+      pickupLocation,
+      contactNumber,
+      specifications: rawSpecs,
+      status,
+      availability,
+    } = req.body;
+
+    const updateFields = {};
+    if (cropName !== undefined) updateFields.cropName = cropName;
+    if (cropType !== undefined) updateFields.cropType = cropType;
+    if (category !== undefined) updateFields.category = category;
+    if (price !== undefined) updateFields.price = price;
+    if (quantity !== undefined) updateFields.quantity = quantity;
+    if (unit !== undefined) updateFields.unit = unit;
+    if (description !== undefined) updateFields.description = description;
+    if (pickupLocation !== undefined) updateFields.pickupLocation = pickupLocation;
+    if (contactNumber !== undefined) updateFields.contactNumber = contactNumber;
+    if (rawSpecs !== undefined) {
+      try {
+        updateFields.specifications = typeof rawSpecs === 'string' ? JSON.parse(rawSpecs) : rawSpecs;
+      } catch {
+        updateFields.specifications = {};
+      }
+    }
+    if (status !== undefined && req.user.role === 'admin') updateFields.status = status;
+    if (availability !== undefined) updateFields.availability = availability;
+
+    // Handle images from multer middleware (req.uploadedFiles)
+    if (req.uploadedFiles && req.uploadedFiles.length > 0) {
+      updateFields.images = req.uploadedFiles.map(f => f.url);
+    }
 
     crop = await CropListing.findByIdAndUpdate(
       req.params.id,
-      {
-        name,
-        category,
-        price,
-        quantity,
-        description,
-        specifications,
-        certifications,
-        ...(req.user.role === 'admin' && { status }),
-      },
+      updateFields,
       { new: true, runValidators: true }
     );
 
@@ -174,12 +276,186 @@ export const deleteCrop = async (req, res, next) => {
 // @access Public
 export const getCropsByFarmer = async (req, res, next) => {
   try {
+    const { farmerId } = req.params;
+
+    if (!farmerId || farmerId === 'undefined') {
+      return res.status(400).json({ message: 'Valid farmer ID is required' });
+    }
+
     const crops = await CropListing.find({
-      farmerId: req.params.farmerId,
+      farmerId,
       status: 'active',
-    }).sort({ createdAt: -1 });
+    }).lean().sort({ createdAt: -1 });
 
     res.status(200).json({ crops });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @route GET /api/crops/my-listings
+// @desc Get current farmer's own crop listings (including not available)
+// @access Private (Farmer only)
+export const getMyListings = async (req, res, next) => {
+  try {
+    const crops = await CropListing.find({ farmerId: req.user._id })
+      .lean()
+      .populate('interestedBuyers.buyerId', 'firstName lastName name phone email city state')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ crops });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ===================== INTEREST / UNINTEREST WORKFLOW =====================
+
+// @route POST /api/crops/:id/interest
+// @desc Mark interest in a crop (Buyer only)
+// @access Private
+export const toggleInterest = async (req, res, next) => {
+  try {
+    const crop = await CropListing.findById(req.params.id);
+
+    if (!crop) {
+      return res.status(404).json({ message: 'Crop not found' });
+    }
+
+    // Only buyers can mark interest
+    if (req.user.role !== 'buyer') {
+      return res.status(403).json({ message: 'Only buyers can mark interest in crops' });
+    }
+
+    // Check if crop is available
+    if (crop.availability !== 'available') {
+      return res.status(400).json({ message: 'This crop is no longer available' });
+    }
+
+    // Check if buyer already marked interest
+    const existingIndex = crop.interestedBuyers.findIndex(
+      (ib) => ib.buyerId.toString() === req.user._id.toString()
+    );
+
+    if (existingIndex > -1) {
+      // Toggle: if already interested, remove interest (uninterested)
+      const existing = crop.interestedBuyers[existingIndex];
+
+      if (existing.status === 'ordered') {
+        return res.status(400).json({
+          message: 'Cannot remove interest - an order is already in progress for this crop',
+        });
+      }
+
+      crop.interestedBuyers.splice(existingIndex, 1);
+      await crop.save();
+
+      return res.status(200).json({
+        message: 'Interest removed successfully',
+        interested: false,
+        interestedBuyers: crop.interestedBuyers,
+      });
+    }
+
+    // Add new interest
+    crop.interestedBuyers.push({
+      buyerId: req.user._id,
+      status: 'interested',
+      interestedAt: new Date(),
+    });
+
+    await crop.save();
+
+    // Populate buyer details for notification
+    const buyer = await User.findById(req.user._id).select('firstName lastName name phone email city state');
+
+    // Send notification to the farmer
+    try {
+      await Notification.create({
+        userId: crop.farmerId,
+        title: 'New Interest in Your Crop 🌾',
+        message: `${buyer.firstName || buyer.name} is interested in your crop "${crop.cropName}". Contact them to finalize the order.`,
+        type: 'interest',
+        relatedId: crop._id,
+        priority: 'high',
+        actionUrl: `/farmer/crops/${crop._id}`,
+        data: {
+          cropId: crop._id,
+          cropName: crop.cropName,
+          buyerId: buyer._id,
+          buyerName: buyer.firstName || buyer.name,
+          buyerPhone: buyer.phone,
+          buyerEmail: buyer.email,
+          buyerCity: buyer.city,
+          buyerState: buyer.state,
+        },
+      });
+    } catch (notifErr) {
+      console.error('Failed to create interest notification:', notifErr);
+    }
+
+    res.status(200).json({
+      message: 'Interest marked successfully',
+      interested: true,
+      interestedBuyers: crop.interestedBuyers,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @route GET /api/crops/:id/interested-buyers
+// @desc Get list of interested buyers for a crop (Farmer only - owner)
+// @access Private
+export const getInterestedBuyers = async (req, res, next) => {
+  try {
+    const crop = await CropListing.findById(req.params.id)
+      .populate('interestedBuyers.buyerId', 'firstName lastName name phone email city state');
+
+    if (!crop) {
+      return res.status(404).json({ message: 'Crop not found' });
+    }
+
+    // Only the farmer who owns this crop can see interested buyers
+    if (crop.farmerId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to view interested buyers' });
+    }
+
+    res.status(200).json({
+      cropId: crop._id,
+      cropName: crop.cropName,
+      interestedBuyers: crop.interestedBuyers,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @route GET /api/crops/buyer/interested
+// @desc Get all crops the current buyer has marked as interested
+// @access Private (Buyer only)
+export const getMyInterestedCrops = async (req, res, next) => {
+  try {
+    const crops = await CropListing.find({
+      'interestedBuyers.buyerId': req.user._id,
+    })
+      .populate('farmerId', 'firstName lastName name phone farmName city state')
+      .sort({ updatedAt: -1 });
+
+    // Add the buyer's interest status to each crop
+    const cropsWithStatus = crops.map((crop) => {
+      const myInterest = crop.interestedBuyers.find(
+        (ib) => ib.buyerId.toString() === req.user._id.toString()
+      );
+      return {
+        ...crop.toObject(),
+        myInterestStatus: myInterest ? myInterest.status : null,
+        myInterestedAt: myInterest ? myInterest.interestedAt : null,
+        myOrderId: myInterest ? myInterest.orderId : null,
+      };
+    });
+
+    res.status(200).json({ crops: cropsWithStatus });
   } catch (error) {
     next(error);
   }

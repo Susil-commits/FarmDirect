@@ -1,14 +1,16 @@
-import { useState } from 'react';
-import { Upload, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Upload, CheckCircle, Clock, AlertCircle, Loader, Eye } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import BackButton from '../../components/common/BackButton';
+import { uploadService } from '../../services/uploadService';
+import DocumentPreviewModal from '../../components/admin/DocumentPreviewModal.jsx';
 
 export default function BuyerVerification() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { navigate } = useRouter();
   const [documents, setDocuments] = useState({
     governmentId: { file: null, status: 'pending', fileName: '' },
@@ -21,6 +23,45 @@ export default function BuyerVerification() {
   const [userType, setUserType] = useState('individual'); // individual or business
   const [submittedAt, setSubmittedAt] = useState(null);
   const [allSubmitted, setAllSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
+
+  // Pre-populate documents from backend kycDocuments when user data is available
+  useEffect(() => {
+    if (!user?.kycDocuments) return;
+
+    const kycDocs = user.kycDocuments;
+    const hasSubmittedDocs = Object.values(kycDocs).some(
+      (doc) => doc && typeof doc === 'object' && doc.url
+    );
+
+    if (!hasSubmittedDocs) return;
+
+    const docMappings = ['governmentId', 'businessRegistration', 'bankDetails', 'taxId', 'addressProof'];
+    const restoredDocs = {};
+    let hasAnyDoc = false;
+
+    docMappings.forEach((docId) => {
+      const backendDoc = kycDocs[docId];
+      if (backendDoc && backendDoc.url) {
+        restoredDocs[docId] = {
+          file: null,
+          status: 'submitted',
+          fileName: backendDoc.fileName || 'Uploaded document',
+          url: backendDoc.url,
+          mimeType: backendDoc.mimeType || 'application/pdf',
+        };
+        hasAnyDoc = true;
+      }
+    });
+
+    if (hasAnyDoc) {
+      setDocuments((prev) => ({ ...prev, ...restoredDocs }));
+      if (user.kycSubmittedAt) {
+        setSubmittedAt(new Date(user.kycSubmittedAt));
+      }
+    }
+  }, [user?.kycDocuments, user?.kycSubmittedAt]);
 
   // Redirect non-buyers
   if (!user || user.role !== 'buyer') {
@@ -40,7 +81,7 @@ export default function BuyerVerification() {
   }
 
   // If already verified
-  if (user?.verified) {
+  if (user?.kycStatus === 'verified') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <Card className="w-full max-w-md">
@@ -108,18 +149,73 @@ export default function BuyerVerification() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const requiredDocsToCheck = requiredDocs.filter(doc => doc.required);
-    const allUploaded = requiredDocsToCheck.every(doc => documents[doc.id].file);
-    
-    if (!allUploaded) {
-      alert('Please upload all required documents');
+
+    // Allow docs that are either newly uploaded (have File object) OR already submitted on backend with a file URL
+    const allReady = requiredDocsToCheck.every(
+      doc => documents[doc.id].file || (documents[doc.id].status === 'submitted' && documents[doc.id].url)
+    );
+
+    if (!allReady) {
+      const missing = requiredDocsToCheck.filter(doc => {
+        const d = documents[doc.id];
+        return !d.file && !(d.status === 'submitted' && d.url);
+      });
+      alert(`Please upload all required documents. Missing: ${missing.map(d => d.label).join(', ')}`);
       return;
     }
-    
-    setSubmittedAt(new Date().toLocaleDateString());
-    setAllSubmitted(true);
-    alert('Documents submitted for verification. Our team will review within 24-48 hours.');
+
+    // Check if there are any new files to actually upload
+    // IMPORTANT: Also allow re-upload if docs are marked "submitted" but have no file URL
+    // (this happens when a previous upload failed silently — kycStatus is "pending" but no docs stored)
+    const hasNewFiles = requiredDocsToCheck.some(
+      doc => documents[doc.id].file || (documents[doc.id].status === 'submitted' && !documents[doc.id].url)
+    );
+
+    if (!hasNewFiles) {
+      alert('All documents are already submitted and under review. No new files to upload.');
+      return;
+    }
+
+    const termsCheckbox = document.getElementById('terms');
+    if (termsCheckbox && !termsCheckbox.checked) {
+      alert('Please certify that all information provided is true and accurate');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      // Build file map - include docs with actual File objects (newly uploaded ones)
+      // AND docs that were marked "submitted" but have no file URL (failed previous upload)
+      const fileMap = {};
+      requiredDocsToCheck.forEach(doc => {
+        if (documents[doc.id].file) {
+          fileMap[doc.id] = documents[doc.id].file;
+        }
+      });
+
+      console.log('📤 [BuyerVerification] Uploading files:', Object.keys(fileMap));
+      console.log('📤 [BuyerVerification] File details:', Object.entries(fileMap).map(([k, v]) => `${k}: ${v.name} (${v.size} bytes)`));
+
+      await uploadService.uploadKYCDocuments(fileMap, 'buyer_kyc');
+
+      // CRITICAL: Refresh user data to get kycDocuments from backend
+      // This ensures the pre-populate useEffect can find the docs on next page load
+      console.log('🔄 [BuyerVerification] Refreshing user data...');
+      const refreshedUser = await refreshUser();
+      console.log('🔄 [BuyerVerification] User refreshed, kycDocuments:', Object.keys(refreshedUser?.kycDocuments || {}));
+
+      setSubmittedAt(new Date().toLocaleDateString());
+      setAllSubmitted(true);
+      alert('Documents submitted for verification. Our team will review within 24-48 hours.');
+    } catch (error) {
+      console.error('❌ [BuyerVerification] Failed to submit verification documents:', error);
+      const serverMsg = error?.response?.data?.message || error?.message || 'Unknown error';
+      alert(`Failed to submit documents: ${serverMsg}\n\nPlease check that:\n• All files are under 10MB\n• Files are PDF, JPG, or PNG format\n• Your internet connection is stable\n\nIf the problem persists, try refreshing the page and uploading again.`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const getStatusBg = (status) => {
@@ -131,7 +227,7 @@ export default function BuyerVerification() {
     }
   };
 
-  const uploadedCount = Object.values(documents).filter(d => d.file).length;
+  const uploadedCount = Object.values(documents).filter(d => d.file || d.status === 'submitted').length;
   const requiredCount = requiredDocs.filter(doc => doc.required).length;
 
   return (
@@ -223,11 +319,20 @@ export default function BuyerVerification() {
                   Refresh Status
                 </Button>
                 <Button
-                  variant="primary"
+                  variant="outline"
                   size="md"
-                  onClick={() => navigate('/marketplace')}
+                  onClick={() => {
+                    setAllSubmitted(false);
+                    setSubmittedAt(null);
+                    // Reset all document states to pending
+                    const resetDocs = {};
+                    Object.keys(documents).forEach((key) => {
+                      resetDocs[key] = { file: null, status: 'pending', fileName: '' };
+                    });
+                    setDocuments(resetDocs);
+                  }}
                 >
-                  Go to Marketplace
+                  Resubmit Documents
                 </Button>
               </div>
             </Card>
@@ -249,8 +354,8 @@ export default function BuyerVerification() {
                     <div className="text-4xl mb-2 opacity-70">{doc.icon}</div>
                     <p className="text-xs text-gray-600 font-medium">{doc.label}</p>
                     <Badge
-                      label={docData.file ? 'Uploaded' : 'Pending'}
-                      variant={docData.file ? 'success' : 'warning'}
+                      label={docData.status === 'submitted' ? 'Submitted' : docData.file ? 'Uploaded' : 'Pending'}
+                      variant={docData.status === 'submitted' || docData.file ? 'success' : 'warning'}
                       size="sm"
                       className="mt-2 mx-auto"
                     />
@@ -292,31 +397,57 @@ export default function BuyerVerification() {
                   </div>
                   {doc.required && (
                     <Badge
-                      label={documents[doc.id].file ? 'Uploaded' : 'Required'}
-                      variant={documents[doc.id].file ? 'success' : 'danger'}
+                      label={
+                        documents[doc.id].status === 'submitted' ? 'Submitted' :
+                        documents[doc.id].file ? 'Uploaded' : 'Required'
+                      }
+                      variant={
+                        documents[doc.id].status === 'submitted' ? 'success' :
+                        documents[doc.id].file ? 'success' : 'danger'
+                      }
                     />
                   )}
                 </div>
 
-                {documents[doc.id].file ? (
-                  <div className="bg-white rounded-lg p-4 border-2 border-green-200 mb-4">
+                {documents[doc.id].file || documents[doc.id].status === 'submitted' ? (
+                  <div className={`bg-white rounded-lg p-4 border-2 mb-4 ${documents[doc.id].status === 'submitted' ? 'border-blue-200' : 'border-green-200'}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
+                        {documents[doc.id].status === 'submitted' ? (
+                          <Clock className="w-5 h-5 text-blue-600" />
+                        ) : (
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                        )}
                         <div>
                           <p className="font-medium text-gray-900">{documents[doc.id].fileName}</p>
-                          <p className="text-xs text-gray-500">Ready for verification</p>
+                          <p className="text-xs text-gray-500">
+                            {documents[doc.id].status === 'submitted' ? 'Already submitted — under review' : 'Ready for verification'}
+                          </p>
                         </div>
                       </div>
-                      <button
-                        onClick={() => setDocuments(prev => ({
-                          ...prev,
-                          [doc.id]: { file: null, status: 'pending', fileName: '' }
-                        }))}
-                        className="text-red-600 hover:text-red-700 font-medium text-sm"
-                      >
-                        Remove
-                      </button>
+                      <div className="flex items-center gap-3">
+                        {documents[doc.id].url && (
+                          <button
+                            onClick={() => setSelectedDocument({
+                              url: documents[doc.id].url,
+                              fileName: documents[doc.id].fileName,
+                              mimeType: documents[doc.id].mimeType || 'application/pdf',
+                            })}
+                            className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1"
+                          >
+                            <Eye className="w-4 h-4" /> View
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setDocuments(prev => ({
+                            ...prev,
+                            [doc.id]: { file: null, status: 'pending', fileName: '' }
+                          }))}
+                          className="text-red-600 hover:text-red-700 font-medium text-sm"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -374,28 +505,34 @@ export default function BuyerVerification() {
         </Card>
 
         {/* Submit Button */}
-        <div className="mt-8 flex gap-4">
-          <Button
-            onClick={() => navigate('/')}
-            variant="secondary"
-            size="lg"
-            className="flex-1"
-          >
-            Skip for Now
-          </Button>
+        <div className="mt-8">
           <Button
             onClick={handleSubmit}
             variant="primary"
             size="lg"
-            className="flex-1"
-            disabled={allSubmitted}
+            className="w-full"
+            disabled={allSubmitted || submitting}
           >
-            {allSubmitted ? 'Documents Submitted' : 'Submit for Verification'}
+            {submitting ? (
+              <><Loader size={18} className="animate-spin mr-2" /> Submitting...</>
+            ) : allSubmitted ? (
+              'Documents Submitted'
+            ) : (
+              'Submit for Verification'
+            )}
           </Button>
         </div>
           </>
         )}
       </div>
+
+      {/* Document Preview Modal */}
+      {selectedDocument && (
+        <DocumentPreviewModal
+          document={selectedDocument}
+          onClose={() => setSelectedDocument(null)}
+        />
+      )}
     </div>
   );
 }

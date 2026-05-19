@@ -106,7 +106,7 @@ router.get('/test/pending-kyc', async (req, res) => {
     const users = await User.find({
       role: queryRole,
       kycStatus: 'pending'
-    }).select('firstName lastName email role kycStatus phone createdAt kycSubmittedAt');
+    }).select('firstName lastName email role kycStatus phone createdAt kycSubmittedAt kycDocuments');
     
     console.log(`✅ Test: Found ${users.length} pending KYC users for role: ${queryRole}`);
     
@@ -134,6 +134,110 @@ router.get('/test/pending-kyc', async (req, res) => {
   }
 });
 
+// TEST: Get rejected KYC (NO AUTH - for debugging)
+router.get('/test/rejected-kyc', async (req, res) => {
+  try {
+    const { role = 'buyer' } = req.query;
+    const User = (await import('../models/User.js')).default;
+    
+    let queryRole = role.toLowerCase().replace(/s$/, '');
+    const validRoles = ['farmer', 'buyer'];
+    if (!validRoles.includes(queryRole)) {
+      queryRole = 'buyer';
+    }
+    
+    console.log(`🔍 Test: Fetching REJECTED KYC for role: ${queryRole} (received: ${role})`);
+    
+    const users = await User.find({
+      role: queryRole,
+      kycStatus: 'rejected'
+    }).select('firstName lastName email role kycStatus phone createdAt kycSubmittedAt kycRejectionReason');
+    
+    console.log(`✅ Test: Found ${users.length} rejected KYC users for role: ${queryRole}`);
+    
+    res.json({
+      success: true,
+      role: role,
+      queryRole: queryRole,
+      total: users.length,
+      data: users.map(u => ({
+        id: u._id,
+        name: u.firstName + ' ' + u.lastName,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        email: u.email,
+        role: u.role,
+        phone: u.phone,
+        kycStatus: u.kycStatus,
+        kycRejectionReason: u.kycRejectionReason,
+        createdAt: u.createdAt,
+        kycSubmittedAt: u.kycSubmittedAt
+      }))
+    });
+  } catch (error) {
+    console.error('Rejected KYC test endpoint error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// TEST: Create admin user (NO AUTH - for first-time setup)
+router.post('/test/create-admin', async (req, res) => {
+  try {
+    const bcrypt = (await import('bcryptjs')).default;
+    const User = (await import('../models/User.js')).default;
+    const { email, password, firstName, lastName } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+    
+    // Check if admin already exists
+    const existing = await User.findOne({ email });
+    if (existing) {
+      // Update to admin if needed
+      if (existing.role !== 'admin' || existing.kycStatus !== 'verified') {
+        existing.role = 'admin';
+        existing.kycStatus = 'verified';
+        existing.status = 'active';
+        existing.verified = true;
+        existing.emailVerified = true;
+        await existing.save();
+        return res.json({ success: true, message: `Updated ${email} to admin role`, user: { email: existing.email, role: existing.role, kycStatus: existing.kycStatus } });
+      }
+      return res.json({ success: true, message: `Admin ${email} already exists`, user: { email: existing.email, role: existing.role } });
+    }
+    
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    
+    const admin = await User.create({
+      firstName: firstName || 'FarmDirect',
+      lastName: lastName || 'Admin',
+      name: `${firstName || 'FarmDirect'} ${lastName || 'Admin'}`,
+      email,
+      password: hashedPassword,
+      role: 'admin',
+      kycStatus: 'verified',
+      status: 'active',
+      verified: true,
+      emailVerified: true,
+      phone: '0000000000',
+      bio: 'FarmDirect Platform Administrator',
+    });
+    
+    res.json({ success: true, message: 'Admin created successfully', user: { id: admin._id, email: admin.email, role: admin.role, kycStatus: admin.kycStatus } });
+  } catch (error) {
+    console.error('Create admin test endpoint error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Document proxy for iframe viewing (no auth needed - iframes can't send JWT)
+router.get('/documents/proxy', adminController.proxyDocument);
+
+// KYC result-seen endpoint (must be BEFORE admin-only middleware — called by farmers/buyers)
+router.patch('/kyc/result-seen', protect, adminController.markKYCResultSeen);
+
 // All admin routes require admin authorization
 router.use(protect, authorize('admin'));
 
@@ -153,8 +257,12 @@ router.delete('/users/:userId', adminController.deleteUser);
 router.get('/kyc/pending', adminController.getPendingKYC);
 router.get('/kyc/rejected', adminController.getRejectedKYC);
 router.get('/debug/users-kyc-status', adminController.debugGetAllUsersKYCStatus);
-router.patch('/kyc/:farmerId/approve', adminController.approveFarmerKYC);
-router.patch('/kyc/:farmerId/reject', adminController.rejectFarmerKYC);
+router.patch('/kyc/:userId/approve', adminController.approveUserKYC);
+router.patch('/kyc/:userId/reject', adminController.rejectUserKYC);
+
+// Documents & Images (Admin Visibility)
+router.get('/documents/search', adminController.searchDocuments);
+router.get('/documents/:userId', adminController.getUserDocuments);
 
 // Crops management
 router.get('/crops', adminController.getAllCrops);

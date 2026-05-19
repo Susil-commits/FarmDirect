@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { reviewService } from '../services/appService';
 import '../styles/Reviews.css';
 
 export default function ProductReviews({ productId }) {
@@ -220,3 +221,4 @@ export default function ProductReviews({ productId }) {
     </div>
   );
 }
+

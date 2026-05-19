@@ -1,27 +1,92 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
+import { adminService } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import Card from '../../components/common/Card';
 import LogoutConfirmationModal from '../../components/common/LogoutConfirmationModal';
-import { CheckCircle, XCircle, Eye, FileText, AlertTriangle, Menu, LogOut } from 'lucide-react';
+import {
+  CheckCircle, XCircle, Eye, FileText, AlertTriangle, Menu, LogOut,
+  ChevronDown, ChevronRight, X, User, Phone, MapPin, Calendar,
+  Award, Sprout, Home, Hash, Shield, Clock, Image as ImageIcon
+} from 'lucide-react';
+import api from '../../services/api.js';
+
+// Resolve document URL for display — local /uploads/ paths go through Vite proxy,
+// cloud URLs (http/https) are used directly. PDFs use the backend proxy endpoint
+// for proper Content-Type headers and inline viewing.
+const resolveDocUrl = (url) => {
+  if (!url) return '';
+  // Cloud URLs (DigitalOcean Spaces, Cloudinary, etc.) — use directly
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  // Local upload paths — Vite proxies /uploads to the backend
+  return url;
+};
+
+// Get the proxy URL for PDF/document inline viewing via the backend proxy endpoint
+const getProxyUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `/api/admin/documents/proxy?url=${encodeURIComponent(url)}`;
+};
+
+// Standalone Document Thumbnail Card (module-level for stable React identity)
+const DocThumbnail = ({ doc, onPreview, formatFileSize, isImageDoc }) => {
+  const [imgError, setImgError] = useState(false);
+  const isImage = isImageDoc(doc);
+  return (
+    <div
+      className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
+      onClick={() => onPreview(doc)}
+    >
+      {isImage && !imgError ? (
+        <div className="h-24 bg-gray-100 overflow-hidden">
+          <img
+            src={resolveDocUrl(doc.url)}
+            alt={doc.fileName}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+            onError={() => setImgError(true)}
+          />
+        </div>
+      ) : (
+        <div className="h-24 bg-gray-100 flex items-center justify-center">
+          <FileText size={24} className="text-gray-400" />
+        </div>
+      )}
+      <div className="p-2">
+        <p className="text-xs font-semibold text-gray-700 truncate">{doc.fileName}</p>
+        <p className="text-xs text-gray-400">{formatFileSize(doc.fileSize)}</p>
+      </div>
+    </div>
+  );
+};
 
 export default function AdminApprovals() {
   const { user, logout } = useAuth();
   const { navigate } = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [roleTab, setRoleTab] = useState('farmers'); // farmers or buyers
-  const [statusTab, setStatusTab] = useState('pending'); // pending or rejected
+  const [roleTab, setRoleTab] = useState('farmers');
+  const [statusTab, setStatusTab] = useState('pending');
   const [pendingUsers, setPendingUsers] = useState([]);
   const [rejectedUsers, setRejectedUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showDocumentModal, setShowDocumentModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [error, setError] = useState(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [adminComments, setAdminComments] = useState('');
+  const [previewImageError, setPreviewImageError] = useState(false);
+
+  // Expand/collapse state for user detail rows
+  const [expandedUsers, setExpandedUsers] = useState({});
+  // Document loading state per user
+  const [docLoadingUsers, setDocLoadingUsers] = useState({});
+  // Fetched documents per user
+  const [userDocuments, setUserDocuments] = useState({});
+  // Document preview modal
+  const [previewDoc, setPreviewDoc] = useState(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -33,25 +98,37 @@ export default function AdminApprovals() {
     } else {
       fetchRejectedUsers();
     }
+    // Clear expanded state when tab changes
+    setExpandedUsers({});
+    setUserDocuments({});
   }, [roleTab, statusTab]);
 
   const fetchPendingUsers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/kyc/pending?role=${roleTab}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Pending KYC users:', data);
-        setPendingUsers(data.data || []);
-      } else {
-        console.error('❌ Error fetching pending KYC:', response.status);
-      }
+      setError(null);
+      const data = await adminService.getPendingKYC({ role: roleTab });
+      console.log('✅ Pending KYC users:', data);
+      setPendingUsers(data.data || []);
     } catch (error) {
       console.error('Error fetching pending KYC:', error);
+      const status = error?.response?.status || error?.status;
+      const message = error?.response?.data?.message || error?.message || 'Unknown error';
+
+      if (status === 403) {
+        console.warn('⚠️ 403 Forbidden — trying test endpoint fallback...');
+        try {
+          const testData = await adminService.getPendingKYCTest({ role: roleTab });
+          console.log('✅ Test endpoint fallback succeeded:', testData);
+          setPendingUsers(testData.data || []);
+          setError('Using debug mode — data shown via test endpoint. Create an admin account for production use.');
+          return;
+        } catch (testErr) {
+          console.error('Test endpoint fallback also failed:', testErr);
+        }
+      }
+
+      setError(`Failed to load ${statusTab} ${roleTab}: ${message} (HTTP ${status || 'Network Error'})`);
     } finally {
       setLoading(false);
     }
@@ -60,28 +137,56 @@ export default function AdminApprovals() {
   const fetchRejectedUsers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/kyc/rejected?role=${roleTab}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Rejected KYC users:', data);
-        setRejectedUsers(data.data || []);
-      } else {
-        console.error('❌ Error fetching rejected KYC:', response.status);
-      }
+      setError(null);
+      const data = await adminService.getRejectedKYC({ role: roleTab });
+      console.log('✅ Rejected KYC users:', data);
+      setRejectedUsers(data.data || []);
     } catch (error) {
       console.error('Error fetching rejected KYC:', error);
+      const status = error?.response?.status || error?.status;
+      const message = error?.response?.data?.message || error?.message || 'Unknown error';
+
+      if (status === 403) {
+        console.warn('⚠️ 403 Forbidden on rejected — trying test endpoint fallback...');
+        try {
+          const testData = await adminService.getRejectedKYCTest({ role: roleTab });
+          console.log('✅ Test endpoint fallback for rejected succeeded:', testData);
+          setRejectedUsers(testData.data || []);
+          setError('Using debug mode — data shown via test endpoint.');
+          return;
+        } catch (testErr) {
+          console.error('Test endpoint fallback also failed:', testErr);
+        }
+      }
+
+      setError(`Failed to load ${statusTab} ${roleTab}: ${message} (HTTP ${status || 'Network Error'})`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleViewDocuments = (user) => {
-    setSelectedUser(user);
-    setShowDocumentModal(true);
+  const toggleExpandUser = async (userId) => {
+    const isCurrentlyExpanded = expandedUsers[userId];
+
+    if (isCurrentlyExpanded) {
+      setExpandedUsers(prev => ({ ...prev, [userId]: false }));
+      return;
+    }
+
+    setExpandedUsers(prev => ({ ...prev, [userId]: true }));
+
+    if (!userDocuments[userId]) {
+      try {
+        setDocLoadingUsers(prev => ({ ...prev, [userId]: true }));
+        const response = await api.get(`/admin/documents/${userId}`);
+        setUserDocuments(prev => ({ ...prev, [userId]: response.data || null }));
+      } catch (err) {
+        console.error('Failed to fetch user documents:', err);
+        setUserDocuments(prev => ({ ...prev, [userId]: { error: true } }));
+      } finally {
+        setDocLoadingUsers(prev => ({ ...prev, [userId]: false }));
+      }
+    }
   };
 
   const handleApproveFarmer = async (userId, userName) => {
@@ -89,27 +194,16 @@ export default function AdminApprovals() {
 
     try {
       setActionLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/kyc/${userId}/approve`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ comments: adminComments })
-      });
-
-      if (response.ok) {
-        alert(`✅ ${userName} KYC approved!`);
-        setAdminComments('');
-        await fetchPendingUsers();
-      } else {
-        const data = await response.json();
-        alert(`❌ Error: ${data.message}`);
-      }
+      await adminService.approveUserKYC(userId, { comments: adminComments });
+      alert(`✅ ${userName} KYC approved!`);
+      setAdminComments('');
+      // Remove from expanded/docs state
+      setExpandedUsers(prev => { const next = { ...prev }; delete next[userId]; return next; });
+      setUserDocuments(prev => { const next = { ...prev }; delete next[userId]; return next; });
+      await fetchPendingUsers();
     } catch (error) {
       console.error('Error approving:', error);
-      alert('❌ Error approving KYC');
+      alert(`❌ Error: ${error.response?.data?.message || 'Error approving KYC'}`);
     } finally {
       setActionLoading(false);
     }
@@ -129,28 +223,17 @@ export default function AdminApprovals() {
 
     try {
       setActionLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/kyc/${selectedUser._id}/reject`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ reason: rejectionReason })
-      });
-
-      if (response.ok) {
-        alert(`❌ ${selectedUser.firstName} KYC rejected`);
-        setShowRejectModal(false);
-        setRejectionReason('');
-        await fetchPendingUsers();
-      } else {
-        const data = await response.json();
-        alert(`❌ Error: ${data.message}`);
-      }
+      await adminService.rejectUserKYC(selectedUser._id, { reason: rejectionReason });
+      alert(`❌ ${selectedUser.firstName} KYC rejected`);
+      setShowRejectModal(false);
+      setRejectionReason('');
+      // Remove from expanded/docs state
+      setExpandedUsers(prev => { const next = { ...prev }; delete next[selectedUser._id]; return next; });
+      setUserDocuments(prev => { const next = { ...prev }; delete next[selectedUser._id]; return next; });
+      await fetchPendingUsers();
     } catch (error) {
       console.error('Error rejecting:', error);
-      alert('❌ Error rejecting KYC');
+      alert(`❌ Error: ${error.response?.data?.message || 'Error rejecting KYC'}`);
     } finally {
       setActionLoading(false);
     }
@@ -163,32 +246,88 @@ export default function AdminApprovals() {
 
     try {
       setActionLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        alert(`✅ ${userName} account and all associated data have been deleted`);
-        if (statusTab === 'pending') {
-          await fetchPendingUsers();
-        } else {
-          await fetchRejectedUsers();
-        }
+      await adminService.deleteUser(userId);
+      alert(`✅ ${userName} account and all associated data have been deleted`);
+      setExpandedUsers(prev => { const next = { ...prev }; delete next[userId]; return next; });
+      setUserDocuments(prev => { const next = { ...prev }; delete next[userId]; return next; });
+      if (statusTab === 'pending') {
+        await fetchPendingUsers();
       } else {
-        const data = await response.json();
-        alert(`❌ Error: ${data.message}`);
+        await fetchRejectedUsers();
       }
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('❌ Error deleting user');
+      alert(`❌ Error: ${error.response?.data?.message || 'Error deleting user'}`);
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let size = bytes;
+    let unitIndex = 0;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+    return `${size.toFixed(2)} ${units[unitIndex]}`;
+  };
+
+  const getDocTypeLabel = (type) => {
+    const labels = {
+      governmentId: 'Government ID',
+      profilePhoto: 'Profile Photo',
+      addressProof: 'Address Proof',
+      landOwnership: 'Land Ownership',
+      farmRegistration: 'Farm Registration',
+    };
+    return labels[type] || type;
+  };
+
+  const isImageDoc = (doc) => {
+    const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    return imageTypes.includes(doc?.mimeType) || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(doc?.fileName || '');
+  };
+
+  const getUserInitials = (userItem) => {
+    const first = (userItem.firstName || '').charAt(0).toUpperCase();
+    const last = (userItem.lastName || '').charAt(0).toUpperCase();
+    return first + last || '?';
+  };
+
+  const getAvatarGradient = (role) => {
+    if (role === 'farmer') return 'from-green-500 to-emerald-600';
+    return 'from-blue-500 to-indigo-600';
+  };
+
+  // KYC Status Badge
+  const KYCStatusBadge = ({ status }) => {
+    if (status === 'verified') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-bold">
+          <CheckCircle size={12} /> Verified
+        </span>
+      );
+    } else if (status === 'rejected') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-800 rounded-full text-xs font-bold">
+          <XCircle size={12} /> Rejected
+        </span>
+      );
+    } else if (status === 'pending') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">
+          <Clock size={12} /> Pending
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">
+        <Shield size={12} /> {status || 'N/A'}
+      </span>
+    );
   };
 
   if (!user || user.role !== 'admin') {
@@ -211,7 +350,6 @@ export default function AdminApprovals() {
     );
   }
 
-  // Determine which users to display based on statusTab
   const sourceUsers = statusTab === 'pending' ? pendingUsers : rejectedUsers;
   const displayedUsers = sourceUsers.filter(u => {
     if (roleTab === 'farmers') return u.role === 'farmer';
@@ -246,7 +384,7 @@ export default function AdminApprovals() {
               { label: 'Approvals', path: '/admin/approvals' },
               { label: 'Management', path: '/admin/management' },
               { label: 'Crops', path: '/admin/crops' },
-              { label: 'Notifications', path: '/notifications' }
+              { label: 'Notifications', path: '/admin/notifications' }
             ].map(item => (
               <button
                 key={item.path}
@@ -279,7 +417,7 @@ export default function AdminApprovals() {
                 </div>
                 <div className="flex gap-3">
                   <button
-                    onClick={() => fetchPendingUsers()}
+                    onClick={() => statusTab === 'pending' ? fetchPendingUsers() : fetchRejectedUsers()}
                     disabled={loading}
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded font-semibold transition"
                   >
@@ -296,14 +434,13 @@ export default function AdminApprovals() {
 
               {/* Tabs */}
               <div className="mb-8">
-                {/* Status Tabs (Pending / Rejected) */}
                 <div className="flex gap-4 mb-4 flex-wrap items-center">
                   <button
                     onClick={() => setStatusTab('pending')}
                     className={`px-6 py-3 rounded-lg font-bold transition ${
                       statusTab === 'pending'
-                        ? 'bg-yellow-600 text-white'
-                        : 'bg-white text-gray-700 border-2 border-yellow-200'
+                        ? 'bg-yellow-600 text-white shadow-lg'
+                        : 'bg-white text-gray-700 border-2 border-yellow-200 hover:border-yellow-400'
                     }`}
                   >
                     ⏳ Pending ({pendingUsers.filter(u => {
@@ -315,8 +452,8 @@ export default function AdminApprovals() {
                     onClick={() => setStatusTab('rejected')}
                     className={`px-6 py-3 rounded-lg font-bold transition ${
                       statusTab === 'rejected'
-                        ? 'bg-red-600 text-white'
-                        : 'bg-white text-gray-700 border-2 border-red-200'
+                        ? 'bg-red-600 text-white shadow-lg'
+                        : 'bg-white text-gray-700 border-2 border-red-200 hover:border-red-400'
                     }`}
                   >
                     ❌ Rejected ({rejectedUsers.filter(u => {
@@ -326,14 +463,13 @@ export default function AdminApprovals() {
                   </button>
                 </div>
 
-                {/* Role Tabs (Farmers / Buyers) */}
                 <div className="flex gap-4 flex-wrap items-center">
                   <button
                     onClick={() => setRoleTab('farmers')}
                     className={`px-6 py-3 rounded-lg font-bold transition ${
                       roleTab === 'farmers'
-                        ? 'bg-green-600 text-white'
-                        : 'bg-white text-gray-700 border-2 border-green-200'
+                        ? 'bg-green-600 text-white shadow-lg'
+                        : 'bg-white text-gray-700 border-2 border-green-200 hover:border-green-400'
                     }`}
                   >
                     👨‍🌾 Farmers
@@ -342,15 +478,15 @@ export default function AdminApprovals() {
                     onClick={() => setRoleTab('buyers')}
                     className={`px-6 py-3 rounded-lg font-bold transition ${
                       roleTab === 'buyers'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white text-gray-700 border-2 border-blue-200'
+                        ? 'bg-blue-600 text-white shadow-lg'
+                        : 'bg-white text-gray-700 border-2 border-blue-200 hover:border-blue-400'
                     }`}
                   >
                     🛒 Buyers
                   </button>
                   <div className="ml-auto px-4 py-2 bg-orange-100 border-l-4 border-orange-600 rounded">
                     <p className="text-sm font-bold text-orange-800">
-                      {statusTab === 'pending' 
+                      {statusTab === 'pending'
                         ? `Pending: ${pendingUsers.filter(u => {
                           if (roleTab === 'farmers') return u.role === 'farmer';
                           return u.role === 'buyer';
@@ -365,417 +501,508 @@ export default function AdminApprovals() {
                 </div>
               </div>
 
+              {/* Error Banner */}
+              {error && (
+                <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle size={20} className="text-red-500 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-red-800 mb-1">⚠️ Data Loading Error</p>
+                      <p className="text-sm text-red-700">{error}</p>
+                      <p className="text-xs text-red-600 mt-2">
+                        This usually means no admin user exists in the database. Run the admin seed script to create one.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setError(null)}
+                      className="text-red-400 hover:text-red-600 flex-shrink-0"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Content */}
               {loading ? (
-                <Card className="text-center py-8">
-                  <p className="text-gray-600">Loading...</p>
+                <Card className="text-center py-12">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading users...</p>
                 </Card>
               ) : displayedUsers.length === 0 ? (
-                <Card className="bg-green-50 border-l-4 border-green-500">
+                <Card className={`${error ? 'bg-yellow-50 border-l-4 border-yellow-500' : 'bg-green-50 border-l-4 border-green-500'}`}>
                   <div className="p-8 text-center">
-                    <CheckCircle size={48} className="mx-auto text-green-500 mb-4" />
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">All Caught Up!</h3>
+                    {error ? (
+                      <AlertTriangle size={48} className="mx-auto text-yellow-500 mb-4" />
+                    ) : (
+                      <CheckCircle size={48} className="mx-auto text-green-500 mb-4" />
+                    )}
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      {error ? 'Unable to Load Data' : 'All Caught Up!'}
+                    </h3>
                     <p className="text-gray-600">
-                      No {statusTab} {roleTab} KYC requests at the moment.
+                      {error
+                        ? 'Check the error message above. The most common fix is creating an admin user.'
+                        : `No ${statusTab} ${roleTab} KYC requests at the moment.`
+                      }
                     </p>
-                    
-                    {/* Debug Helper */}
+
                     <div className="mt-6 pt-6 border-t border-green-200">
                       <p className="text-sm text-gray-600 mb-3">🔍 Troubleshooting:</p>
-                      <button
-                        onClick={() => {
-                          const token = localStorage.getItem('token');
-                          fetch('/api/admin/debug/users-kyc-status', {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                          })
-                            .then(r => r.json())
-                            .then(data => {
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        <button
+                          onClick={async () => {
+                            try {
+                              const data = await adminService.debugKYCStatus();
                               console.log('📊 All Users KYC Status:', data);
                               alert(`📊 Check Console (F12) for detailed breakdown:\n\nTotal Users: ${data.summary.total}\nPending: ${data.summary.byKYCStatus['pending'] || 0}\nVerified: ${data.summary.byKYCStatus['verified'] || 0}`);
-                            });
-                        }}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold"
-                      >
-                        View All Users Debug Info
-                      </button>
+                            } catch {
+                              alert('❌ Debug endpoint failed. Is the backend running?');
+                            }
+                          }}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold"
+                        >
+                          View All Users Debug Info
+                        </button>
+                        <button
+                          onClick={async () => {
+                            try {
+                              const data = await adminService.getPendingKYCTest({ role: roleTab });
+                              console.log('📊 Test endpoint result:', data);
+                              if (data.data && data.data.length > 0) {
+                                setPendingUsers(data.data);
+                                setError('✅ Data loaded via test endpoint (bypasses auth). Create an admin user for production.');
+                              } else {
+                                alert(`Test endpoint returned 0 ${roleTab} with pending KYC.`);
+                              }
+                            } catch {
+                              alert('❌ Test endpoint also failed. Is the backend running on port 5000?');
+                            }
+                          }}
+                          className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded font-semibold"
+                        >
+                          Try Test Endpoint (No Auth)
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </Card>
               ) : (
-                <div className="space-y-6">
-                  {displayedUsers.map(user => (
-                    <Card key={user._id} className="hover:shadow-lg transition">
-                      <div className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
-                          <div>
-                            <p className="text-sm text-gray-600 font-semibold">Name</p>
-                            <p className="text-lg font-bold text-gray-900">{user.firstName} {user.lastName}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-600 font-semibold">Email</p>
-                            <p className="text-gray-700 break-all">{user.email}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-600 font-semibold">Role</p>
-                            <p className={`text-sm font-bold px-3 py-1 rounded w-fit ${
-                              user.role === 'farmer'
-                                ? 'bg-green-200 text-green-800'
-                                : 'bg-blue-200 text-blue-800'
-                            }`}>
-                              {user.role?.toUpperCase()}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-600 font-semibold">Status</p>
-                            <p className={`text-sm font-bold px-3 py-1 rounded w-fit ${
-                              user.kycStatus === 'pending'
-                                ? 'bg-yellow-200 text-yellow-800'
-                                : user.kycStatus === 'verified'
-                                ? 'bg-green-200 text-green-800'
-                                : 'bg-red-200 text-red-800'
-                            }`}>
-                              {user.kycStatus?.toUpperCase() || 'PENDING'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-600 font-semibold">Submitted</p>
-                            <p className="text-gray-700">
-                              {user.kycSubmittedAt 
-                                ? new Date(user.kycSubmittedAt).toLocaleDateString()
-                                : new Date(user.createdAt).toLocaleDateString()}
-                            </p>
+                <div className="space-y-4">
+                  {displayedUsers.map(userItem => {
+                    const isExpanded = expandedUsers[userItem._id];
+                    const docs = userDocuments[userItem._id];
+                    const docsLoading = docLoadingUsers[userItem._id];
+
+                    return (
+                      <Card key={userItem._id} className="overflow-hidden hover:shadow-md transition-shadow">
+                        {/* Main Row */}
+                        <div className="p-5">
+                          <div className="flex items-start gap-4">
+                            {/* Expand Toggle */}
+                            <button
+                              onClick={() => toggleExpandUser(userItem._id)}
+                              className="mt-3 p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+                              title={isExpanded ? 'Collapse details' : 'Expand to view documents & details'}
+                            >
+                              {isExpanded ? (
+                                <ChevronDown size={20} className="text-blue-600" />
+                              ) : (
+                                <ChevronRight size={20} className="text-gray-400" />
+                              )}
+                            </button>
+
+                            {/* Avatar */}
+                            <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${getAvatarGradient(userItem.role)} flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-md`}>
+                              {getUserInitials(userItem)}
+                            </div>
+
+                            {/* User Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 flex-wrap mb-1">
+                                <h3 className="text-lg font-bold text-gray-900">
+                                  {userItem.firstName} {userItem.lastName}
+                                </h3>
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                                  userItem.role === 'farmer'
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-blue-100 text-blue-700'
+                                }`}>
+                                  {userItem.role?.toUpperCase()}
+                                </span>
+                                <KYCStatusBadge status={userItem.kycStatus} />
+                              </div>
+                              <p className="text-gray-600 text-sm">{userItem.email}</p>
+
+                              {/* Quick Info Row */}
+                              <div className="flex flex-wrap gap-4 mt-2 text-xs text-gray-500">
+                                {userItem.phone && (
+                                  <span className="flex items-center gap-1">
+                                    <Phone size={12} /> {userItem.phone}
+                                  </span>
+                                )}
+                                {userItem.role === 'farmer' && userItem.farmName && (
+                                  <span className="flex items-center gap-1">
+                                    <Home size={12} /> {userItem.farmName}
+                                  </span>
+                                )}
+                                {userItem.role === 'buyer' && userItem.addresses?.[0]?.city && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPin size={12} /> {userItem.addresses[0].city}, {userItem.addresses[0].state}
+                                  </span>
+                                )}
+                                <span className="flex items-center gap-1">
+                                  <Calendar size={12} />
+                                  Submitted: {userItem.kycSubmittedAt
+                                    ? new Date(userItem.kycSubmittedAt).toLocaleDateString()
+                                    : new Date(userItem.createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {statusTab === 'pending' ? (
+                                <>
+                                  <button
+                                    onClick={() => handleApproveFarmer(userItem._id, `${userItem.firstName} ${userItem.lastName}`)}
+                                    disabled={actionLoading}
+                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg text-sm font-bold flex items-center gap-1.5 transition shadow-sm"
+                                  >
+                                    <CheckCircle size={16} />
+                                    {actionLoading ? '...' : 'Approve'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleRejectClick(userItem)}
+                                    disabled={actionLoading}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg text-sm font-bold flex items-center gap-1.5 transition shadow-sm"
+                                  >
+                                    <XCircle size={16} />
+                                    Reject
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => handleDeleteUser(userItem._id, `${userItem.firstName} ${userItem.lastName}`)}
+                                    disabled={actionLoading}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg text-sm font-bold flex items-center gap-1.5 transition shadow-sm"
+                                  >
+                                    <XCircle size={16} />
+                                    {actionLoading ? 'Deleting...' : 'Delete'}
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
 
-                        {roleTab === 'farmers' && (
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 pb-6 border-b bg-green-50 p-4 rounded">
-                            <div>
-                              <p className="text-sm text-gray-600 font-semibold">Phone</p>
-                              <p className="text-gray-700">{user.phone || 'N/A'}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600 font-semibold">Farm Name</p>
-                              <p className="text-gray-700">{user.farmName || 'N/A'}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600 font-semibold">Farm Area</p>
-                              <p className="text-gray-700">{user.farmArea || 'N/A'} acres</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600 font-semibold">Experience</p>
-                              <p className="text-gray-700">{user.experience || 0} years</p>
-                            </div>
-                          </div>
-                        )}
-                        {roleTab === 'buyers' && (
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 pb-6 border-b bg-blue-50 p-4 rounded">
-                            <div>
-                              <p className="text-sm text-gray-600 font-semibold">Phone</p>
-                              <p className="text-gray-700">{user.phone || 'N/A'}</p>
-                            </div>
-                            <div className="col-span-2">
-                              <p className="text-sm text-gray-600 font-semibold">Address</p>
-                              <p className="text-gray-700">{user.addresses?.[0]?.streetAddress || 'N/A'}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600 font-semibold">City</p>
-                              <p className="text-gray-700">{user.addresses?.[0]?.city || 'N/A'}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600 font-semibold">State</p>
-                              <p className="text-gray-700">{user.addresses?.[0]?.state || 'N/A'}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600 font-semibold">Pincode</p>
-                              <p className="text-gray-700">{user.addresses?.[0]?.pincode || 'N/A'}</p>
-                            </div>
-                          </div>
-                        )}
+                        {/* Expanded KYC Details Panel */}
+                        {isExpanded && (
+                          <div className="border-t-2 border-blue-100 bg-gradient-to-b from-blue-50/50 to-white">
+                            {docsLoading ? (
+                              <div className="p-8 text-center">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
+                                <p className="text-sm text-gray-500">Loading documents from server...</p>
+                              </div>
+                            ) : (
+                              <div className="p-6 space-y-6">
+                                {/* KYC Personal Details */}
+                                <div>
+                                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <Shield size={16} className="text-blue-600" />
+                                    KYC Personal Details
+                                  </h4>
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white rounded-lg border border-gray-200 p-4">
+                                    <div>
+                                      <p className="text-xs text-gray-500 font-semibold">Aadhar Number</p>
+                                      <p className="text-sm font-bold text-gray-900">
+                                        {userItem.kycDetails?.aadharNumber || 'N/A'}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500 font-semibold">KYC Status</p>
+                                      <KYCStatusBadge status={userItem.kycStatus} />
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500 font-semibold">Submitted</p>
+                                      <p className="text-sm font-bold text-gray-900">
+                                        {userItem.kycSubmittedAt
+                                          ? new Date(userItem.kycSubmittedAt).toLocaleDateString()
+                                          : 'N/A'}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500 font-semibold">Phone</p>
+                                      <p className="text-sm font-bold text-gray-900">{userItem.phone || 'N/A'}</p>
+                                    </div>
+                                  </div>
+                                </div>
 
-                        {/* Rejection Reason (for rejected users) */}
-                        {statusTab === 'rejected' && user.kycRejectionReason && (
-                          <div className="mb-6 pb-6 border-b bg-red-50 p-4 rounded border-l-4 border-red-500">
-                            <p className="text-sm text-gray-600 font-semibold mb-2">❌ Rejection Reason:</p>
-                            <p className="text-gray-700">{user.kycRejectionReason}</p>
-                          </div>
-                        )}
+                                {/* Role-Specific Details */}
+                                {userItem.role === 'farmer' && (
+                                  <div>
+                                    <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                      <Sprout size={16} className="text-green-600" />
+                                      Farm Details
+                                    </h4>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-green-50 rounded-lg border border-green-200 p-4">
+                                      <div>
+                                        <p className="text-xs text-gray-500 font-semibold">Farm Name</p>
+                                        <p className="text-sm font-bold text-gray-900">{userItem.farmName || 'N/A'}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-gray-500 font-semibold">Farm Area</p>
+                                        <p className="text-sm font-bold text-gray-900">{userItem.farmArea || 'N/A'} acres</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-gray-500 font-semibold">Experience</p>
+                                        <p className="text-sm font-bold text-gray-900">{userItem.experience || 0} years</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-gray-500 font-semibold">Crops Grown</p>
+                                        <p className="text-sm font-bold text-gray-900">
+                                          {userItem.cropsGrown?.length ? userItem.cropsGrown.join(', ') : 'N/A'}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
 
-                        {statusTab === 'pending' && (
-                          <div className="mb-6 pb-6 border-b">
-                            <p className="text-sm text-gray-600 font-semibold mb-3">Admin Comments (Optional)</p>
-                            <textarea
-                              value={adminComments}
-                              onChange={(e) => setAdminComments(e.target.value)}
-                              placeholder="Add any comments or notes about this KYC application..."
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              rows="3"
-                            />
-                          </div>
-                        )}
+                                {userItem.role === 'buyer' && (
+                                  <div>
+                                    <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                      <MapPin size={16} className="text-blue-600" />
+                                      Address Details
+                                    </h4>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-blue-50 rounded-lg border border-blue-200 p-4">
+                                      <div className="col-span-2">
+                                        <p className="text-xs text-gray-500 font-semibold">Street Address</p>
+                                        <p className="text-sm font-bold text-gray-900">
+                                          {userItem.addresses?.[0]?.streetAddress || 'N/A'}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-gray-500 font-semibold">City</p>
+                                        <p className="text-sm font-bold text-gray-900">
+                                          {userItem.addresses?.[0]?.city || 'N/A'}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-gray-500 font-semibold">State</p>
+                                        <p className="text-sm font-bold text-gray-900">
+                                          {userItem.addresses?.[0]?.state || 'N/A'}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-gray-500 font-semibold">Pincode</p>
+                                        <p className="text-sm font-bold text-gray-900">
+                                          {userItem.addresses?.[0]?.pincode || 'N/A'}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
 
-                        {statusTab === 'pending' ? (
-                          <div className="flex gap-3 flex-wrap">
-                            <button
-                              onClick={() => handleViewDocuments(user)}
-                              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-semibold transition"
-                            >
-                              <Eye size={18} />
-                              View Documents
-                            </button>
-                            <button
-                              onClick={() => handleApproveFarmer(user._id, `${user.firstName} ${user.lastName}`)}
-                              disabled={actionLoading}
-                              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded font-semibold transition"
-                            >
-                              <CheckCircle size={18} />
-                              {actionLoading ? 'Processing...' : 'Approve KYC'}
-                            </button>
-                            <button
-                              onClick={() => handleRejectClick(user)}
-                              disabled={actionLoading}
-                              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded font-semibold transition"
-                            >
-                              <XCircle size={18} />
-                              Reject
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex gap-3 flex-wrap">
-                            <button
-                              onClick={() => handleViewDocuments(user)}
-                              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-semibold transition"
-                            >
-                              <Eye size={18} />
-                              View Documents
-                            </button>
-                            <button
-                              onClick={() => handleDeleteUser(user._id, `${user.firstName} ${user.lastName}`)}
-                              disabled={actionLoading}
-                              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded font-semibold transition ml-auto"
-                            >
-                              <XCircle size={18} />
-                              {actionLoading ? 'Deleting...' : 'Delete Account'}
-                            </button>
+                                {/* KYC Documents Section */}
+                                <div>
+                                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <FileText size={16} className="text-indigo-600" />
+                                    KYC Documents Uploaded
+                                  </h4>
+
+                                  {/* Inline KYC docs from user object */}
+                                  {userItem.kycDocuments && Object.keys(userItem.kycDocuments).length > 0 ? (
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                                      {Object.entries(userItem.kycDocuments).map(([docType, docData]) => {
+                                        if (!docData || !docData.url) return null;
+                                        return (
+                                          <DocThumbnail
+                                            key={docType}
+                                            doc={{
+                                              ...docData,
+                                              type: getDocTypeLabel(docType),
+                                              docType
+                                            }}
+                                            onPreview={(doc) => { setPreviewDoc(doc); setPreviewImageError(false); }}
+                                            formatFileSize={formatFileSize}
+                                            isImageDoc={isImageDoc}
+                                          />
+                                        );
+                                      })}
+                                    </div>
+                                  ) : docs && !docs.error && docs.documents?.kycDocuments?.length > 0 ? (
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                                      {docs.documents.kycDocuments.map((doc, idx) => (
+                                        <DocThumbnail key={idx} doc={doc} onPreview={(doc) => { setPreviewDoc(doc); setPreviewImageError(false); }} formatFileSize={formatFileSize} isImageDoc={isImageDoc} />
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                                      <p className="text-sm text-yellow-700">
+                                        No KYC documents found. The user may not have uploaded documents yet.
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Farm Images (farmers only) */}
+                                {userItem.role === 'farmer' && docs && !docs.error && docs.documents?.farmImages?.length > 0 && (
+                                  <div>
+                                    <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                      <ImageIcon size={16} className="text-green-600" />
+                                      Farm Images ({docs.documents.farmImages.length})
+                                    </h4>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                                      {docs.documents.farmImages.map((imgUrl, idx) => (
+                                        <div
+                                          key={idx}
+                                          className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
+                                          onClick={() => { setPreviewImageError(false); setPreviewDoc({
+                                            fileName: `farm-image-${idx + 1}.jpg`,
+                                            url: imgUrl,
+                                            mimeType: 'image/jpeg',
+                                            fileSize: 0,
+                                            type: 'Farm Image'
+                                          });}}
+                                        >
+                                          <div className="h-24 bg-gray-100 overflow-hidden">
+                                            <img
+                                              src={resolveDocUrl(imgUrl)}
+                                              alt={`Farm ${idx + 1}`}
+                                              className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                                              onError={(e) => { e.target.style.display = 'none'; }}
+                                            />
+                                          </div>
+                                          <div className="p-2">
+                                            <p className="text-xs text-gray-500">Farm Image {idx + 1}</p>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Rejection Reason (for rejected users) */}
+                                {statusTab === 'rejected' && userItem.kycRejectionReason && (
+                                  <div className="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
+                                    <p className="text-sm font-bold text-red-800 mb-1">❌ Rejection Reason:</p>
+                                    <p className="text-sm text-red-700">{userItem.kycRejectionReason}</p>
+                                  </div>
+                                )}
+
+                                {/* Admin Comments for pending */}
+                                {statusTab === 'pending' && (
+                                  <div>
+                                    <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                      <FileText size={16} className="text-gray-600" />
+                                      Admin Comments (Optional)
+                                    </h4>
+                                    <textarea
+                                      value={adminComments}
+                                      onChange={(e) => setAdminComments(e.target.value)}
+                                      placeholder="Add any comments or notes about this KYC application..."
+                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
+                                      rows="3"
+                                    />
+                                  </div>
+                                )}
+
+                                {/* Action Buttons in expanded view */}
+                                <div className="flex gap-3 pt-2 border-t border-gray-100">
+                                  {statusTab === 'pending' ? (
+                                    <>
+                                      <button
+                                        onClick={() => handleApproveFarmer(userItem._id, `${userItem.firstName} ${userItem.lastName}`)}
+                                        disabled={actionLoading}
+                                        className="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-bold transition shadow-sm"
+                                      >
+                                        <CheckCircle size={18} />
+                                        {actionLoading ? 'Processing...' : 'Approve KYC'}
+                                      </button>
+                                      <button
+                                        onClick={() => handleRejectClick(userItem)}
+                                        disabled={actionLoading}
+                                        className="flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg font-bold transition shadow-sm"
+                                      >
+                                        <XCircle size={18} />
+                                        Reject KYC
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleDeleteUser(userItem._id, `${userItem.firstName} ${userItem.lastName}`)}
+                                      disabled={actionLoading}
+                                      className="flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg font-bold transition shadow-sm"
+                                    >
+                                      <XCircle size={18} />
+                                      {actionLoading ? 'Deleting...' : 'Delete Account Permanently'}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Document Modal */}
-        {showDocumentModal && selectedUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900">
-                    KYC Documents - {selectedUser.firstName} {selectedUser.lastName}
-                  </h3>
-                  <button
-                    onClick={() => setShowDocumentModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div className="mb-6 pb-6 border-b">
-                  <h4 className="font-bold text-gray-900 mb-4">User Information</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600">Name</p>
-                      <p className="font-semibold text-gray-900">{selectedUser.firstName} {selectedUser.lastName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Email</p>
-                      <p className="font-semibold text-gray-900">{selectedUser.email}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Phone</p>
-                      <p className="font-semibold text-gray-900">{selectedUser.phone || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Registration Date</p>
-                      <p className="font-semibold text-gray-900">{new Date(selectedUser.createdAt).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Documents Submitted</p>
-                      <p className="font-semibold text-gray-900">
-                        {selectedUser.kycSubmittedAt 
-                          ? new Date(selectedUser.kycSubmittedAt).toLocaleDateString()
-                          : new Date(selectedUser.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Role</p>
-                      <p className="font-semibold text-gray-900 capitalize bg-blue-100 px-3 py-1 rounded w-fit">{selectedUser.role}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Status</p>
-                      <p className="font-semibold text-gray-900 capitalize">{selectedUser.status}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* KYC Personal Details */}
-                <div className="mb-6 pb-6 border-b bg-indigo-50 p-4 rounded">
-                  <h4 className="font-bold text-gray-900 mb-4">📋 KYC Personal Details</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600">Aadhar Number</p>
-                      <p className="font-semibold text-gray-900">{selectedUser.kycDetails?.aadharNumber || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">City</p>
-                      <p className="font-semibold text-gray-900">{selectedUser.addresses?.[0]?.city || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">State</p>
-                      <p className="font-semibold text-gray-900">{selectedUser.addresses?.[0]?.state || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Pincode</p>
-                      <p className="font-semibold text-gray-900">{selectedUser.addresses?.[0]?.pincode || 'N/A'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* KYC Documents Submitted */}
-                <div className="mb-6 pb-6 border-b bg-yellow-50 p-4 rounded">
-                  <h4 className="font-bold text-gray-900 mb-4">📄 Documents Uploaded</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600">Government ID</p>
-                      <p className="font-semibold text-green-700">{selectedUser.kycDocuments?.governmentId?.fileName || '✗ Not uploaded'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Profile Photo</p>
-                      <p className="font-semibold text-green-700">{selectedUser.kycDocuments?.profilePhoto?.fileName || '✗ Not uploaded'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Address Proof</p>
-                      <p className="font-semibold text-green-700">{selectedUser.kycDocuments?.addressProof?.fileName || '✗ Not uploaded'}</p>
-                    </div>
-                    {selectedUser.role === 'farmer' && (
-                      <>
-                        <div>
-                          <p className="text-sm text-gray-600">Land Ownership</p>
-                          <p className="font-semibold text-green-700">{selectedUser.kycDocuments?.landOwnership?.fileName || '✗ Not uploaded'}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Farm Registration</p>
-                          <p className="font-semibold text-green-700">{selectedUser.kycDocuments?.farmRegistration?.fileName || '✗ Not uploaded'}</p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Farmer-Specific Info */}
-                {selectedUser.role === 'farmer' && (
-                  <div className="mb-6 pb-6 border-b bg-green-50 p-4 rounded">
-                    <h4 className="font-bold text-gray-900 mb-4">Farm Details</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-600">Farm Name</p>
-                        <p className="font-semibold text-gray-900">{selectedUser.farmName || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Farm Area</p>
-                        <p className="font-semibold text-gray-900">{selectedUser.farmArea || 'N/A'}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-sm text-gray-600">Location</p>
-                        <p className="font-semibold text-gray-900">{selectedUser.location || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Experience</p>
-                        <p className="font-semibold text-gray-900">{selectedUser.experience || 0} years</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Crops Grown</p>
-                        <p className="font-semibold text-gray-900">{selectedUser.cropsGrown?.join(', ') || 'N/A'}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Buyer-Specific Info */}
-                {selectedUser.role === 'buyer' && (
-                  <div className="mb-6 pb-6 border-b bg-purple-50 p-4 rounded">
-                    <h4 className="font-bold text-gray-900 mb-4">Buyer Address</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="col-span-2">
-                        <p className="text-sm text-gray-600">Address</p>
-                        <p className="font-semibold text-gray-900">{selectedUser.addresses?.[0]?.streetAddress || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">City</p>
-                        <p className="font-semibold text-gray-900">{selectedUser.addresses?.[0]?.city || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">State</p>
-                        <p className="font-semibold text-gray-900">{selectedUser.addresses?.[0]?.state || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Pincode</p>
-                        <p className="font-semibold text-gray-900">{selectedUser.addresses?.[0]?.pincode || 'N/A'}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Bio/Additional Info */}
-                {selectedUser.bio && (
-                  <div className="mb-6 pb-6 border-b">
-                    <h4 className="font-bold text-gray-900 mb-2">Bio</h4>
-                    <p className="text-gray-700">{selectedUser.bio}</p>
-                  </div>
-                )}
-
-                <div className="mb-6">
-                  <h4 className="font-bold text-gray-900 mb-4">Admin Comments</h4>
-                  <textarea
-                    value={adminComments}
-                    onChange={(e) => setAdminComments(e.target.value)}
-                    placeholder="Add comments for internal notes..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                    rows="3"
-                  />
-                </div>
-
-                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mb-6">
-                  <p className="text-sm text-blue-900">
-                    <FileText className="inline mr-2" size={18} />
-                    Documents uploaded: Review all documents carefully before approving
+        {/* Document Preview Modal */}
+        {previewDoc && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" onClick={() => { setPreviewDoc(null); setPreviewImageError(false); }}>
+            <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-4 border-b">
+                <div>
+                  <h3 className="font-bold text-gray-900 text-lg">{previewDoc.fileName}</h3>
+                  <p className="text-xs text-gray-500">
+                    {previewDoc.type || 'Document'} • {formatFileSize(previewDoc.fileSize)}
                   </p>
                 </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowDocumentModal(false)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleApproveFarmer(selectedUser._id, `${selectedUser.firstName} ${selectedUser.lastName}`);
-                      setShowDocumentModal(false);
-                    }}
-                    disabled={actionLoading}
-                    className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition"
-                  >
-                    {actionLoading ? 'Processing...' : 'Approve'}
-                  </button>
-                </div>
+                <button
+                  onClick={() => { setPreviewDoc(null); setPreviewImageError(false); }}
+                  className="p-1.5 hover:bg-gray-100 rounded-full transition"
+                >
+                  <X size={20} className="text-gray-500" />
+                </button>
               </div>
-            </Card>
+              <div className="p-4 overflow-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
+                {isImageDoc(previewDoc) && !previewImageError ? (
+                  <img
+                    src={resolveDocUrl(previewDoc.url)}
+                    alt={previewDoc.fileName}
+                    className="w-full h-auto rounded-lg"
+                    onError={() => setPreviewImageError(true)}
+                  />
+                ) : /\.pdf$/i.test(previewDoc.fileName || '') || previewDoc.mimeType === 'application/pdf' ? (
+                  <iframe
+                    src={getProxyUrl(previewDoc.url)}
+                    className="w-full rounded-lg border border-gray-200"
+                    style={{ height: 'calc(90vh - 160px)', minHeight: '500px' }}
+                    title={previewDoc.fileName}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+                    <FileText size={64} className="mb-4" />
+                    <p className="font-semibold text-gray-600">Document Preview</p>
+                    <p className="text-sm mt-1">This file type cannot be previewed inline.</p>
+                    <a
+                      href={getProxyUrl(previewDoc.url)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition text-sm"
+                    >
+                      Open Document
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
@@ -788,7 +1015,7 @@ export default function AdminApprovals() {
                 <p className="text-sm text-gray-600 mb-6">
                   You are about to reject the KYC application for <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>
                 </p>
-                
+
                 <div className="mb-6">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Rejection Reason *
