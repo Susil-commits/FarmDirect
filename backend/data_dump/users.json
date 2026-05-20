@@ -1,0 +1,995 @@
+[
+  {
+    "_id": "6a0569153916d9f4994320aa",
+    "firstName": "FarmDirect",
+    "lastName": "Admin",
+    "name": "FarmDirect Admin",
+    "email": "admin@farmdirect.com",
+    "password": "$2a$12$NMRvzNIpXXtvMe1tn/PS7OUBLDKbzmIfrPb2x4u1h3qvJ5tVBNJZu",
+    "phone": "0000000000",
+    "role": "admin",
+    "status": "active",
+    "profilePicture": null,
+    "bio": "FarmDirect Platform Administrator",
+    "cropsGrown": [],
+    "farmImages": [],
+    "experience": 0,
+    "kycStatus": "verified",
+    "rating": 0,
+    "totalReviews": 0,
+    "verified": true,
+    "emailVerified": true,
+    "socialAuth": {
+      "provider": null
+    },
+    "notificationPreferences": {
+      "orderUpdates": true,
+      "cropUpdates": true,
+      "reviews": true,
+      "promotions": false,
+      "email": true,
+      "push": true
+    },
+    "blockedUsers": [],
+    "addresses": [],
+    "createdAt": "2026-05-14T06:17:57.579Z",
+    "updatedAt": "2026-05-14T06:17:57.579Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a07f5d61554bc60073a6fdf",
+    "firstName": "Asish",
+    "lastName": "Nayak",
+    "name": "Asish Nayak",
+    "email": "nayakasish123@gmail.com",
+    "password": "$2a$10$MLP3EKEdqng8EWD0pXy9j.eOiNlcuhqC4joPLWj2W1RpwrBjwK1U2",
+    "phone": "9787652345",
+    "role": "buyer",
+    "status": "active",
+    "profilePicture": null,
+    "bio": "",
+    "cropsGrown": [],
+    "farmImages": [],
+    "experience": 0,
+    "kycStatus": "pending",
+    "rating": 0,
+    "totalReviews": 0,
+    "verified": false,
+    "emailVerified": false,
+    "socialAuth": {
+      "provider": null
+    },
+    "notificationPreferences": {
+      "orderUpdates": true,
+      "cropUpdates": true,
+      "reviews": true,
+      "promotions": false,
+      "email": true,
+      "push": true
+    },
+    "blockedUsers": [],
+    "addresses": [
+      {
+        "city": "Cuttack",
+        "state": "Odisha",
+        "pincode": "987689",
+        "isDefault": true
+      }
+    ],
+    "createdAt": "2026-05-16T04:43:02.510Z",
+    "updatedAt": "2026-05-16T04:44:24.629Z",
+    "__v": 1,
+    "kycDetails": {
+      "aadharNumber": "987623457897"
+    },
+    "kycDocuments": {
+      "aadharNumber": "987623457897",
+      "governmentId": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1778906664490-7076-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T04:44:24.617Z"
+      },
+      "profilePhoto": {
+        "fileName": "Sign.pdf",
+        "url": "/uploads/kyc_documents/1778906664493-3727-Sign.pdf",
+        "fileSize": 22681,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T04:44:24.617Z"
+      },
+      "addressProof": {
+        "fileName": "Sign-min.pdf",
+        "url": "/uploads/kyc_documents/1778906664496-7011-Sign-min.pdf",
+        "fileSize": 26206,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T04:44:24.617Z"
+      }
+    },
+    "kycSubmittedAt": "2026-05-16T04:44:24.615Z",
+    "kycVerifiedAt": null
+  },
+  {
+    "_id": "6a07f74e1554bc60073a7055",
+    "firstName": "Mukti",
+    "lastName": "Nayak",
+    "name": "Mukti Nayak",
+    "email": "nayakmukti123@gmail.com",
+    "password": "$2a$10$Bz0YmIK8ikbH8sULP3qCdu0CHsVXpLSQtxKNPZ05BuGxZ27zRIJ2K",
+    "phone": "9876543213",
+    "role": "farmer",
+    "status": "active",
+    "profilePicture": null,
+    "bio": "",
+    "cropsGrown": [],
+    "farmImages": [],
+    "experience": 0,
+    "kycStatus": "rejected",
+    "rating": 0,
+    "totalReviews": 0,
+    "verified": false,
+    "emailVerified": false,
+    "socialAuth": {
+      "provider": null
+    },
+    "notificationPreferences": {
+      "orderUpdates": true,
+      "cropUpdates": true,
+      "reviews": true,
+      "promotions": false,
+      "email": true,
+      "push": true
+    },
+    "blockedUsers": [],
+    "addresses": [
+      {
+        "city": "Kalapathar",
+        "state": "Odisha",
+        "pincode": "876900",
+        "isDefault": true
+      }
+    ],
+    "createdAt": "2026-05-16T04:49:18.891Z",
+    "updatedAt": "2026-05-18T13:23:41.593Z",
+    "__v": 1,
+    "kycDetails": {
+      "aadharNumber": "987645679876"
+    },
+    "kycDocuments": {
+      "aadharNumber": "987645679876",
+      "governmentId": {
+        "fileName": "node  (1).pdf",
+        "url": "/uploads/kyc_documents/1778907062746-1327-node___1_.pdf",
+        "fileSize": 721,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T04:51:02.997Z"
+      },
+      "profilePhoto": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1778907062749-4327-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T04:51:02.997Z"
+      },
+      "addressProof": {
+        "fileName": "Sign.pdf",
+        "url": "/uploads/kyc_documents/1778907062752-7001-Sign.pdf",
+        "fileSize": 22681,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T04:51:02.997Z"
+      },
+      "landOwnership": {
+        "fileName": "Sign-min.pdf",
+        "url": "/uploads/kyc_documents/1778907062755-9341-Sign-min.pdf",
+        "fileSize": 26206,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T04:51:02.997Z"
+      },
+      "farmRegistration": {
+        "fileName": "rules.pdf",
+        "url": "/uploads/kyc_documents/1778907062757-4354-rules.pdf",
+        "fileSize": 118276,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T04:51:02.997Z"
+      }
+    },
+    "kycSubmittedAt": "2026-05-16T04:51:02.996Z",
+    "kycVerifiedAt": null,
+    "kycRejectionReason": "Inappropriate details submitted",
+    "kycResultSeen": false
+  },
+  {
+    "_id": "6a080294e5ed2d14c9840bff",
+    "firstName": "Pratik",
+    "lastName": "Sahoo",
+    "name": "Pratik Sahoo",
+    "email": "sahoopratik123@gmail.com",
+    "password": "$2a$10$ewiqYVZhtQe/t89F51H2Z.iTrK2/fKn58bV/8geTiDPP/n5.V8/0m",
+    "phone": "9876541234",
+    "role": "buyer",
+    "status": "active",
+    "profilePicture": null,
+    "bio": "",
+    "address": "xxxxx",
+    "city": "Cuttack",
+    "state": "Odisha",
+    "pincode": "987654",
+    "cropsGrown": [],
+    "farmImages": [],
+    "experience": 0,
+    "kycStatus": "verified",
+    "rating": 0,
+    "totalReviews": 0,
+    "verified": false,
+    "emailVerified": false,
+    "socialAuth": {
+      "provider": null
+    },
+    "notificationPreferences": {
+      "orderUpdates": true,
+      "cropUpdates": true,
+      "reviews": true,
+      "promotions": false,
+      "email": true,
+      "push": true
+    },
+    "blockedUsers": [],
+    "addresses": [
+      {
+        "streetAddress": "xxxxx",
+        "city": "Cuttack",
+        "state": "Odisha",
+        "pincode": "987654",
+        "isDefault": true
+      }
+    ],
+    "createdAt": "2026-05-16T05:37:24.220Z",
+    "updatedAt": "2026-05-16T19:39:48.917Z",
+    "__v": 1,
+    "kycDetails": {
+      "aadharNumber": "987634556788"
+    },
+    "kycDocuments": {
+      "aadharNumber": "987634556788",
+      "governmentId": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1778911373067-4770-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T06:02:53.162Z"
+      },
+      "profilePhoto": {
+        "fileName": "Sign.pdf",
+        "url": "/uploads/kyc_documents/1778911373068-7131-Sign.pdf",
+        "fileSize": 22681,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T06:02:53.162Z"
+      },
+      "addressProof": {
+        "fileName": "Sign-min.pdf",
+        "url": "/uploads/kyc_documents/1778911373069-2822-Sign-min.pdf",
+        "fileSize": 26206,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T06:02:53.162Z"
+      }
+    },
+    "kycSubmittedAt": "2026-05-16T06:02:53.161Z",
+    "kycVerifiedAt": "2026-05-16T11:56:02.728Z",
+    "kycComments": "",
+    "kycResultSeen": true
+  },
+  {
+    "_id": "6a080957e5ed2d14c9840ca6",
+    "firstName": "Bansi",
+    "lastName": "Nayak",
+    "name": "Bansi Nayak",
+    "email": "nayakbansi123@gmail.com",
+    "password": "$2a$10$MkLJepdPmR11sxiTHQA0kuX901JPUarZCkACYWXxbmVetOjzcyhTe",
+    "phone": "9876678934",
+    "role": "farmer",
+    "status": "active",
+    "profilePicture": null,
+    "bio": "",
+    "address": "xxx",
+    "city": "Cuttack",
+    "state": "Odisha",
+    "pincode": "879004",
+    "cropsGrown": [],
+    "farmImages": [],
+    "experience": 0,
+    "kycStatus": "pending",
+    "rating": 0,
+    "totalReviews": 0,
+    "verified": false,
+    "emailVerified": false,
+    "socialAuth": {
+      "provider": null
+    },
+    "notificationPreferences": {
+      "orderUpdates": true,
+      "cropUpdates": true,
+      "reviews": true,
+      "promotions": false,
+      "email": true,
+      "push": true
+    },
+    "blockedUsers": [],
+    "addresses": [
+      {
+        "streetAddress": "xxx",
+        "city": "Cuttack",
+        "state": "Odisha",
+        "pincode": "879004",
+        "isDefault": true
+      }
+    ],
+    "createdAt": "2026-05-16T06:06:15.078Z",
+    "updatedAt": "2026-05-16T06:07:41.556Z",
+    "__v": 1,
+    "kycDetails": {
+      "aadharNumber": "98763456xxxx"
+    },
+    "kycDocuments": {
+      "aadharNumber": "98763456xxxx",
+      "governmentId": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1778911661448-1107-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T06:07:41.555Z"
+      },
+      "profilePhoto": {
+        "fileName": "Sign.pdf",
+        "url": "/uploads/kyc_documents/1778911661449-4240-Sign.pdf",
+        "fileSize": 22681,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T06:07:41.555Z"
+      },
+      "addressProof": {
+        "fileName": "Sign-min.pdf",
+        "url": "/uploads/kyc_documents/1778911661449-3531-Sign-min.pdf",
+        "fileSize": 26206,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T06:07:41.555Z"
+      },
+      "landOwnership": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1778911661450-3153-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T06:07:41.555Z"
+      },
+      "farmRegistration": {
+        "fileName": "Sign-min.pdf",
+        "url": "/uploads/kyc_documents/1778911661451-4070-Sign-min.pdf",
+        "fileSize": 26206,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T06:07:41.555Z"
+      }
+    },
+    "kycSubmittedAt": "2026-05-16T06:07:41.554Z",
+    "kycVerifiedAt": null
+  },
+  {
+    "_id": "6a085a28941fb24bb2d247f2",
+    "firstName": "Akash",
+    "lastName": "Das",
+    "name": "Akash Das",
+    "email": "dasakash123@gmail.com",
+    "password": "$2a$10$TQzc0GiGOrpV8N9ytG0qa.J1hoJxspvvE9P7m4/P8tkGnjrRIjiXK",
+    "phone": "9876678943",
+    "role": "farmer",
+    "status": "active",
+    "profilePicture": null,
+    "bio": "",
+    "address": "xxxx",
+    "city": "Kendrapada",
+    "state": "Odisha",
+    "pincode": "987600",
+    "cropsGrown": [],
+    "farmImages": [],
+    "experience": 7,
+    "kycStatus": "verified",
+    "kycResultSeen": true,
+    "rating": 0,
+    "totalReviews": 0,
+    "verified": false,
+    "emailVerified": false,
+    "socialAuth": {
+      "provider": null
+    },
+    "notificationPreferences": {
+      "orderUpdates": true,
+      "cropUpdates": true,
+      "reviews": true,
+      "promotions": false,
+      "email": true,
+      "push": true
+    },
+    "blockedUsers": [],
+    "addresses": [
+      {
+        "streetAddress": "xxxx",
+        "city": "Kendrapada",
+        "state": "Odisha",
+        "pincode": "987600",
+        "isDefault": true
+      }
+    ],
+    "createdAt": "2026-05-16T11:51:04.409Z",
+    "updatedAt": "2026-05-16T15:23:49.881Z",
+    "__v": 1,
+    "farmArea": "5 acres",
+    "farmName": "xxxxx",
+    "kycDetails": {
+      "aadharNumber": "987656783456"
+    },
+    "kycDocuments": {
+      "aadharNumber": "987656783456",
+      "governmentId": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1778932389007-8374-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T11:53:09.107Z"
+      },
+      "profilePhoto": {
+        "fileName": "Sign.pdf",
+        "url": "/uploads/kyc_documents/1778932389011-7432-Sign.pdf",
+        "fileSize": 22681,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T11:53:09.107Z"
+      },
+      "addressProof": {
+        "fileName": "Sign-min.pdf",
+        "url": "/uploads/kyc_documents/1778932389013-5366-Sign-min.pdf",
+        "fileSize": 26206,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T11:53:09.107Z"
+      },
+      "landOwnership": {
+        "fileName": "Sign-min.pdf",
+        "url": "/uploads/kyc_documents/1778932389016-3070-Sign-min.pdf",
+        "fileSize": 26206,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T11:53:09.107Z"
+      },
+      "farmRegistration": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1778932389018-4218-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T11:53:09.107Z"
+      }
+    },
+    "kycSubmittedAt": "2026-05-16T11:53:09.103Z",
+    "kycVerifiedAt": "2026-05-16T11:56:53.451Z",
+    "kycComments": ""
+  },
+  {
+    "_id": "6a0886589792e43e1e5cff36",
+    "firstName": "Amit",
+    "lastName": "Mishra",
+    "name": "Amit Mishra",
+    "email": "mishraamit123@gmail.com",
+    "password": "$2a$10$fnYKdMa9wocjnQ9kKqxY0OhjKN11P3MV/6kEIL7dJx4mlTefTF.dW",
+    "phone": "9876567834",
+    "role": "farmer",
+    "status": "active",
+    "profilePicture": null,
+    "bio": "",
+    "address": "xxx",
+    "city": "Bhubaneswar",
+    "state": "Odisha",
+    "pincode": "987655",
+    "cropsGrown": [],
+    "farmImages": [],
+    "experience": 6,
+    "kycStatus": "verified",
+    "kycResultSeen": true,
+    "rating": 0,
+    "totalReviews": 0,
+    "verified": false,
+    "emailVerified": false,
+    "socialAuth": {
+      "provider": null
+    },
+    "notificationPreferences": {
+      "orderUpdates": true,
+      "cropUpdates": true,
+      "reviews": true,
+      "promotions": false,
+      "email": true,
+      "push": true
+    },
+    "blockedUsers": [],
+    "addresses": [
+      {
+        "streetAddress": "xxx",
+        "city": "Bhubaneswar",
+        "state": "Odisha",
+        "pincode": "987655",
+        "isDefault": true
+      }
+    ],
+    "createdAt": "2026-05-16T14:59:36.050Z",
+    "updatedAt": "2026-05-18T05:02:09.300Z",
+    "__v": 1,
+    "farmArea": "5 Acres",
+    "farmName": "zzz",
+    "kycDetails": {
+      "aadharNumber": "987623456789"
+    },
+    "kycDocuments": {
+      "aadharNumber": "987623456789",
+      "governmentId": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1778943649657-8645-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T15:00:49.813Z"
+      },
+      "profilePhoto": {
+        "fileName": "Sign.pdf",
+        "url": "/uploads/kyc_documents/1778943649661-6375-Sign.pdf",
+        "fileSize": 22681,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T15:00:49.813Z"
+      },
+      "addressProof": {
+        "fileName": "Sign-min.pdf",
+        "url": "/uploads/kyc_documents/1778943649663-4280-Sign-min.pdf",
+        "fileSize": 26206,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T15:00:49.814Z"
+      },
+      "landOwnership": {
+        "fileName": "Sign.pdf",
+        "url": "/uploads/kyc_documents/1778943649664-1294-Sign.pdf",
+        "fileSize": 22681,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T15:00:49.814Z"
+      },
+      "farmRegistration": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1778943649697-9260-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T15:00:49.814Z"
+      }
+    },
+    "kycSubmittedAt": "2026-05-16T15:00:49.811Z",
+    "kycVerifiedAt": "2026-05-16T19:36:25.597Z",
+    "kycComments": ""
+  },
+  {
+    "_id": "6a08874e9792e43e1e5cff90",
+    "firstName": "Sumit",
+    "lastName": "Mishra",
+    "name": "Sumit Mishra",
+    "email": "mishrasumit123@gmail.com",
+    "password": "$2a$10$TVDas0ECRs9gAyOTxT9Il.GHSyoe2VHEYoHS2sdCIy6//Lkcws7z.",
+    "phone": "9876456798",
+    "role": "buyer",
+    "status": "active",
+    "profilePicture": null,
+    "bio": "",
+    "address": "Kananpur",
+    "city": "Khordha",
+    "state": "Odisha",
+    "pincode": "987655",
+    "cropsGrown": [],
+    "farmImages": [],
+    "experience": 0,
+    "kycStatus": "verified",
+    "kycResultSeen": true,
+    "rating": 0,
+    "totalReviews": 0,
+    "verified": false,
+    "emailVerified": false,
+    "socialAuth": {
+      "provider": null
+    },
+    "notificationPreferences": {
+      "orderUpdates": true,
+      "cropUpdates": true,
+      "reviews": true,
+      "promotions": false,
+      "email": true,
+      "push": true
+    },
+    "blockedUsers": [],
+    "addresses": [
+      {
+        "streetAddress": "Kananpur",
+        "city": "Khordha",
+        "state": "Odisha",
+        "pincode": "987655",
+        "isDefault": true
+      }
+    ],
+    "createdAt": "2026-05-16T15:03:42.067Z",
+    "updatedAt": "2026-05-18T05:05:55.310Z",
+    "__v": 1,
+    "kycDetails": {
+      "aadharNumber": "987623456789"
+    },
+    "kycDocuments": {
+      "aadharNumber": "987623456789",
+      "governmentId": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1778943880827-2056-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T15:04:40.946Z"
+      },
+      "profilePhoto": {
+        "fileName": "Sign-min.pdf",
+        "url": "/uploads/kyc_documents/1778943880831-7591-Sign-min.pdf",
+        "fileSize": 26206,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T15:04:40.947Z"
+      },
+      "addressProof": {
+        "fileName": "Sign.pdf",
+        "url": "/uploads/kyc_documents/1778943880834-4772-Sign.pdf",
+        "fileSize": 22681,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-16T15:04:40.947Z"
+      }
+    },
+    "kycSubmittedAt": "2026-05-16T15:04:40.945Z",
+    "kycVerifiedAt": "2026-05-16T19:36:39.700Z",
+    "kycComments": ""
+  },
+  {
+    "_id": "6a0b0ec35995973655d03152",
+    "firstName": "Aditya",
+    "lastName": "Muduli",
+    "name": "Aditya Muduli",
+    "email": "muduliaditya123@gmail.com",
+    "password": "$2a$10$hQipm330HeQCowR4dbbrpeobH/.NhMHDRXymr2Zbb1Iy1RNaxQNOa",
+    "phone": "9876345697",
+    "role": "farmer",
+    "status": "active",
+    "profilePicture": null,
+    "bio": "",
+    "address": "xxxxx",
+    "city": "Cuttack",
+    "state": "Odisha",
+    "pincode": "987655",
+    "cropsGrown": [],
+    "farmImages": [],
+    "experience": 6,
+    "kycStatus": "pending",
+    "kycResultSeen": false,
+    "rating": 0,
+    "totalReviews": 0,
+    "verified": false,
+    "emailVerified": false,
+    "socialAuth": {
+      "provider": null
+    },
+    "notificationPreferences": {
+      "orderUpdates": true,
+      "cropUpdates": true,
+      "reviews": true,
+      "promotions": false,
+      "email": true,
+      "push": true
+    },
+    "blockedUsers": [],
+    "addresses": [
+      {
+        "streetAddress": "xxxxx",
+        "city": "Cuttack",
+        "state": "Odisha",
+        "pincode": "987655",
+        "isDefault": true
+      }
+    ],
+    "createdAt": "2026-05-18T13:06:11.765Z",
+    "updatedAt": "2026-05-18T13:08:28.979Z",
+    "__v": 1,
+    "farmArea": "10 acres",
+    "farmName": "Shanti pvt ltd",
+    "kycDetails": {
+      "aadharNumber": "987612345678"
+    },
+    "kycDocuments": {
+      "aadharNumber": "987612345678",
+      "governmentId": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1779109708866-8504-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:08:28.976Z"
+      },
+      "profilePhoto": {
+        "fileName": "Sign.pdf",
+        "url": "/uploads/kyc_documents/1779109708867-730-Sign.pdf",
+        "fileSize": 22681,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:08:28.976Z"
+      },
+      "addressProof": {
+        "fileName": "Sign-min.pdf",
+        "url": "/uploads/kyc_documents/1779109708868-2090-Sign-min.pdf",
+        "fileSize": 26206,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:08:28.976Z"
+      },
+      "landOwnership": {
+        "fileName": "Sign-min.pdf",
+        "url": "/uploads/kyc_documents/1779109708868-3949-Sign-min.pdf",
+        "fileSize": 26206,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:08:28.976Z"
+      },
+      "farmRegistration": {
+        "fileName": "Sign.pdf",
+        "url": "/uploads/kyc_documents/1779109708869-8142-Sign.pdf",
+        "fileSize": 22681,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:08:28.976Z"
+      }
+    },
+    "kycSubmittedAt": "2026-05-18T13:08:28.976Z",
+    "kycVerifiedAt": null
+  },
+  {
+    "_id": "6a0b0fb85995973655d0317b",
+    "firstName": "Saswat",
+    "lastName": "Jena",
+    "name": "Saswat Jena",
+    "email": "jenasaswat123@gmail.com",
+    "password": "$2a$10$296W6iHKlREflC2g0WK.w.zz4ldtd3VAsS0HrIYO4b2eCcld/wTa6",
+    "phone": "9876234578",
+    "role": "buyer",
+    "status": "active",
+    "profilePicture": null,
+    "bio": "",
+    "address": "infront of temple",
+    "city": "Cuttack",
+    "state": "odisha",
+    "pincode": "987623",
+    "cropsGrown": [],
+    "farmImages": [],
+    "experience": 0,
+    "kycStatus": "verified",
+    "kycResultSeen": true,
+    "rating": 0,
+    "totalReviews": 0,
+    "verified": false,
+    "emailVerified": false,
+    "socialAuth": {
+      "provider": null
+    },
+    "notificationPreferences": {
+      "orderUpdates": true,
+      "cropUpdates": true,
+      "reviews": true,
+      "promotions": false,
+      "email": true,
+      "push": true
+    },
+    "blockedUsers": [],
+    "addresses": [
+      {
+        "streetAddress": "infront of temple",
+        "city": "Cuttack",
+        "state": "odisha",
+        "pincode": "987623",
+        "isDefault": true
+      }
+    ],
+    "createdAt": "2026-05-18T13:10:16.203Z",
+    "updatedAt": "2026-05-19T05:05:58.484Z",
+    "__v": 1,
+    "kycDetails": {
+      "aadharNumber": "987623456789"
+    },
+    "kycDocuments": {
+      "aadharNumber": "987623456789",
+      "governmentId": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1779109885264-5890-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:11:25.380Z"
+      },
+      "profilePhoto": {
+        "fileName": "Sign.pdf",
+        "url": "/uploads/kyc_documents/1779109885265-3419-Sign.pdf",
+        "fileSize": 22681,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:11:25.380Z"
+      },
+      "addressProof": {
+        "fileName": "Sign-min.pdf",
+        "url": "/uploads/kyc_documents/1779109885266-1629-Sign-min.pdf",
+        "fileSize": 26206,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:11:25.380Z"
+      }
+    },
+    "kycSubmittedAt": "2026-05-18T13:11:25.379Z",
+    "kycVerifiedAt": "2026-05-18T13:28:45.704Z",
+    "kycComments": ""
+  },
+  {
+    "_id": "6a0b109d5995973655d031b0",
+    "firstName": "Madhav",
+    "lastName": "Rana",
+    "name": "Madhav Rana",
+    "email": "ranamadhav123@gmail.com",
+    "password": "$2a$10$CrrjUFyh16eQMO7pDuWt9OJpgJUleIx.bfRe7BLRFworFSmp63D3y",
+    "phone": "9876234567",
+    "role": "farmer",
+    "status": "active",
+    "profilePicture": null,
+    "bio": "",
+    "address": "daspur club front",
+    "city": "Bhadrak",
+    "state": "Odisha",
+    "pincode": "987600",
+    "cropsGrown": [],
+    "farmImages": [],
+    "experience": 6,
+    "kycStatus": "verified",
+    "kycResultSeen": true,
+    "rating": 0,
+    "totalReviews": 0,
+    "verified": false,
+    "emailVerified": false,
+    "socialAuth": {
+      "provider": null
+    },
+    "notificationPreferences": {
+      "orderUpdates": true,
+      "cropUpdates": true,
+      "reviews": true,
+      "promotions": false,
+      "email": true,
+      "push": true
+    },
+    "blockedUsers": [],
+    "addresses": [
+      {
+        "streetAddress": "daspur club front",
+        "city": "Bhadrak",
+        "state": "Odisha",
+        "pincode": "987600",
+        "isDefault": true
+      }
+    ],
+    "createdAt": "2026-05-18T13:14:05.499Z",
+    "updatedAt": "2026-05-19T05:02:48.576Z",
+    "__v": 1,
+    "farmArea": "9 acres",
+    "farmName": "xxxx",
+    "kycDetails": {
+      "aadharNumber": "987634562345"
+    },
+    "kycDocuments": {
+      "aadharNumber": "987634562345",
+      "governmentId": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1779110112531-3582-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:15:12.637Z"
+      },
+      "profilePhoto": {
+        "fileName": "Sign.pdf",
+        "url": "/uploads/kyc_documents/1779110112532-3950-Sign.pdf",
+        "fileSize": 22681,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:15:12.637Z"
+      },
+      "addressProof": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1779110112533-1864-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:15:12.637Z"
+      },
+      "landOwnership": {
+        "fileName": "Sign.pdf",
+        "url": "/uploads/kyc_documents/1779110112533-8251-Sign.pdf",
+        "fileSize": 22681,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:15:12.637Z"
+      },
+      "farmRegistration": {
+        "fileName": "Sign-min.pdf",
+        "url": "/uploads/kyc_documents/1779110112534-9768-Sign-min.pdf",
+        "fileSize": 26206,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:15:12.637Z"
+      }
+    },
+    "kycSubmittedAt": "2026-05-18T13:15:12.637Z",
+    "kycVerifiedAt": "2026-05-18T13:28:12.768Z",
+    "kycComments": ""
+  },
+  {
+    "_id": "6a0b11b25995973655d031d9",
+    "firstName": "Asutosh",
+    "lastName": "Nayak",
+    "name": "Asutosh Nayak",
+    "email": "nayakasutosh123@gmail.com",
+    "password": "$2a$10$DhGJDP0mJVUcRPSiS77AjuslBTEj9H0soYa8gOHXyDjCWTt6iztFW",
+    "phone": "9876345623",
+    "role": "buyer",
+    "status": "active",
+    "profilePicture": null,
+    "bio": "",
+    "address": "infront of temple",
+    "city": "Bhadrak",
+    "state": "Odisha",
+    "pincode": "789456",
+    "cropsGrown": [],
+    "farmImages": [],
+    "experience": 0,
+    "kycStatus": "pending",
+    "kycResultSeen": false,
+    "rating": 0,
+    "totalReviews": 0,
+    "verified": false,
+    "emailVerified": false,
+    "socialAuth": {
+      "provider": null
+    },
+    "notificationPreferences": {
+      "orderUpdates": true,
+      "cropUpdates": true,
+      "reviews": true,
+      "promotions": false,
+      "email": true,
+      "push": true
+    },
+    "blockedUsers": [],
+    "addresses": [
+      {
+        "streetAddress": "infront of temple",
+        "city": "Bhadrak",
+        "state": "Odisha",
+        "pincode": "789456",
+        "isDefault": true
+      }
+    ],
+    "createdAt": "2026-05-18T13:18:42.022Z",
+    "updatedAt": "2026-05-18T13:21:47.042Z",
+    "__v": 1,
+    "kycDetails": {
+      "aadharNumber": "987623457897"
+    },
+    "kycDocuments": {
+      "aadharNumber": "987623457897",
+      "governmentId": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1779110506951-7367-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:21:47.041Z"
+      },
+      "profilePhoto": {
+        "fileName": "Sign.pdf",
+        "url": "/uploads/kyc_documents/1779110506953-803-Sign.pdf",
+        "fileSize": 22681,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:21:47.041Z"
+      },
+      "addressProof": {
+        "fileName": "node .pdf",
+        "url": "/uploads/kyc_documents/1779110506953-6155-node_.pdf",
+        "fileSize": 68673,
+        "mimeType": "application/pdf",
+        "uploadedAt": "2026-05-18T13:21:47.041Z"
+      }
+    },
+    "kycSubmittedAt": "2026-05-18T13:21:47.040Z",
+    "kycVerifiedAt": null
+  }
+]
