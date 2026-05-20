@@ -1,0 +1,181 @@
+[
+  {
+    "_id": "6a08bcd83d62246a4f99390f",
+    "farmerId": "6a085a28941fb24bb2d247f2",
+    "cropName": "Cabbages",
+    "cropType": "vegetables",
+    "category": "vegetables",
+    "price": 70,
+    "originalPrice": null,
+    "quantity": 9,
+    "unit": "kg",
+    "description": "xxxxxxxxxxxxxxxxxxx",
+    "images": [
+      "/uploads/crops/1778957527928-6357-gobi.jpg"
+    ],
+    "pickupLocation": "infront of club",
+    "contactNumber": "9876345612",
+    "discount": 0,
+    "certifications": [],
+    "rating": 0,
+    "totalReviews": 0,
+    "status": "active",
+    "availability": "available",
+    "listingApprovalStatus": "approved",
+    "views": 85,
+    "sold": 0,
+    "likes": 0,
+    "lowStockThreshold": 10,
+    "monthlyStats": {
+      "totalRevenue": 0,
+      "totalUnits": 0,
+      "averageRating": 0
+    },
+    "interestedBuyers": [],
+    "restockHistory": [],
+    "dailySales": [],
+    "createdAt": "2026-05-16T18:52:08.058Z",
+    "updatedAt": "2026-05-17T07:18:03.797Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a0a9dfdfddc7a09f32bc7ab",
+    "farmerId": "6a0886589792e43e1e5cff36",
+    "cropName": "LadyFingers",
+    "cropType": "vegetables",
+    "category": "vegetables",
+    "price": 80,
+    "originalPrice": null,
+    "quantity": 9,
+    "unit": "kg",
+    "description": "Good condition and healthy ",
+    "images": [
+      "/uploads/crops/1779080701348-1852-lf.jpg"
+    ],
+    "pickupLocation": "Near sgb square",
+    "contactNumber": "8765345689",
+    "discount": 0,
+    "certifications": [],
+    "rating": 0,
+    "totalReviews": 0,
+    "status": "active",
+    "availability": "available",
+    "listingApprovalStatus": "approved",
+    "views": 4,
+    "sold": 1,
+    "likes": 0,
+    "lowStockThreshold": 10,
+    "monthlyStats": {
+      "totalRevenue": 0,
+      "totalUnits": 0,
+      "averageRating": 0
+    },
+    "interestedBuyers": [
+      {
+        "buyerId": "6a08874e9792e43e1e5cff90",
+        "status": "ordered",
+        "interestedAt": "2026-05-19T15:20:20.920Z",
+        "orderId": "6a0c832d7fa545f4ed7eff0e",
+        "_id": "6a0c7fb47fa545f4ed7efea5"
+      }
+    ],
+    "restockHistory": [],
+    "dailySales": [],
+    "createdAt": "2026-05-18T05:05:01.428Z",
+    "updatedAt": "2026-05-19T15:35:09.993Z",
+    "__v": 1
+  },
+  {
+    "_id": "6a0beec8f53193cf206d39c0",
+    "farmerId": "6a085a28941fb24bb2d247f2",
+    "cropName": "Potato",
+    "cropType": "vegetables",
+    "category": "vegetables",
+    "price": 40,
+    "originalPrice": null,
+    "quantity": 20,
+    "unit": "kg",
+    "description": "Healthy and fresh",
+    "images": [
+      "/uploads/crops/1779166919951-5698-aloo.jpg"
+    ],
+    "pickupLocation": "Near sgb square",
+    "contactNumber": "9876234589",
+    "discount": 0,
+    "certifications": [],
+    "rating": 0,
+    "totalReviews": 0,
+    "status": "active",
+    "availability": "available",
+    "listingApprovalStatus": "approved",
+    "views": 0,
+    "sold": 0,
+    "likes": 0,
+    "lowStockThreshold": 10,
+    "monthlyStats": {
+      "totalRevenue": 0,
+      "totalUnits": 0,
+      "averageRating": 0
+    },
+    "interestedBuyers": [],
+    "restockHistory": [],
+    "dailySales": [],
+    "createdAt": "2026-05-19T05:02:00.032Z",
+    "updatedAt": "2026-05-19T05:02:00.032Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a0bef4af53193cf206d39e8",
+    "farmerId": "6a0b109d5995973655d031b0",
+    "cropName": "Tomato",
+    "cropType": "vegetables",
+    "category": "vegetables",
+    "price": 30,
+    "originalPrice": null,
+    "quantity": 11,
+    "unit": "kg",
+    "description": "well produced ",
+    "images": [
+      "/uploads/crops/1779167050039-3904-tomato.jpg"
+    ],
+    "pickupLocation": "infront of club",
+    "contactNumber": "8765234578",
+    "discount": 0,
+    "certifications": [],
+    "rating": 0,
+    "totalReviews": 0,
+    "status": "active",
+    "availability": "available",
+    "listingApprovalStatus": "approved",
+    "views": 10,
+    "sold": 1,
+    "likes": 0,
+    "lowStockThreshold": 10,
+    "monthlyStats": {
+      "totalRevenue": 30,
+      "totalUnits": 1,
+      "averageRating": 0
+    },
+    "interestedBuyers": [
+      {
+        "buyerId": "6a0b0fb85995973655d0317b",
+        "status": "ordered",
+        "interestedAt": "2026-05-19T05:07:05.026Z",
+        "orderId": "6a0c41df9648bff377e49323",
+        "_id": "6a0beff9f53193cf206d3a31"
+      }
+    ],
+    "restockHistory": [],
+    "dailySales": [
+      {
+        "date": "2026-05-18T18:30:00.000Z",
+        "quantity": 1,
+        "revenue": 30,
+        "_id": "6a0c7e827fa545f4ed7efdab"
+      }
+    ],
+    "createdAt": "2026-05-19T05:04:10.103Z",
+    "updatedAt": "2026-05-19T15:15:14.330Z",
+    "__v": 1
+  }
+]

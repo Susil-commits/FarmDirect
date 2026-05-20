@@ -1,0 +1,48 @@
+[
+  {
+    "_id": "6a0bf03ff53193cf206d3a50",
+    "senderId": "6a0b0fb85995973655d0317b",
+    "receiverId": "6a0b109d5995973655d031b0",
+    "content": "is it well maintaned ?",
+    "cropId": "6a0bef4af53193cf206d39e8",
+    "orderId": null,
+    "isRead": true,
+    "readAt": "2026-05-19T05:40:38.493Z",
+    "type": "text",
+    "attachments": [],
+    "conversationId": "6a0b0fb85995973655d0317b_6a0b109d5995973655d031b0",
+    "isDeleted": false,
+    "isEdited": false,
+    "editedAt": null,
+    "replyTo": null,
+    "metadata": {
+      "deviceType": "desktop"
+    },
+    "createdAt": "2026-05-19T05:08:15.273Z",
+    "updatedAt": "2026-05-19T05:40:38.493Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a0bf7ecf53193cf206d3b1a",
+    "senderId": "6a0b109d5995973655d031b0",
+    "receiverId": "6a0b0fb85995973655d0317b",
+    "content": "yes it is",
+    "cropId": null,
+    "orderId": null,
+    "isRead": true,
+    "readAt": "2026-05-19T15:14:37.931Z",
+    "type": "text",
+    "attachments": [],
+    "conversationId": "6a0b0fb85995973655d0317b_6a0b109d5995973655d031b0",
+    "isDeleted": false,
+    "isEdited": false,
+    "editedAt": null,
+    "replyTo": null,
+    "metadata": {
+      "deviceType": "desktop"
+    },
+    "createdAt": "2026-05-19T05:41:00.468Z",
+    "updatedAt": "2026-05-19T15:14:37.932Z",
+    "__v": 0
+  }
+]
