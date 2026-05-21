@@ -54,7 +54,7 @@ export default function Home() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const apiBaseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+        const apiBaseURL = import.meta.env.VITE_API_BASE_URL || '/api';
         const url = `${apiBaseURL}/users/community/stats`;
         
         const response = await fetch(url, {

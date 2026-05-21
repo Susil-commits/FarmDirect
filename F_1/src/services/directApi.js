@@ -5,11 +5,12 @@
  * can corrupt multipart/form-data boundaries, causing multer to see
  * req.files as empty on the backend.
  * 
- * This instance connects directly to http://localhost:5000/api.
+ * In production, this connects to the deployed backend URL.
+ * In development, it connects directly to http://localhost:5000/api.
  */
 import axios from 'axios';
 
-const BACKEND_URL = 'http://localhost:5000/api';
+const BACKEND_URL = import.meta.env.VITE_API_DIRECT_URL || 'http://localhost:5000/api';
 
 const directApi = axios.create({
   baseURL: BACKEND_URL,

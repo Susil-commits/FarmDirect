@@ -1,6 +1,5 @@
-const AWS = require('aws-sdk');
-const fs = require('fs');
-const path = require('path');
+import AWS from 'aws-sdk';
+import fs from 'fs';
 
 /**
  * Configure DigitalOcean Spaces (S3-compatible)
@@ -19,7 +18,7 @@ const s3 = new AWS.S3({
  * Upload file to DigitalOcean Spaces
  * @param {Object} file - Express file object from multer
  * @param {String} folder - Folder path (e.g., 'crops', 'users', 'docs')
- * @returns {String} - Public URL of uploaded file
+ * @returns {Object} - Upload result with public URL
  */
 const uploadToSpaces = async (file, folder = 'uploads') => {
   try {
@@ -41,7 +40,7 @@ const uploadToSpaces = async (file, folder = 'uploads') => {
       Key: key,
       Body: fileStream,
       ContentType: file.mimetype,
-      ACL: 'public-read', // Make file publicly accessible
+      ACL: 'public-read',
     };
 
     // Upload to Spaces
@@ -119,7 +118,7 @@ const listSpacesFiles = async (folder) => {
   }
 };
 
-module.exports = {
+export {
   uploadToSpaces,
   deleteFromSpaces,
   listSpacesFiles,
