@@ -469,7 +469,7 @@ export default function AdminManagement() {
               </div>
 
               {/* ─── Stats Cards ─── */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <StatsCard
                   icon={Users}
                   label="Verified Users"
@@ -742,7 +742,7 @@ export default function AdminManagement() {
                                     </div>
                                     KYC Personal Details
                                   </h4>
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white rounded-xl border border-gray-200 p-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-white rounded-xl border border-gray-200 p-4">
                                     <div>
                                       <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Aadhar</p>
                                       <p className="text-sm font-bold text-gray-900 mt-0.5">
@@ -781,7 +781,7 @@ export default function AdminManagement() {
                                       </div>
                                       Farm Details
                                     </h4>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-green-50/50 rounded-xl border border-green-200 p-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-green-50/50 rounded-xl border border-green-200 p-4">
                                       <div>
                                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Farm Name</p>
                                         <p className="text-sm font-bold text-gray-900 mt-0.5">{userItem.farmName || '—'}</p>
@@ -812,7 +812,7 @@ export default function AdminManagement() {
                                       </div>
                                       Address Details
                                     </h4>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-blue-50/50 rounded-xl border border-blue-200 p-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-blue-50/50 rounded-xl border border-blue-200 p-4">
                                       <div className="col-span-2">
                                         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Street Address</p>
                                         <p className="text-sm font-bold text-gray-900 mt-0.5">
@@ -852,7 +852,7 @@ export default function AdminManagement() {
 
                                   {/* Inline KYC docs from user object */}
                                   {userItem.kycDocuments && Object.keys(userItem.kycDocuments).length > 0 ? (
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                                       {Object.entries(userItem.kycDocuments).map(([docType, docData]) => {
                                         if (!docData || !docData.url) return null;
                                         return (
@@ -871,7 +871,7 @@ export default function AdminManagement() {
                                       })}
                                     </div>
                                   ) : docs && !docs.error && docs.documents?.kycDocuments?.length > 0 ? (
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                                       {docs.documents.kycDocuments.map((doc, idx) => (
                                         <DocThumbnail key={idx} doc={doc} onPreview={(doc) => { setPreviewDoc(doc); setPreviewImageError(false); }} formatFileSize={formatFileSize} isImageDoc={isImageDoc} />
                                       ))}
@@ -932,7 +932,7 @@ export default function AdminManagement() {
                                       </div>
                                       Farm Images ({docs.documents.farmImages.length})
                                     </h4>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                                       {docs.documents.farmImages.map((imgUrl, idx) => (
                                         <div
                                           key={idx}

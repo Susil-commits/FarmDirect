@@ -93,7 +93,7 @@ export default function AdminDashboardStats() {
         <div className="p-6">
           <div className="space-y-6 max-w-7xl mx-auto">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
               <Card className="bg-blue-100 border-2 border-blue-600 shadow-xl hover:shadow-2xl transition transform hover:scale-105">
                 <div className="p-8">
                   <p className="text-lg font-bold text-black">Total Users</p>

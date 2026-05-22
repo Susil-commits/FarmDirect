@@ -773,6 +773,46 @@
   }
 }
 
+@media (max-width: 480px) {
+  .messages-page {
+    height: calc(100vh - 3rem);
+  }
+
+  .message-bubble {
+    max-width: 88%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .chat-header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .chat-input-area {
+    padding: 0.5rem;
+  }
+
+  .chat-input {
+    font-size: 0.8125rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .chat-mobile-back {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.4rem;
+  }
+
+  .chat-crop-context {
+    font-size: 0.625rem;
+  }
+
+  .chat-error-banner {
+    margin: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+}
+
 /* ---------- Crop Context Badge ---------- */
 .chat-crop-context {
   display: inline-flex;

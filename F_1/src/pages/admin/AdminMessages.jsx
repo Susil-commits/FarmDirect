@@ -220,7 +220,7 @@ export default function AdminMessages() {
           <div className="max-w-7xl mx-auto px-4 py-8">
             {/* Stats Cards */}
             <ScrollAnimation className="scroll-slide">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
                 <Card hover className="bg-gradient-to-br from-blue-50 to-white p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -448,7 +448,7 @@ export default function AdminMessages() {
           <div className="max-w-6xl mx-auto px-4 py-6">
             {/* User Info Card */}
             <Card className="p-6 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <p className="text-gray-600 text-sm font-semibold">Name</p>
                   <p className="text-gray-900 font-bold">

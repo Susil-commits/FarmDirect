@@ -282,7 +282,7 @@ export default function AdminUsers() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg mb-4">
                           <div>
                             <p className="text-xs text-gray-600 font-semibold">Email</p>
                             <p className="text-sm text-gray-900">{usr.email}</p>

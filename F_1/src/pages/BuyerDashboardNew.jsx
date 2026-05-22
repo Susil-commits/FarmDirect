@@ -214,7 +214,7 @@ export default function BuyerDashboardNew() {
 
           {/* Stats */}
           <ScrollAnimation className="scroll-slide mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="p-6 bg-gradient-to-br from-blue-50 to-white">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-semibold text-gray-600">Total Orders</p>
@@ -583,7 +583,7 @@ export default function BuyerDashboardNew() {
                   </Button>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {interestedCrops.map(crop => {
                     const cropId = crop._id || crop.id;
                     return (
@@ -793,7 +793,7 @@ export default function BuyerDashboardNew() {
                   </Button>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {wishlist.map(item => (
                     <Card key={item._id} className="p-4">
                       <div className="mb-4">

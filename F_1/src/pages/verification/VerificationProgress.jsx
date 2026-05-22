@@ -470,7 +470,7 @@ export default function VerificationProgress() {
           {/* Status Overview */}
           <Card className="mb-8 bg-white shadow-lg">
             <div className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
                 {/* Current Status */}
                 <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg">
                   <div className="flex items-center gap-3 mb-3">
@@ -693,7 +693,7 @@ export default function VerificationProgress() {
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           Aadhar Number *
@@ -797,7 +797,7 @@ export default function VerificationProgress() {
                         <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                           🌾 Farm Details
                         </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                               Farm Name *
@@ -950,7 +950,7 @@ export default function VerificationProgress() {
                   })}
                 </p>
               )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 {requiredDocuments.map(doc => (
                   <div key={doc.id} className="bg-white p-4 rounded-lg border border-blue-100">
                     <div className="flex items-start gap-3">

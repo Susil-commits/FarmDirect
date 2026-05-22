@@ -176,12 +176,12 @@ export default function Home() {
             }}
           ></div>
 
-          {/* Floating particles background */}
+          {/* Floating particles background - reduced on mobile for performance */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
-                className="absolute animate-float"
+                className={`absolute animate-float ${i > 1 ? 'hidden sm:block' : ''}`}
                 style={{
                   width: '100px',
                   height: '100px',
@@ -196,7 +196,7 @@ export default function Home() {
             ))}
           </div>
 
-          <div ref={particleRef} className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10 w-full">
+          <div ref={particleRef} className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-12 items-center relative z-10 w-full">
             <ScrollAnimation className="scroll-slide">
               <div>
                 <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
@@ -265,21 +265,24 @@ export default function Home() {
 
 
 
-        {/* Features - with Video Background */}
+        {/* Features - with Video Background (desktop only; static gradient on mobile to prevent lag) */}
         <section id="features" className="py-20 px-4 relative overflow-hidden">
-          {/* Video Background - no dark overlay, video fully visible */}
-          <div className="absolute inset-0 z-0">
+          {/* Video Background - hidden on mobile to avoid 12.8MB download lag */}
+          <div className="absolute inset-0 z-0 hidden md:block">
             <video
               src="/mixkit-wheat-field.mp4"
               autoPlay
               loop
               muted
               playsInline
+              preload="metadata"
               className="w-full h-full object-cover"
             />
             {/* Subtle light overlay only for slight text contrast */}
             <div className="absolute inset-0 bg-white/5"></div>
           </div>
+          {/* Lightweight static gradient for mobile (replaces heavy video) */}
+          <div className="absolute inset-0 z-0 md:hidden bg-gradient-to-br from-green-50 via-amber-50 to-green-100"></div>
 
           <div className="max-w-6xl mx-auto relative z-10">
             <ScrollAnimation className="scroll-slide mb-12">
@@ -290,7 +293,7 @@ export default function Home() {
                 Experience the difference of buying directly from farmers
               </p>
             </ScrollAnimation>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {features.map((feat, i) => (
                 <div
                   key={i}
@@ -327,7 +330,7 @@ export default function Home() {
                 </h3>
               </ScrollAnimation>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                 {/* Step 1 */}
                 <ScrollAnimation className="scroll-slide">
                   <Card hover className="h-full bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200">
@@ -449,7 +452,7 @@ export default function Home() {
                 </h3>
               </ScrollAnimation>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                 {/* Farmer Step 1 */}
                 <ScrollAnimation className="scroll-slide">
                   <Card hover className="h-full bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
@@ -593,7 +596,7 @@ export default function Home() {
               <p className="text-center text-gray-600 text-lg">Real farmers, real customers, real impact</p>
             </ScrollAnimation>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {/* Farmers Card */}
               <ScrollAnimation className="scroll-slide">
                 <div className="bg-green-50 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-green-200 hover:scale-105 animate-bounce-soft h-full flex flex-col">
@@ -678,7 +681,7 @@ export default function Home() {
                 <p className="text-lg text-gray-600 max-w-2xl mx-auto">Join thousands of satisfied farmers and buyers who are transforming agriculture</p>
               </div>
             </ScrollAnimation>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
               {testimonials.map((testi, i) => (
                 <ScrollAnimation key={i} className="scroll-slide" style={{ animationDelay: `${i * 0.1}s` }}>
                   <Card hover className="h-full bg-gradient-to-br from-white to-gray-50 border border-gray-100 hover:shadow-lg transition-all duration-300 group">

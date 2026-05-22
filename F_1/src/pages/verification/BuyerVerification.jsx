@@ -244,7 +244,7 @@ export default function BuyerVerification() {
           <Card className="mb-8">
             <div className="p-6">
               <h3 className="font-bold text-gray-900 mb-4">Account Type</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
                   onClick={() => setUserType('individual')}
                   className={`p-4 border-2 rounded-lg transition cursor-pointer ${
@@ -345,7 +345,7 @@ export default function BuyerVerification() {
         <Card className="mb-8">
           <div className="p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Verification Progress</h2>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-6">
               {requiredDocs.map((doc) => {
                 const docData = documents[doc.id];
                 if (!doc.required) return null;

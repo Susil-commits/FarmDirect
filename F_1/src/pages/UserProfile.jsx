@@ -211,7 +211,7 @@ export default function UserProfile() {
               {!isEditing ? (
                 <>
                   {/* Info Cards Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <Card className="p-0! overflow-hidden hover:shadow-xl transition duration-300">
                       <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 border-b border-blue-200">
                         <div className="flex items-center gap-3 mb-3">
@@ -325,7 +325,7 @@ export default function UserProfile() {
                     </div>
 
                     {/* Form Fields Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-bold text-gray-700 mb-3">Full Name</label>
                         <input
@@ -351,7 +351,7 @@ export default function UserProfile() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-bold text-gray-700 mb-3">Phone Number</label>
                         <input
@@ -388,7 +388,7 @@ export default function UserProfile() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-bold text-gray-700 mb-3">State</label>
                         <input

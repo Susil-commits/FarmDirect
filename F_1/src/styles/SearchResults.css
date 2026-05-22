@@ -520,3 +520,43 @@
     font-size: 0.75rem;
   }
 }
+
+@media (max-width: 480px) {
+  .results-grid {
+    gap: 0.75rem;
+  }
+
+  .result-item {
+    padding: 0.75rem;
+  }
+
+  .result-image {
+    height: 120px;
+  }
+
+  .result-title {
+    font-size: 0.9rem;
+  }
+
+  .result-price {
+    font-size: 0.85rem;
+  }
+
+  .result-actions {
+    gap: 0.4rem;
+  }
+
+  .result-action-btn {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  .pagination-btn {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  .filter-toggle {
+    font-size: 0.8rem;
+  }
+}

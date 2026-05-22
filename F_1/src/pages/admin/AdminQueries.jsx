@@ -219,7 +219,7 @@ export default function AdminQueries() {
 
           {/* Query Details */}
           <Card className="p-8 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
               <div>
                 <p className="text-sm text-gray-600 font-semibold mb-1">Full Name</p>
                 <p className="text-lg text-gray-900">{selectedQuery.name}</p>
@@ -358,7 +358,7 @@ export default function AdminQueries() {
 
         {/* Statistics */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <Card className="p-6">
               <p className="text-sm text-gray-600 font-semibold mb-2">Total Queries</p>
               <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
@@ -389,7 +389,7 @@ export default function AdminQueries() {
 
         {/* Filters & Search */}
         <Card className="p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-6 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Search</label>
               <div className="relative">

@@ -302,7 +302,7 @@ export default function FarmerVerification() {
         <Card className="mb-8">
           <div className="p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Verification Progress</h2>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-6">
               {requiredDocs.map((doc) => {
                 const docData = documents[doc.id];
                 return (

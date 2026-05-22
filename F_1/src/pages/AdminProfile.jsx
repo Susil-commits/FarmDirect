@@ -354,7 +354,7 @@ export default function AdminProfile() {
               )}
 
               {/* Quick Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 <Card _glass={false} className="bg-gradient-to-br from-blue-600 to-blue-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
                   <div className="p-8">
                     <div className="flex items-center justify-between mb-4">
@@ -399,7 +399,7 @@ export default function AdminProfile() {
               </div>
 
               {/* Additional Stats Row */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 <Card _glass={false} className="bg-gradient-to-br from-amber-600 to-orange-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
                   <div className="p-8">
                     <div className="flex items-center justify-between mb-4">
@@ -441,7 +441,7 @@ export default function AdminProfile() {
               </div>
 
               {/* User Breakdown */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 <Card _glass={false} className="bg-slate-700 border border-slate-600 text-white">
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-6">
@@ -529,7 +529,7 @@ export default function AdminProfile() {
               {!isEditing ? (
                 <>
                   {/* Info Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <Card _glass={false} className="bg-gradient-to-br from-blue-600 to-blue-700 border border-blue-500/30 text-white hover:shadow-2xl transition duration-300">
                       <div className="p-8">
                         <div className="flex items-center gap-4 mb-4">
@@ -600,7 +600,7 @@ export default function AdminProfile() {
 
                     <form className="space-y-8">
                       {/* Form Fields */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                           <label className="block text-sm font-bold text-slate-300 mb-3 uppercase tracking-wide">Full Name</label>
                           <input
@@ -624,7 +624,7 @@ export default function AdminProfile() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                           <label className="block text-sm font-bold text-slate-300 mb-3 uppercase tracking-wide">Phone Number</label>
                           <input
@@ -749,7 +749,7 @@ export default function AdminProfile() {
           {/* Settings Tab */}
           {activeTab === 'settings' && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {/* Security Settings */}
                 <Card _glass={false} className="bg-gradient-to-br from-red-600/40 to-red-700/40 border border-red-500/30">
                   <div className="p-8">

@@ -176,7 +176,7 @@ function InventoryItem({
         </Badge>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
         <div>
           <p className="text-xs text-gray-600 uppercase font-semibold">Current Qty</p>
           <p className={`text-xl font-bold ${statusColor}`}>{item.quantity} {item.unit || 'kg'}</p>

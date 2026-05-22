@@ -474,6 +474,57 @@
   }
 }
 
+@media (max-width: 480px) {
+  .timeline-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+
+  .timeline-marker {
+    gap: 0.5rem;
+  }
+
+  .timeline-line {
+    left: 16px;
+    height: 60px;
+  }
+
+  .timeline-title {
+    font-size: 0.85rem;
+  }
+
+  .timeline-description {
+    font-size: 0.75rem;
+  }
+
+  .contact-modal {
+    padding: 1rem;
+  }
+
+  .contact-modal h3 {
+    font-size: 1rem;
+  }
+
+  .farmer-info-card {
+    padding: 0.75rem;
+  }
+
+  .action-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .orders-list {
+    padding: 0.5rem;
+  }
+
+  .order-summary-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .scroll-slide,
   .contact-modal {

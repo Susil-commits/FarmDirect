@@ -404,7 +404,7 @@ export default function AdminDocuments() {
                           <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-900">
                             <FileText size={24} /> KYC Documents ({selectedUser.documents.kycDocuments.length})
                           </h3>
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                             {selectedUser.documents.kycDocuments.map((doc, idx) => (
                               <DocumentCard key={idx} doc={doc} type="KYC" />
                             ))}
@@ -418,7 +418,7 @@ export default function AdminDocuments() {
                           <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-900">
                             <ImageIcon size={24} /> Farm Images ({selectedUser.documents.farmImages.length})
                           </h3>
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                             {selectedUser.documents.farmImages.map((imageUrl, idx) => (
                               <div
                                 key={idx}
@@ -460,7 +460,7 @@ export default function AdminDocuments() {
                             {selectedUser.documents.cropImages.map((crop, idx) => (
                               <div key={idx} className="bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
                                 <h4 className="font-bold text-gray-900 mb-3">{crop.cropName}</h4>
-                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                                   {crop.images && crop.images.map((imageUrl, imgIdx) => (
                                     <div
                                       key={imgIdx}

@@ -178,6 +178,36 @@
   .tooltip-text {
     display: none;
   }
+
+  .hamburger-menu-panel {
+    width: 14rem;
+    top: 56px;
+    height: calc(100vh - 56px);
+  }
+}
+
+@media (max-width: 480px) {
+  .cart-preview-dropdown {
+    min-width: 260px;
+    right: -20px;
+  }
+
+  .hamburger-menu-panel {
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .hamburger-menu-item {
+    font-size: 0.875rem;
+  }
+
+  .nav-icon-badge {
+    min-width: 16px;
+    height: 16px;
+    font-size: 10px;
+    top: -6px;
+    right: -6px;
+  }
 }
 
 /* ========== HAMBURGER MENU ========== */

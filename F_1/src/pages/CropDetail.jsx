@@ -411,7 +411,7 @@ export default function CropDetail() {
                   </div>
 
                   {/* Location & Contact */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6 animate-slide-in-down" style={{ animationDelay: '0.3s' }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 animate-slide-in-down" style={{ animationDelay: '0.3s' }}>
                     <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
                       <MapPin size={18} className="text-blue-600 shrink-0" />
                       <div>

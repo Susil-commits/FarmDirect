@@ -131,7 +131,7 @@ export default function FarmerAnalytics() {
 
         {/* Overview Stats */}
         {dashboardStats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatCard
               label="Total Revenue"
               value={`₹${(dashboardStats.totalRevenue / 100000).toFixed(2)}L`}
@@ -207,7 +207,7 @@ export default function FarmerAnalytics() {
                     <BarChart3 className="w-5 h-5 text-green-600" />
                     Sales Summary
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                     <div className="border-l-4 border-green-600 pl-4">
                       <p className="text-gray-600 text-sm">Total Revenue</p>
                       <p className="text-3xl font-bold text-gray-900">

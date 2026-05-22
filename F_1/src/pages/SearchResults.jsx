@@ -296,7 +296,7 @@ export default function SearchResults() {
                     <Button onClick={() => navigate('/marketplace')} variant="primary">Browse All</Button>
                   </Card>
                 ) : (
-                  <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+                  <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
                     {filteredResults.map(crop => (
                       <Card key={crop._id} className={`p-6 hover:shadow-lg transition ${viewMode === 'list' ? 'flex items-center gap-6' : ''}`}>
                         {/* Crop Image Placeholder */}

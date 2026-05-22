@@ -239,6 +239,69 @@
   }
 }
 
+@media (max-width: 480px) {
+  .checkout-container {
+    padding: 0.75rem;
+  }
+
+  .step-indicator {
+    gap: 4px;
+  }
+
+  .step-circle {
+    width: 24px;
+    height: 24px;
+    font-size: 0.7rem;
+  }
+
+  .step-label {
+    font-size: 0.65rem;
+  }
+
+  .step-connector {
+    width: 20px;
+  }
+
+  .delivery-card,
+  .payment-card {
+    padding: 0.75rem;
+  }
+
+  .delivery-card .text-3xl,
+  .payment-card .text-3xl {
+    font-size: 1.5rem;
+  }
+
+  .form-input {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+
+  .order-summary {
+    padding: 0.75rem;
+  }
+
+  .summary-item {
+    padding: 0.5rem 0;
+  }
+
+  .btn-place-order {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .flex.gap-4 {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .trust-badge {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .checkout-container,
   .delivery-card,
