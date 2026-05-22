@@ -167,7 +167,7 @@ export default function Contact() {
         <div className="max-w-6xl mx-auto px-4 py-16">
           {/* Contact Info Cards */}
           <ScrollAnimation className="scroll-slide mb-16">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {contactInfo.map((info, idx) => (
                 <Card key={idx} hover className="p-8 text-center">
                   <div className="text-green-600 mb-4 flex justify-center">{info.icon}</div>

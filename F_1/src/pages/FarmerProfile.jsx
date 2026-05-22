@@ -181,7 +181,7 @@ export default function FarmerProfile() {
               </div>
 
               {crops.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {crops.map((crop, idx) => (
                     <div key={crop.id || crop._id || idx} className="bg-slate-700/50 border border-slate-600 rounded-xl overflow-hidden hover:shadow-2xl hover:border-emerald-500/50 transition duration-300 transform hover:scale-[1.02]">
                       <div className="p-4 relative group">
@@ -264,7 +264,7 @@ export default function FarmerProfile() {
                   <p className="text-slate-300 leading-relaxed text-lg mb-8">{farmer.bio || 'A dedicated farmer committed to providing fresh, quality produce.'}</p>
 
                   {/* Contact Info Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                     <div className="bg-gradient-to-br from-emerald-600/20 to-emerald-700/20 border border-emerald-500/30 rounded-xl p-6 hover:shadow-lg transition">
                       <div className="flex items-center gap-3 mb-3">
                         <div className="bg-emerald-500/30 p-3 rounded-lg">
@@ -298,7 +298,7 @@ export default function FarmerProfile() {
 
                   {/* About Details */}
                   {farmer.about && Object.keys(farmer.about).length > 0 && (
-                    <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                       {Object.entries(farmer.about).map(([key, value]) => (
                         <div key={key} className="p-4 bg-slate-800/50 rounded-lg border border-slate-600">
                           <p className="text-xs font-semibold text-slate-400 uppercase mb-1">{key.replace(/([A-Z])/g, ' $1')}</p>
@@ -326,7 +326,7 @@ export default function FarmerProfile() {
           {activeTab === 'stats' && farmer && (
             <div className="space-y-6">
               {/* Quick Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 border-0 text-white rounded-xl overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
                   <div className="p-8">
                     <div className="flex items-center justify-between mb-4">
@@ -371,7 +371,7 @@ export default function FarmerProfile() {
               </div>
 
               {/* Detailed Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 <div className="bg-slate-700/50 border border-slate-600 text-white rounded-xl">
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-6">
@@ -448,7 +448,7 @@ export default function FarmerProfile() {
                   </h2>
                   
                   {farmer.certifications && farmer.certifications.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {farmer.certifications.map((cert, idx) => (
                         <div key={idx} className="flex items-center gap-4 p-4 bg-gradient-to-br from-amber-600/20 to-amber-700/20 border border-amber-500/30 rounded-xl hover:shadow-lg transition">
                           <div className="bg-amber-500/30 p-3 rounded-lg">

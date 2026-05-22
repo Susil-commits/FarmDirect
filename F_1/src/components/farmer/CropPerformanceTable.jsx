@@ -186,7 +186,7 @@ export default function CropPerformanceTable({ data }) {
         {/* Legend */}
         <div className="mt-6 pt-6 border-t border-gray-200">
           <p className="text-sm font-semibold text-gray-700 mb-3">Performance Score Legend</p>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-green-500"></div>
               <span className="text-sm text-gray-600">Excellent (80-100)</span>

@@ -84,7 +84,7 @@ export default function RevenueChart({ data }) {
       <Card>
         <div className="p-6">
           <h3 className="text-lg font-bold mb-4">Revenue Summary</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <SummaryStat
               label="Total Revenue"
               value={`₹${(data.totals.totalRevenue / 100000).toFixed(2)}L`}

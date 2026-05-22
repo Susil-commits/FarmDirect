@@ -253,7 +253,7 @@ export default function FarmerDashboardNew() {
           </ScrollAnimation>
 
           <ScrollAnimation className="scroll-slide mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
               <Card className="p-6 bg-gradient-to-br from-blue-50 to-white">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-semibold text-gray-600">Total Revenue</p>
@@ -358,7 +358,7 @@ export default function FarmerDashboardNew() {
                             </span>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 pb-4 border-b border-gray-200">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4 pb-4 border-b border-gray-200">
                           <div><p className="text-xs text-gray-600 mb-1">Price</p><p className="text-lg font-bold">₹{crop.price}/{crop.unit || 'kg'}</p></div>
                           <div><p className="text-xs text-gray-600 mb-1">Quantity</p><p className="text-lg font-bold">{crop.quantity} {crop.unit || 'kg'}</p></div>
                           <div><p className="text-xs text-gray-600 mb-1">Pickup</p><p className="text-sm font-semibold flex items-center gap-1"><MapPin className="w-3 h-3" />{crop.pickupLocation || 'N/A'}</p></div>
@@ -768,7 +768,7 @@ export default function FarmerDashboardNew() {
 
               <Card className="p-6 bg-gradient-to-r from-green-50 to-emerald-50">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Performance Summary</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   <div><p className="text-sm text-gray-600 mb-1">Total Revenue</p><p className="text-3xl font-bold text-green-600">₹{analytics.totalRevenue.toLocaleString()}</p></div>
                   <div><p className="text-sm text-gray-600 mb-1">Completion Rate</p><p className="text-3xl font-bold text-emerald-600">{analytics.totalSales > 0 ? Math.round((analytics.completedOrders / analytics.totalSales) * 100) : 0}%</p></div>
                   <div><p className="text-sm text-gray-600 mb-1">Active Listings</p><p className="text-3xl font-bold text-blue-600">{crops.filter(c => c.availability !== 'not_available' && c.quantity > 0).length}</p></div>

@@ -87,6 +87,66 @@
   }
 }
 
+@media (max-width: 640px) {
+  .order-details-container {
+    padding: 1rem 0.75rem;
+  }
+
+  .order-item-card {
+    padding: 0.75rem;
+  }
+
+  .payment-modal-overlay > div {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+
+  .cod-info-card {
+    padding: 0.75rem;
+  }
+
+  .cod-payment-badge {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .order-details-container {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .order-item-card {
+    padding: 0.6rem;
+    border-radius: 0.5rem;
+  }
+
+  .timeline-dot {
+    width: 0.6rem;
+    height: 0.6rem;
+  }
+
+  .timeline-content {
+    padding-bottom: 0.5rem;
+  }
+
+  .back-button {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .cod-payment-badge {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .payment-modal-overlay > div {
+    padding: 0.75rem;
+    margin: 0.25rem;
+    border-radius: 0.5rem;
+  }
+}
+
 /* Status badge colors */
 .status-pending {
   background-color: var(--warning-light, #fef3c7);

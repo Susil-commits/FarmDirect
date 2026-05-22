@@ -146,7 +146,7 @@ export default function AdminOrders() {
 
         <div className="p-6 max-w-7xl mx-auto">
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
             <Card className="p-4 bg-gradient-to-br from-slate-50 to-white text-center">
               <p className="text-xs font-semibold text-gray-600 mb-1">Total</p>
               <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
@@ -323,7 +323,7 @@ export default function AdminOrders() {
                         </div>
 
                         {/* Order Details Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                           <div className="p-4 bg-gray-50 rounded-lg">
                             <p className="text-xs text-gray-500 font-semibold mb-1">Crop</p>
                             <p className="font-bold text-gray-900">{order.cropName || 'N/A'}</p>
@@ -345,7 +345,7 @@ export default function AdminOrders() {
                         </div>
 
                         {/* Farmer & Buyer Details */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                           <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                             <p className="text-xs text-green-600 font-semibold mb-2">👨‍🌾 Farmer</p>
                             <p className="font-bold text-gray-900">{farmerName}</p>

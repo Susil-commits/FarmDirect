@@ -31,7 +31,7 @@ export default function RoutingTest() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Test Navigation</h2>
           <p className="text-gray-600 mb-6">Open browser DevTools (F12) and check the console for logs when clicking buttons:</p>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {testRoutes.map((route) => (
               <Button
                 key={route.path}

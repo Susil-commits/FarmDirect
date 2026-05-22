@@ -152,6 +152,90 @@
   }
 }
 
+@media (max-width: 640px) {
+  .timeline-step {
+    gap: 8px;
+  }
+
+  .timeline-step .w-24 {
+    width: 48px;
+    height: 48px;
+  }
+
+  .timeline-step .text-3xl {
+    font-size: 1.25rem;
+  }
+
+  .success-icon .text-7xl {
+    font-size: 4rem;
+  }
+
+  .detail-item {
+    padding: 12px;
+  }
+
+  .order-item {
+    padding: 0.75rem;
+  }
+
+  .next-step {
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .order-confirmation-container {
+    padding: 0.75rem;
+  }
+
+  .success-icon .text-7xl {
+    font-size: 3rem;
+  }
+
+  .success-message {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .timeline-step {
+    gap: 6px;
+  }
+
+  .timeline-step .w-24 {
+    width: 40px;
+    height: 40px;
+  }
+
+  .timeline-step .text-3xl {
+    font-size: 1rem;
+  }
+
+  .detail-item {
+    padding: 10px;
+  }
+
+  .detail-label {
+    font-size: 0.75rem;
+  }
+
+  .detail-value {
+    font-size: 0.875rem;
+  }
+
+  .order-item {
+    padding: 0.6rem;
+  }
+
+  .next-step {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+
+  .order-details-grid {
+    gap: 0.5rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .order-confirmation-container,
   .success-icon,

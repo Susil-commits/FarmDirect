@@ -151,7 +151,7 @@ export default function JoinAsFarmer() {
               </p>
             </ScrollAnimation>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {benefits.map((benefit, i) => (
                 <ScrollAnimation key={i} className="scroll-slide">
                   <Card hover className="h-full">
@@ -178,7 +178,7 @@ export default function JoinAsFarmer() {
               <h2 className="text-4xl font-bold text-gray-900 text-center mb-4">FarmDirect by the Numbers</h2>
             </ScrollAnimation>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {whyUs.map((stat, i) => (
                 <ScrollAnimation key={i} className="scroll-slide">
                   <Card className="text-center bg-white border-2 border-green-200">
@@ -204,7 +204,7 @@ export default function JoinAsFarmer() {
               </p>
             </ScrollAnimation>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {steps.map((step, i) => (
                 <ScrollAnimation key={i} className="scroll-slide">
                   <div className="relative">
@@ -244,7 +244,7 @@ export default function JoinAsFarmer() {
               <h2 className="text-4xl font-bold text-gray-900 text-center mb-4">What Farmers Are Saying</h2>
             </ScrollAnimation>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
               {[
                 {
                   quote: 'FarmDirect helped me increase my sales by 45%. I now deal directly with customers and earn much better margins.',

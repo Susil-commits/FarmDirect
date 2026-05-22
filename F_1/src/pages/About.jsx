@@ -106,7 +106,7 @@ export default function About() {
           <ScrollAnimation className="scroll-slide mb-16">
             <Card className="bg-gradient-to-br from-amber-50 to-orange-50 p-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-8">Why Choose FarmDirect?</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div className="flex gap-4">
                   <div className="text-4xl shrink-0">🌾</div>
                   <div>
@@ -164,7 +164,7 @@ export default function About() {
                 <Award size={40} className="text-white" />
                 <h2 className="text-3xl font-bold">Project Achievements</h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div className="text-center p-6 bg-white/10 rounded-lg backdrop-blur">
                   <div className="text-5xl font-bold text-white mb-3">10+</div>
                   <p className="text-green-50 font-semibold">Features Implemented</p>
@@ -218,7 +218,7 @@ export default function About() {
             </div>
             
             {/* Phase Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 max-w-7xl mx-auto px-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-7xl mx-auto px-2">
               {[
                 { phase: 'Phase 1', title: 'Planning & Design', timeline: 'Aug - Sep 2024', desc: 'Requirements, architecture, database, UI wireframes, tech stack', icon: '📋', bgColor: 'bg-blue-500', details: ['Requirements', 'Architecture', 'Database', 'Wireframes', 'Tech Stack'] },
                 { phase: 'Phase 2', title: 'Backend Dev', timeline: 'Oct - Nov 2024', desc: 'APIs, JWT auth, RBAC, MongoDB, File Storage, payments', icon: '⚙️', bgColor: 'bg-green-500', details: ['50+ APIs', 'Authentication', 'RBAC', 'DB Models', 'Upload'] },

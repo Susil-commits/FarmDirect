@@ -78,7 +78,7 @@ export default function AdminOrderManagement({ order }) {
         </div>
 
         {/* Contact Info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-blue-50 rounded-lg p-4">
             <h4 className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2">
               <User size={16} /> Farmer Contact

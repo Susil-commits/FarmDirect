@@ -87,7 +87,7 @@ export default function ProductComparison() {
           {/* Crop Selection */}
           <div className="bg-white rounded-lg shadow p-6 mb-8">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Select Products to Compare</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
               {allCrops.map((crop) => (
                 <div
                   key={crop.id}

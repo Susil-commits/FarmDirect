@@ -268,7 +268,7 @@ export default function Marketplace() {
 
                   {/* Crops Grid */}
                   {filteredCrops.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                       {filteredCrops.map((crop, index) => (
                         <CropCard
                           key={crop._id || crop.id}

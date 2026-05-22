@@ -309,6 +309,46 @@
   }
 }
 
+@media (max-width: 480px) {
+  .image-upload-form {
+    padding: 12px;
+  }
+
+  .file-input-content {
+    padding: 20px 12px;
+  }
+
+  .label-text {
+    font-size: 12px;
+  }
+
+  .sublabel-text {
+    font-size: 10px;
+  }
+
+  .preview-image {
+    width: 80px;
+    height: 80px;
+  }
+
+  .file-name {
+    font-size: 0.75rem;
+  }
+
+  .file-size {
+    font-size: 0.65rem;
+  }
+
+  .btn {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .upload-icon {
+    font-size: 2rem;
+  }
+}
+
 /* ========== DARK MODE SUPPORT ========== */
 @media (prefers-color-scheme: dark) {
   .image-upload-form {

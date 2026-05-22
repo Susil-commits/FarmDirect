@@ -262,3 +262,48 @@
     font-size: 1.75rem;
   }
 }
+
+@media (max-width: 480px) {
+  .dashboard-tabs {
+    gap: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.25rem;
+  }
+
+  .dashboard-tab {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .stat-card {
+    padding: 0.75rem;
+  }
+
+  .stat-value {
+    font-size: 1.35rem;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+  }
+
+  .crop-card {
+    padding: 0.75rem;
+  }
+
+  .crop-actions {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .crop-actions button {
+    width: 100%;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.5rem;
+  }
+
+  .performance-grid {
+    gap: 0.75rem;
+  }
+}

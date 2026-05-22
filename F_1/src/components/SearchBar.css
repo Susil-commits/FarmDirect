@@ -332,3 +332,48 @@
     font-size: 1.5rem;
   }
 }
+
+@media (max-width: 480px) {
+  .search-bar-container {
+    max-width: none;
+  }
+
+  .search-input-group {
+    padding: 0.3rem 0.4rem;
+    border-radius: 0.5rem;
+  }
+
+  .search-input {
+    font-size: 0.75rem;
+  }
+
+  .search-input::placeholder {
+    font-size: 0.7rem;
+  }
+
+  .search-dropdown {
+    max-height: 260px;
+  }
+
+  .dropdown-item {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  .dropdown-section-header {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.65rem;
+  }
+
+  .result-item {
+    padding: 0.4rem 0.5rem;
+  }
+
+  .dropdown-empty {
+    padding: 1rem 0.5rem;
+  }
+
+  .empty-icon {
+    font-size: 1.25rem;
+  }
+}

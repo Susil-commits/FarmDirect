@@ -158,7 +158,7 @@ export default function OrderDetails() {
           {/* Order Summary */}
           <ScrollAnimation className="scroll-slide mb-8">
             <Card className="p-6 md:p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 pb-6 border-b border-gray-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 pb-6 border-b border-gray-200">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-600 mb-2">Order Status</h3>
                   <span className={`inline-block px-4 py-2 rounded-lg font-semibold text-sm border ${STATUS_COLORS[order.orderStatus] || 'bg-gray-100 text-gray-800'}`}>
@@ -176,7 +176,7 @@ export default function OrderDetails() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Order Date</p>
                   <p className="font-semibold text-gray-900 flex items-center gap-2">
@@ -298,7 +298,7 @@ export default function OrderDetails() {
 
           {/* Pickup Location & Contact */}
           <ScrollAnimation className="scroll-slide mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Pickup Location */}
               <Card className="p-6 md:p-8">
                 <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">

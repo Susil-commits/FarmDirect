@@ -220,7 +220,7 @@ export default function AdminVerification() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, i) => (
             <Card key={i}>
               <div className="p-6">
@@ -351,7 +351,7 @@ export default function AdminVerification() {
                   {/* Documents */}
                   <div className="mb-6">
                     <h3 className="font-bold text-gray-900 mb-4">Submitted Documents</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {selectedRequest.documents.map((doc, idx) => (
                         <div
                           key={idx}

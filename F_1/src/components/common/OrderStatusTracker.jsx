@@ -154,7 +154,7 @@ export default function OrderStatusTracker({ order }) {
 
         {/* Quick Info Box */}
         <div className="mt-8 pt-6 border-t-2 border-blue-200">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-lg p-4 border border-blue-100">
               <p className="text-xs text-gray-600 font-semibold">Order Number</p>
               <p className="text-lg font-bold text-gray-900 mt-1">{order.orderNumber || order._id?.slice(-6)}</p>

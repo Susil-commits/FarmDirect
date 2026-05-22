@@ -217,7 +217,7 @@ export default function OrderConfirmation() {
           {/* Order Details Card */}
           <Card className="mb-8 animate-slide-in-down" style={{ animationDelay: '0.3s' }}>
             <div className="p-8">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                 <div className="text-center">
                   <p className="text-gray-600 text-sm mb-2">Order ID</p>
                   <p className="text-xl font-bold text-gray-900 wrap-break-word">
@@ -285,7 +285,7 @@ export default function OrderConfirmation() {
           </Card>
 
           {/* Pickup & Order Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
             {/* Pickup Location */}
             <Card className="animate-slide-in-down" style={{ animationDelay: '0.5s' }}>
               <div className="p-8">

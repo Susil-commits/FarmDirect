@@ -150,7 +150,7 @@ export default function StartShopping() {
               </p>
             </ScrollAnimation>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {BENEFITS.map((benefit) => (
                 <ScrollAnimation key={benefit.id} className="scroll-slide">
                   <Card 
@@ -188,7 +188,7 @@ export default function StartShopping() {
               </p>
             </ScrollAnimation>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {STEPS.map((step, i) => (
                 <ScrollAnimation key={step.number} className="scroll-slide">
                   <div className="relative">
@@ -239,7 +239,7 @@ export default function StartShopping() {
           <ScrollAnimation className="scroll-slide">
             <div className="max-w-6xl mx-auto relative z-10">
               <h2 id="quick-facts-heading" className="sr-only">Quick Facts</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-white text-center">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 text-white text-center">
                 {QUICK_FACTS.map((fact, idx) => (
                   <div key={fact.id} role="article" aria-label={`${fact.value} ${fact.label}`} className="transform hover:scale-110 transition-transform duration-300">
                     <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 shadow-xl">
@@ -295,7 +295,7 @@ export default function StartShopping() {
               </p>
             </ScrollAnimation>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
               {VERIFICATION_BENEFITS.map((benefit) => (
                 <ScrollAnimation key={benefit.id} className="scroll-slide">
                   <Card 
@@ -332,7 +332,7 @@ export default function StartShopping() {
                       {/* Enhanced Timeline Background */}
                       <div className="hidden md:block absolute top-12 left-0 right-0 h-1 bg-gradient-to-r from-green-300 via-emerald-400 to-green-300" aria-hidden="true"></div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 relative z-10">
                         {VERIFICATION_TIMELINE.map((timeline, i) => (
                           <div key={i} className="text-center relative group">
                             {/* Timeline dot - Enhanced */}
