@@ -15,5 +15,6 @@
         }
       ]
     }
-  ]
+  ],
+  "installCommand": "npm ci"
 }
