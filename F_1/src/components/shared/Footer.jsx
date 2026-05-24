@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Globe, MessageCircle, Camera, ExternalLink } from 'lucide-react';
 import { useRouter } from '../../context/RouterContext';
 
 export default function Footer() {
@@ -92,16 +92,16 @@ export default function Footer() {
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
           <div className="flex gap-4 mb-4 md:mb-0">
             <button className="text-gray-400 hover:text-blue-400 hover:bg-gray-800 p-2 rounded-lg transition duration-200 cursor-pointer" title="Twitter">
-              <Twitter size={20} />
+              <MessageCircle size={20} />
             </button>
             <button className="text-gray-400 hover:text-blue-600 hover:bg-gray-800 p-2 rounded-lg transition duration-200 cursor-pointer" title="Facebook">
-              <Facebook size={20} />
+              <Globe size={20} />
             </button>
             <button className="text-gray-400 hover:text-pink-500 hover:bg-gray-800 p-2 rounded-lg transition duration-200 cursor-pointer" title="Instagram">
-              <Instagram size={20} />
+              <Camera size={20} />
             </button>
             <button className="text-gray-400 hover:text-blue-500 hover:bg-gray-800 p-2 rounded-lg transition duration-200 cursor-pointer" title="LinkedIn">
-              <Linkedin size={20} />
+              <ExternalLink size={20} />
             </button>
           </div>
           <p className="text-sm text-gray-400">&copy; 2026 FarmDirect. All rights reserved.</p>
