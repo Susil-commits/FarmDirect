@@ -8,6 +8,7 @@ import { orderService } from '../services/appService';
 import PageTransition from '../components/common/PageTransition.jsx';
 import Button from '../components/common/Button';
 import '../styles/ShoppingCart.css';
+import { getImageUrl } from '../utils/formatters';
 
 export default function ShoppingCart() {
   const { cart, removeFromCart, updateQuantity, clearCart, getTotalPrice } = useCart();
@@ -322,9 +323,9 @@ export default function ShoppingCart() {
 // Individual Cart Item Card - Redesigned with Marketplace-level details
 function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuantityChange, onNavigate }) {
   const staggerDelay = index * 0.08;
-  const itemImage = item.image || item.images?.[0];
+  const rawItemImage = item.image || item.images?.[0];
   const [imgError, setImgError] = useState(false);
-  const showFallback = !itemImage || imgError || !(itemImage.startsWith?.('http') || itemImage.startsWith?.('/'));
+  const showFallback = !rawItemImage || imgError;
 
   const renderStars = (rating) => {
     const stars = [];
@@ -409,9 +410,9 @@ function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuant
         className="cart-item-image"
         onClick={() => onNavigate(`/crop/${item.id || item._id}`)}
       >
-        {!showFallback && itemImage ? (
+        {!showFallback && rawItemImage ? (
           <img
-            src={itemImage}
+            src={getImageUrl(rawItemImage)}
             alt={item.name}
             className="cart-item-img"
             loading="lazy"

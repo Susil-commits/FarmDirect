@@ -12,6 +12,7 @@ import {
   Calendar, IndianRupee, AlertCircle, Leaf, ThumbsUp, Loader
 } from 'lucide-react';
 import '../styles/OrderDetails.css';
+import { getImageUrl } from '../utils/formatters';
 
 const ORDER_STATUS_FLOW = ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'completed'];
 
@@ -260,7 +261,7 @@ export default function OrderDetails() {
                   <div className="w-20 h-20 bg-gradient-to-br from-green-200 to-emerald-200 rounded-lg flex items-center justify-center shrink-0 text-3xl overflow-hidden">
                     {order.cropId?.images?.[0] ? (
                       <img
-                        src={order.cropId.images[0]}
+                        src={getImageUrl(order.cropId.images[0])}
                         alt={order.cropName || 'Crop'}
                         className="w-full h-full object-cover"
                         onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}

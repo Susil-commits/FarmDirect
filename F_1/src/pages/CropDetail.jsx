@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { useRecentlyViewed } from '../context/RecentlyViewedContext';
 import { useToast } from '../context/ToastContext';
 import { useCart } from '../context/CartContext';
+import { getImageUrl } from '../utils/formatters';
 import { cropService, wishlistService, userService } from '../services/appService';
 import '../styles/CropDetail.css';
 
@@ -286,7 +287,7 @@ export default function CropDetail() {
 
   // Derived values from crop data
   const cropName = crop?.cropName || crop?.name || 'Unknown Crop';
-  const cropImage = crop?.images?.[0] || crop?.image || null;
+  const rawCropImage = crop?.images?.[0] || crop?.image || null;
   const cropPrice = crop?.price || 0;
   const cropQuantity = crop?.quantity || 0;
   const cropUnit = crop?.unit || 'kg';
@@ -356,9 +357,9 @@ export default function CropDetail() {
               {/* Main Image */}
               <Card className="mb-6 animate-slide-in-left">
                 <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-t-lg flex items-center justify-center hover-lift relative overflow-hidden" style={{ minHeight: '400px' }}>
-                  {cropImage ? (
+                  {rawCropImage ? (
                     <img
-                      src={cropImage}
+                      src={getImageUrl(rawCropImage)}
                       alt={cropName}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                       loading="lazy"

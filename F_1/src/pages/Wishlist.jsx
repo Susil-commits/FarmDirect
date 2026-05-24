@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, MapPin, Star, ShoppingCart, Eye, Check, Trash2 } from 'lucide-react';
+import { getImageUrl } from '../utils/formatters';
 import { useWishlist } from '../context/WishlistContext';
 import { useRouter } from '../context/RouterContext';
 import { useCart } from '../context/CartContext';
@@ -127,9 +128,9 @@ export default function Wishlist() {
 // Individual Wishlist Card - Matching Marketplace CropCard Design
 function WishlistCard({ product, index, onRemove, onAddToCart, onViewCrop }) {
   const staggerDelay = index * 0.08;
-  const productImage = product.image || product.images?.[0];
+  const rawProductImage = product.image || product.images?.[0];
   const [imgError, setImgError] = useState(false);
-  const showFallback = !productImage || imgError || !(productImage.startsWith?.('http') || productImage.startsWith?.('/'));
+  const showFallback = !rawProductImage || imgError;
 
   const renderStars = (rating) => {
     const stars = [];
@@ -164,7 +165,7 @@ function WishlistCard({ product, index, onRemove, onAddToCart, onViewCrop }) {
       >
         {!showFallback && productImage ? (
           <img
-            src={productImage}
+            src={getImageUrl(rawProductImage)}
             alt={product.name}
             className="wishlist-card-img"
             loading="lazy"

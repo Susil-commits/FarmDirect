@@ -9,6 +9,7 @@ import {
   Clock, MapPin, Phone, User, ChevronDown, ChevronUp,
   ArrowLeft, RefreshCw, Search, Filter, IndianRupee
 } from 'lucide-react';
+import { getImageUrl } from '../../utils/formatters';
 
 const ORDER_STATUS_FLOW = ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'completed'];
 
@@ -234,7 +235,7 @@ export default function AdminOrders() {
                           <div className="w-12 h-12 rounded-lg overflow-hidden bg-green-100 flex items-center justify-center shrink-0">
                             {order.cropId?.images?.[0] ? (
                               <img
-                                src={order.cropId.images[0]}
+                                src={getImageUrl(order.cropId.images[0])}
                                 alt={order.cropName || 'Crop'}
                                 className="w-full h-full object-cover"
                                 onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}

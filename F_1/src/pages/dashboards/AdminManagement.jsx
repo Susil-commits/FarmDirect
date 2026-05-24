@@ -17,10 +17,12 @@ import api from '../../services/api.js';
 
 // ─── Document URL Helpers (DO NOT MODIFY — document preview is working) ───
 
+import { getImageUrl } from '../../utils/formatters';
+
 const resolveDocUrl = (url) => {
   if (!url) return '';
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  return url;
+  return getImageUrl(url) || url;
 };
 
 const getProxyUrl = (url) => {

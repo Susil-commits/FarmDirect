@@ -11,16 +11,18 @@ import {
   Award, Sprout, Home, Hash, Shield, Clock, Image as ImageIcon
 } from 'lucide-react';
 import api from '../../services/api.js';
+import { getImageUrl } from '../../utils/formatters';
 
-// Resolve document URL for display — local /uploads/ paths go through Vite proxy,
+// Resolve document URL for display — local /uploads/ paths use getImageUrl
+// to prepend the backend origin in production.
 // cloud URLs (http/https) are used directly. PDFs use the backend proxy endpoint
 // for proper Content-Type headers and inline viewing.
 const resolveDocUrl = (url) => {
   if (!url) return '';
   // Cloud URLs (DigitalOcean Spaces, Cloudinary, etc.) — use directly
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  // Local upload paths — Vite proxies /uploads to the backend
-  return url;
+  // Local upload paths — prefix with backend origin via getImageUrl
+  return getImageUrl(url) || url;
 };
 
 // Get the proxy URL for PDF/document inline viewing via the backend proxy endpoint

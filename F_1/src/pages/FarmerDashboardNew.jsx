@@ -15,6 +15,7 @@ import {
   Mail, Shield, FileText, Star, Calendar, UserCheck, Image, Award, Hash, BadgeCheck
 } from 'lucide-react';
 import '../styles/FarmerDashboard.css';
+import { getImageUrl } from '../utils/formatters';
 
 const ORDER_STATUS_FLOW = ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'completed'];
 
@@ -335,8 +336,8 @@ export default function FarmerDashboardNew() {
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-4">
                             {(crop.images?.[0] || crop.image) && (
-                              <img 
-                                src={crop.images?.[0] || crop.image} 
+                              <img
+                                src={getImageUrl(crop.images?.[0] || crop.image)}
                                 alt={crop.cropName || crop.name}
                                 className="w-16 h-16 rounded-lg object-cover"
                                 onError={(e) => e.target.style.display = 'none'}
@@ -576,7 +577,7 @@ export default function FarmerDashboardNew() {
                             <div className="w-16 h-16 rounded-lg overflow-hidden bg-green-100 flex items-center justify-center shrink-0">
                               {order.cropId?.images?.[0] ? (
                                 <img
-                                  src={order.cropId.images[0]}
+                                  src={getImageUrl(order.cropId.images[0])}
                                   alt={order.cropName || 'Crop'}
                                   className="w-full h-full object-cover"
                                   onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
