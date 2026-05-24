@@ -7,6 +7,7 @@ import ScrollAnimation from '../components/common/ScrollAnimation';
 import { CheckCircle, Package, Truck, MapPin, Clock, Loader, AlertCircle, Phone } from 'lucide-react';
 import { orderService } from '../services/appService';
 import '../styles/OrderConfirmation.css';
+import { getImageUrl } from '../utils/formatters';
 
 const STATUS_LABELS = {
   confirmed: 'Confirmed',
@@ -356,7 +357,7 @@ export default function OrderConfirmation() {
                     <div className="w-16 h-16 rounded-lg overflow-hidden bg-green-100 flex items-center justify-center shrink-0">
                       {order.cropId?.images?.[0] ? (
                         <img
-                          src={order.cropId.images[0]}
+                          src={getImageUrl(order.cropId.images[0])}
                           alt={order.cropName || 'Crop Item'}
                           className="w-full h-full object-cover"
                           onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}

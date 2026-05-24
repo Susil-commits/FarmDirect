@@ -13,6 +13,7 @@ import { useRouter } from '../context/RouterContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
 import { cropService } from '../services/appService';
+import { getImageUrl } from '../utils/formatters';
 import '../styles/Marketplace.css';
 
 export default function Marketplace() {
@@ -311,7 +312,8 @@ function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, index }) {
   const staggerDelay = index * 0.08;
   const cropImage = crop.images?.[0] || crop.image;
   const [imgError, setImgError] = useState(false);
-  const showFallback = !cropImage || imgError || !(cropImage.startsWith('http') || cropImage.startsWith('/'));
+  const resolvedImageUrl = getImageUrl(cropImage);
+  const showFallback = !cropImage || imgError;
 
   return (
     <Card
@@ -329,7 +331,7 @@ function CropCard({ crop, isFavorite, onToggleFavorite, onViewCrop, index }) {
              onClick={onViewCrop}>
           {!showFallback && (
             <img
-              src={cropImage}
+              src={resolvedImageUrl}
               alt={crop.cropName || crop.name}
               className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"

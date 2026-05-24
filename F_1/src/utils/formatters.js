@@ -169,3 +169,26 @@ export const formatStars = (rating) => {
   const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
   return stars;
 };
+
+/**
+ * Resolve image URLs for production deployment.
+ * In development, Vite proxies /uploads to the backend, so relative URLs work.
+ * In production (Vercel/Netlify), relative /uploads/ paths must be prefixed with
+ * the backend domain, otherwise they 404 on the frontend host.
+ *
+ * @param {string|null|undefined} url - Raw image URL from API (could be relative or absolute)
+ * @returns {string|null} - Resolved absolute URL, or null if input is falsy
+ */
+export const getImageUrl = (url) => {
+  if (!url) return null;
+  // Already an absolute URL (http/https) — return as-is
+  if (url.startsWith('http')) return url;
+  // Relative /uploads/ path — prefix with backend origin
+  if (url.startsWith('/uploads/')) {
+    // Use the direct backend URL (e.g., https://backend.onrender.com) and strip /api suffix
+    const backendOrigin = (import.meta.env.VITE_API_DIRECT_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+    return `${backendOrigin}${url}`;
+  }
+  // Other relative paths — return as-is (they may be frontend assets)
+  return url;
+};

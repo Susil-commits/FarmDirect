@@ -13,6 +13,7 @@ import {
   Clock, ArrowRight, XCircle, Leaf, MapPin, Phone, Package, Loader, ThumbsUp
 } from 'lucide-react';
 import '../styles/BuyerDashboard.css';
+import { getImageUrl } from '../utils/formatters';
 
 const ORDER_STATUS_FLOW = ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'completed'];
 
@@ -358,7 +359,7 @@ export default function BuyerDashboardNew() {
                         <div className="flex items-center gap-3">
                           {crop.images?.[0] ? (
                             <img
-                              src={crop.images[0]}
+                              src={getImageUrl(crop.images[0])}
                               alt={crop.cropName}
                               className="w-12 h-12 rounded-lg object-cover"
                             />
@@ -592,7 +593,7 @@ export default function BuyerDashboardNew() {
                         {crop.images?.[0] ? (
                           <div className="relative mb-4 rounded-lg overflow-hidden h-40">
                             <img
-                              src={crop.images[0]}
+                              src={getImageUrl(crop.images[0])}
                               alt={crop.cropName}
                               className="w-full h-full object-cover"
                             />

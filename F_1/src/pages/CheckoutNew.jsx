@@ -13,6 +13,7 @@ import {
   ArrowLeft, AlertCircle, Sprout
 } from 'lucide-react';
 import '../styles/Checkout.css';
+import { getImageUrl } from '../utils/formatters';
 
 export default function CheckoutNew() {
   const { navigate } = useRouter();
@@ -171,7 +172,7 @@ export default function CheckoutNew() {
                   <div className="flex items-start gap-4">
                     {crop.images?.[0] && (
                       <img
-                        src={crop.images[0]}
+                        src={getImageUrl(crop.images[0])}
                         alt={crop.cropName}
                         className="w-24 h-24 rounded-lg object-cover"
                       />

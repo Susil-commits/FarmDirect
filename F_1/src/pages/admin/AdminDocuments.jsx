@@ -7,6 +7,7 @@ import ScrollAnimation from '../../components/common/ScrollAnimation.jsx';
 import { Search, Filter, FileText, Image as ImageIcon, Eye, AlertCircle, CheckCircle, ArrowLeft, X } from 'lucide-react';
 import api from '../../services/api.js';
 import { useRouter } from '../../context/RouterContext.jsx';
+import { getImageUrl } from '../../utils/formatters';
 
 /**
  * AdminDocuments - Document and Image Viewer for Admin
@@ -436,7 +437,7 @@ export default function AdminDocuments() {
                               >
                                 <div className="h-40 bg-gray-100 overflow-hidden">
                                   <img
-                                    src={imageUrl}
+                                    src={getImageUrl(imageUrl)}
                                     alt={`Farm ${idx}`}
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform"
                                   />
@@ -478,7 +479,7 @@ export default function AdminDocuments() {
                                     >
                                       <div className="h-32 bg-gray-100 overflow-hidden">
                                         <img
-                                          src={imageUrl}
+                                          src={getImageUrl(imageUrl)}
                                           alt={`${crop.cropName} ${imgIdx}`}
                                           className="w-full h-full object-cover group-hover:scale-110 transition-transform"
                                         />

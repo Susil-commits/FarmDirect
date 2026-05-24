@@ -4,6 +4,7 @@ import { useRouter } from '../context/RouterContext';
 import { useSearch } from '../hooks/useSearch';
 import { cropService } from '../services/appService';
 import './SearchBar.css';
+import { getImageUrl } from '../utils/formatters';
 
 export default function SearchBar() {
   const [crops, setCrops] = useState([]);
@@ -179,8 +180,8 @@ export default function SearchBar() {
                             role="option"
                           >
                             <div className="result-image">
-                              {cropImage && (cropImage.startsWith('http') || cropImage.startsWith('/')) ? (
-                                <img src={cropImage} alt={cropName} />
+                              {cropImage ? (
+                                <img src={getImageUrl(cropImage)} alt={cropName} />
                               ) : (
                                 <span>{cropImage || '🥬'}</span>
                               )}

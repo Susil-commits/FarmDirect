@@ -283,7 +283,7 @@ export default function AdminCrops() {
                       <div className="relative h-40 bg-gray-200">
                         {crop.images && crop.images.length > 0 ? (
                           <img
-                            src={crop.images[0]}
+                            src={getImageUrl(crop.images[0])}
                             alt={crop.cropName}
                             className="w-full h-full object-cover"
                           />

@@ -7,7 +7,6 @@ export default function Footer() {
   const footerLinks = {
     quickLinks: [
       { label: 'Home', path: '/' },
-      { label: 'Marketplace', path: '/marketplace' },
       { label: 'About Us', path: '/about' },
       { label: 'Contact', path: '/contact' },
     ],
