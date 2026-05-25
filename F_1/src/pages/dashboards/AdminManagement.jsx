@@ -25,10 +25,12 @@ const resolveDocUrl = (url) => {
   return getImageUrl(url) || url;
 };
 
+// Uses VITE_API_BASE_URL to bypass Vercel's SPA catch-all in production
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 const getProxyUrl = (url) => {
   if (!url) return '';
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  return `/api/admin/documents/proxy?url=${encodeURIComponent(url)}`;
+  return `${API_BASE}/admin/documents/proxy?url=${encodeURIComponent(url)}`;
 };
 
 // ─── Document Thumbnail Card ───
