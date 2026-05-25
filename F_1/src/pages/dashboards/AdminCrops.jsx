@@ -5,6 +5,7 @@ import { adminService } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import Card from '../../components/common/Card';
 import LogoutConfirmationModal from '../../components/common/LogoutConfirmationModal';
+import { getImageUrl } from '../../utils/formatters';
 import { Package, AlertTriangle, LogOut, Menu, Search, Eye, Trash2, Users, BarChart3, Lock, Unlock, CheckCircle, XCircle } from 'lucide-react';
 
 export default function AdminCrops() {
