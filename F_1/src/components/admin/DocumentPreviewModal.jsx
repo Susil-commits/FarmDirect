@@ -1,12 +1,32 @@
-import React from 'react';
-import { X, FileText } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, FileText, Image as ImageIcon } from 'lucide-react';
+import { getImageUrl } from '../../utils/formatters';
+
+// Resolve document URL: prepend backend origin for relative /uploads/ paths,
+// use cloud URLs directly, and route PDFs through the backend proxy
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+
+const resolveDocUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return getImageUrl(url) || url;
+};
+
+const getProxyUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `${API_BASE}/admin/documents/proxy?url=${encodeURIComponent(url)}`;
+};
 
 /**
  * DocumentPreviewModal - Clean inline document preview (no download, no external links)
- * Used for viewing KYC documents, farm images, and crop images
+ * Used for viewing KYC documents, farm images, and crop images.
+ * Supports: images (img tag) and PDFs (iframe via backend proxy).
  */
 export default function DocumentPreviewModal({ document, onClose }) {
   if (!document) return null;
+
+  const [imageError, setImageError] = useState(false);
 
   const formatFileSize = (bytes) => {
     if (!bytes) return '0 B';
@@ -21,6 +41,7 @@ export default function DocumentPreviewModal({ document, onClose }) {
   };
 
   const isImage = document.mimeType?.startsWith('image/');
+  const isPdf = /\.pdf$/i.test(document.fileName || '') || document.mimeType === 'application/pdf';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -43,12 +64,19 @@ export default function DocumentPreviewModal({ document, onClose }) {
 
         {/* Preview Content */}
         <div className="p-4 overflow-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
-          {isImage ? (
+          {isImage && !imageError ? (
             <img
-              src={document.url}
+              src={resolveDocUrl(document.url)}
               alt={document.fileName}
               className="w-full h-auto rounded-lg"
-              onError={(e) => { e.target.style.display = 'none'; }}
+              onError={() => setImageError(true)}
+            />
+          ) : isPdf ? (
+            <iframe
+              src={getProxyUrl(document.url)}
+              className="w-full rounded-lg border border-gray-200"
+              style={{ height: 'calc(90vh - 160px)', minHeight: '500px' }}
+              title={document.fileName}
             />
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-gray-400">
