@@ -30,14 +30,14 @@ export const getDashboardStats = async (req, res, next) => {
       
       // Revenue calculations
       totalRevenue: orders
-        .filter(o => o.status === 'delivered' || o.status === 'completed')
-        .reduce((sum, order) => sum + (order.totalPrice || 0), 0),
+        .filter(o => o.orderStatus === 'completed')
+        .reduce((sum, order) => sum + (order.totalAmount || 0), 0),
       
       // Sales metrics
       totalOrdersReceived: orders.length,
-      completedOrders: orders.filter(o => o.status === 'delivered' || o.status === 'completed').length,
-      pendingOrders: orders.filter(o => ['pending', 'confirmed', 'shipped'].includes(o.status)).length,
-      cancelledOrders: orders.filter(o => o.status === 'cancelled').length,
+      completedOrders: orders.filter(o => o.orderStatus === 'completed').length,
+      pendingOrders: orders.filter(o => ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up'].includes(o.orderStatus)).length,
+      cancelledOrders: orders.filter(o => o.orderStatus === 'cancelled').length,
       
       // Inventory
       totalInventory: crops.reduce((sum, crop) => sum + (crop.quantity || 0), 0),
@@ -117,9 +117,9 @@ export const getCropAnalytics = async (req, res, next) => {
         // Sales metrics
         unitsSold: crop.sold,
         ordersReceived: cropOrders.length,
-        totalRevenue: cropOrders.reduce((sum, o) => sum + (o.totalPrice || 0), 0),
+        totalRevenue: cropOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0),
         avgOrderValue: cropOrders.length > 0 
-          ? (cropOrders.reduce((sum, o) => sum + (o.totalPrice || 0), 0) / cropOrders.length).toFixed(2)
+          ? (cropOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) / cropOrders.length).toFixed(2)
           : 0,
         
         // Conversion metrics
@@ -192,7 +192,7 @@ export const getRevenueAnalytics = async (req, res, next) => {
         $match: {
           farmerId: farmerId,
           createdAt: { $gte: startDate, $lte: now },
-          status: { $in: ['delivered', 'completed'] }
+          orderStatus: { $in: ['completed'] }
         }
       },
       {
@@ -203,7 +203,7 @@ export const getRevenueAnalytics = async (req, res, next) => {
               date: '$createdAt'
             }
           },
-          revenue: { $sum: '$totalPrice' },
+          revenue: { $sum: '$totalAmount' },
           orders: { $sum: 1 },
           units: { $sum: '$quantity' }
         }

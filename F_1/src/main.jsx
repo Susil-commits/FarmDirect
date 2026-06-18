@@ -5,13 +5,16 @@ import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext'
 import { RouterProvider } from './context/RouterContext'
 import { LoadingProvider } from './context/LoadingContext'
+import { SocketProvider } from './context/SocketContext'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
       <RouterProvider>
         <LoadingProvider>
-          <App />
+          <SocketProvider>
+            <App />
+          </SocketProvider>
         </LoadingProvider>
       </RouterProvider>
     </AuthProvider>

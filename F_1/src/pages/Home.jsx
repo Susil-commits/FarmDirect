@@ -72,10 +72,10 @@ export default function Home() {
 
         if (data?.success && data?.data) {
           const newStats = {
-            farmers: Math.max(data.data.users?.farmers || 0, 1),
-            customers: Math.max(data.data.users?.buyers || 0, 1),
-            varieties: Math.max(data.data.crops?.total || 0, 1),
-            orders: Math.max(data.data.orders?.total || 0, 1),
+            farmers: data.data.users?.farmers || 0,
+            customers: data.data.users?.buyers || 0,
+            varieties: data.data.crops?.total || 0,
+            orders: data.data.orders?.total || 0,
             deliveryDays: '3-5',
           };
           setStats(newStats);
@@ -604,7 +604,7 @@ export default function Home() {
                     <AnimatedNumber 
                       value={stats.farmers} 
                       duration={2000}
-                      suffix="+"
+                      suffix={stats.farmers > 0 ? "+" : ""}
                     />
                   </div>
                   <p className="text-gray-700 font-bold text-lg text-center mb-2">Active Farmers</p>
@@ -622,7 +622,7 @@ export default function Home() {
                     <AnimatedNumber 
                       value={stats.customers} 
                       duration={2000}
-                      suffix="+"
+                      suffix={stats.customers > 0 ? "+" : ""}
                     />
                   </div>
                   <p className="text-gray-700 font-bold text-lg text-center mb-2">Happy Customers</p>
@@ -640,7 +640,7 @@ export default function Home() {
                     <AnimatedNumber 
                       value={stats.varieties} 
                       duration={2000}
-                      suffix="+"
+                      suffix={stats.varieties > 0 ? "+" : ""}
                     />
                   </div>
                   <p className="text-gray-700 font-bold text-lg text-center mb-2">Crop Varieties</p>
@@ -658,7 +658,7 @@ export default function Home() {
                     <AnimatedNumber 
                       value={stats.orders} 
                       duration={2000}
-                      suffix="+"
+                      suffix={stats.orders > 0 ? "+" : ""}
                     />
                   </div>
                   <p className="text-gray-700 font-bold text-lg text-center mb-2">Total Orders</p>

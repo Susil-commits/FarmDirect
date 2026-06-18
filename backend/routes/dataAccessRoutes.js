@@ -15,21 +15,18 @@ router.get('/crops/search', dataAccessController.searchCrops);
 router.get('/farmers/:farmerId', dataAccessController.getPublicFarmerProfile);
 
 // ============ FARMER ROUTES (Auth + Farmer Role) ============
-router.use(protect, authorize('farmer'));
-router.get('/farmer/crops', dataAccessController.getFarmerCrops);
-router.get('/farmer/orders', dataAccessController.getFarmerOrders);
-router.get('/farmer/earnings', dataAccessController.getFarmerEarnings);
+router.get('/farmer/crops', protect, authorize('farmer'), dataAccessController.getFarmerCrops);
+router.get('/farmer/orders', protect, authorize('farmer'), dataAccessController.getFarmerOrders);
+router.get('/farmer/earnings', protect, authorize('farmer'), dataAccessController.getFarmerEarnings);
 
 // ============ BUYER ROUTES (Auth + Buyer Role) ============
-router.use(protect, authorize('buyer'));
-router.get('/buyer/crops', dataAccessController.getBuyerApprovedCrops);
-router.get('/buyer/orders', dataAccessController.getBuyerOrders);
-router.get('/buyer/wishlist', dataAccessController.getBuyerWishlist);
+router.get('/buyer/crops', protect, authorize('buyer'), dataAccessController.getBuyerApprovedCrops);
+router.get('/buyer/orders', protect, authorize('buyer'), dataAccessController.getBuyerOrders);
+router.get('/buyer/wishlist', protect, authorize('buyer'), dataAccessController.getBuyerWishlist);
 
 // ============ ADMIN ROUTES (Auth + Admin Role) ============
-router.use(protect, authorize('admin'));
-router.get('/admin/crops', dataAccessController.getAdminAllCrops);
-router.get('/admin/orders', dataAccessController.getAdminAllOrders);
-router.get('/admin/users/:role', dataAccessController.getAdminUsersByRole);
+router.get('/admin/crops', protect, authorize('admin'), dataAccessController.getAdminAllCrops);
+router.get('/admin/orders', protect, authorize('admin'), dataAccessController.getAdminAllOrders);
+router.get('/admin/users/:role', protect, authorize('admin'), dataAccessController.getAdminUsersByRole);
 
 export default router;

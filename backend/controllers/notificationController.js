@@ -1,5 +1,6 @@
 import Notification from '../models/Notification.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import { notifyNewNotification, notifyBulkNotification } from '../socket/eventHandlers.js';
 
 // Get user notifications
 export const getNotifications = asyncHandler(async (req, res) => {
@@ -138,6 +139,8 @@ export const createNotification = asyncHandler(async (req, res) => {
     actionUrl,
     isRead: false
   });
+
+  notifyNewNotification(userId, notification);
   
   res.status(201).json({
     success: true,
@@ -160,7 +163,9 @@ export const sendBulkNotifications = asyncHandler(async (req, res) => {
   }));
   
   const result = await Notification.insertMany(notifications);
-  
+
+  notifyBulkNotification(userIds, { title, message, type, _id: result[0]?._id });
+
   res.status(201).json({
     success: true,
     message: 'Bulk notifications sent successfully',

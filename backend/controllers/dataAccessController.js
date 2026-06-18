@@ -44,7 +44,7 @@ export const getFarmerOrders = asyncHandler(async (req, res) => {
     stats: {
       totalOrders: farmerOrders.length,
       completedOrders: farmerOrders.filter(o => o.orderStatus === 'completed').length,
-      pendingOrders: farmerOrders.filter(o => o.orderStatus === 'pending').length
+      pendingOrders: farmerOrders.filter(o => ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up'].includes(o.orderStatus)).length
     }
   });
 });
@@ -122,7 +122,7 @@ export const getBuyerOrders = asyncHandler(async (req, res) => {
     data: orders,
     stats: {
       totalOrders: orders.length,
-      totalSpent: orders.reduce((sum, order) => sum + order.totalPrice, 0),
+      totalSpent: orders.reduce((sum, order) => sum + order.totalAmount, 0),
       completedOrders: orders.filter(o => o.orderStatus === 'completed').length
     }
   });
@@ -305,12 +305,12 @@ export const getAdminAllOrders = asyncHandler(async (req, res) => {
 
   const stats = {
     total: orders.length,
-    pending: orders.filter(o => o.orderStatus === 'pending').length,
+    pending: orders.filter(o => ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up'].includes(o.orderStatus)).length,
     completed: orders.filter(o => o.orderStatus === 'completed').length,
     cancelled: orders.filter(o => o.orderStatus === 'cancelled').length,
     totalRevenue: orders
       .filter(o => o.orderStatus === 'completed')
-      .reduce((sum, o) => sum + o.totalPrice, 0)
+      .reduce((sum, o) => sum + o.totalAmount, 0)
   };
 
   res.status(200).json({

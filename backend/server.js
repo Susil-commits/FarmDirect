@@ -4,9 +4,11 @@ import compression from 'compression';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
 import connectDB from './config/db.js';
 import errorHandler from './middleware/errorHandler.js';
 import { resetServerStartTime, getServerStartTime } from './utils/serverTime.js';
+import { initSocket } from './socket/socketManager.js';
 
 import authRoutes from './routes/authRoutes.js';
 import cropRoutes from './routes/cropRoutes.js';
@@ -53,9 +55,8 @@ app.use(helmet({
 
 // 2. CORS — supports comma-separated origins for dev + production
 const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173').split(',').map(o => o.trim());
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -65,7 +66,8 @@ app.use(cors({
     }
   },
   credentials: true,
-}));
+};
+app.use(cors(corsOptions));
 
 // 3. Global rate limiter — 600 requests per 15 min per IP (accommodates polling SPA with multiple contexts)
 const globalLimiter = rateLimit({
@@ -100,7 +102,7 @@ app.use('/api/messages/unread', pollingLimiter);
 app.use('/api/notifications/unread', pollingLimiter);
 
 // 5. Body parsing
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // 6. Response compression — gzip/brotli JSON responses (3-5x smaller)
@@ -163,12 +165,19 @@ app.use('*', (req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
+// Create HTTP server for Socket.io
+const httpServer = createServer(app);
+
+// Initialize Socket.io
+initSocket(httpServer, { origin: allowedOrigins });
+
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🛡️  Rate limiting: 600 req/15min (global), 120 req/min (polling), 30 req/15min (auth)`);
+  console.log(`⚡ WebSocket: Ready`);
 });
 
 export default app;

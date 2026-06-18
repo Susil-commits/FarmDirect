@@ -10,6 +10,7 @@ import Notification from '../models/Notification.js';
 import AuditLog from '../models/AuditLog.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { invalidationStrategies } from '../utils/cache.js';
+import { notifyKYCUpdate, notifyUserStatusChange } from '../socket/eventHandlers.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -19,7 +20,7 @@ export const getPublicCommunityStats = asyncHandler(async (req, res) => {
     const totalFarmers = await User.countDocuments({ role: 'farmer', status: 'active' });
     const totalBuyers = await User.countDocuments({ role: 'buyer', status: 'active' });
     const totalCrops = await CropListing.countDocuments({ status: 'active' });
-    const totalOrders = await Order.countDocuments({ orderStatus: { $in: ['delivered', 'completed'] } });
+    const totalOrders = await Order.countDocuments({ orderStatus: { $in: ['completed'] } });
     
     res.status(200).json({
       success: true,
@@ -57,8 +58,8 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
   const activeCrops = await CropListing.countDocuments({ status: 'active' });
   
   const totalOrders = await Order.countDocuments();
-  const pendingOrders = await Order.countDocuments({ orderStatus: 'pending' });
-  const completedOrders = await Order.countDocuments({ orderStatus: 'delivered' });
+  const pendingOrders = await Order.countDocuments({ orderStatus: { $in: ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up'] } });
+  const completedOrders = await Order.countDocuments({ orderStatus: 'completed' });
   
   const totalReviews = await Review.countDocuments();
   
@@ -67,7 +68,7 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
   
   // Revenue calculation using MongoDB aggregation (avoids pulling all orders into memory)
   const revenueResult = await Order.aggregate([
-    { $match: { orderStatus: 'delivered' } },
+    { $match: { orderStatus: 'completed' } },
     { $group: { _id: null, totalRevenue: { $sum: '$totalAmount' }, count: { $sum: 1 } } }
   ]);
   const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
@@ -201,7 +202,9 @@ export const toggleUserStatus = asyncHandler(async (req, res) => {
   } catch (err) {
     console.error('Notification creation error:', err);
   }
-  
+
+  notifyUserStatusChange(userId, status, reason);
+
   // Create audit log
   try {
     await AuditLog.create({
@@ -344,6 +347,8 @@ export const approveUserKYC = asyncHandler(async (req, res) => {
     console.error('Notification creation error:', err);
   }
 
+  notifyKYCUpdate(userId, 'verified', null);
+
   // Create audit log
   try {
     await AuditLog.create({
@@ -403,6 +408,8 @@ export const rejectUserKYC = asyncHandler(async (req, res) => {
   } catch (err) {
     console.error('Notification creation error:', err);
   }
+
+  notifyKYCUpdate(userId, 'rejected', reason);
 
   // Create audit log
   try {
@@ -1013,8 +1020,8 @@ export const getDashboardAnalytics = asyncHandler(async (req, res) => {
   const pendingCrops = await CropListing.countDocuments({ listingApprovalStatus: 'pending' });
 
   const totalOrders = await Order.countDocuments();
-  const completedOrders = await Order.countDocuments({ orderStatus: 'delivered' });
-  const pendingOrders = await Order.countDocuments({ orderStatus: 'verification_pending' });
+  const completedOrders = await Order.countDocuments({ orderStatus: 'completed' });
+  const pendingOrders = await Order.countDocuments({ orderStatus: { $in: ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up'] } });
 
   const orders = await Order.find().select('totalAmount');
   const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
@@ -1055,7 +1062,7 @@ export const getFarmerAnalytics = asyncHandler(async (req, res) => {
 
   const totalEarnings = orders.reduce((sum, o) => sum + o.totalAmount, 0);
   const totalOrders = orders.length;
-  const deliveredOrders = orders.filter(o => o.orderStatus === 'delivered').length;
+  const deliveredOrders = orders.filter(o => o.orderStatus === 'completed').length;
 
   res.status(200).json({
     success: true,
@@ -1085,7 +1092,7 @@ export const getBuyerAnalytics = asyncHandler(async (req, res) => {
 
   const orders = await Order.find({ buyerId: buyer._id }).lean();
   const totalSpent = orders.reduce((sum, o) => sum + o.totalAmount, 0);
-  const completedOrders = orders.filter(o => o.orderStatus === 'delivered').length;
+  const completedOrders = orders.filter(o => o.orderStatus === 'completed').length;
 
   res.status(200).json({
     success: true,
