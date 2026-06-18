@@ -38,3 +38,4 @@ backend/data_dump/
 # Testing
 coverage/
 .nyc_output/
+.vercel
