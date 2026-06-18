@@ -1,0 +1,22 @@
+{
+  "installCommand": "cd F_1 && npm install",
+  "buildCommand": "cd F_1 && npm run build",
+  "outputDirectory": "F_1/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ]
+}
