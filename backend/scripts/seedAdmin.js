@@ -26,10 +26,15 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/farmdirect';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@farmdirect.com';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@123';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const ADMIN_FIRST_NAME = process.env.ADMIN_FIRST_NAME || 'FarmDirect';
 const ADMIN_LAST_NAME = process.env.ADMIN_LAST_NAME || 'Admin';
+
+if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+  console.error('ERROR: ADMIN_EMAIL and ADMIN_PASSWORD environment variables are required');
+  process.exit(1);
+}
 
 async function seedAdmin() {
   try {

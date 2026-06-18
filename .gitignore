@@ -32,6 +32,9 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 
+# Data dumps (contains user data)
+backend/data_dump/
+
 # Testing
 coverage/
 .nyc_output/

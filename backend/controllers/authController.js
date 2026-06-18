@@ -83,57 +83,9 @@ export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
+// Validate input
     if (!email || !password) {
       return res.status(400).json({ message: 'Please provide email and password' });
-    }
-
-    // ADMIN ACCOUNT - Hardcoded for local dev/testing
-    if (email === 'admin@123' && password === 'password') {
-      let adminUser = await User.findOne({ email: 'admin@123', role: 'admin' });
-
-      if (!adminUser) {
-        const bcrypt = (await import('bcryptjs')).default;
-        const salt = await bcrypt.genSalt(12);
-        const hashedPassword = await bcrypt.hash('password', salt);
-
-        adminUser = await User.create({
-          firstName: 'FarmDirect',
-          lastName: 'Admin',
-          name: 'FarmDirect Admin',
-          email: 'admin@123',
-          password: hashedPassword,
-          role: 'admin',
-          kycStatus: 'verified',
-          status: 'active',
-          verified: true,
-          emailVerified: true,
-          phone: '0000000000',
-        });
-      }
-
-      const token = generateToken(adminUser._id);
-      const refreshToken = generateToken(adminUser._id);
-
-      return res.status(200).json({
-        message: 'Login successful',
-        token,
-        refreshToken,
-        user: {
-          id: adminUser._id,
-          name: adminUser.name,
-          firstName: adminUser.firstName,
-          lastName: adminUser.lastName,
-          email: adminUser.email,
-          role: adminUser.role,
-          phone: adminUser.phone,
-          location: adminUser.location,
-          kycStatus: adminUser.kycStatus,
-          verified: adminUser.verified,
-          photo: adminUser.profilePicture,
-        },
-        serverStartTime: getServerStartTime()
-      });
     }
 
     // Find user and select password
