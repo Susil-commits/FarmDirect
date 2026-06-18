@@ -1,6 +1,7 @@
 import CropListing from '../models/CropListing.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
+import { notifyCropInterest } from '../socket/eventHandlers.js';
 
 // @route POST /api/crops
 // @desc Create a new crop listing (Farmer only - KYC already verified)
@@ -428,6 +429,8 @@ export const toggleInterest = async (req, res, next) => {
     } catch (notifErr) {
       console.error('Failed to create interest notification:', notifErr);
     }
+
+    notifyCropInterest(crop.farmerId, crop, buyer);
 
     res.status(200).json({
       message: 'Interest marked successfully',

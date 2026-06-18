@@ -1,5 +1,6 @@
-import React, { createContext, useState, useCallback, useEffect, useRef } from 'react';
+import React, { createContext, useState, useCallback, useEffect, useRef, useContext } from 'react';
 import { notificationService } from '../services/appService.js';
+import { useSocket } from './SocketContext';
 
 export const ToastContext = createContext();
 
@@ -52,6 +53,18 @@ export const NotificationProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const pollingIntervalRef = useRef(null);
+  const { subscribe, connected } = useSocket();
+
+  useEffect(() => {
+    if (!connected) return;
+
+    const unsub = subscribe('notification:new', (notification) => {
+      setNotifications((prev) => [notification, ...prev]);
+      setUnreadCount((prev) => prev + 1);
+    });
+
+    return () => unsub();
+  }, [connected, subscribe]);
 
   const fetchNotifications = useCallback(async (page = 1) => {
     setLoading(true);

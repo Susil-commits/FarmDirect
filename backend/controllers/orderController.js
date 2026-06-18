@@ -2,6 +2,7 @@ import Order from '../models/Order.js';
 import CropListing from '../models/CropListing.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
+import { notifyOrderUpdate } from '../socket/eventHandlers.js';
 
 // @route POST /api/orders/start
 // @desc Farmer starts an order for an interested buyer
@@ -125,6 +126,8 @@ export const startOrder = async (req, res, next) => {
       console.error('Failed to create start order notification:', notifErr);
     }
 
+    notifyOrderUpdate(order, 'order:created');
+
     res.status(201).json({
       message: 'Order started successfully! Buyer has been notified.',
       order,
@@ -234,6 +237,8 @@ export const createOrder = async (req, res, next) => {
     } catch (notifErr) {
       console.error('Failed to create order notification:', notifErr);
     }
+
+    notifyOrderUpdate(order, 'order:created');
 
     res.status(201).json({
       message: 'Order placed successfully! Farmer will start preparing your order.',
@@ -479,6 +484,8 @@ export const updateOrderStatus = async (req, res, next) => {
       }
     }
 
+    notifyOrderUpdate(order, 'order:statusUpdated');
+
     res.status(200).json({
       message: `Order status updated to "${status}"`,
       order,
@@ -512,8 +519,8 @@ export const addOrderReview = async (req, res, next) => {
 
     order.review = {
       rating,
-      review: reviewText,
-      date: new Date(),
+      comment: reviewText,
+      reviewedAt: new Date(),
     };
 
     await order.save();
@@ -603,6 +610,8 @@ export const cancelOrder = async (req, res, next) => {
     } catch (notifErr) {
       console.error('Failed to create cancel notification:', notifErr);
     }
+
+    notifyOrderUpdate(order, 'order:cancelled');
 
     res.status(200).json({ message: 'Order cancelled successfully', order });
   } catch (error) {
@@ -849,6 +858,8 @@ export const markOrderReceived = async (req, res, next) => {
     } catch (notifErr) {
       console.error('Failed to create received notification:', notifErr);
     }
+
+    notifyOrderUpdate(order, 'order:statusUpdated');
 
     res.status(200).json({ message: 'Order marked as received successfully', order });
   } catch (error) {
