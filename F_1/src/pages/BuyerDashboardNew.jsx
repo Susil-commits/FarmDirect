@@ -135,7 +135,7 @@ export default function BuyerDashboardNew() {
       addToast('Order cancelled successfully. Farmer has been notified.', 'success');
       await fetchBuyerData();
     } catch (err) {
-      addToast(err.response?.data?.message || 'Failed to cancel order', 'error');
+      addToast(err?.message || 'Failed to cancel order', 'error');
     } finally {
       setCancelLoading(false);
       setCancelModalOpen(false);
@@ -150,7 +150,7 @@ export default function BuyerDashboardNew() {
       addToast('Order marked as picked up! Complete the order by marking it as received.', 'success');
       await fetchBuyerData();
     } catch (err) {
-      addToast(err.response?.data?.message || 'Failed to mark order as picked up', 'error');
+      addToast(err?.message || 'Failed to mark order as picked up', 'error');
     } finally {
       setPickedUpLoading(prev => ({ ...prev, [orderId]: false }));
     }
@@ -163,7 +163,7 @@ export default function BuyerDashboardNew() {
       addToast('Order marked as received! Thank you for your purchase.', 'success');
       await fetchBuyerData();
     } catch (err) {
-      addToast(err.response?.data?.message || 'Failed to mark order as received', 'error');
+      addToast(err?.message || 'Failed to mark order as received', 'error');
     } finally {
       setReceiveLoading(prev => ({ ...prev, [orderId]: false }));
     }

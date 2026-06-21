@@ -37,6 +37,26 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
   });
 });
 
+// Update profile picture (handles file upload)
+export const updateProfilePicture = asyncHandler(async (req, res) => {
+  if (!req.uploadedFile) {
+    return res.status(400).json({ success: false, message: 'No file uploaded' });
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    { profilePicture: req.uploadedFile.url, updatedAt: new Date() },
+    { new: true }
+  ).select('-password');
+
+  res.status(200).json({
+    success: true,
+    message: 'Profile picture updated',
+    url: req.uploadedFile.url,
+    data: user,
+  });
+});
+
 // Add address
 export const addAddress = asyncHandler(async (req, res) => {
   const { streetAddress, area, city, state, pincode, latitude, longitude, isDefault } = req.body;

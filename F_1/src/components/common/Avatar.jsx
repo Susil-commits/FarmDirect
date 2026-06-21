@@ -1,4 +1,5 @@
 import React from 'react';
+import { getImageUrl } from '../../utils/formatters';
 
 /**
  * Avatar Component
@@ -63,7 +64,7 @@ export default function Avatar({
     return (
       <div className={`relative ${className}`}>
         <img
-          src={user.photo}
+          src={getImageUrl(user.photo)}
           alt={user.name || 'User'}
           className={`${sizeClasses[size]} rounded-full object-cover border-2 border-gray-200 hover:border-green-400 transition-all`}
         />

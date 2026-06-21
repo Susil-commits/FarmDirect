@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from '../../context/RouterContext';
 import { useAuth } from '../../context/AuthContext';
 import { authServiceExtended } from '../../services/appService';
-import OnboardingWizard from '../onboarding/OnboardingWizard';
+import OnboardingWizard from '../../components/onboarding/OnboardingWizard';
 import {
   WelcomeStep,
   AccountStep,
@@ -11,8 +11,8 @@ import {
   FarmStep,
   PreferencesStep,
   ReviewStep,
-} from '../onboarding/OnboardingSteps';
-import PageTransition from '../common/PageTransition';
+} from '../../components/onboarding/OnboardingSteps';
+import PageTransition from '../../components/common/PageTransition';
 import { useData } from '../../context/DataContext';
 import './OnboardingFlow.css';
 

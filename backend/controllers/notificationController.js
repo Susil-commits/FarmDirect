@@ -1,4 +1,5 @@
 import Notification from '../models/Notification.js';
+import User from '../models/User.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { notifyNewNotification, notifyBulkNotification } from '../socket/eventHandlers.js';
 
@@ -177,9 +178,9 @@ export const sendBulkNotifications = asyncHandler(async (req, res) => {
 export const getPreferences = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   
-  const notification = await Notification.findOne({ userId });
+  const user = await User.findById(userId).select('notificationPreferences');
   
-  const preferences = notification?.preferences || {
+  const preferences = user?.notificationPreferences || {
     orderUpdates: true,
     cropUpdates: true,
     reviews: true,
@@ -199,8 +200,7 @@ export const updatePreferences = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const preferences = req.body;
   
-  // This would typically be stored in a UserPreferences collection
-  // For now, we'll update the user's notification settings
+  await User.findByIdAndUpdate(userId, { notificationPreferences: preferences });
   
   res.status(200).json({
     success: true,

@@ -29,7 +29,7 @@ export const addReview = asyncHandler(async (req, res) => {
   // Check if user has purchased this crop
   const order = await Order.findOne({
     buyerId: userId,
-    'items.cropId': cropId,
+    cropId: cropId,
     orderStatus: 'completed'
   });
   

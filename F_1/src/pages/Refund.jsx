@@ -77,7 +77,7 @@ export default function Refund() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-3">8. Contact</h2>
                 <p>
                   For refund-related queries, contact us at <strong>refunds@farmdirect.com</strong> or call 
-                  <strong> +91-XXXX-XXXX</strong>.
+                  <strong> +91-98765-43210</strong>.
                 </p>
               </section>
             </div>

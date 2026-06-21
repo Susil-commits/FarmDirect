@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
+import { useToast } from '../../context/ToastContext';
 import { adminService } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import Card from '../../components/common/Card';
@@ -11,6 +12,7 @@ import { Package, AlertTriangle, LogOut, Menu, Search, Eye, Trash2, Users, BarCh
 export default function AdminCrops() {
   const { user, logout } = useAuth();
   const { navigate } = useRouter();
+  const { addToast } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [allCrops, setAllCrops] = useState([]);
@@ -50,7 +52,7 @@ export default function AdminCrops() {
 
   const handleSubmitDelete = async () => {
     if (!deleteReason.trim()) {
-      alert('⚠️ Please provide a reason for deletion');
+      addToast('Please provide a reason for deletion', 'warning');
       return;
     }
 
@@ -58,15 +60,14 @@ export default function AdminCrops() {
       setActionLoading(true);
       const deletedCropId = selectedCrop._id;
       await adminService.deleteCrop(deletedCropId, deleteReason);
-      alert(`✅ Crop "${selectedCrop.cropName}" has been deleted`);
-      // Dispatch global event so cart & wishlist contexts remove this crop
+      addToast(`Crop "${selectedCrop.cropName}" has been deleted`, 'success');
       window.dispatchEvent(new CustomEvent('crop-deleted', { detail: { cropId: deletedCropId } }));
       setShowDeleteModal(false);
       setDeleteReason('');
       await fetchData();
     } catch (error) {
       console.error('Error deleting crop:', error);
-      alert('❌ Error deleting crop');
+      addToast('Error deleting crop', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -80,20 +81,20 @@ export default function AdminCrops() {
 
   const handleSubmitFreeze = async () => {
     if (!freezeReason.trim()) {
-      alert('⚠️ Please provide a reason for freezing');
+      addToast('Please provide a reason for freezing', 'warning');
       return;
     }
 
     try {
       setActionLoading(true);
       await adminService.freezeCrop(selectedCrop._id, freezeReason);
-      alert(`✅ Crop "${selectedCrop.cropName}" has been frozen`);
+      addToast(`Crop "${selectedCrop.cropName}" has been frozen`, 'success');
       setShowFreezeModal(false);
       setFreezeReason('');
       await fetchData();
     } catch (error) {
       console.error('Error freezing crop:', error);
-      alert(`❌ Error: ${error.response?.data?.message || 'Error freezing crop'}`);
+      addToast(`Error: ${error.response?.data?.message || 'Error freezing crop'}`, 'error');
     } finally {
       setActionLoading(false);
     }
@@ -109,12 +110,12 @@ export default function AdminCrops() {
     try {
       setActionLoading(true);
       await adminService.approveCrop(selectedCrop._id);
-      alert(`✅ Crop "${selectedCrop.cropName}" has been approved!`);
+      addToast(`Crop "${selectedCrop.cropName}" has been approved!`, 'success');
       setShowApproveModal(false);
       await fetchData();
     } catch (error) {
       console.error('Error approving crop:', error);
-      alert(`❌ Error: ${error.response?.data?.message || 'Error approving crop'}`);
+      addToast(`Error: ${error.response?.data?.message || 'Error approving crop'}`, 'error');
     } finally {
       setActionLoading(false);
     }
@@ -129,20 +130,20 @@ export default function AdminCrops() {
 
   const handleSubmitReject = async () => {
     if (!rejectReason.trim()) {
-      alert('⚠️ Please provide a reason for rejection');
+      addToast('Please provide a reason for rejection', 'warning');
       return;
     }
 
     try {
       setActionLoading(true);
       await adminService.rejectCrop(selectedCrop._id, rejectReason);
-      alert(`✅ Crop "${selectedCrop.cropName}" has been rejected`);
+      addToast(`Crop "${selectedCrop.cropName}" has been rejected`, 'success');
       setShowRejectModal(false);
       setRejectReason('');
       await fetchData();
     } catch (error) {
       console.error('Error rejecting crop:', error);
-      alert(`❌ Error: ${error.response?.data?.message || 'Error rejecting crop'}`);
+      addToast(`Error: ${error.response?.data?.message || 'Error rejecting crop'}`, 'error');
     } finally {
       setActionLoading(false);
     }

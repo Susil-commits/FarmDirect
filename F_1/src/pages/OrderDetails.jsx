@@ -71,7 +71,7 @@ export default function OrderDetails() {
       addToast('Order marked as picked up! Complete by marking as received.', 'success');
       await fetchOrderDetails();
     } catch (err) {
-      addToast(err.response?.data?.message || 'Failed to mark as picked up', 'error');
+      addToast(err?.message || 'Failed to mark as picked up', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -84,7 +84,7 @@ export default function OrderDetails() {
       addToast('Order marked as completed! Thank you for your purchase.', 'success');
       await fetchOrderDetails();
     } catch (err) {
-      addToast(err.response?.data?.message || 'Failed to mark as received', 'error');
+      addToast(err?.message || 'Failed to mark as received', 'error');
     } finally {
       setActionLoading(false);
     }

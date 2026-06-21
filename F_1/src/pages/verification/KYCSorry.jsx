@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from '../../context/RouterContext';
+import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { useRouter } from '../../context/RouterContext';
 import { adminService, authServiceExtended } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition';
 import { XCircle, Trash2, Upload, AlertTriangle, ArrowLeft } from 'lucide-react';
@@ -8,6 +9,7 @@ import { XCircle, Trash2, Upload, AlertTriangle, ArrowLeft } from 'lucide-react'
 export default function KYCSorry() {
   const { user, setUser, logout } = useAuth();
   const { navigate } = useRouter();
+  const { addToast } = useToast();
   const markedRef = useRef(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -39,7 +41,7 @@ export default function KYCSorry() {
       navigate('/');
     } catch (error) {
       console.error('Failed to delete account:', error);
-      alert('Failed to delete account. Please try again.');
+      addToast('Failed to delete account. Please try again.', 'error');
     } finally {
       setDeleting(false);
       setShowDeleteConfirm(false);

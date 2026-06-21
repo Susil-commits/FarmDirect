@@ -94,29 +94,6 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Auto-add timeline entry when status changes
-orderSchema.pre('save', function (next) {
-  if (this.isModified('orderStatus')) {
-    const statusDescriptions = {
-      'confirmed': 'Order confirmed - farmer will prepare your order',
-      'preparing': 'Farmer is preparing your order',
-      'ready_for_pickup': 'Order is ready for pickup',
-      'picked_up': 'Order has been picked up',
-      'completed': 'Order completed successfully',
-      'cancelled': 'Order has been cancelled'
-    };
-    this.timeline.push({
-      event: this.orderStatus.toUpperCase(),
-      description: statusDescriptions[this.orderStatus] || `Order ${this.orderStatus}`,
-      timestamp: new Date()
-    });
-    if (this.orderStatus === 'completed') {
-      this.completedAt = new Date();
-    }
-  }
-  next();
-});
-
 // Indexes for faster queries
 orderSchema.index({ buyerId: 1 });
 orderSchema.index({ farmerId: 1 });

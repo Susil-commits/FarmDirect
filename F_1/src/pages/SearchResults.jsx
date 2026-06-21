@@ -24,6 +24,8 @@ export default function SearchResults() {
   const [filteredResults, setFilteredResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState('grid'); // grid or list
+  const [page, setPage] = useState(1);
+  const resultsPerPage = 12;
 
   // Filters
   const [filters, setFilters] = useState({
@@ -67,32 +69,27 @@ export default function SearchResults() {
     }
   };
 
-  const applyFilters = (crops = results) => {
+  const applyFilters = (crops = results, filterValues = filters) => {
     let filtered = [...crops];
 
-    // Category filter
-    if (filters.category !== 'all') {
-      filtered = filtered.filter(c => c.category === filters.category);
+    if (filterValues.category !== 'all') {
+      filtered = filtered.filter(c => c.category === filterValues.category);
     }
 
-    // Price range filter
-    if (filters.priceRange !== 'all') {
-      const [min, max] = filters.priceRange.split('-').map(Number);
+    if (filterValues.priceRange !== 'all') {
+      const [min, max] = filterValues.priceRange.split('-').map(Number);
       filtered = filtered.filter(c => c.price >= min && c.price <= max);
     }
 
-    // Rating filter
-    if (filters.rating > 0) {
-      filtered = filtered.filter(c => (c.rating || 0) >= filters.rating);
+    if (filterValues.rating > 0) {
+      filtered = filtered.filter(c => (c.rating || 0) >= filterValues.rating);
     }
 
-    // Location filter
-    if (filters.location !== 'all') {
-      filtered = filtered.filter(c => c.farmerId?.location === filters.location);
+    if (filterValues.location !== 'all') {
+      filtered = filtered.filter(c => c.farmerId?.location === filterValues.location);
     }
 
-    // Sorting
-    switch (filters.sortBy) {
+    switch (filterValues.sortBy) {
       case 'price-asc':
         filtered.sort((a, b) => a.price - b.price);
         break;
@@ -105,7 +102,7 @@ export default function SearchResults() {
       case 'newest':
         filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         break;
-      default: // popular
+      default:
         filtered.sort((a, b) => (b.reviews?.length || 0) - (a.reviews?.length || 0));
     }
 
@@ -115,7 +112,8 @@ export default function SearchResults() {
   const handleFilterChange = (filterName, value) => {
     const newFilters = { ...filters, [filterName]: value };
     setFilters(newFilters);
-    applyFilters(results);
+    setPage(1);
+    applyFilters(results, newFilters);
   };
 
   const categories = ['all', 'vegetables', 'fruits', 'grains', 'dairy', 'meat'];
@@ -126,6 +124,9 @@ export default function SearchResults() {
     { label: '₹500 - ₹1000', value: '500-1000' },
     { label: '₹1000+', value: '1000-9999' }
   ];
+
+  const totalPages = Math.ceil(filteredResults.length / resultsPerPage);
+  const paginatedResults = filteredResults.slice((page - 1) * resultsPerPage, page * resultsPerPage);
 
   if (loading) {
     return (
@@ -297,7 +298,7 @@ export default function SearchResults() {
                   </Card>
                 ) : (
                   <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
-                    {filteredResults.map(crop => (
+                    {paginatedResults.map(crop => (
                       <Card key={crop._id} className={`p-6 hover:shadow-lg transition ${viewMode === 'list' ? 'flex items-center gap-6' : ''}`}>
                         {/* Crop Image Placeholder */}
                         {viewMode === 'grid' && <div className="w-full h-48 bg-gradient-to-br from-green-100 to-green-200 rounded-lg mb-4 flex items-center justify-center text-3xl">🌾</div>}
@@ -379,20 +380,33 @@ export default function SearchResults() {
           </div>
 
           {/* Pagination */}
-          {filteredResults.length > 12 && (
+          {filteredResults.length > resultsPerPage && (
             <ScrollAnimation className="scroll-slide mt-12">
               <div className="flex items-center justify-center gap-2">
-                <Button variant="outline">← Previous</Button>
-                {[1, 2, 3].map(page => (
+                <Button
+                  variant="outline"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  ← Previous
+                </Button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
                   <Button
-                    key={page}
-                    variant={page === 1 ? 'primary' : 'outline'}
+                    key={pageNum}
+                    variant={pageNum === page ? 'primary' : 'outline'}
                     className="w-10 h-10 p-0"
+                    onClick={() => setPage(pageNum)}
                   >
-                    {page}
+                    {pageNum}
                   </Button>
                 ))}
-                <Button variant="outline">Next →</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >
+                  Next →
+                </Button>
               </div>
             </ScrollAnimation>
           )}

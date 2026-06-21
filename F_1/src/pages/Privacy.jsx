@@ -65,7 +65,7 @@ export default function Privacy() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-3">7. Contact Us</h2>
                 <p>
                   If you have questions about this Privacy Policy or our privacy practices, please contact us at 
-                  <strong> privacy@farmdirect.com</strong> or call <strong>+91-XXXX-XXXX</strong>.
+                  <strong> privacy@farmdirect.com</strong> or call <strong>+91-98765-43210</strong>.
                 </p>
               </section>
             </div>

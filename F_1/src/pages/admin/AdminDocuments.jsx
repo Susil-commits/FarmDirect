@@ -4,10 +4,11 @@ import Card from '../../components/common/Card.jsx';
 import Button from '../../components/common/Button.jsx';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import ScrollAnimation from '../../components/common/ScrollAnimation.jsx';
-import { Search, Filter, FileText, Image as ImageIcon, Eye, AlertCircle, CheckCircle, ArrowLeft, X } from 'lucide-react';
+import { Search, Filter, FileText, Image as ImageIcon, Eye, AlertCircle, CheckCircle, ArrowLeft, X, ImageOff } from 'lucide-react';
 import api from '../../services/api.js';
 import { useRouter } from '../../context/RouterContext.jsx';
 import { getImageUrl } from '../../utils/formatters';
+import ImageWithFallback from '../../components/common/ImageWithFallback.jsx';
 
 /**
  * AdminDocuments - Document and Image Viewer for Admin
@@ -147,11 +148,11 @@ export default function AdminDocuments() {
       >
         {isImage ? (
           <div className="h-40 bg-gray-100 overflow-hidden relative">
-            <img
-              src={doc.url}
+            <ImageWithFallback
+              src={getImageUrl(doc.url)}
               alt={doc.fileName}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform"
-              onError={(e) => { e.target.style.display = 'none'; }}
+              fallbackIcon={<ImageOff size={32} className="text-gray-400" />}
             />
           </div>
         ) : (
@@ -436,10 +437,11 @@ export default function AdminDocuments() {
                                 }
                               >
                                 <div className="h-40 bg-gray-100 overflow-hidden">
-                                  <img
+                                  <ImageWithFallback
                                     src={getImageUrl(imageUrl)}
                                     alt={`Farm ${idx}`}
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                                    fallbackIcon={<ImageOff size={32} className="text-gray-400" />}
                                   />
                                 </div>
                                 <div className="p-3">
@@ -478,10 +480,11 @@ export default function AdminDocuments() {
                                       }
                                     >
                                       <div className="h-32 bg-gray-100 overflow-hidden">
-                                        <img
+                                        <ImageWithFallback
                                           src={getImageUrl(imageUrl)}
                                           alt={`${crop.cropName} ${imgIdx}`}
                                           className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                                          fallbackIcon={<ImageOff size={24} className="text-gray-400" />}
                                         />
                                       </div>
                                     </div>
@@ -528,11 +531,12 @@ export default function AdminDocuments() {
                 </div>
                 <div className="p-4 overflow-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
                   {selectedDocument.mimeType?.startsWith('image/') ? (
-                    <img
-                      src={selectedDocument.url}
+                    <ImageWithFallback
+                      src={getImageUrl(selectedDocument.url)}
                       alt={selectedDocument.fileName}
                       className="w-full h-auto rounded-lg"
-                      onError={(e) => { e.target.style.display = 'none'; }}
+                      fallbackIcon={<ImageOff size={64} className="text-gray-400" />}
+                      fallbackText="Image failed to load"
                     />
                   ) : (
                     <div className="flex flex-col items-center justify-center py-16 text-gray-400">

@@ -120,7 +120,7 @@ export default function CreateCrop() {
       }, 1500);
     } catch (err) {
       console.error('Failed to create crop:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to create crop listing. Please try again.');
+      setError(err?.message || err.message || 'Failed to create crop listing. Please try again.');
     } finally {
       setLoading(false);
     }

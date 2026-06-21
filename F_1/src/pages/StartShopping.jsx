@@ -48,15 +48,13 @@ export default function StartShopping() {
   const handleMarketplaceAccess = useCallback(() => {
     try {
       if (!user) {
-        // Redirect to login with marketplace as the next destination
         handleNavigation('/auth/login?next=/marketplace');
         return;
       }
       
-      // Require verification to access marketplace
       if (user.kycStatus !== VERIFICATION_STATUS.VERIFIED) {
-        console.warn(ERROR_MESSAGES.VERIFICATION_REQUIRED);
-        // Optionally show a notification or redirect to verification page
+        handleNavigation('/verify');
+        return;
       }
       
       handleNavigation('/marketplace');

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from '../context/RouterContext';
 import PageTransition from '../components/common/PageTransition.jsx';
 import Button from '../components/common/Button';
@@ -10,6 +10,8 @@ import contactService from '../services/contactService';
 export default function Contact() {
   // Navigation handled by context
   const { navigate } = useRouter();
+  const faqRef = useRef(null);
+  const [activeCategory, setActiveCategory] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -115,27 +117,33 @@ export default function Contact() {
   const faqItems = [
     {
       q: 'How do I place an order?',
-      a: 'Browse the marketplace, select your crops, add to cart, and proceed to checkout. You can pay using UPI, credit/debit card, or wallet.'
+      a: 'Browse the marketplace, select your crops, add to cart, and proceed to checkout. You can pay using UPI, credit/debit card, or wallet.',
+      category: 'Order Issues'
     },
     {
       q: 'How long does delivery take?',
-      a: 'Standard delivery takes 3-5 days from the date of order. Express delivery is available in selected areas.'
+      a: 'Standard delivery takes 3-5 days from the date of order. Express delivery is available in selected areas.',
+      category: 'Order Issues'
     },
     {
       q: 'How can I become a farmer partner?',
-      a: 'Fill out the "Become a Farmer Partner" form at the bottom of this page or contact our farmer relations team at farmers@farmdirect.io'
+      a: 'Fill out the "Become a Farmer Partner" form at the bottom of this page or contact our farmer relations team at farmers@farmdirect.io',
+      category: 'Farmer Support'
     },
     {
       q: 'What if I receive damaged crops?',
-      a: 'Report within 24 hours with photo evidence, and we will refund or replace your order at no cost.'
+      a: 'Report within 24 hours with photo evidence, and we will refund or replace your order at no cost.',
+      category: 'Order Issues'
     },
     {
       q: 'Are crops certified organic?',
-      a: 'All crops are verified for quality and freshness. Some farmers are certified organic; this is indicated on their profile.'
+      a: 'All crops are verified for quality and freshness. Some farmers are certified organic; this is indicated on their profile.',
+      category: 'Farmer Support'
     },
     {
       q: 'How can I track my order?',
-      a: 'Track real-time updates via SMS and the app. You\'ll receive updates at each stage: confirmed, packed, shipped, and delivered.'
+      a: 'Track real-time updates via SMS and the app. You\'ll receive updates at each stage: confirmed, packed, shipped, and delivered.',
+      category: 'Order Issues'
     }
   ];
 
@@ -311,7 +319,19 @@ export default function Contact() {
                     { emoji: '👥', title: 'Account Help', desc: 'Profile updates, verification' },
                     { emoji: '📱', title: 'Technical', desc: 'App issues, login problems' }
                   ].map((cat, idx) => (
-                    <button key={idx} className="w-full text-left p-4 bg-gray-50 hover:bg-green-50 rounded-lg transition cursor-pointer">
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        const newCategory = activeCategory === cat.title ? null : cat.title;
+                        setActiveCategory(newCategory);
+                        if (newCategory) {
+                          faqRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }}
+                      className={`w-full text-left p-4 rounded-lg transition cursor-pointer ${
+                        activeCategory === cat.title ? 'bg-green-100 border border-green-300' : 'bg-gray-50 hover:bg-green-50'
+                      }`}
+                    >
                       <div className="text-2xl mb-2">{cat.emoji}</div>
                       <p className="font-bold text-gray-900">{cat.title}</p>
                       <p className="text-sm text-gray-600">{cat.desc}</p>
@@ -326,9 +346,24 @@ export default function Contact() {
 
           {/* FAQs Section */}
           <ScrollAnimation className="scroll-slide mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Frequently Asked Questions</h2>
+            <h2 ref={faqRef} className="text-3xl font-bold text-gray-900 mb-8 text-center">
+              Frequently Asked Questions
+              {activeCategory && (
+                <span className="block text-lg font-normal text-green-600 mt-2">
+                  Showing: {activeCategory}
+                  <button
+                    onClick={() => setActiveCategory(null)}
+                    className="ml-2 text-sm text-gray-500 hover:text-gray-700 underline"
+                  >
+                    Show All
+                  </button>
+                </span>
+              )}
+            </h2>
             <div className="space-y-4">
-              {faqItems.map((item, idx) => (
+              {faqItems
+                .filter(item => !activeCategory || item.category === activeCategory)
+                .map((item, idx) => (
                 <Card key={idx} hover className="p-6">
                   <details className="cursor-pointer">
                     <summary className="font-bold text-gray-900 text-lg flex justify-between items-center cursor-pointer">
@@ -340,6 +375,9 @@ export default function Contact() {
                 </Card>
               ))}
             </div>
+            {activeCategory && faqItems.filter(item => item.category === activeCategory).length === 0 && (
+              <p className="text-center text-gray-500 mt-8">No FAQs found for this category.</p>
+            )}
           </ScrollAnimation>
 
           {/* Footer */}

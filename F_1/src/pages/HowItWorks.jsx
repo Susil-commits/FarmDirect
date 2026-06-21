@@ -135,6 +135,8 @@ export default function HowItWorks() {
                 </div>
               ))}
 
+            </div>
+
           {/* Footer */}
           <div className="mt-16 pt-8 border-t border-gray-200">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
@@ -151,7 +153,6 @@ export default function HowItWorks() {
               </div>
             </div>
           </div>
-            </div>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { Trash2, Copy, Check, CheckCheck } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { getImageUrl } from '../../utils/formatters';
 import '../../styles/Messages.css';
 
 export default function ChatBubble({ message, onDelete, onCopy }) {
@@ -54,7 +55,7 @@ export default function ChatBubble({ message, onDelete, onCopy }) {
       {!isOwn && (
         senderPhoto ? (
           <img
-            src={senderPhoto}
+            src={getImageUrl(senderPhoto)}
             alt={senderName}
             className="message-sender-avatar"
             onError={(e) => { e.target.style.display = 'none'; }}

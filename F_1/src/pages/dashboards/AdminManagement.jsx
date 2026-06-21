@@ -14,6 +14,7 @@ import {
   UserCheck, UserX, BarChart3
 } from 'lucide-react';
 import api from '../../services/api.js';
+import { useToast } from '../../context/ToastContext';
 
 // ─── Document URL Helpers (DO NOT MODIFY — document preview is working) ───
 
@@ -119,6 +120,7 @@ const KYCStatusBadge = ({ status }) => {
 export default function AdminManagement() {
   const { user, logout } = useAuth();
   const { navigate } = useRouter();
+  const { addToast } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('farmers');
   const [users, setUsers] = useState([]);
@@ -250,14 +252,14 @@ export default function AdminManagement() {
   const handleSubmitFreeze = async () => {
     const reason = freezeReason === 'Other' ? freezeCustomReason : freezeReason;
     if (!reason.trim()) {
-      alert('⚠️ Please provide a reason for freezing');
+      addToast('Please provide a reason for freezing', 'warning');
       return;
     }
 
     try {
       setActionLoading(true);
       await adminService.toggleUserStatus(selectedUser._id, 'suspended', reason);
-      alert(`✅ ${selectedUser.firstName} account has been frozen`);
+      addToast(`${selectedUser.firstName} account has been frozen`, 'success');
       setShowFreezeModal(false);
       setFreezeReason('');
       setFreezeCustomReason('');
@@ -265,7 +267,7 @@ export default function AdminManagement() {
       await fetchStats();
     } catch (error) {
       console.error('Error freezing user:', error);
-      alert(`❌ Error: ${error.response?.data?.message || 'Error freezing user'}`);
+      addToast(error.response?.data?.message || 'Error freezing user', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -281,14 +283,14 @@ export default function AdminManagement() {
 
   const handleSubmitDelete = async () => {
     if (!deleteReason.trim()) {
-      alert('⚠️ Please provide a reason for deletion');
+      addToast('Please provide a reason for deletion', 'warning');
       return;
     }
 
     try {
       setActionLoading(true);
       await adminService.deleteUser(selectedUser._id, deleteReason);
-      alert(`✅ ${selectedUser.firstName} account has been deleted`);
+      addToast(`${selectedUser.firstName} account has been deleted`, 'success');
       setShowDeleteModal(false);
       setDeleteReason('');
       setExpandedUsers(prev => {
@@ -305,7 +307,7 @@ export default function AdminManagement() {
       await fetchStats();
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert(`❌ Error: ${error.response?.data?.message || 'Error deleting user'}`);
+      addToast(error.response?.data?.message || 'Error deleting user', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -319,12 +321,12 @@ export default function AdminManagement() {
     try {
       setActionLoading(true);
       await adminService.toggleUserStatus(user.id || user._id, 'active');
-      alert(`✅ ${user.firstName} account has been unfrozen`);
+      addToast(`${user.firstName} account has been unfrozen`, 'success');
       await fetchUsers();
       await fetchStats();
     } catch (error) {
       console.error('Error unfreezing:', error);
-      alert(`❌ Error: ${error.response?.data?.message || 'Error unfreezing user'}`);
+      addToast(error.response?.data?.message || 'Error unfreezing user', 'error');
     } finally {
       setActionLoading(false);
     }

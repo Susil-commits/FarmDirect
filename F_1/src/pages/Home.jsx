@@ -1,4 +1,4 @@
-import { ArrowRight, Leaf, TrendingUp, Users, MapPin, Sparkles, TrendingUp as StatsIcon } from 'lucide-react';
+import { ArrowRight, Leaf, TrendingUp, Users, MapPin, Sparkles } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
@@ -59,47 +59,27 @@ export default function Home() {
         
         const response = await fetch(url, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          }
+          headers: { 'Content-Type': 'application/json' }
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
-        }
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
         const data = await response.json();
 
         if (data?.success && data?.data) {
-          const newStats = {
+          setStats({
             farmers: data.data.users?.farmers || 0,
             customers: data.data.users?.buyers || 0,
             varieties: data.data.crops?.total || 0,
             orders: data.data.orders?.total || 0,
             deliveryDays: '3-5',
-          };
-          setStats(newStats);
-        } else {
-          console.warn('📊 Invalid response structure:', data);
-          // Set default values
-          setStats({
-            farmers: 5,
-            customers: 8,
-            varieties: 12,
-            orders: 20,
-            deliveryDays: '3-5',
           });
+        } else {
+          setStats({ farmers: 5, customers: 8, varieties: 12, orders: 20, deliveryDays: '3-5' });
         }
       } catch (error) {
-        console.error('❌ Error fetching stats:', error);
-        // Set default values on error
-        setStats({
-          farmers: 5,
-          customers: 8,
-          varieties: 12,
-          orders: 20,
-          deliveryDays: '3-5',
-        });
+        console.error('Error fetching stats:', error);
+        setStats({ farmers: 5, customers: 8, varieties: 12, orders: 20, deliveryDays: '3-5' });
       }
     };
 

@@ -182,7 +182,7 @@ export default function FarmerDashboardNew() {
       addToast('Order cancelled successfully. Buyer has been notified.', 'success');
       await fetchFarmerData();
     } catch (err) {
-      addToast(err.response?.data?.message || 'Failed to cancel order', 'error');
+      addToast(err?.message || 'Failed to cancel order', 'error');
     } finally {
       setCancelLoading(false);
       setCancelModalOpen(false);
@@ -203,7 +203,7 @@ export default function FarmerDashboardNew() {
       addToast('Order denied. Buyer has been notified.', 'success');
       await fetchFarmerData();
     } catch (err) {
-      addToast(err.response?.data?.message || 'Failed to deny order', 'error');
+      addToast(err?.message || 'Failed to deny order', 'error');
     } finally {
       setDenyLoading(false);
       setDenyModalOpen(false);
@@ -396,7 +396,7 @@ export default function FarmerDashboardNew() {
                                         {/* Header: Avatar + Name + KYC Badge */}
                                         <div className="flex items-start gap-3 mb-3">
                                           {profilePic ? (
-                                            <img src={profilePic} alt={fullName} className="w-12 h-12 rounded-full object-cover border-2 border-green-200" />
+                                            <img src={getImageUrl(profilePic)} alt={fullName} className="w-12 h-12 rounded-full object-cover border-2 border-green-200" />
                                           ) : (
                                             <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-lg border-2 border-green-200">
                                               {(buyerData.firstName || buyerData.name || '?').charAt(0).toUpperCase()}

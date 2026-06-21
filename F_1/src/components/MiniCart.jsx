@@ -1,6 +1,7 @@
 import { X, ShoppingCart, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useRouter } from '../context/RouterContext';
+import { getImageUrl } from '../utils/formatters';
 import QuantitySelector from './QuantitySelector';
 import './MiniCart.css';
 
@@ -64,8 +65,8 @@ export default function MiniCart({ isOpen, onClose }) {
                 <div key={item.id} className="cart-item">
                   {/* Item Image */}
                   <div className="item-image">
-                    {item.icon && (item.icon.startsWith('http') || item.icon.startsWith('/')) ? (
-                      <img src={item.icon} alt={item.name} className="w-full h-full object-cover" />
+                    {item.icon ? (
+                      <img src={getImageUrl(item.icon)} alt={item.name} className="w-full h-full object-cover" />
                     ) : (
                       <span className="text-2xl">{item.icon || '🥬'}</span>
                     )}

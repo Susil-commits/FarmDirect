@@ -1,5 +1,5 @@
 import React, { createContext, useState, useCallback, useEffect, useContext } from 'react';
-import { authService } from '../services/appService.js';
+import { authService, userService } from '../services/appService.js';
 import { socialAuthService } from '../services/socialAuthService.js';
 import { isTokenExpired, decodeToken, hasRole, getUserIdFromToken } from '../utils/jwtUtils.js';
 
@@ -388,12 +388,9 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = useCallback(async (profileData) => {
     try {
-      const updatedUser = {
-        ...user,
-        ...profileData,
-      };
+      const response = await userService.updateProfile(profileData);
+      const updatedUser = response.data?.data || response.data || { ...user, ...profileData };
       setUser(updatedUser);
-      localStorage.setItem('userProfile', JSON.stringify(updatedUser));
       localStorage.setItem('userData', JSON.stringify(updatedUser));
       return updatedUser;
     } catch (err) {
@@ -414,6 +411,12 @@ export const AuthProvider = ({ children }) => {
       if (response.serverStartTime) {
         localStorage.setItem('serverStartTime', response.serverStartTime.toString());
       }
+      if (response.user) {
+        localStorage.setItem('userData', JSON.stringify(response.user));
+      }
+      const verifyStatus = response.user?.kycStatus || 'pending';
+      setVerificationStatus(verifyStatus);
+      localStorage.setItem('verificationStatus', verifyStatus);
       setUser(response.user);
       setSessionActive(true);
       recordLoginHistory(response.user);
@@ -438,6 +441,12 @@ export const AuthProvider = ({ children }) => {
       if (response.serverStartTime) {
         localStorage.setItem('serverStartTime', response.serverStartTime.toString());
       }
+      if (response.user) {
+        localStorage.setItem('userData', JSON.stringify(response.user));
+      }
+      const verifyStatus = response.user?.kycStatus || 'pending';
+      setVerificationStatus(verifyStatus);
+      localStorage.setItem('verificationStatus', verifyStatus);
       setUser(response.user);
       setSessionActive(true);
       recordLoginHistory(response.user);

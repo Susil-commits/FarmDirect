@@ -163,7 +163,7 @@ function WishlistCard({ product, index, onRemove, onAddToCart, onViewCrop }) {
         className="wishlist-card-image"
         onClick={() => onViewCrop(product.id || product._id)}
       >
-        {!showFallback && productImage ? (
+        {!showFallback && rawProductImage ? (
           <img
             src={getImageUrl(rawProductImage)}
             alt={product.name}

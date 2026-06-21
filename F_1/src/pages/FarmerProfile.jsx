@@ -188,9 +188,9 @@ export default function FarmerProfile() {
                         {/* Image */}
                         <div className="relative mb-4 overflow-hidden rounded-lg">
                           <div className="bg-gradient-to-br from-emerald-900/50 to-green-900/50 rounded-lg relative min-h-40 flex items-center justify-center group-hover:shadow-lg transition-shadow">
-                            {crop.image && (crop.image.startsWith('http') || crop.image.startsWith('/')) ? (
+                            {crop.image ? (
                               <img
-                                src={crop.image}
+                                src={getImageUrl(crop.image)}
                                 alt={crop.name}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               />

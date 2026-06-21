@@ -4,6 +4,7 @@ import { useRouter } from '../context/RouterContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useRecentlyViewed } from '../context/RecentlyViewedContext';
+import { getImageUrl } from '../utils/formatters';
 import './RecentlyViewedCarousel.css';
 
 export default function RecentlyViewedCarousel() {
@@ -95,9 +96,9 @@ export default function RecentlyViewedCarousel() {
           {recentlyViewed.map((product) => (
             <div key={product.id} className="carousel-item">
               <div className="item-image-wrapper">
-                {product.image && (product.image.startsWith('http') || product.image.startsWith('/')) ? (
+                {product.image ? (
                   <img
-                    src={product.image}
+                    src={getImageUrl(product.image)}
                     alt={product.name}
                     className="item-image"
                     onClick={() => navigate(`/crop/${product.id}`)}

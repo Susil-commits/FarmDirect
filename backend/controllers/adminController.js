@@ -786,6 +786,8 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
     cancelled: 'Admin: Order cancelled',
   };
 
+  const previousStatus = order.orderStatus;
+
   order.orderStatus = orderStatus;
   order.timeline.push({
     event: orderStatus.toUpperCase(),
@@ -900,7 +902,7 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
       resourceId: order._id,
       status: 'success',
       changes: {
-        previousStatus: order.orderStatus,
+        previousStatus: previousStatus,
         newStatus: orderStatus,
         cancellationReason: cancellationReason || null,
       },
@@ -970,7 +972,7 @@ export const getUsersWithCrops = asyncHandler(async (req, res) => {
   
   // Get users with password included
   const users = await User.find(query)
-    .select('+password')
+    .select('-password')
     .skip(skip)
     .limit(parseInt(limit))
     .sort({ createdAt: -1 });
@@ -1052,13 +1054,13 @@ export const getDashboardAnalytics = asyncHandler(async (req, res) => {
 
 // Get farmer-specific analytics
 export const getFarmerAnalytics = asyncHandler(async (req, res) => {
-  const farmer = await User.findById(req.params.id);
+  const farmer = await User.findById(req.params.farmerId);
   if (!farmer || farmer.role !== 'farmer') {
     return res.status(404).json({ success: false, message: 'Farmer not found' });
   }
 
   const crops = await CropListing.find({ farmerId: farmer._id }).lean();
-  const orders = await Order.find({ 'items.farmerId': farmer._id }).lean();
+  const orders = await Order.find({ farmerId: farmer._id }).lean();
 
   const totalEarnings = orders.reduce((sum, o) => sum + o.totalAmount, 0);
   const totalOrders = orders.length;
@@ -1085,7 +1087,7 @@ export const getFarmerAnalytics = asyncHandler(async (req, res) => {
 
 // Get buyer-specific analytics
 export const getBuyerAnalytics = asyncHandler(async (req, res) => {
-  const buyer = await User.findById(req.params.id);
+  const buyer = await User.findById(req.params.buyerId);
   if (!buyer || buyer.role !== 'buyer') {
     return res.status(404).json({ success: false, message: 'Buyer not found' });
   }
@@ -1173,7 +1175,7 @@ export const changeUserRole = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'Invalid role' });
   }
 
-  const user = await User.findById(req.params.id);
+  const user = await User.findById(req.params.userId);
   if (!user) {
     return res.status(404).json({ success: false, message: 'User not found' });
   }
