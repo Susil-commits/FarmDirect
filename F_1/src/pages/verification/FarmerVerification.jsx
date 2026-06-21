@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Upload, CheckCircle, Clock, AlertCircle, Download, Eye } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { useRouter } from '../../context/RouterContext';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
@@ -8,10 +8,12 @@ import Badge from '../../components/common/Badge';
 import BackButton from '../../components/common/BackButton';
 import DocumentPreviewModal from '../../components/admin/DocumentPreviewModal.jsx';
 import uploadService from '../../services/uploadService';
+import { useAuth } from '../../context/AuthContext';
 
 export default function FarmerVerification() {
   const { user, refreshUser } = useAuth();
   const { navigate } = useRouter();
+  const { addToast } = useToast();
   const [documents, setDocuments] = useState({
     governmentId: { file: null, status: 'pending', fileName: '' },
     landOwnership: { file: null, status: 'pending', fileName: '' },
@@ -160,7 +162,7 @@ export default function FarmerVerification() {
         const d = documents[doc.id];
         return !d.file && !(d.status === 'submitted' && d.url);
       });
-      alert(`Please upload all required documents. Missing: ${missing.map(d => d.label).join(', ')}`);
+      addToast(`Please upload all required documents. Missing: ${missing.map(d => d.label).join(', ')}`, 'warning');
       return;
     }
 
@@ -171,7 +173,7 @@ export default function FarmerVerification() {
       doc => doc.file || (doc.status === 'submitted' && !doc.url)
     );
     if (!hasNewFiles) {
-      alert('All documents are already submitted and under review. No new files to upload.');
+      addToast('All documents are already submitted and under review', 'info');
       return;
     }
 
@@ -203,11 +205,11 @@ export default function FarmerVerification() {
 
       setSubmittedAt(new Date().toLocaleDateString());
       setAllSubmitted(true);
-      alert('✅ Documents submitted successfully! Our team will review within 24-48 hours.');
+      addToast('Documents submitted for verification. Review within 24-48 hours.', 'success');
     } catch (error) {
       console.error('❌ [FarmerVerification] Upload error:', error);
       const serverMsg = error?.response?.data?.message || error?.message || 'Unknown error';
-      alert(`❌ Error submitting documents: ${serverMsg}\n\nPlease check that:\n• All files are under 10MB\n• Files are PDF, JPG, or PNG format\n• Your internet connection is stable\n\nIf the problem persists, try refreshing the page and uploading again.`);
+      addToast('Failed to submit documents. Check file sizes and formats.', 'error');
     } finally {
       setIsUploading(false);
     }

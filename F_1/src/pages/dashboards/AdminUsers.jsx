@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
+import { useToast } from '../../context/ToastContext';
 import { adminService } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import Card from '../../components/common/Card';
@@ -10,6 +11,7 @@ import { Users, AlertTriangle, LogOut, Menu, Search, Eye, EyeOff, Trash2, Ban, L
 export default function AdminUsers() {
   const { user, logout } = useAuth();
   const { navigate } = useRouter();
+  const { addToast } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [allUsers, setAllUsers] = useState([]);
@@ -72,8 +74,10 @@ export default function AdminUsers() {
     try {
       await adminService.deleteUser(userId);
       await fetchData();
+      addToast('User deleted', 'success');
     } catch (error) {
       console.error('Error deleting user:', error);
+      addToast('Failed to delete user', 'error');
     }
   };
 
@@ -82,8 +86,10 @@ export default function AdminUsers() {
     try {
       await adminService.toggleUserStatus(userId, 'hidden');
       await fetchData();
+      addToast('User hidden', 'success');
     } catch (error) {
       console.error('Error hiding user:', error);
+      addToast('Failed to hide user', 'error');
     }
   };
 

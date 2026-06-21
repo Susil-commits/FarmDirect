@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api.js';
 import { getImageUrl } from '../../utils/formatters';
+import { useToast } from '../../context/ToastContext';
 
 // Resolve document URL for display — local /uploads/ paths use getImageUrl
 // to prepend the backend origin in production.
@@ -82,6 +83,7 @@ export default function AdminApprovals() {
   const [actionLoading, setActionLoading] = useState(false);
   const [adminComments, setAdminComments] = useState('');
   const [previewImageError, setPreviewImageError] = useState(false);
+  const { addToast } = useToast();
 
   // Expand/collapse state for user detail rows
   const [expandedUsers, setExpandedUsers] = useState({});
@@ -199,7 +201,7 @@ export default function AdminApprovals() {
     try {
       setActionLoading(true);
       await adminService.approveUserKYC(userId, { comments: adminComments });
-      alert(`✅ ${userName} KYC approved!`);
+      addToast(`${userName} KYC approved!`, 'success');
       setAdminComments('');
       // Remove from expanded/docs state
       setExpandedUsers(prev => { const next = { ...prev }; delete next[userId]; return next; });
@@ -207,7 +209,7 @@ export default function AdminApprovals() {
       await fetchPendingUsers();
     } catch (error) {
       console.error('Error approving:', error);
-      alert(`❌ Error: ${error.response?.data?.message || 'Error approving KYC'}`);
+      addToast(error.response?.data?.message || 'Error approving KYC', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -221,14 +223,14 @@ export default function AdminApprovals() {
 
   const handleSubmitReject = async () => {
     if (!rejectionReason.trim()) {
-      alert('⚠️ Please provide a rejection reason');
+      addToast('Please provide a rejection reason', 'warning');
       return;
     }
 
     try {
       setActionLoading(true);
       await adminService.rejectUserKYC(selectedUser._id, { reason: rejectionReason });
-      alert(`❌ ${selectedUser.firstName} KYC rejected`);
+      addToast(`${selectedUser.firstName} KYC rejected`, 'success');
       setShowRejectModal(false);
       setRejectionReason('');
       // Remove from expanded/docs state
@@ -237,7 +239,7 @@ export default function AdminApprovals() {
       await fetchPendingUsers();
     } catch (error) {
       console.error('Error rejecting:', error);
-      alert(`❌ Error: ${error.response?.data?.message || 'Error rejecting KYC'}`);
+      addToast(error.response?.data?.message || 'Error rejecting KYC', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -251,7 +253,7 @@ export default function AdminApprovals() {
     try {
       setActionLoading(true);
       await adminService.deleteUser(userId);
-      alert(`✅ ${userName} account and all associated data have been deleted`);
+      addToast(`${userName} account and all associated data have been deleted`, 'success');
       setExpandedUsers(prev => { const next = { ...prev }; delete next[userId]; return next; });
       setUserDocuments(prev => { const next = { ...prev }; delete next[userId]; return next; });
       if (statusTab === 'pending') {
@@ -261,7 +263,7 @@ export default function AdminApprovals() {
       }
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert(`❌ Error: ${error.response?.data?.message || 'Error deleting user'}`);
+      addToast(error.response?.data?.message || 'Error deleting user', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -559,9 +561,9 @@ export default function AdminApprovals() {
                             try {
                               const data = await adminService.debugKYCStatus();
                               console.log('📊 All Users KYC Status:', data);
-                              alert(`📊 Check Console (F12) for detailed breakdown:\n\nTotal Users: ${data.summary.total}\nPending: ${data.summary.byKYCStatus['pending'] || 0}\nVerified: ${data.summary.byKYCStatus['verified'] || 0}`);
+                              addToast('Check Console (F12) for detailed breakdown', 'info');
                             } catch {
-                              alert('❌ Debug endpoint failed. Is the backend running?');
+                              addToast('Debug endpoint failed. Is the backend running?', 'error');
                             }
                           }}
                           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold"
@@ -577,10 +579,10 @@ export default function AdminApprovals() {
                                 setPendingUsers(data.data);
                                 setError('✅ Data loaded via test endpoint (bypasses auth). Create an admin user for production.');
                               } else {
-                                alert(`Test endpoint returned 0 ${roleTab} with pending KYC.`);
+                                addToast(`Test endpoint returned 0 ${roleTab} with pending KYC.`, 'warning');
                               }
                             } catch {
-                              alert('❌ Test endpoint also failed. Is the backend running on port 5000?');
+                              addToast('Test endpoint also failed. Is the backend running on port 5000?', 'error');
                             }
                           }}
                           className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded font-semibold"

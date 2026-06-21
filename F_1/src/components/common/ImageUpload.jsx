@@ -100,7 +100,7 @@ const ImageUpload = ({
     } catch (err) {
       const errorMessage = 
         err.response?.data?.error || 
-        err.response?.data?.message || 
+        err?.message || 
         'Upload failed. Please try again.';
       setError(errorMessage);
     } finally {

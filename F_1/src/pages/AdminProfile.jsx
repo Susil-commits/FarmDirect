@@ -8,6 +8,7 @@ import Avatar from '../components/common/Avatar';
 import Card from '../components/common/Card';
 import LogoutConfirmationModal from '../components/common/LogoutConfirmationModal';
 import { adminService } from '../services/appService.js';
+import { uploadService } from '../services/uploadService.js';
 import {
   Shield, Mail, Phone, Users, TrendingUp, Activity,
   Settings, LogOut, Camera, Lock, Bell, BarChart3, Package,
@@ -86,6 +87,8 @@ export default function AdminProfile() {
     }
   }, [user]);
 
+  const [photoFile, setPhotoFile] = useState(null);
+
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (files) {
@@ -95,13 +98,10 @@ export default function AdminProfile() {
         addToast('File size must be less than 5MB', 'error');
         return;
       }
+      setPhotoFile(file);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, photo: reader.result }));
-      };
-      reader.onerror = () => {
-        addToast('Error reading file', 'error');
-      };
+      reader.onloadend = () => setFormData(prev => ({ ...prev, photo: reader.result }));
+      reader.onerror = () => addToast('Error reading file', 'error');
       reader.readAsDataURL(file);
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -110,11 +110,18 @@ export default function AdminProfile() {
 
   const handleSave = async () => {
     try {
+      if (photoFile) {
+        const result = await uploadService.uploadProfilePicture(photoFile);
+        if (result?.url) {
+          formData.photo = result.url;
+        }
+      }
       if (updateProfile) {
         await updateProfile(formData);
       }
       addToast('Profile updated successfully', 'success');
       setIsEditing(false);
+      setPhotoFile(null);
     } catch {
       addToast('Failed to update profile', 'error');
     }

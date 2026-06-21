@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ShoppingCart, Heart } from 'lucide-react';
 import Button from './Button';
 import { useWishlist } from '../../context/WishlistContext';
+import { getImageUrl } from '../../utils/formatters';
 
 /**
  * RelatedProducts Component
@@ -123,9 +124,9 @@ function RelatedProductCard({
     >
       {/* Image */}
       <div className="relative h-40 bg-gray-100 overflow-hidden">
-        {product.image && (product.image.startsWith('http') || product.image.startsWith('/')) ? (
+        {product.image ? (
           <img
-            src={product.image}
+            src={getImageUrl(product.image)}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />

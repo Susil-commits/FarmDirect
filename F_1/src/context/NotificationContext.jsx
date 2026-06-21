@@ -70,7 +70,7 @@ export const NotificationProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await notificationService.getNotifications({ page });
-      setNotifications(response.data);
+      setNotifications(response.notifications || response || []);
       return response;
     } catch (err) {
       console.error('Failed to fetch notifications:', err);
@@ -82,9 +82,8 @@ export const NotificationProvider = ({ children }) => {
   const fetchUnreadCount = useCallback(async () => {
     try {
       const response = await notificationService.getUnreadCount();
-      setUnreadCount(response.unreadCount);
+      setUnreadCount(response.unreadCount || response.count || 0);
     } catch (err) {
-      // Silently fail - notifications are not critical
       console.debug('Failed to fetch unread count:', err);
     }
   }, []);

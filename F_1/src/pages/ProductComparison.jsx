@@ -2,16 +2,8 @@ import { useState, useEffect } from 'react';
 import { X, Download, Share2, Star } from 'lucide-react';
 import PageTransition from '../components/common/PageTransition';
 import { useToast } from '../context/ToastContext';
+import { useCart } from '../context/CartContext';
 import { cropService } from '../services/appService';
-
-// Comparison service
-
-// Inline comparison service
-const productComparisonService = {
-  compareCrops: async (cropIds) => {
-    return { success: true, data: { crops: cropIds } };
-  },
-};
 
 export default function ProductComparison() {
   const [comparisonData, setComparisonData] = useState(null);
@@ -19,6 +11,7 @@ export default function ProductComparison() {
   const [loading, setLoading] = useState(false);
   const [allCrops, setAllCrops] = useState([]);
   const { addToast } = useToast();
+  const { addToCart } = useCart();
 
   useEffect(() => {
     // Load available crops for selection from API
@@ -27,11 +20,10 @@ export default function ProductComparison() {
 
   const fetchAvailableCrops = async () => {
     try {
-      // TODO: Replace with actual API call when available
-      // const response = await cropService.getAllCrops();
-      // setAllCrops(response.data || []);
-      setAllCrops([]);
-    } catch (_error) {
+      const response = await cropService.getAllCrops();
+      const crops = response.data || response || [];
+      setAllCrops(Array.isArray(crops) ? crops : []);
+    } catch (error) {
       console.error('Failed to fetch crops:', error);
       setAllCrops([]);
     }
@@ -58,8 +50,10 @@ export default function ProductComparison() {
 
     try {
       setLoading(true);
-      const data = await productComparisonService.compareCrops(selectedCrops);
-      setComparisonData(data);
+      const cropDetails = await Promise.all(
+        selectedCrops.map(id => cropService.getCropById(id).then(r => r.data || r))
+      );
+      setComparisonData({ success: true, data: { crops: cropDetails } });
     } catch (error) {
       addToast('Failed to load comparison', 'error');
     } finally {
@@ -153,58 +147,49 @@ export default function ProductComparison() {
                   <thead>
                     <tr className="bg-gray-50 border-b">
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Attribute</th>
-                      {selectedCrops.map((cropId) => {
-                        const crop = allCrops.find(c => c.id === cropId);
-                        return (
-                          <th key={cropId} className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                            {crop?.name}
-                          </th>
-                        );
-                      })}
+                      {comparisonData.data.crops.map((crop) => (
+                        <th key={crop.id} className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                          {crop.name}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     <tr>
                       <td className="px-6 py-4 font-medium text-gray-900">Price</td>
-                      {selectedCrops.map((cropId) => {
-                        const crop = allCrops.find(c => c.id === cropId);
-                        return (
-                          <td key={cropId} className="px-6 py-4 text-gray-700">₹{crop?.price}/kg</td>
-                        );
-                      })}
+                      {comparisonData.data.crops.map((crop) => (
+                        <td key={crop.id} className="px-6 py-4 text-gray-700">₹{crop.price}/kg</td>
+                      ))}
                     </tr>
                     <tr>
                       <td className="px-6 py-4 font-medium text-gray-900">Rating</td>
-                      {selectedCrops.map((cropId) => {
-                        const crop = allCrops.find(c => c.id === cropId);
-                        return (
-                          <td key={cropId} className="px-6 py-4">
-                            <div className="flex items-center gap-1">
-                              <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                              <span className="text-gray-700">{crop?.rating}</span>
-                            </div>
-                          </td>
-                        );
-                      })}
+                      {comparisonData.data.crops.map((crop) => (
+                        <td key={crop.id} className="px-6 py-4">
+                          <div className="flex items-center gap-1">
+                            <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                            <span className="text-gray-700">{crop.rating}</span>
+                          </div>
+                        </td>
+                      ))}
                     </tr>
                     <tr>
                       <td className="px-6 py-4 font-medium text-gray-900">Freshness</td>
-                      {selectedCrops.map((cropId) => (
-                        <td key={cropId} className="px-6 py-4 text-gray-700">Farm Fresh ✓</td>
+                      {comparisonData.data.crops.map((crop) => (
+                        <td key={crop.id} className="px-6 py-4 text-gray-700">{crop.freshness || 'Farm Fresh ✓'}</td>
                       ))}
                     </tr>
                     <tr>
                       <td className="px-6 py-4 font-medium text-gray-900">Delivery</td>
-                      {selectedCrops.map((cropId) => (
-                        <td key={cropId} className="px-6 py-4 text-gray-700">3-5 days</td>
+                      {comparisonData.data.crops.map((crop) => (
+                        <td key={crop.id} className="px-6 py-4 text-gray-700">{crop.delivery || '3-5 days'}</td>
                       ))}
                     </tr>
                     <tr>
                       <td className="px-6 py-4 font-medium text-gray-900">Stock</td>
-                      {selectedCrops.map((cropId) => (
-                        <td key={cropId} className="px-6 py-4">
-                          <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm font-medium">
-                            In Stock
+                      {comparisonData.data.crops.map((crop) => (
+                        <td key={crop.id} className="px-6 py-4">
+                          <span className={`px-2 py-1 rounded text-sm font-medium ${crop.stockStatus === 'out_of_stock' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                            {crop.stockStatus === 'out_of_stock' ? 'Out of Stock' : 'In Stock'}
                           </span>
                         </td>
                       ))}
@@ -214,12 +199,30 @@ export default function ProductComparison() {
               </div>
 
               <div className="p-6 bg-gray-50 border-t">
-                <button
-                  onClick={() => addToast('Items added to cart!', 'success')}
-                  className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
-                >
-                  Add Selected to Cart
-                </button>
+<button
+                    onClick={() => {
+                      const crops = comparisonData?.data?.crops || allCrops.filter(c => selectedCrops.includes(c._id || c.id));
+                      crops.forEach(crop => {
+                        const cartProduct = {
+                          _id: crop._id || crop.id,
+                          id: crop._id || crop.id,
+                          cropName: crop.cropName || crop.name,
+                          category: crop.category,
+                          price: crop.price,
+                          unit: crop.unit || 'kg',
+                          images: crop.images || [],
+                          farmerId: crop.farmerId,
+                          pickupLocation: crop.pickupLocation,
+                          quantity: crop.quantity,
+                        };
+                        addToCart(cartProduct, 1);
+                      });
+                      addToast(`${crops.length} items added to cart`, 'success');
+                    }}
+                    className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
+                  >
+                    Add Selected to Cart
+                  </button>
               </div>
             </div>
           )}

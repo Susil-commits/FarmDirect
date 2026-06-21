@@ -1,60 +1,71 @@
 import React, { useState, useEffect } from 'react';
 import { reviewService } from '../services/appService';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import '../styles/Reviews.css';
 
 export default function ProductReviews({ productId }) {
   const [reviews, setReviews] = useState([]);
-  const [_loading, _setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { addToast } = useToast();
 
-  // Fetch reviews on component mount
   useEffect(() => {
     fetchReviews();
   }, [productId]);
 
   const fetchReviews = async () => {
     try {
-      _setLoading(true);
-      // TODO: Replace with actual API call
-      // const response = await reviewService.getReviews(productId);
-      // setReviews(response.data || []);
-      setReviews([]);
-      _setLoading(false);
+      setLoading(true);
+      const response = await reviewService.getReviews(productId);
+      const data = response.data?.reviews || response.data || response || [];
+      setReviews(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch reviews:', error);
       setReviews([]);
     } finally {
-      _setLoading(false);
+      setLoading(false);
     }
   };
 
   const [showForm, setShowForm] = useState(false);
   const [newReview, setNewReview] = useState({
-    author: '',
     rating: 5,
     title: '',
     content: '',
   });
 
-  const averageRating = (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1);
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1)
+    : '0.0';
 
-  const handleSubmitReview = (e) => {
+  const handleSubmitReview = async (e) => {
     e.preventDefault();
-    if (!newReview.author || !newReview.title || !newReview.content) {
-      alert('Please fill all fields');
+    if (!newReview.title || !newReview.content) {
+      addToast('Please fill all required fields', 'warning');
       return;
     }
 
-    const review = {
-      id: reviews.length + 1,
-      ...newReview,
-      date: new Date().toISOString().split('T')[0],
-      helpful: 0,
-      verified: false,
-    };
+    if (!user) {
+      addToast('Please log in to submit a review', 'warning');
+      return;
+    }
 
-    setReviews([review, ...reviews]);
-    setNewReview({ author: '', rating: 5, title: '', content: '' });
-    setShowForm(false);
+    try {
+      const response = await reviewService.addReview(productId, {
+        rating: newReview.rating,
+        title: newReview.title,
+        content: newReview.content,
+      });
+      const createdReview = response.data?.review || response.data || response;
+      setReviews(prev => [createdReview, ...prev]);
+      setNewReview({ rating: 5, title: '', content: '' });
+      setShowForm(false);
+      addToast('Review submitted successfully!', 'success');
+    } catch (error) {
+      console.error('Failed to submit review:', error);
+      addToast(error.response?.data?.message || 'Failed to submit review', 'error');
+    }
   };
 
   return (
@@ -108,19 +119,6 @@ export default function ProductReviews({ productId }) {
         <div className="review-form-container card-glass animate-scale-in">
           <h3>Share your experience</h3>
           <form onSubmit={handleSubmitReview}>
-            <div className="form-group">
-              <label>Your Name *</label>
-              <input
-                type="text"
-                placeholder="Enter your name"
-                value={newReview.author}
-                onChange={(e) =>
-                  setNewReview({ ...newReview, author: e.target.value })
-                }
-                required
-              />
-            </div>
-
             <div className="form-group">
               <label>Rating *</label>
               <div className="rating-selector">
@@ -191,19 +189,19 @@ export default function ProductReviews({ productId }) {
               <div className="review-header">
                 <div className="reviewer-info">
                   <div className="reviewer-avatar">
-                    {review.author.charAt(0).toUpperCase()}
+                    {(review.user?.firstName || review.user?.name || review.author || 'A').charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h4>{review.author}</h4>
+                    <h4>{review.user?.firstName || review.user?.name || review.author || 'Anonymous'}</h4>
                     <div className="review-meta">
-                      {'⭐'.repeat(review.rating)}
+                      {'⭐'.repeat(review.rating || 0)}
                       {review.verified && (
                         <span className="verified-badge">✓ Verified</span>
                       )}
                     </div>
                   </div>
                 </div>
-                <span className="review-date">{review.date}</span>
+                <span className="review-date">{new Date(review.createdAt || review.date).toLocaleDateString()}</span>
               </div>
 
               <h5 className="review-title">{review.title}</h5>

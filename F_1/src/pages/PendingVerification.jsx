@@ -158,7 +158,7 @@ export default function PendingVerification() {
               {/* Support Text */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <p className="text-sm text-gray-600">
-                  Questions? <a href="/contact" className="text-green-600 font-semibold hover:underline">Contact Support</a>
+                  Questions? <button onClick={() => navigate('/contact')} className="text-green-600 font-semibold hover:underline bg-transparent border-none cursor-pointer">Contact Support</button>
                 </p>
               </div>
             </div>

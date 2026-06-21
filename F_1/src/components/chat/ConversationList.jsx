@@ -1,5 +1,6 @@
 import { MessageCircle, Search } from 'lucide-react';
 import { useState, useMemo } from 'react';
+import { getImageUrl } from '../../utils/formatters';
 import '../../styles/Messages.css';
 
 const AVATAR_COLORS = [
@@ -110,11 +111,11 @@ export default function ConversationList({
                 <div className="conversation-avatar-wrapper">
                   {hasPhoto ? (
                     <img
-                      src={
+                      src={getImageUrl(
                         otherUser.photo ||
                         otherUser.profilePhoto ||
                         otherUser.profilePicture
-                      }
+                      )}
                       alt={displayName}
                       className="conversation-avatar"
                     />

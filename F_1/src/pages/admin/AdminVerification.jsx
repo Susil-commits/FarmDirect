@@ -7,10 +7,12 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import BackButton from '../../components/common/BackButton';
+import { useToast } from '../../context/ToastContext';
 
 export default function AdminVerification() {
   const { user } = useAuth();
   const { navigate } = useRouter();
+  const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState('pending');
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -124,16 +126,16 @@ export default function AdminVerification() {
         )
       );
       setSelectedRequest(null);
-      alert('Verification approved successfully! User will see congratulation on next login.');
+      addToast('Verification approved successfully!', 'success');
     } catch (error) {
       console.error('Failed to approve verification:', error);
-      alert('Failed to approve verification: ' + (error.response?.data?.message || error.message));
+      addToast('Failed to approve verification: ' + (error.response?.data?.message || error.message), 'error');
     }
   };
 
   const handleFreeze = async () => {
     if (!selectedRequest) {
-      alert('Please select a user first');
+      addToast('Please select a user first', 'warning');
       return;
     }
     try {
@@ -146,16 +148,16 @@ export default function AdminVerification() {
         )
       );
       setShowFreezeModal(false);
-      alert(`Account for ${selectedRequest.name} has been frozen.`);
+      addToast(`Account for ${selectedRequest.name} has been frozen.`, 'success');
     } catch (error) {
       console.error('Failed to freeze account:', error);
-      alert('Failed to freeze account: ' + (error.response?.data?.message || error.message));
+      addToast('Failed to freeze account: ' + (error.response?.data?.message || error.message), 'error');
     }
   };
 
   const handleDelete = async () => {
     if (!selectedRequest) {
-      alert('Please select a user first');
+      addToast('Please select a user first', 'warning');
       return;
     }
     try {
@@ -165,16 +167,16 @@ export default function AdminVerification() {
       );
       setShowDeleteModal(false);
       setSelectedRequest(null);
-      alert(`Account for ${selectedRequest.name} has been deleted along with all associated data.`);
+      addToast(`Account for ${selectedRequest.name} has been deleted along with all associated data.`, 'success');
     } catch (error) {
       console.error('Failed to delete account:', error);
-      alert('Failed to delete account: ' + (error.response?.data?.message || error.message));
+      addToast('Failed to delete account: ' + (error.response?.data?.message || error.message), 'error');
     }
   };
 
   const handleReject = async () => {
     if (!selectedRequest || !rejectionReason.trim()) {
-      alert('Please provide a rejection reason');
+      addToast('Please provide a rejection reason', 'warning');
       return;
     }
     try {
@@ -189,10 +191,10 @@ export default function AdminVerification() {
       setSelectedRequest(null);
       setRejectionReason('');
       setShowRejectionModal(false);
-      alert('Verification rejected successfully!');
+      addToast('Verification rejected successfully!', 'success');
     } catch (error) {
       console.error('Failed to reject verification:', error);
-      alert('Failed to reject verification: ' + (error.response?.data?.message || error.message));
+      addToast('Failed to reject verification: ' + (error.response?.data?.message || error.message), 'error');
     }
   };
 

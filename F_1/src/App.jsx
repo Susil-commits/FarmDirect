@@ -9,6 +9,7 @@ import { RecentlyViewedProvider } from './context/RecentlyViewedContext';
 import Navbar from './components/shared/Navbar';
 import Footer from './components/shared/Footer';
 import GlobalPageLoader from './components/common/GlobalPageLoader';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import Home from './pages/Home';
 import Marketplace from './pages/Marketplace';
 import CropDetail from './pages/CropDetail';
@@ -287,14 +288,16 @@ function App() {
           <NotificationProvider>
             <ChatProvider>
               <RecentlyViewedProvider>
-                <GlobalPageLoader />
-                <div className="min-h-screen bg-white flex flex-col">
-                  <Navbar />
-                  <main className="flex-1">
-                    {renderPage()}
-                  </main>
-                  <Footer />
-                </div>
+                <ErrorBoundary>
+                  <GlobalPageLoader />
+                  <div className="min-h-screen bg-white flex flex-col">
+                    <Navbar />
+                    <main className="flex-1">
+                      {renderPage()}
+                    </main>
+                    <Footer />
+                  </div>
+                </ErrorBoundary>
               </RecentlyViewedProvider>
             </ChatProvider>
           </NotificationProvider>

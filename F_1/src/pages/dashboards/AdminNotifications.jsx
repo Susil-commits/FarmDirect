@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
+import { useToast } from '../../context/ToastContext';
 import { notificationService } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import Card from '../../components/common/Card';
@@ -18,6 +19,7 @@ const ITEMS_PER_PAGE = 10;
 export default function AdminNotifications() {
   const { logout } = useAuth();
   const { navigate } = useRouter();
+  const { addToast } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -88,8 +90,10 @@ export default function AdminNotifications() {
       await notificationService.markAllAsRead();
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
+      addToast('All notifications marked as read', 'success');
     } catch (err) {
       console.error('Failed to mark all as read:', err);
+      addToast('Failed to mark all as read', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -104,8 +108,10 @@ export default function AdminNotifications() {
         const updated = prev.filter(n => n._id !== id);
         return updated;
       });
+      addToast('Notification deleted', 'success');
     } catch (err) {
       console.error('Failed to delete notification:', err);
+      addToast('Failed to delete notification', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -119,8 +125,10 @@ export default function AdminNotifications() {
       await notificationService.deleteAllNotifications();
       setNotifications([]);
       setUnreadCount(0);
+      addToast('All notifications deleted', 'success');
     } catch (err) {
       console.error('Failed to delete all notifications:', err);
+      addToast('Failed to delete all notifications', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -136,6 +144,7 @@ export default function AdminNotifications() {
       setShowCreateModal(false);
       setCreateForm({ title: '', message: '', recipientType: 'all', recipientId: '' });
       fetchNotifications();
+      addToast('Notification sent', 'success');
       setTimeout(() => setCreateSuccess(false), 3000);
     } catch (err) {
       console.error('Failed to create notification:', err);

@@ -2,6 +2,7 @@ import asyncHandler from '../utils/asyncHandler.js';
 import CropListing from '../models/CropListing.js';
 import Order from '../models/Order.js';
 import User from '../models/User.js';
+import Wishlist from '../models/Wishlist.js';
 
 /**
  * PHASE 2: DATA ACCESS CONTROL
@@ -24,56 +25,43 @@ export const getFarmerCrops = asyncHandler(async (req, res) => {
 });
 
 export const getFarmerOrders = asyncHandler(async (req, res) => {
-  // Farmers see orders where they are a seller
-  const orders = await Order.find({ 'items.farmerId': req.user._id })
+  const orders = await Order.find({ farmerId: req.user._id })
     .lean()
     .populate('buyerId', 'name email phone')
-    .populate('items.cropId', 'cropName price')
-    .populate('items.farmerId', 'name email')
+    .populate('cropId', 'cropName price')
+    .populate('farmerId', 'name email')
     .sort({ createdAt: -1 });
-
-  const farmerOrders = orders.map(order => ({
-    ...order,
-    items: order.items.filter(item => item.farmerId._id.toString() === req.user._id.toString())
-  }));
 
   res.status(200).json({
     success: true,
-    count: farmerOrders.length,
-    data: farmerOrders,
+    count: orders.length,
+    data: orders,
     stats: {
-      totalOrders: farmerOrders.length,
-      completedOrders: farmerOrders.filter(o => o.orderStatus === 'completed').length,
-      pendingOrders: farmerOrders.filter(o => ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up'].includes(o.orderStatus)).length
+      totalOrders: orders.length,
+      completedOrders: orders.filter(o => o.orderStatus === 'completed').length,
+      pendingOrders: orders.filter(o => ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up'].includes(o.orderStatus)).length
     }
   });
 });
 
 export const getFarmerEarnings = asyncHandler(async (req, res) => {
-  // Get farmer's total earnings
   const orders = await Order.find({
-    'items.farmerId': req.user._id,
+    farmerId: req.user._id,
     orderStatus: 'completed'
-  }).lean().populate('items.cropId');
+  }).lean().populate('cropId');
 
   let totalEarnings = 0;
-  let orderCount = 0;
 
   orders.forEach(order => {
-    order.items.forEach(item => {
-      if (item.farmerId.toString() === req.user._id.toString()) {
-        totalEarnings += (item.quantity * item.pricePerUnit);
-        orderCount++;
-      }
-    });
+    totalEarnings += order.totalAmount;
   });
 
   res.status(200).json({
     success: true,
     data: {
       totalEarnings,
-      orderCount,
-      averagePerOrder: orderCount > 0 ? Math.round(totalEarnings / orderCount) : 0
+      orderCount: orders.length,
+      averagePerOrder: orders.length > 0 ? Math.round(totalEarnings / orders.length) : 0
     }
   });
 });
@@ -103,17 +91,10 @@ export const getBuyerApprovedCrops = asyncHandler(async (req, res) => {
 });
 
 export const getBuyerOrders = asyncHandler(async (req, res) => {
-  // Buyers see only their own orders
   const orders = await Order.find({ buyerId: req.user._id })
     .lean()
-    .populate({
-      path: 'items.farmerId',
-      select: 'name email phone rating'
-    })
-    .populate({
-      path: 'items.cropId',
-      select: 'cropName price description'
-    })
+    .populate('farmerId', 'name email phone rating')
+    .populate('cropId', 'cropName price description')
     .sort({ createdAt: -1 });
 
   res.status(200).json({
@@ -129,10 +110,9 @@ export const getBuyerOrders = asyncHandler(async (req, res) => {
 });
 
 export const getBuyerWishlist = asyncHandler(async (req, res) => {
-  // Buyers see their wishlist with approved crops only
-  const user = await User.findById(req.user._id)
+  const wishlist = await Wishlist.findOne({ userId: req.user._id })
     .populate({
-      path: 'wishlist',
+      path: 'items.cropId',
       match: { listingApprovalStatus: 'approved' },
       populate: {
         path: 'farmerId',
@@ -141,7 +121,15 @@ export const getBuyerWishlist = asyncHandler(async (req, res) => {
       }
     });
 
-  const validWishlist = user.wishlist.filter(crop => crop.farmerId !== null);
+  if (!wishlist) {
+    return res.status(200).json({
+      success: true,
+      count: 0,
+      data: []
+    });
+  }
+
+  const validWishlist = wishlist.items.filter(item => item.cropId && item.cropId.farmerId !== null);
 
   res.status(200).json({
     success: true,
@@ -295,12 +283,11 @@ export const getAdminAllCrops = asyncHandler(async (req, res) => {
 });
 
 export const getAdminAllOrders = asyncHandler(async (req, res) => {
-  // Admin sees all orders with detailed info
   const orders = await Order.find()
     .lean()
     .populate('buyerId', 'name email phone')
-    .populate('items.farmerId', 'name email')
-    .populate('items.cropId', 'cropName price')
+    .populate('farmerId', 'name email')
+    .populate('cropId', 'cropName price')
     .sort({ createdAt: -1 });
 
   const stats = {

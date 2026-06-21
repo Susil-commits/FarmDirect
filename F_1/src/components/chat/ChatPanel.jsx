@@ -11,6 +11,8 @@ import {
 import { useState, useEffect, useRef } from 'react';
 import ChatBubble from './ChatBubble';
 import { useChat } from '../../context/ChatContext';
+import { useToast } from '../../context/ToastContext';
+import { getImageUrl } from '../../utils/formatters';
 import '../../styles/Messages.css';
 
 const AVATAR_COLORS = [
@@ -56,11 +58,16 @@ export default function ChatPanel({
     sendMessage,
     deleteMessage,
     markConversationAsRead,
+    blockUser,
   } = useChat();
+
+  const { addToast } = useToast();
 
   const [messageInput, setMessageInput] = useState('');
   const [sending, setSending] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [blocking, setBlocking] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const menuRef = useRef(null);
@@ -121,9 +128,37 @@ export default function ChatPanel({
     }
   };
 
-  const handleCopyMessage = (content) => {
+  const handleBlockUser = async () => {
+    setShowMenu(false);
+    if (blocking) return;
+    try {
+      setBlocking(true);
+      const blocked = await blockUser(receiverId);
+      setIsBlocked(blocked);
+      addToast(
+        blocked ? 'User has been blocked' : 'User has been unblocked',
+        blocked ? 'warning' : 'success'
+      );
+    } catch (err) {
+      addToast('Failed to update block status', 'error');
+    } finally {
+      setBlocking(false);
+    }
+  };
+
+  const handleClearChat = async () => {
+    setShowMenu(false);
+    if (!window.confirm('Clear all messages in this conversation?')) return;
+    try {
+      const allMessageIds = messages.map(m => m._id).filter(Boolean);
+      await Promise.all(allMessageIds.map(id => deleteMessage(id)));
+      addToast('Chat cleared successfully', 'success');
+    } catch (err) {
+      addToast('Failed to clear chat', 'error');
+    }
+  };
+    const handleCopyMessage = (content) => {
     navigator.clipboard.writeText(content).catch(() => {
-      // Fallback for older browsers
       const textarea = document.createElement('textarea');
       textarea.value = content;
       document.body.appendChild(textarea);
@@ -184,7 +219,7 @@ export default function ChatPanel({
           )}
           {/* Avatar */}
           {photoUrl ? (
-            <img src={photoUrl} alt={displayName} className="chat-header-avatar" />
+            <img src={getImageUrl(photoUrl)} alt={displayName} className="chat-header-avatar" />
           ) : (
             <div className={`chat-header-avatar-fallback ${getColorClass(displayName)}`}>
               {getInitial(receiverData?.firstName || receiverData?.name)}
@@ -227,19 +262,14 @@ export default function ChatPanel({
           {showMenu && (
             <div className="chat-header-dropdown">
               <button
-                onClick={() => {
-                  setShowMenu(false);
-                  alert('Block feature coming soon');
-                }}
+                onClick={handleBlockUser}
+                disabled={blocking}
               >
                 <Shield size={16} />
-                Block user
+                {blocking ? 'Processing...' : isBlocked ? 'Unblock user' : 'Block user'}
               </button>
               <button
-                onClick={() => {
-                  setShowMenu(false);
-                  alert('Clear chat feature coming soon');
-                }}
+                onClick={handleClearChat}
                 className="danger"
               >
                 <Trash2 size={16} />

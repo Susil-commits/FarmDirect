@@ -3,6 +3,7 @@ import { Eye, Trash2, MessageSquare, Filter, Search, RefreshCw, CheckCircle, Clo
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import contactService from '../../services/contactService';
+import { useToast } from '../../context/ToastContext';
 
 export default function AdminQueries() {
   const [queries, setQueries] = useState([]);
@@ -28,6 +29,7 @@ export default function AdminQueries() {
     status: 'Resolved'
   });
   const [respondLoading, setRespondLoading] = useState(false);
+  const { addToast } = useToast();
 
   // Fetch queries and stats
   useEffect(() => {
@@ -95,7 +97,7 @@ export default function AdminQueries() {
 
   const handleRespond = async () => {
     if (!responseForm.adminResponse.trim()) {
-      alert('Please enter a response message');
+      addToast('Please enter a response message', 'warning');
       return;
     }
 
@@ -112,6 +114,7 @@ export default function AdminQueries() {
         fetchQueries();
         fetchStats();
         setError('');
+        addToast('Response sent successfully', 'success');
       }
     } catch (err) {
       setError(err.message || 'Error sending response');
@@ -128,6 +131,7 @@ export default function AdminQueries() {
       if (response.success) {
         setQueries(queries.filter(q => q._id !== queryId));
         fetchStats();
+        addToast('Query deleted', 'success');
       }
     } catch (err) {
       setError(err.message || 'Error deleting query');

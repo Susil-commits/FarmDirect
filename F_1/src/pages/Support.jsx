@@ -48,7 +48,7 @@ export default function Support() {
               <Phone size={48} className="text-blue-500 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-gray-900 mb-2">Phone Support</h3>
               <p className="text-gray-600 mb-4">Mon-Sat: 9 AM - 6 PM</p>
-              <p className="text-blue-600 font-semibold">+91-XXXX-XXXX</p>
+              <p className="text-blue-600 font-semibold">+91-98765-43210</p>
             </div>
 
             <div className="bg-white rounded-lg shadow-lg p-8 text-center hover:shadow-xl transition">

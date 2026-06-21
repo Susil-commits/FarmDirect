@@ -184,7 +184,7 @@ export default function EditCrop() {
       }, 1500);
     } catch (err) {
       console.error('Error updating crop:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to update crop. Please try again.');
+      setError(err?.message || err.message || 'Failed to update crop. Please try again.');
     } finally {
       setSubmitting(false);
     }

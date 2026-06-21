@@ -82,7 +82,15 @@ export default function Pricing() {
                     <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
                   </div>
 
-                  <button className={`w-full py-3 rounded-lg font-bold mb-6 transition ${
+                  <button
+                    onClick={() => {
+                      if (plan.name.includes('Farmer')) {
+                        navigate('/join-farmer');
+                      } else {
+                        navigate('/start-shopping');
+                      }
+                    }}
+                    className={`w-full py-3 rounded-lg font-bold mb-6 transition ${
                     plan.highlight
                       ? 'bg-green-500 hover:bg-green-600 text-white'
                       : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
@@ -127,6 +135,8 @@ export default function Pricing() {
                 <h3 className="text-lg font-bold text-gray-900 mb-2">How is pricing calculated?</h3>
                 <p className="text-gray-700">Monthly subscription fees are billed in advance. Commission is deducted from seller payments at the time of transaction settlement.</p>
               </div>
+            </div>
+          </div>
 
           {/* Footer */}
           <div className="mt-16 pt-8 border-t border-gray-200">
@@ -142,8 +152,6 @@ export default function Pricing() {
                 <button onClick={() => navigate('/privacy')} className="text-gray-600 hover:text-gray-900 transition">Privacy</button>
                 <button onClick={() => navigate('/contact')} className="text-gray-600 hover:text-gray-900 transition">Contact</button>
               </div>
-            </div>
-          </div>
             </div>
           </div>
         </div>

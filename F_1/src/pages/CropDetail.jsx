@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Heart, Star, User, CheckCircle, AlertCircle, Loader, Phone, Leaf, Package, MessageCircle, ShoppingCart } from 'lucide-react';
+import { MapPin, Heart, Star, User, CheckCircle, AlertCircle, Loader, Phone, Leaf, Package, MessageCircle, ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
 import Timeline from '../components/common/Timeline';
 import FarmerDetailCard from '../components/common/FarmerDetailCard';
+import RelatedProducts from '../components/common/RelatedProducts';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
 import LoginPrompt from '../components/modals/LoginPrompt';
@@ -32,6 +33,8 @@ export default function CropDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [relatedProducts, setRelatedProducts] = useState([]);
 
   const [crop, setCrop] = useState(null);
   const [farmer, setFarmer] = useState(null);
@@ -69,6 +72,16 @@ export default function CropDetail() {
         if (cropData) {
           addToRecentlyViewed(cropData);
         }
+
+        // Fetch related products
+        try {
+          const relatedRes = await cropService.getAllCrops({
+            category: cropData?.category || cropData?.cropType,
+            limit: 8,
+          });
+          const allRelated = relatedRes.crops || relatedRes.data?.crops || [];
+          setRelatedProducts(allRelated.filter(c => (c._id || c.id) !== cropId).slice(0, 6));
+        } catch {}
 
         // Fetch farmer details if farmerId is available
         // farmerId from populate() is an object, so extract _id or use the string directly
@@ -337,6 +350,10 @@ export default function CropDetail() {
     );
   }
 
+  const cropImages = crop?.images || (crop?.image ? [crop.image] : []);
+
+  // ... (keep existing return statement)
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4 relative">
@@ -354,16 +371,45 @@ export default function CropDetail() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Product Images & Info */}
             <div className="lg:col-span-2">
-              {/* Main Image */}
-              <Card className="mb-6 animate-slide-in-left">
-                <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-t-lg flex items-center justify-center hover-lift relative overflow-hidden" style={{ minHeight: '400px' }}>
-                  {rawCropImage ? (
-                    <img
-                      src={getImageUrl(rawCropImage)}
-                      alt={cropName}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
+              {/* Image Gallery */}
+              <Card className="mb-6 animate-slide-in-left overflow-hidden">
+                <div className="bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center relative" style={{ minHeight: '400px' }}>
+                  {cropImages.length > 0 ? (
+                    <>
+                      <img
+                        src={getImageUrl(cropImages[activeImageIndex])}
+                        alt={cropName}
+                        className="w-full h-full object-cover"
+                        style={{ minHeight: '400px' }}
+                      />
+                      {cropImages.length > 1 && (
+                        <>
+                          <button
+                            onClick={() => setActiveImageIndex(prev => Math.max(0, prev - 1))}
+                            disabled={activeImageIndex === 0}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-700 p-2 rounded-full shadow-lg transition disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            <ChevronLeft size={24} />
+                          </button>
+                          <button
+                            onClick={() => setActiveImageIndex(prev => Math.min(cropImages.length - 1, prev + 1))}
+                            disabled={activeImageIndex === cropImages.length - 1}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-700 p-2 rounded-full shadow-lg transition disabled:opacity-30 disabled:cursor-not-allowed"
+                          >
+                            <ChevronRight size={24} />
+                          </button>
+                          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                            {cropImages.map((_, i) => (
+                              <button
+                                key={i}
+                                onClick={() => setActiveImageIndex(i)}
+                                className={`w-2.5 h-2.5 rounded-full transition-all ${i === activeImageIndex ? 'bg-white scale-125 shadow' : 'bg-white/50 hover:bg-white/70'}`}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </>
                   ) : (
                     <span className="text-9xl animate-bounce-soft">
                       {cropType === 'vegetables' ? '🥬' : cropType === 'crops' ? '🌾' : '🌿'}
@@ -375,6 +421,19 @@ export default function CropDetail() {
                     </div>
                   )}
                 </div>
+                {cropImages.length > 1 && (
+                  <div className="flex gap-2 p-3 bg-gray-50 overflow-x-auto">
+                    {cropImages.map((img, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setActiveImageIndex(i)}
+                        className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition ${i === activeImageIndex ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200 hover:border-green-300'}`}
+                      >
+                        <img src={getImageUrl(img)} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="p-6">
                   <div className="flex items-center gap-3 mb-2 flex-wrap">
                     <h1 className="text-4xl font-bold text-gray-900 animate-slide-in-down">{cropName}</h1>
@@ -502,12 +561,12 @@ export default function CropDetail() {
                 <ScrollAnimation className="scroll-slide">
                   <Card variant="light" animated={false}>
                     <div className="p-6">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-6 animate-slide-in-left">⭐ Customer Reviews</h2>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-6">⭐ Customer Reviews</h2>
                       <div className="space-y-6">
                         {crop.reviews_list.map((review, i) => (
                           <div key={i} className="pb-6 border-b last:border-b-0 stagger-item" style={{ animationDelay: `${i * 0.1}s` }}>
                             <div className="flex items-center gap-3 mb-2">
-                              <div className="w-10 h-10 bg-green-100 text-green-700 rounded-full flex items-center justify-center font-semibold animate-scale-in">
+                              <div className="w-10 h-10 bg-green-100 text-green-700 rounded-full flex items-center justify-center font-semibold">
                                 {review.name.charAt(0)}
                               </div>
                               <div>
@@ -523,6 +582,15 @@ export default function CropDetail() {
                   </Card>
                 </ScrollAnimation>
               )}
+
+              {/* Related Products */}
+              <ScrollAnimation className="scroll-slide">
+                <RelatedProducts
+                  products={relatedProducts}
+                  title="Related Products"
+                  onProductClick={(product) => navigate(`/crop/${product._id || product.id}`)}
+                />
+              </ScrollAnimation>
 
             </div>
 
