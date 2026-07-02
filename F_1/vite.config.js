@@ -67,16 +67,6 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api/, /^\/uploads/],
         runtimeCaching: [
           {
-            // Large media (hero video) — cache on demand, never precache
-            urlPattern: ({ url }) => url.pathname.endsWith('.mp4'),
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'media-cache',
-              expiration: { maxEntries: 5, maxAgeSeconds: 60 * 60 * 24 * 30 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
             // Cache backend uploads (product images, avatars) so previously
             // viewed pages work offline. stale-while-revalidate keeps them fresh.
             urlPattern: ({ url }) => url.pathname.startsWith('/uploads/'),
