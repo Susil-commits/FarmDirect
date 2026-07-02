@@ -46,6 +46,14 @@ export const cropService = {
   toggleInterest: (cropId) => api.post(`/crops/${cropId}/interest`),
   getInterestedBuyers: (cropId) => api.get(`/crops/${cropId}/interested-buyers`),
   getMyInterestedCrops: () => api.get('/crops/buyer/interested'),
+  // Recommendations
+  getTrendingCrops: (limit = 8) => api.get('/crops/trending', { params: { limit } }),
+  getSimilarCrops: (cropId, limit = 6) => api.get(`/crops/${cropId}/similar`, { params: { limit } }),
+  getRecommendedCrops: (limit = 8) => api.get('/crops/buyer/recommended', { params: { limit } }),
+};
+
+export const couponService = {
+  validate: (code, amount) => api.get('/coupons/validate', { params: { code, amount } }),
 };
 
 export const orderService = {
@@ -119,7 +127,12 @@ export const adminService = {
   searchDocuments: (params) => api.get('/admin/documents/search', { params }),
   getUserDocuments: (userId) => api.get(`/admin/documents/${userId}`),
   // Audit logs
-  getAuditLogs: (params) => api.get('/admin/audit-logs', { params })
+  getAuditLogs: (params) => api.get('/admin/audit-logs', { params }),
+  // Coupons management
+  getCoupons: (params) => api.get('/admin/coupons', { params }),
+  createCoupon: (data) => api.post('/admin/coupons', data),
+  updateCoupon: (id, data) => api.patch(`/admin/coupons/${id}`, data),
+  deleteCoupon: (id) => api.delete(`/admin/coupons/${id}`),
 };
 
 export const authServiceExtended = {

@@ -21,6 +21,7 @@ import messageRoutes from './routes/messageRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import farmerRoutes from './routes/farmerRoutes.js';
+import couponRoutes from './routes/couponRoutes.js';
 import dataAccessRoutes from './routes/dataAccessRoutes.js';
 import { uploadSingleFile } from './middleware/localUpload.js';
 import path from 'path';
@@ -141,6 +142,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/farmer', farmerRoutes);
+app.use('/api/coupons', couponRoutes);
 app.use('/api/data', dataAccessRoutes);
 
 // File upload route (for profile pictures, crop images, etc.)

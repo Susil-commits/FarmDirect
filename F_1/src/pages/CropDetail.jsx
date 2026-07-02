@@ -73,14 +73,11 @@ export default function CropDetail() {
           addToRecentlyViewed(cropData);
         }
 
-        // Fetch related products
+        // Fetch related products via the dedicated similar-crops endpoint
         try {
-          const relatedRes = await cropService.getAllCrops({
-            category: cropData?.category || cropData?.cropType,
-            limit: 8,
-          });
+          const relatedRes = await cropService.getSimilarCrops(cropId, 8);
           const allRelated = relatedRes.crops || relatedRes.data?.crops || [];
-          setRelatedProducts(allRelated.filter(c => (c._id || c.id) !== cropId).slice(0, 6));
+          setRelatedProducts(allRelated.slice(0, 6));
         } catch {}
 
         // Fetch farmer details if farmerId is available
@@ -436,7 +433,7 @@ export default function CropDetail() {
                 )}
                 <div className="p-6">
                   <div className="flex items-center gap-3 mb-2 flex-wrap">
-                    <h1 className="text-4xl font-bold text-gray-900 animate-slide-in-down">{cropName}</h1>
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 animate-slide-in-down">{cropName}</h1>
                     {cropType && (
                       <span className="px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full capitalize">
                         {cropType}
@@ -459,10 +456,10 @@ export default function CropDetail() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-6 pb-6 border-b animate-slide-in-down" style={{ animationDelay: '0.2s' }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 pb-6 border-b animate-slide-in-down" style={{ animationDelay: '0.2s' }}>
                     <div>
                       <p className="text-gray-600 text-sm mb-1">PRICE</p>
-                      <p className="text-4xl font-bold text-green-600">₹{cropPrice}/{cropUnit}</p>
+                      <p className="text-3xl sm:text-4xl font-bold text-green-600">₹{cropPrice}/{cropUnit}</p>
                     </div>
                     <div>
                       <p className="text-gray-600 text-sm mb-1">AVAILABLE QTY</p>

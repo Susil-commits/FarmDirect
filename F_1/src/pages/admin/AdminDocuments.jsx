@@ -340,7 +340,7 @@ export default function AdminDocuments() {
 
                     {/* Pagination */}
                     {pagination.pages > 1 && (
-                      <div className="flex justify-center gap-2 mt-8 pt-6 border-t-2 border-gray-200">
+                      <div className="flex flex-wrap justify-center gap-2 mt-8 pt-6 border-t-2 border-gray-200">
                         <button
                           onClick={() => handlePageChange(page - 1)}
                           disabled={page === 1}

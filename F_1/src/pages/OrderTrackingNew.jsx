@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../context/ToastContext';
+import { useRealtime } from '../context/RealtimeContext';
 import { orderService } from '../services/appService';
 import PageTransition from '../components/common/PageTransition';
 import Card from '../components/common/Card';
@@ -26,6 +27,7 @@ export default function OrderTrackingNew() {
   const { navigate } = useRouter();
   const { user } = useAuth();
   const { addToast } = useToast();
+  const { orderEvent } = useRealtime();
 
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -42,6 +44,25 @@ export default function OrderTrackingNew() {
     document.addEventListener('visibilitychange', onVis);
     return () => { clearInterval(interval); document.removeEventListener('visibilitychange', onVis); };
   }, [user]);
+
+  // Live order updates via WebSocket: patch the selected order instantly and
+  // reconcile the list (debounced). Toasts/browser-push are handled centrally
+  // by RealtimeProvider; this just keeps the UI in sync without a full refresh.
+  useEffect(() => {
+    if (!orderEvent) return;
+    setSelectedOrder((prev) => {
+      if (prev && String(prev._id) === String(orderEvent.orderId)) {
+        return {
+          ...prev,
+          orderStatus: orderEvent.orderStatus,
+          updatedAt: orderEvent.updatedAt,
+        };
+      }
+      return prev;
+    });
+    const t = setTimeout(() => fetchOrders(), 400);
+    return () => clearTimeout(t);
+  }, [orderEvent]);
 
   const fetchOrders = async () => {
     try {

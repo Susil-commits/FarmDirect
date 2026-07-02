@@ -291,7 +291,7 @@
     font-size: 0.9rem;
   }
 
-  .flex.gap-4 {
+  .flex.gap-4:not(.items-center):not(.justify-center) {
     flex-direction: column;
     gap: 8px;
   }

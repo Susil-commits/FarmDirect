@@ -1,5 +1,6 @@
 import express from 'express';
 import * as adminController from '../controllers/adminController.js';
+import * as couponController from '../controllers/couponController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -274,6 +275,12 @@ router.delete('/crops/:cropId', adminController.deleteCrop);
 // Orders management
 router.get('/orders', adminController.getAllOrders);
 router.patch('/orders/:orderId/status', adminController.updateOrderStatus);
+
+// Coupons management
+router.get('/coupons', couponController.getAllCoupons);
+router.post('/coupons', couponController.createCoupon);
+router.patch('/coupons/:id', couponController.updateCoupon);
+router.delete('/coupons/:id', couponController.deleteCoupon);
 
 // Announcements
 router.post('/announcements', adminController.sendAnnouncement);

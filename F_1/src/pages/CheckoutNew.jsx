@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../context/ToastContext';
+import { useCart } from '../context/CartContext';
 import { cropService, orderService } from '../services/appService';
 import PageTransition from '../components/common/PageTransition';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
+import CouponInput from '../components/common/CouponInput';
 import ScrollAnimation from '../components/common/ScrollAnimation';
 import PageLoader from '../components/common/PageLoader';
 import {
@@ -19,6 +21,7 @@ export default function CheckoutNew() {
   const { navigate } = useRouter();
   const { user } = useAuth();
   const { addToast } = useToast();
+  const { appliedCoupon } = useCart();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -80,7 +83,8 @@ export default function CheckoutNew() {
         quantity: formData.quantity,
         unitPrice: crop.price,
         totalAmount: total,
-        paymentMethod: 'cod'
+        paymentMethod: 'cod',
+        couponCode: appliedCoupon?.code || undefined,
       });
 
       const createdOrder = result.order;
@@ -248,10 +252,23 @@ export default function CheckoutNew() {
                     <span>Quantity</span>
                     <span>{formData.quantity} kg</span>
                   </div>
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-green-700 mb-2">
+                      <span>Coupon ({appliedCoupon.code})</span>
+                      <span>- ₹{(appliedCoupon.discountAmount || 0).toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-lg font-bold text-gray-900 pt-2 border-t">
                     <span>Total Amount</span>
-                    <span className="text-green-600">₹{total.toLocaleString('en-IN')}</span>
+                    <span className="text-green-600">
+                      ₹{(total - (appliedCoupon?.discountAmount || 0)).toLocaleString('en-IN')}
+                    </span>
                   </div>
+                </div>
+
+                {/* Promo code */}
+                <div className="mb-6">
+                  <CouponInput amount={total} variant="checkout" />
                 </div>
 
                 {/* Payment Method */}

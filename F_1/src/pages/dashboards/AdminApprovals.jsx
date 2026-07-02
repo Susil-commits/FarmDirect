@@ -69,7 +69,7 @@ const DocThumbnail = ({ doc, onPreview, formatFileSize, isImageDoc }) => {
 export default function AdminApprovals() {
   const { user, logout } = useAuth();
   const { navigate } = useRouter();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
   const [roleTab, setRoleTab] = useState('farmers');
   const [statusTab, setStatusTab] = useState('pending');
   const [pendingUsers, setPendingUsers] = useState([]);
@@ -365,8 +365,10 @@ export default function AdminApprovals() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gray-100 flex">
+        {/* Mobile Backdrop */}
+        {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
         {/* Sidebar */}
-        <div className={`fixed lg:static inset-0 lg:inset-auto transition-all duration-300 ${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-blue-700 to-blue-800 text-white flex flex-col z-40`}>
+        <div className={`fixed lg:static inset-y-0 left-0 lg:inset-auto transition-all duration-300 ${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-blue-700 to-blue-800 text-white flex flex-col z-40 ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
           <div className="p-6 border-b border-blue-600">
             <div className="flex items-center justify-between">
               <button
@@ -417,8 +419,9 @@ export default function AdminApprovals() {
           <div className="p-8">
             <div className="max-w-6xl mx-auto">
               <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h1 className="text-4xl font-bold text-gray-900">KYC Approvals</h1>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"><Menu size={24} /></button>
+                  <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">KYC Approvals</h1>
                   <p className="text-gray-600 mt-1">Review and approve pending farmer/buyer registrations</p>
                 </div>
                 <div className="flex gap-3">
@@ -604,7 +607,8 @@ export default function AdminApprovals() {
                       <Card key={userItem._id} className="overflow-hidden hover:shadow-md transition-shadow">
                         {/* Main Row */}
                         <div className="p-5">
-                          <div className="flex items-start gap-4">
+                          <div className="flex flex-col sm:flex-row items-start gap-4">
+                            <div className="flex items-start gap-4 min-w-0 flex-1">
                             {/* Expand Toggle */}
                             <button
                               onClick={() => toggleExpandUser(userItem._id)}
@@ -665,9 +669,10 @@ export default function AdminApprovals() {
                                 </span>
                               </div>
                             </div>
+                            </div>
 
                             {/* Actions */}
-                            <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
                               {statusTab === 'pending' ? (
                                 <>
                                   <button

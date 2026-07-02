@@ -38,6 +38,7 @@ export default function Marketplace() {
     sortBy: 'newest'
   });
   const [crops, setCrops] = useState([]);
+  const [trendingCrops, setTrendingCrops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quickCategory, setQuickCategory] = useState('');
@@ -56,6 +57,10 @@ export default function Marketplace() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    // Fetch trending crops once on mount (independent of active filters)
+    cropService.getTrendingCrops(4).then((res) => {
+      setTrendingCrops(res.crops || res.data?.crops || []);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -97,8 +102,6 @@ export default function Marketplace() {
       default: return (b.id || 0) - (a.id || 0);
     }
   });
-
-  const trendingCrops = [...filteredCrops].sort((a, b) => (b.totalReviews || 0) - (a.totalReviews || 0)).slice(0, 4);
 
   const activeFilterCount = Object.entries(filters).filter(([key, val]) => {
     if (key === 'sortBy') return false;

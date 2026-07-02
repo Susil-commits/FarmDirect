@@ -4,6 +4,7 @@ const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -109,12 +110,31 @@ export function CartProvider({ children }) {
 
   const clearCart = useCallback(() => {
     setCart([]);
+    setAppliedCoupon(null);
     localStorage.removeItem('farm-cart');
+  }, []);
+
+  // ---- Coupon handling ----
+  // appliedCoupon shape: { code, type, value, description, discountAmount }
+  // (discountAmount is computed against the current subtotal at apply time)
+  const applyCoupon = useCallback((coupon) => {
+    setAppliedCoupon(coupon);
+  }, []);
+
+  const removeCoupon = useCallback(() => {
+    setAppliedCoupon(null);
   }, []);
 
   const getTotalPrice = useCallback(() => {
     return cart.reduce((total, item) => total + ((item.price || 0) * (item.quantity || 0)), 0);
   }, [cart]);
+
+  // Subtotal after coupon discount (clamped to >= 0)
+  const getDiscountedTotal = useCallback(() => {
+    const subtotal = getTotalPrice();
+    if (!appliedCoupon) return subtotal;
+    return Math.max(0, subtotal - (appliedCoupon.discountAmount || 0));
+  }, [getTotalPrice, appliedCoupon]);
 
   const getTotalItems = useCallback(() => {
     return cart.reduce((total, item) => total + (item.quantity || 0), 0);
@@ -130,6 +150,10 @@ export function CartProvider({ children }) {
         clearCart,
         getTotalPrice,
         getTotalItems,
+        appliedCoupon,
+        applyCoupon,
+        removeCoupon,
+        getDiscountedTotal,
       }}
     >
       {children}

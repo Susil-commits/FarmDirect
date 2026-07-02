@@ -1,5 +1,7 @@
 import CropListing from '../models/CropListing.js';
 import User from '../models/User.js';
+import Order from '../models/Order.js';
+import Wishlist from '../models/Wishlist.js';
 import Notification from '../models/Notification.js';
 import { notifyCropInterest } from '../socket/eventHandlers.js';
 
@@ -99,9 +101,13 @@ export const getCrops = async (req, res, next) => {
       minPrice,
       maxPrice,
       search,
+      location,
+      rating,
+      certifications,
       page = 1,
       limit = 12,
       sortBy = 'createdAt',
+      sortOrder = 'desc',
     } = req.query;
 
     const query = { status: 'active', availability: 'available' };
@@ -120,6 +126,22 @@ export const getCrops = async (req, res, next) => {
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
+    if (location && location !== 'all') {
+      query.pickupLocation = { $regex: location, $options: 'i' };
+    }
+
+    if (rating) {
+      query.rating = { $gte: Number(rating) };
+    }
+
+    if (certifications) {
+      // Accept comma-separated certifications; require all to be present
+      const certList = certifications.split(',').map((c) => c.trim()).filter(Boolean);
+      if (certList.length > 0) {
+        query.certifications = { $all: certList };
+      }
+    }
+
     if (search) {
       query.$or = [
         { cropName: { $regex: search, $options: 'i' } },
@@ -129,13 +151,15 @@ export const getCrops = async (req, res, next) => {
     }
 
     const skip = (page - 1) * limit;
+    const sortDir = sortOrder === 'asc' ? 1 : -1;
+    const sortOptions = { [sortBy]: sortDir };
 
     const crops = await CropListing.find(query)
       .lean()
       .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
       .skip(skip)
       .limit(Number(limit))
-      .sort({ [sortBy]: -1 });
+      .sort(sortOptions);
 
     const total = await CropListing.countDocuments(query);
 
@@ -147,6 +171,137 @@ export const getCrops = async (req, res, next) => {
         pages: Math.ceil(total / limit),
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @route GET /api/crops/trending
+// @desc Get trending crops (by sold + views + rating)
+// @access Public
+export const getTrendingCrops = async (req, res, next) => {
+  try {
+    const { limit = 8 } = req.query;
+
+    const crops = await CropListing.find({
+      status: 'active',
+      availability: 'available',
+    })
+      .lean()
+      .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
+      .limit(Number(limit))
+      .sort({ sold: -1, views: -1, rating: -1, totalReviews: -1 });
+
+    res.status(200).json({ crops });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @route GET /api/crops/:id/similar
+// @desc Get crops similar to a given crop (same category, exclude self)
+// @access Public
+export const getSimilarCrops = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { limit = 6 } = req.query;
+
+    const crop = await CropListing.findById(id).lean().select('category cropType farmerId');
+    if (!crop) {
+      return res.status(404).json({ message: 'Crop not found' });
+    }
+
+    const similar = await CropListing.find({
+      _id: { $ne: id },
+      status: 'active',
+      availability: 'available',
+      $or: [{ category: crop.category }, { cropType: crop.cropType }],
+    })
+      .lean()
+      .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
+      .limit(Number(limit))
+      .sort({ rating: -1, sold: -1 });
+
+    res.status(200).json({ crops: similar });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @route GET /api/crops/buyer/recommended
+// @desc Get personalized recommendations for a buyer based on order history
+//       + wishlist categories, falling back to trending.
+// @access Private (buyer)
+export const getRecommendedCrops = async (req, res, next) => {
+  try {
+    const { limit = 8 } = req.query;
+    const userId = req.user._id;
+
+    // 1. Gather categories the buyer has ordered or wishlisted
+    const [pastOrders, wishlistItems] = await Promise.all([
+      Order.find({ buyerId: userId })
+        .lean()
+        .populate('cropId', 'category')
+        .select('cropId')
+        .limit(50),
+      Wishlist.find({ userId }).lean().populate('cropId', 'category').select('cropId').limit(50),
+    ]);
+
+    const preferredCategories = [
+      ...pastOrders.map((o) => o.cropId?.category),
+      ...wishlistItems.map((w) => w.cropId?.category),
+    ].filter(Boolean);
+
+    const uniqueCategories = [...new Set(preferredCategories.map(String))];
+
+    let recommended = [];
+
+    // 2. If we have preferences, find available crops in those categories the
+    //    buyer hasn't already purchased
+    if (uniqueCategories.length > 0) {
+      const purchasedCropIds = pastOrders
+        .map((o) => o.cropId?._id)
+        .filter(Boolean)
+        .map(String);
+
+      const excludeIds = purchasedCropIds.length
+        ? purchasedCropIds.map((id) => id)
+        : [];
+
+      const q = {
+        status: 'active',
+        availability: 'available',
+        category: { $in: uniqueCategories },
+      };
+      if (excludeIds.length) {
+        q._id = { $nin: excludeIds };
+      }
+
+      recommended = await CropListing.find(q)
+        .lean()
+        .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
+        .limit(Number(limit))
+        .sort({ rating: -1, sold: -1, views: -1 });
+    }
+
+    // 3. Fall back to trending if preferences yielded too few results
+    if (recommended.length < Number(limit)) {
+      const needed = Number(limit) - recommended.length;
+      const existingIds = recommended.map((c) => String(c._id));
+      const fallback = await CropListing.find({
+        status: 'active',
+        availability: 'available',
+        _id: existingIds.length ? { $nin: existingIds } : { $exists: true },
+      })
+        .lean()
+        .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
+        .limit(needed)
+        .sort({ sold: -1, views: -1, rating: -1 });
+
+      recommended = [...recommended, ...fallback];
+    }
+
+    res.status(200).json({ crops: recommended });
   } catch (error) {
     next(error);
   }

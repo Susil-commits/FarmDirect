@@ -229,7 +229,7 @@ export default function FarmerVerification() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Farmer Account Verification</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Farmer Account Verification</h1>
           <p className="text-gray-600">Complete your profile verification to start selling on FarmDirect</p>
         </div>
 
@@ -364,15 +364,15 @@ export default function FarmerVerification() {
 
                 {documents[doc.id].file || documents[doc.id].status === 'submitted' ? (
                   <div className={`bg-white rounded-lg p-4 border-2 mb-4 ${documents[doc.id].status === 'submitted' ? 'border-blue-200' : 'border-green-200'}`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
                         {documents[doc.id].status === 'submitted' ? (
-                          <Clock className="w-5 h-5 text-blue-600" />
+                          <Clock className="w-5 h-5 text-blue-600 flex-shrink-0" />
                         ) : (
-                          <CheckCircle className="w-5 h-5 text-green-600" />
+                          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
                         )}
-                        <div>
-                          <p className="font-medium text-gray-900">{documents[doc.id].fileName}</p>
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 break-all">{documents[doc.id].fileName}</p>
                           <p className="text-xs text-gray-500">
                             {documents[doc.id].status === 'submitted' ? 'Already submitted — under review' : 'Ready for verification'}
                           </p>

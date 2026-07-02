@@ -122,7 +122,7 @@ export default function ProductComparison() {
           {/* Comparison Table */}
           {comparisonData && (
             <div className="bg-white rounded-lg shadow overflow-hidden mb-8">
-              <div className="flex justify-between items-center p-6 border-b bg-gray-50">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 p-6 border-b bg-gray-50">
                 <h2 className="text-lg font-semibold text-gray-900">Comparison Results</h2>
                 <div className="flex gap-2">
                   <button

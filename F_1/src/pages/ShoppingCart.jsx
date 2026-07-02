@@ -7,11 +7,12 @@ import { useAuth } from '../context/AuthContext';
 import { orderService } from '../services/appService';
 import PageTransition from '../components/common/PageTransition.jsx';
 import Button from '../components/common/Button';
+import CouponInput from '../components/common/CouponInput';
 import '../styles/ShoppingCart.css';
 import { getImageUrl } from '../utils/formatters';
 
 export default function ShoppingCart() {
-  const { cart, removeFromCart, updateQuantity, clearCart, getTotalPrice } = useCart();
+  const { cart, removeFromCart, updateQuantity, clearCart, getTotalPrice, appliedCoupon, getDiscountedTotal } = useCart();
   const { navigate } = useRouter();
   const { addToast } = useToast();
   const { isAuthenticated, user } = useAuth();
@@ -78,6 +79,9 @@ export default function ShoppingCart() {
             unitPrice: item.price,
             totalAmount: (item.price * (item.quantity || 1)),
             paymentMethod: 'cod',
+            // Pass the coupon code; backend re-validates + recomputes the discount
+            // per-item (server is source of truth).
+            couponCode: appliedCoupon?.code || undefined,
           };
           // api.js interceptor unwraps to response.data, so result = { message, order }
           const result = await orderService.createOrder(orderData);
@@ -120,9 +124,10 @@ export default function ShoppingCart() {
   };
 
   const totalPrice = getTotalPrice();
+  const couponDiscount = appliedCoupon?.discountAmount || 0;
   const discountPercent = cart.length >= 3 ? 10 : cart.length >= 2 ? 5 : 0;
   const discountAmount = (totalPrice * discountPercent) / 100;
-  const finalTotal = totalPrice - discountAmount;
+  const finalTotal = Math.max(0, totalPrice - discountAmount - couponDiscount);
   const taxAmount = (finalTotal * 5) / 100;
   const grandTotal = finalTotal + taxAmount;
   const deliveryCharge = grandTotal >= 500 ? 0 : 40;
@@ -219,6 +224,21 @@ export default function ShoppingCart() {
                     <span>₹{totalPrice.toFixed(2)}</span>
                   </div>
 
+                  {/* Promo code */}
+                  <div className="cart-coupon-section">
+                    <CouponInput amount={totalPrice} />
+                  </div>
+
+                  {appliedCoupon && (
+                    <div className="cart-summary-row cart-summary-discount">
+                      <span>
+                        <span className="cart-discount-badge">{appliedCoupon.code}</span>
+                        Coupon discount
+                      </span>
+                      <span>- ₹{appliedCoupon.discountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+
                   {discountPercent > 0 && (
                     <div className="cart-summary-row cart-summary-discount">
                       <span>
@@ -233,7 +253,7 @@ export default function ShoppingCart() {
 
                   <div className="cart-summary-row">
                     <span>Subtotal after discount</span>
-                    <span>₹{finalTotal.toFixed(2)}</span>
+                    <span>₹{(finalTotal - (appliedCoupon?.discountAmount || 0)).toFixed(2)}</span>
                   </div>
 
                   <div className="cart-summary-row cart-summary-tax">

@@ -63,7 +63,7 @@ export default function KYCSorry() {
           {/* Main Card */}
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
             {/* Top Banner */}
-            <div className="bg-gradient-to-r from-red-500 to-rose-600 px-8 py-12 text-center">
+            <div className="bg-gradient-to-r from-red-500 to-rose-600 px-5 sm:px-8 py-10 sm:py-12 text-center">
               <div className="inline-flex items-center justify-center w-24 h-24 bg-white/20 rounded-full mb-6 backdrop-blur-sm">
                 <XCircle size={56} className="text-white" />
               </div>
@@ -76,7 +76,7 @@ export default function KYCSorry() {
             </div>
 
             {/* Content */}
-            <div className="px-8 py-10">
+            <div className="px-5 sm:px-8 py-8 sm:py-10">
               {/* Rejection Reason */}
               <div className="bg-gradient-to-r from-red-50 to-rose-50 rounded-2xl p-6 mb-8 border border-red-100">
                 <div className="flex items-start gap-4">
@@ -165,7 +165,7 @@ export default function KYCSorry() {
                 This action is permanent and cannot be undone. All your data, including documents, orders, and listings will be permanently deleted.
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={deleting}

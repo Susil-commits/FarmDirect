@@ -12,6 +12,13 @@
   animation: slideInUp 0.3s ease;
 }
 
+/* Chat panel wrapper (takes remaining width on desktop) */
+.chat-panel-wrapper {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
 /* ---------- Sidebar ---------- */
 .chat-sidebar {
   width: 380px;
@@ -616,8 +623,16 @@
   right: auto;
 }
 
-.message-wrapper:hover .message-actions {
+.message-wrapper:hover .message-actions,
+.message-wrapper:focus-within .message-actions {
   display: flex;
+}
+
+/* Touch devices have no reliable hover — keep message actions reachable */
+@media (hover: none) {
+  .message-wrapper .message-actions {
+    display: flex;
+  }
 }
 
 .message-action-btn {
@@ -721,7 +736,7 @@
 /* ---------- Mobile Styles ---------- */
 @media (max-width: 768px) {
   .messages-page {
-    height: calc(100vh - 3.5rem);
+    height: calc(100vh - 4rem);
   }
 
   .chat-sidebar {
@@ -744,6 +759,10 @@
   }
 
   .chat-panel.hidden-on-mobile {
+    display: none;
+  }
+
+  .chat-panel-wrapper.hidden-on-mobile {
     display: none;
   }
 
@@ -775,7 +794,7 @@
 
 @media (max-width: 480px) {
   .messages-page {
-    height: calc(100vh - 3rem);
+    height: calc(100vh - 4rem);
   }
 
   .message-bubble {

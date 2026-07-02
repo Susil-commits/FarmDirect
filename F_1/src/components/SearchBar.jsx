@@ -55,7 +55,7 @@ export default function SearchBar() {
 
   const handleSearch = (searchTerm) => {
     addToRecentSearches(searchTerm);
-    navigate(`/marketplace?search=${encodeURIComponent(searchTerm)}`);
+    navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
     setIsOpen(false);
     clearQuery();
   };

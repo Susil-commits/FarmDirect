@@ -23,7 +23,7 @@ export default function PendingVerification() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center py-12 px-4">
         <div className="max-w-md w-full">
           <Card className="border-2 border-blue-200">
-            <div className="p-10 text-center">
+            <div className="p-6 sm:p-10 text-center">
               {/* Icon */}
               <div className="flex justify-center mb-6">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">

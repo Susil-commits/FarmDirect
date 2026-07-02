@@ -219,9 +219,9 @@ export default function UserProfile() {
             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white rounded-full filter blur-3xl"></div>
           </div>
           <div className="relative h-full flex items-center px-6 md:px-12">
-            <div className="flex items-center gap-8">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
               <div className="relative">
-                <div className="w-32 h-32 rounded-2xl bg-white shadow-2xl p-2 ring-4 ring-white">
+                <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-2xl bg-white shadow-2xl p-2 ring-4 ring-white">
                   <Avatar user={user} size="xl" className="w-full h-full" />
                 </div>
                 {isEditing && (
@@ -231,8 +231,8 @@ export default function UserProfile() {
                   </label>
                 )}
               </div>
-              <div className="text-white">
-                <h1 className="text-4xl font-bold">{user?.name || 'User'}</h1>
+              <div className="text-white min-w-0 text-center sm:text-left">
+                <h1 className="text-2xl sm:text-4xl font-bold break-words">{user?.name || 'User'}</h1>
                 <div className="flex items-center gap-3 mt-3">
                   <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold backdrop-blur-sm ${user?.role === 'farmer' ? 'bg-green-400/30 text-green-100' : 'bg-blue-400/30 text-blue-100'}`}>
                     {user?.role?.toUpperCase() || 'BUYER'}
@@ -452,7 +452,7 @@ export default function UserProfile() {
                   <div className="space-y-4">
                     <input type="text" placeholder="Label (e.g. Home, Office)" value={newAddress.label} onChange={e => setNewAddress({ ...newAddress, label: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-4 focus:ring-green-200 text-sm" />
                     <input type="text" placeholder="Street Address *" value={newAddress.street} onChange={e => setNewAddress({ ...newAddress, street: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-4 focus:ring-green-200 text-sm" />
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <input type="text" placeholder="City *" value={newAddress.city} onChange={e => setNewAddress({ ...newAddress, city: e.target.value })} className="px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-4 focus:ring-green-200 text-sm" />
                       <input type="text" placeholder="State *" value={newAddress.state} onChange={e => setNewAddress({ ...newAddress, state: e.target.value })} className="px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-4 focus:ring-green-200 text-sm" />
                       <input type="text" placeholder="Pincode" value={newAddress.pincode} onChange={e => setNewAddress({ ...newAddress, pincode: e.target.value })} className="px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-4 focus:ring-green-200 text-sm" />

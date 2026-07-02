@@ -121,7 +121,7 @@ export default function AdminManagement() {
   const { user, logout } = useAuth();
   const { navigate } = useRouter();
   const { addToast } = useToast();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
   const [activeTab, setActiveTab] = useState('farmers');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -402,8 +402,10 @@ export default function AdminManagement() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50 flex">
+        {/* Mobile Backdrop */}
+        {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
         {/* ─── Sidebar ─── */}
-        <aside className={`fixed lg:static inset-y-0 left-0 transition-all duration-300 z-40 ${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-purple-700 via-purple-800 to-indigo-900 text-white flex flex-col shadow-2xl`}>
+        <aside className={`fixed lg:static inset-y-0 left-0 transition-all duration-300 z-40 ${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-purple-700 via-purple-800 to-indigo-900 text-white flex flex-col shadow-2xl ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
           <div className="p-6 border-b border-purple-600/50">
             <div className="flex items-center justify-between">
               <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-1 hover:bg-purple-600 rounded">
@@ -458,8 +460,9 @@ export default function AdminManagement() {
             <div className="max-w-7xl mx-auto">
               {/* ─── Header ─── */}
               <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h1 className="text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight">
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"><Menu size={24} /></button>
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight">
                     User Management
                   </h1>
                   <p className="text-gray-500 mt-1 text-sm">
@@ -616,7 +619,8 @@ export default function AdminManagement() {
                       >
                         {/* ─── Main Row ─── */}
                         <div className="p-5">
-                          <div className="flex items-start gap-4">
+                          <div className="flex flex-col sm:flex-row items-start gap-4">
+                            <div className="flex items-start gap-4 min-w-0 flex-1">
                             {/* Expand Toggle */}
                             <button
                               onClick={() => toggleExpandUser(userItem._id)}
@@ -685,9 +689,10 @@ export default function AdminManagement() {
                                 )}
                               </div>
                             </div>
+                            </div>
 
                             {/* Actions */}
-                            <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
                               {activeTab === 'suspended' ? (
                                 <>
                                   <button

@@ -44,11 +44,23 @@ export default function SearchResults() {
     const query = localStorage.getItem('searchQuery') || params?.q || '';
     if (query) {
       setSearchQuery(query);
-      performSearch(query);
+      performSearch(query, filters);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const performSearch = async (query) => {
+  // Map UI sort values → backend sortBy + sortOrder params
+  const mapSort = (sortBy) => {
+    switch (sortBy) {
+      case 'price-asc': return { sortBy: 'price', sortOrder: 'asc' };
+      case 'price-desc': return { sortBy: 'price', sortOrder: 'desc' };
+      case 'rating': return { sortBy: 'rating', sortOrder: 'desc' };
+      case 'newest': return { sortBy: 'createdAt', sortOrder: 'desc' };
+      default: return { sortBy: 'sold', sortOrder: 'desc' }; // popular
+    }
+  };
+
+  const performSearch = async (query, filterValues = filters) => {
     if (!query.trim()) {
       addToast('Please enter a search term', 'error');
       return;
@@ -56,10 +68,31 @@ export default function SearchResults() {
 
     try {
       setLoading(true);
-      const data = await cropService.searchCrops(query, { limit: 50 });
-      const crops = data.data || [];
+      const { sortBy, sortOrder } = mapSort(filterValues.sortBy);
+
+      const params = {
+        search: query,
+        page: 1,
+        limit: 100,
+        sortBy,
+        sortOrder,
+      };
+
+      if (filterValues.category !== 'all') params.category = filterValues.category;
+      if (filterValues.rating > 0) params.rating = filterValues.rating;
+      if (filterValues.location !== 'all') params.location = filterValues.location;
+
+      if (filterValues.priceRange !== 'all') {
+        const [min, max] = filterValues.priceRange.split('-').map(Number);
+        params.minPrice = min;
+        if (max < 9999) params.maxPrice = max;
+      }
+
+      const data = await cropService.getAllCrops(params);
+      const crops = data.crops || data.data?.crops || [];
       setResults(crops);
-      applyFilters(crops);
+      setFilteredResults(crops);
+      setPage(1);
       localStorage.setItem('searchQuery', query);
     } catch (error) {
       console.error('Search error:', error);
@@ -69,54 +102,15 @@ export default function SearchResults() {
     }
   };
 
-  const applyFilters = (crops = results, filterValues = filters) => {
-    let filtered = [...crops];
-
-    if (filterValues.category !== 'all') {
-      filtered = filtered.filter(c => c.category === filterValues.category);
-    }
-
-    if (filterValues.priceRange !== 'all') {
-      const [min, max] = filterValues.priceRange.split('-').map(Number);
-      filtered = filtered.filter(c => c.price >= min && c.price <= max);
-    }
-
-    if (filterValues.rating > 0) {
-      filtered = filtered.filter(c => (c.rating || 0) >= filterValues.rating);
-    }
-
-    if (filterValues.location !== 'all') {
-      filtered = filtered.filter(c => c.farmerId?.location === filterValues.location);
-    }
-
-    switch (filterValues.sortBy) {
-      case 'price-asc':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-desc':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case 'rating':
-        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-        break;
-      case 'newest':
-        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        break;
-      default:
-        filtered.sort((a, b) => (b.reviews?.length || 0) - (a.reviews?.length || 0));
-    }
-
-    setFilteredResults(filtered);
-  };
-
   const handleFilterChange = (filterName, value) => {
     const newFilters = { ...filters, [filterName]: value };
     setFilters(newFilters);
     setPage(1);
-    applyFilters(results, newFilters);
+    // Re-fetch from the backend with updated filters (server-side filtering/sorting)
+    performSearch(searchQuery, newFilters);
   };
 
-  const categories = ['all', 'vegetables', 'fruits', 'grains', 'dairy', 'meat'];
+  const categories = ['all', 'vegetables', 'fruits', 'grains', 'pulses', 'spices', 'dairy', 'meat', 'seeds', 'herbs', 'other'];
   const priceRanges = [
     { label: 'All Prices', value: 'all' },
     { label: '₹0 - ₹100', value: '0-100' },
@@ -342,12 +336,12 @@ export default function SearchResults() {
                           </div>
 
                           {/* Price & Actions */}
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div>
                               <p className="text-xs text-gray-600">Price per kg</p>
                               <p className="text-2xl font-bold text-green-600">₹{crop.price}</p>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2">
                               <Button
                                 onClick={() => navigate(`/crop/${crop._id}`)}
                                 variant="outline"
@@ -382,7 +376,7 @@ export default function SearchResults() {
           {/* Pagination */}
           {filteredResults.length > resultsPerPage && (
             <ScrollAnimation className="scroll-slide mt-12">
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 <Button
                   variant="outline"
                   onClick={() => setPage(p => Math.max(1, p - 1))}
