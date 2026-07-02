@@ -101,7 +101,7 @@ export default function JoinAsFarmer() {
           <div className="max-w-6xl mx-auto relative z-10">
             <ScrollAnimation className="scroll-slide mb-12">
               <div className="text-center">
-                <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight animate-slide-in-down">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight animate-slide-in-down">
                   Grow Your Farm Business <span className="text-green-600">Direct</span>
                 </h1>
                 <p className="text-xl text-gray-700 mb-8 max-w-2xl mx-auto animate-slide-in-down" style={{ animationDelay: '0.1s' }}>

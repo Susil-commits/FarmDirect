@@ -36,6 +36,22 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       required: true
     },
+    // Coupon / discount tracking
+    originalAmount: {
+      type: Number,
+      default: 0,
+    },
+    discountAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    couponCode: {
+      type: String,
+      default: null,
+      trim: true,
+      uppercase: true,
+    },
     // Pickup location (from crop listing)
     pickupLocation: String,
     // Farmer's contact number

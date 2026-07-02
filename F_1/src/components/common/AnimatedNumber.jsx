@@ -22,7 +22,11 @@ export default function AnimatedNumber({
   suffix = '',
   prefix = '',
   animateOnVisible = false,
+  placeholder = '--',
 }) {
+  // While the real value is unknown (loading / failed), show a placeholder
+  // instead of animating from 0.
+  const isPlaceholder = value === null || value === undefined || Number.isNaN(value);
   const [displayValue, setDisplayValue] = useState(0);
   const [isVisible, setIsVisible] = useState(!animateOnVisible);
   const [elementId] = useState(() => {
@@ -31,7 +35,7 @@ export default function AnimatedNumber({
   });
 
   useEffect(() => {
-    if (!isVisible) return;
+    if (isPlaceholder || !isVisible) return;
 
     const startTime = Date.now();
     const startValue = 0;
@@ -54,7 +58,7 @@ export default function AnimatedNumber({
     }, 16); // ~60fps
 
     return () => clearInterval(timer);
-  }, [value, duration, decimals, isVisible]);
+  }, [value, duration, decimals, isVisible, isPlaceholder]);
 
   useEffect(() => {
     if (!animateOnVisible) return;
@@ -76,6 +80,14 @@ export default function AnimatedNumber({
 
     return () => observer.disconnect();
   }, [elementId, animateOnVisible]);
+
+  if (isPlaceholder) {
+    return (
+      <span id={elementId} className={className}>
+        {placeholder}
+      </span>
+    );
+  }
 
   const formattedValue = format
     ? format(displayValue)

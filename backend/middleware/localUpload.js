@@ -1,5 +1,6 @@
 import multer from 'multer';
 import { saveToLocalStorage } from '../config/localStorage.js';
+import { uploadFile } from '../utils/cloudinaryService.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
 // Configure multer to store files in memory (buffer) for processing
@@ -58,7 +59,7 @@ export const uploadSingleFile = (folder = 'general') => {
       }
 
       try {
-        const result = saveToLocalStorage(
+        const result = await uploadFile(
           req.file.buffer,
           req.file.originalname,
           folder
@@ -117,8 +118,8 @@ export const uploadMultipleFiles = (folder = 'general', maxFiles = 5) => {
       }
 
       try {
-        const results = req.files.map(file =>
-          saveToLocalStorage(file.buffer, file.originalname, folder)
+        const results = await Promise.all(
+          req.files.map(file => uploadFile(file.buffer, file.originalname, folder))
         );
 
         req.uploadedFiles = results.map((result, index) => ({

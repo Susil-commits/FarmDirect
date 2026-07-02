@@ -64,7 +64,7 @@ export default function Support() {
             <h2 className="text-3xl font-bold text-gray-900 mb-8">Frequently Asked Questions</h2>
 
             {/* Category Tabs */}
-            <div className="flex gap-4 mb-8 border-b">
+            <div className="flex flex-wrap gap-2 sm:gap-4 mb-8 border-b">
               {Object.keys(faqs).map(category => (
                 <button
                   key={category}

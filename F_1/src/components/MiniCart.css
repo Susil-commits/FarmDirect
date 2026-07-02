@@ -245,9 +245,10 @@
 
 @media (max-width: 640px) {
   .mini-cart-dropdown {
-    width: 100vw;
-    right: -16px;
-    max-width: 100vw;
+    width: 100%;
+    right: 0;
+    left: 0;
+    max-width: 100%;
     border-radius: 0;
   }
 
@@ -273,9 +274,10 @@
 
 @media (max-width: 480px) {
   .mini-cart-dropdown {
-    width: 100vw;
-    right: -16px;
-    max-width: 100vw;
+    width: 100%;
+    right: 0;
+    left: 0;
+    max-width: 100%;
     border-radius: 0;
   }
 

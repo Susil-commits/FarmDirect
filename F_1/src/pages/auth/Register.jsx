@@ -214,7 +214,7 @@ export default function Register() {
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center py-12 px-4 relative">
         <div className="absolute inset-0 premium-gradient"></div>
         <Card variant="deep" animated={false} className="w-full max-w-md animate-scale-in relative z-10 bg-white/20 backdrop-blur-lg border border-white/10 shadow-2xl">
-          <div className="p-10">
+          <div className="p-6 sm:p-10">
             {/* Back Button */}
             <div className="mb-6">
               <BackButton label="Go Back" />
@@ -269,7 +269,7 @@ export default function Register() {
 
             {/* Form */}
             <form ref={formRef} onSubmit={handleSubmit} autoComplete="off" className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
                   label="First Name"
                   name="firstName"
@@ -362,7 +362,7 @@ export default function Register() {
                       autoComplete="street-address"
                       placeholder="House/Flat No., Street, Area"
                     />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input
                         label="City"
                         name="city"

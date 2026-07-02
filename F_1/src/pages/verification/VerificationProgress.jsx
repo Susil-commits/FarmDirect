@@ -459,7 +459,7 @@ export default function VerificationProgress() {
                 <Clock className="w-8 h-8 text-white" />
               </div>
             </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-3">Account Verification</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">Account Verification</h1>
             <p className="text-gray-600 text-lg">
               {user?.role === 'farmer'
                 ? 'Complete your farmer verification to access the platform and start selling crops'
@@ -860,7 +860,7 @@ export default function VerificationProgress() {
                 </Card>
 
                 {/* Submit Button */}
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                   <Button
                     type="submit"
                     variant="primary"

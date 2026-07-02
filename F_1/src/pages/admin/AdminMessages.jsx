@@ -190,11 +190,11 @@ export default function AdminMessages() {
     return msgDate.toLocaleDateString('en-IN');
   };
 
-  const getRoleBadgeColor = (role) => {
-    if (!role) return 'gray';
-    if (role.toLowerCase() === 'farmer') return 'green';
-    if (role.toLowerCase() === 'buyer') return 'blue';
-    return 'gray';
+  const getRoleBadgeClasses = (role) => {
+    const r = (role || '').toLowerCase();
+    if (r === 'farmer') return { badge: 'bg-green-500', text: 'text-green-600', chip: 'bg-green-100' };
+    if (r === 'buyer') return { badge: 'bg-blue-500', text: 'text-blue-600', chip: 'bg-blue-100' };
+    return { badge: 'bg-gray-500', text: 'text-gray-600', chip: 'bg-gray-100' };
   };
 
   // LIST VIEW
@@ -369,7 +369,7 @@ export default function AdminMessages() {
                             <Mail size={16} className="text-gray-400 flex-shrink-0" />
                             <span className="text-sm text-gray-600 truncate">{conversation.otherUser?.email}</span>
                             
-                            <span className={`inline-block px-2 py-1 rounded text-xs font-semibold text-white bg-${getRoleBadgeColor(conversation.otherUser?.role)}-500 ml-auto flex-shrink-0`}>
+                            <span className={`inline-block px-2 py-1 rounded text-xs font-semibold text-white ${getRoleBadgeClasses(conversation.otherUser?.role).badge} ml-auto flex-shrink-0`}>
                               {conversation.otherUser?.role || 'User'}
                             </span>
                           </div>
@@ -423,7 +423,7 @@ export default function AdminMessages() {
                     {selectedConversation.otherUser?.firstName} {selectedConversation.otherUser?.lastName}
                   </h2>
                   <p className="text-emerald-100 text-sm flex items-center gap-2">
-                    <span className={`inline-block px-2 py-1 rounded text-xs font-semibold bg-white text-${getRoleBadgeColor(selectedConversation.otherUser?.role)}-600`}>
+                    <span className={`inline-block px-2 py-1 rounded text-xs font-semibold bg-white ${getRoleBadgeClasses(selectedConversation.otherUser?.role).text}`}>
                       {selectedConversation.otherUser?.role}
                     </span>
                   </p>
@@ -461,7 +461,7 @@ export default function AdminMessages() {
                 </div>
                 <div>
                   <p className="text-gray-600 text-sm font-semibold">Role</p>
-                  <p className={`text-gray-900 font-bold capitalize bg-${getRoleBadgeColor(selectedConversation.otherUser?.role)}-100 px-3 py-1 rounded w-fit`}>
+                  <p className={`text-gray-900 font-bold capitalize ${getRoleBadgeClasses(selectedConversation.otherUser?.role).chip} px-3 py-1 rounded w-fit`}>
                     {selectedConversation.otherUser?.role}
                   </p>
                 </div>

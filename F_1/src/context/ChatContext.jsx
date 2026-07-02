@@ -1,6 +1,7 @@
-import { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
 import messageService from '../services/messageService';
 import { AuthContext } from './AuthContext';
+import { useSocket } from './SocketContext';
 
 const ChatContext = createContext();
 
@@ -181,6 +182,74 @@ export function ChatProvider({ children }) {
   const { user } = useContext(AuthContext);
   const isAuthenticated = Boolean(user);
 
+  // ---- Real-time delivery via WebSocket (instant incoming messages) ----
+  // The backend emits `message:new` to the receiver. We append instantly to the
+  // open chat for a snappy UI, and bump unread / refresh the list otherwise.
+  // The 30s polling below stays as a fallback for when the socket drops.
+  const { subscribe: subscribeSocket, connected: socketConnected } = useSocket();
+
+  // Normalize a sparse socket payload into the shape ChatBubble expects
+  // (senderId must be an object with _id; ChatBubble guards on !message.senderId).
+  const normalizeSocketMessage = useCallback(
+    (msg) => ({
+      _id: msg.id,
+      senderId: { _id: msg.senderId },
+      receiverId: { _id: user?._id },
+      content: msg.content,
+      type: msg.type || 'text',
+      isRead: false,
+      createdAt: msg.createdAt,
+      conversationId: msg.conversationId,
+      cropId: msg.cropId || null,
+      orderId: msg.orderId || null,
+    }),
+    [user?._id]
+  );
+
+  // Debounced refresh of the conversation list + unread count when messages
+  // arrive in chats that aren't currently open.
+  const convRefreshTimer = useRef(null);
+  const scheduleConversationRefresh = useCallback(() => {
+    if (convRefreshTimer.current) clearTimeout(convRefreshTimer.current);
+    convRefreshTimer.current = setTimeout(() => {
+      fetchConversations();
+      fetchUnreadCount();
+    }, 1500);
+  }, [fetchConversations, fetchUnreadCount]);
+
+  useEffect(() => {
+    if (!socketConnected || !isAuthenticated) return;
+
+    const unsub = subscribeSocket('message:new', (msg) => {
+      if (!msg || !msg.id) return;
+      const incomingSenderId = String(msg.senderId);
+
+      if (currentChat && incomingSenderId === String(currentChat)) {
+        // Active conversation → append instantly, dedupe by id
+        setMessages((prev) => {
+          if (prev.some((m) => m._id === msg.id)) return prev;
+          lastMessageIdRef.current = msg.id;
+          return [...prev, normalizeSocketMessage(msg)];
+        });
+        // Best-effort: tell the server we've seen it (no UI churn)
+        messageService.markConversationAsRead(currentChat).catch(() => {});
+      } else {
+        // Other conversation → bump unread + refresh list (debounced)
+        setUnreadCount((prev) => prev + 1);
+        scheduleConversationRefresh();
+      }
+    });
+
+    return () => unsub();
+  }, [
+    socketConnected,
+    isAuthenticated,
+    currentChat,
+    subscribeSocket,
+    normalizeSocketMessage,
+    scheduleConversationRefresh,
+  ]);
+
   // Clear currentChat on logout to prevent stale IDs from triggering 401 polls
   useEffect(() => {
     if (!isAuthenticated) {
@@ -229,8 +298,20 @@ export function ChatProvider({ children }) {
         if (serverMessages.length > 0) {
           const lastServerId = serverMessages[serverMessages.length - 1]._id;
           if (lastServerId !== lastMessageIdRef.current) {
-            // New messages arrived — update with full server state
-            setMessages(serverMessages);
+            // Merge: keep any locally-appended (not-yet-replicated) messages from
+            // the real-time socket, then add server messages we don't have yet,
+            // sorted chronologically. Avoids clobbering instant appends on lag.
+            setMessages((prev) => {
+              const localIds = new Set(prev.map((m) => m._id));
+              const merged = [
+                ...prev,
+                ...serverMessages.filter((m) => !localIds.has(m._id)),
+              ];
+              merged.sort(
+                (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+              );
+              return merged;
+            });
             lastMessageIdRef.current = lastServerId;
             // Refresh conversations too (unread counts may have changed)
             fetchConversations();

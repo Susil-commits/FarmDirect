@@ -44,6 +44,7 @@ export default function BuyerDashboardNew() {
   const [orders, setOrders] = useState([]);
   const [interestedCrops, setInterestedCrops] = useState([]);
   const [wishlist, setWishlist] = useState([]);
+  const [recommendedCrops, setRecommendedCrops] = useState([]);
   const [stats, setStats] = useState({
     totalOrders: 0,
     interestedCount: 0,
@@ -70,10 +71,11 @@ export default function BuyerDashboardNew() {
   const fetchBuyerData = async () => {
     try {
       setLoading(true);
-      const [ordersData, interestedData, wishlistData] = await Promise.all([
+      const [ordersData, interestedData, wishlistData, recommendedData] = await Promise.all([
         orderService.getOrders(),
         cropService.getMyInterestedCrops(),
-        wishlistService.getWishlist()
+        wishlistService.getWishlist(),
+        cropService.getRecommendedCrops(8).catch(() => ({ crops: [] })),
       ]);
 
       const allOrders = ordersData.orders || ordersData.data || [];
@@ -81,6 +83,9 @@ export default function BuyerDashboardNew() {
 
       const interestedItems = interestedData.crops || interestedData.data || [];
       setInterestedCrops(interestedItems);
+
+      const recommendedItems = recommendedData.crops || recommendedData.data || [];
+      setRecommendedCrops(recommendedItems);
 
       const activeOrders = allOrders.filter(o =>
         !['completed', 'cancelled'].includes(o.orderStatus)
@@ -387,6 +392,61 @@ export default function BuyerDashboardNew() {
                   </div>
                 </Card>
               )}
+
+              {/* Recommended for You */}
+              {recommendedCrops.length > 0 && (
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <ThumbsUp className="w-5 h-5 text-green-600" /> Recommended for You
+                    </h3>
+                    <button
+                      onClick={() => navigate('/marketplace')}
+                      className="text-sm text-blue-600 font-semibold flex items-center gap-1 hover:text-blue-700"
+                    >
+                      View all <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {recommendedCrops.slice(0, 8).map(crop => (
+                      <div
+                        key={crop._id || crop.id}
+                        onClick={() => navigate(`/crop/${crop._id || crop.id}`)}
+                        className="group cursor-pointer bg-gray-50 rounded-xl overflow-hidden hover:shadow-lg transition border border-gray-100"
+                      >
+                        <div className="relative h-28 bg-gradient-to-br from-green-100 to-emerald-100 overflow-hidden">
+                          {crop.images?.[0] ? (
+                            <img
+                              src={getImageUrl(crop.images[0])}
+                              alt={crop.cropName}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Leaf className="w-10 h-10 text-green-400" />
+                            </div>
+                          )}
+                          {crop.rating > 0 && (
+                            <span className="absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-sm rounded-full px-1.5 py-0.5 text-xs font-bold text-gray-700 flex items-center gap-0.5">
+                              <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                              {crop.rating.toFixed(1)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="p-3">
+                          <p className="font-semibold text-gray-900 text-sm truncate">{crop.cropName}</p>
+                          <p className="text-sm text-green-600 font-bold">₹{crop.price}/{crop.unit || 'kg'}</p>
+                          {crop.pickupLocation && (
+                            <p className="text-xs text-gray-400 flex items-center gap-0.5 mt-1 truncate">
+                              <MapPin className="w-3 h-3" /> {crop.pickupLocation}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
             </ScrollAnimation>
           )}
 
@@ -499,11 +559,11 @@ export default function BuyerDashboardNew() {
                       </div>
 
                       {/* Current Status Badge */}
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <span className={`inline-block px-3 py-1 rounded text-xs font-semibold ${STATUS_COLORS[order.orderStatus] || 'bg-gray-100 text-gray-800'}`}>
                           {STATUS_LABELS[order.orderStatus] || order.orderStatus}
                         </span>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           {/* Cancel with Reason - available for all active orders */}
                           <Button
                             onClick={() => handleCancelWithReason(order)}

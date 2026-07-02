@@ -2,7 +2,9 @@ import Order from '../models/Order.js';
 import CropListing from '../models/CropListing.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
+import Coupon from '../models/Coupon.js';
 import { notifyOrderUpdate } from '../socket/eventHandlers.js';
+import { computeDiscount, redeemCoupon } from './couponController.js';
 
 // @route POST /api/orders/start
 // @desc Farmer starts an order for an interested buyer
@@ -142,7 +144,7 @@ export const startOrder = async (req, res, next) => {
 // @access Private
 export const createOrder = async (req, res, next) => {
   try {
-    const { cropId, quantity } = req.body;
+    const { cropId, quantity, couponCode } = req.body;
 
     if (!cropId) {
       return res.status(400).json({ message: 'Crop ID is required' });
@@ -173,7 +175,54 @@ export const createOrder = async (req, res, next) => {
     }
 
     const orderQty = quantity || 1;
-    const totalAmount = crop.price * orderQty;
+    const baseAmount = crop.price * orderQty;
+
+    // ---- Coupon validation + discount (server is source of truth) ----
+    let discountAmount = 0;
+    let totalAmount = baseAmount;
+    let appliedCouponCode = null;
+
+    if (couponCode && couponCode.trim()) {
+      const coupon = await Coupon.findOne({
+        code: couponCode.trim().toUpperCase(),
+        isActive: true,
+      });
+
+      if (!coupon) {
+        return res.status(400).json({ message: 'Invalid or expired coupon code' });
+      }
+
+      // Validity window
+      const now = new Date();
+      if (coupon.validFrom && now < coupon.validFrom) {
+        return res.status(400).json({ message: 'This coupon is not active yet' });
+      }
+      if (coupon.validUntil && now > coupon.validUntil) {
+        return res.status(400).json({ message: 'This coupon has expired' });
+      }
+
+      // Usage limits
+      if (coupon.usageLimit !== null && coupon.usedCount >= coupon.usageLimit) {
+        return res.status(400).json({ message: 'This coupon has reached its usage limit' });
+      }
+      const userUses = coupon.usedBy.filter(
+        (id) => id.toString() === req.user._id.toString()
+      ).length;
+      if (userUses >= coupon.perUserLimit) {
+        return res.status(400).json({ message: 'You have already used this coupon' });
+      }
+
+      const result = computeDiscount(coupon, baseAmount);
+      if (!result) {
+        return res.status(400).json({
+          message: `Minimum order amount of ₹${coupon.minOrderAmount} required for this coupon`,
+        });
+      }
+
+      discountAmount = result.discountAmount;
+      totalAmount = result.finalAmount;
+      appliedCouponCode = coupon.code;
+    }
 
     const order = await Order.create({
       orderNumber: 'ORD-' + Date.now(),
@@ -183,6 +232,9 @@ export const createOrder = async (req, res, next) => {
       cropName: crop.cropName,
       quantity: orderQty,
       unitPrice: crop.price,
+      originalAmount: baseAmount,
+      discountAmount,
+      couponCode: appliedCouponCode,
       totalAmount,
       pickupLocation: crop.pickupLocation,
       farmerContact: crop.contactNumber,
@@ -198,6 +250,11 @@ export const createOrder = async (req, res, next) => {
         },
       ],
     });
+
+    // Redeem the coupon now that the order succeeded
+    if (appliedCouponCode) {
+      await redeemCoupon(appliedCouponCode, req.user._id);
+    }
 
     // Update crop: reduce quantity, mark interest as ordered
     await CropListing.findByIdAndUpdate(cropId, {
@@ -755,6 +812,9 @@ export const denyOrder = async (req, res, next) => {
     } catch (notifErr) {
       console.error('Failed to create denial notification:', notifErr);
     }
+
+    // Notify buyer in real time that the order was denied/cancelled
+    notifyOrderUpdate(order, 'order:cancelled');
 
     res.status(200).json({ message: 'Order denied successfully', order });
   } catch (error) {

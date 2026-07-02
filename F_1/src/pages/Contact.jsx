@@ -165,7 +165,7 @@ export default function Contact() {
         {/* Hero Section */}
         <div className="bg-gradient-to-br from-green-600 via-emerald-600 to-green-700 text-white py-16 px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl font-bold mb-4">Get in Touch</h1>
+            <h1 className="text-4xl sm:text-5xl font-bold mb-4">Get in Touch</h1>
             <p className="text-xl text-green-50">
               Have questions? We're here to help. Reach out anytime!
             </p>
@@ -191,7 +191,7 @@ export default function Contact() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
             {/* Contact Form */}
             <ScrollAnimation className="scroll-slide">
-              <Card className="p-12">
+              <Card className="p-6 sm:p-8 md:p-12">
                 <h2 className="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
                   <MessageSquare size={32} className="text-green-600" />
                   Send us a Message

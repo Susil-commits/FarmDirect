@@ -95,7 +95,7 @@ export default function StartShopping() {
           <div className="max-w-6xl mx-auto relative z-10">
             <ScrollAnimation className="scroll-slide mb-12">
               <div className="text-center">
-                <h1 className="text-6xl md:text-7xl font-bold mb-6 leading-tight animate-slide-in-down bg-gradient-to-r from-gray-900 via-green-600 to-emerald-600 bg-clip-text text-transparent">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight animate-slide-in-down bg-gradient-to-r from-gray-900 via-green-600 to-emerald-600 bg-clip-text text-transparent">
                   Fresh Produce, <span className="block">Better Prices</span>
                 </h1>
                 <p className="text-xl text-gray-700 mb-8 max-w-2xl mx-auto animate-slide-in-down font-medium" style={{ animationDelay: ANIMATION_DELAYS.STAGGER_DELAY_1 }}>
@@ -321,7 +321,7 @@ export default function StartShopping() {
                   role="article"
                   aria-label="Verification timeline"
                 >
-                  <div className="p-16">
+                  <div className="p-6 sm:p-10 md:p-16">
                     <div className="text-center mb-12">
                       <h3 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-3">Verification Timeline</h3>
                       <p className="text-gray-600 text-lg">Quick, secure, and transparent process</p>
@@ -380,7 +380,7 @@ export default function StartShopping() {
           
           <ScrollAnimation className="scroll-slide">
             <div className="max-w-4xl mx-auto text-center relative z-10">
-              <h2 id="cta-heading" className="text-5xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-6">Ready to Start Shopping?</h2>
+              <h2 id="cta-heading" className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-6">Ready to Start Shopping?</h2>
               <p className="text-xl text-gray-700 mb-3 max-w-2xl mx-auto font-medium">
                 Join thousands of customers already enjoying fresh, affordable produce from local farmers.
               </p>

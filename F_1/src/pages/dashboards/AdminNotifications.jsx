@@ -20,7 +20,7 @@ export default function AdminNotifications() {
   const { logout } = useAuth();
   const { navigate } = useRouter();
   const { addToast } = useToast();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -194,8 +194,10 @@ export default function AdminNotifications() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gray-50 flex">
+        {/* Mobile Backdrop */}
+        {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
         {/* ─── Sidebar ─── */}
-        <aside className={`fixed lg:static inset-y-0 left-0 transition-all duration-300 z-40 ${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-indigo-700 via-indigo-800 to-purple-900 text-white flex flex-col shadow-2xl`}>
+        <aside className={`fixed lg:static inset-y-0 left-0 transition-all duration-300 z-40 ${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-indigo-700 via-indigo-800 to-purple-900 text-white flex flex-col shadow-2xl ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
           <div className="p-6 border-b border-indigo-600/50">
             <div className="flex items-center justify-between">
               <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-1 hover:bg-indigo-600 rounded">
@@ -253,7 +255,7 @@ export default function AdminNotifications() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setSidebarOpen(!sidebarOpen)}
-                    className="hidden lg:block p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
                   >
                     {sidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
                   </button>

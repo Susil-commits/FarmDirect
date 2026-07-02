@@ -393,7 +393,7 @@ export default function AdminQueries() {
 
         {/* Filters & Search */}
         <Card className="p-6 mb-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Search</label>
               <div className="relative">

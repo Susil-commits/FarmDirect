@@ -9,6 +9,7 @@ import Avatar from '../components/common/Avatar';
 import { useRouter } from '../context/RouterContext';
 import { useWishlist } from '../context/WishlistContext';
 import { cropService, userService } from '../services/appService';
+import { getImageUrl } from '../utils/formatters';
 
 export default function FarmerProfile() {
   const { navigate, params } = useRouter();
@@ -84,7 +85,7 @@ export default function FarmerProfile() {
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         {/* Premium Header Section */}
-        <div className="relative h-64 bg-gradient-to-br from-emerald-600 via-green-600 to-teal-700 overflow-hidden">
+        <div className="relative min-h-64 bg-gradient-to-br from-emerald-600 via-green-600 to-teal-700 overflow-hidden">
           {/* Animated background elements */}
           <div className="absolute inset-0 opacity-20">
             <div className="absolute top-0 right-1/4 w-96 h-96 bg-white rounded-full filter blur-3xl animate-pulse"></div>
@@ -92,18 +93,18 @@ export default function FarmerProfile() {
           </div>
 
           {/* Header Content */}
-          <div className="relative h-full flex items-center px-6 md:px-12">
-            <div className="flex items-center gap-8 w-full">
+          <div className="relative h-full flex items-center py-10 px-6 md:px-12">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 w-full">
               {/* Avatar */}
               <div className="relative">
-                <div className="w-40 h-40 rounded-3xl bg-white shadow-2xl p-3 ring-4 ring-white transform hover:scale-105 transition duration-300">
+                <div className="w-24 h-24 sm:w-40 sm:h-40 rounded-3xl bg-white shadow-2xl p-3 ring-4 ring-white transform hover:scale-105 transition duration-300">
                   <Avatar user={farmer} size="xl" className="w-full h-full" />
                 </div>
               </div>
 
               {/* Info */}
-              <div className="text-white flex-1">
-                <h1 className="text-5xl font-black mb-2">{farmer?.name || 'Farmer'}</h1>
+              <div className="text-white flex-1 min-w-0 text-center sm:text-left">
+                <h1 className="text-3xl sm:text-5xl font-black mb-2 break-words">{farmer?.name || 'Farmer'}</h1>
                 <div className="flex items-center gap-3 flex-wrap mb-4">
                   <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition">
                     <Shield size={16} /> Verified Farmer

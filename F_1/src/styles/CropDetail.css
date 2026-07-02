@@ -197,7 +197,7 @@
 }
 
 @media (max-width: 640px) {
-  .grid {
+  :where(.grid) {
     gap: 16px;
   }
 
@@ -226,7 +226,7 @@
     padding: 3px 8px;
   }
 
-  .grid {
+  :where(.grid) {
     gap: 12px;
   }
 

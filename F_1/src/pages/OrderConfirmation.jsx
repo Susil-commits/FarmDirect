@@ -221,7 +221,7 @@ export default function OrderConfirmation() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                 <div className="text-center">
                   <p className="text-gray-600 text-sm mb-2">Order ID</p>
-                  <p className="text-xl font-bold text-gray-900 wrap-break-word">
+                  <p className="text-xl font-bold text-gray-900 break-all">
                     {order.orderNumber || `ORD-${(order._id || '').slice(-8).toUpperCase()}`}
                   </p>
                 </div>
@@ -257,12 +257,12 @@ export default function OrderConfirmation() {
                 {steps.map((step, idx) => (
                   <div key={idx} className="flex gap-6 relative stagger-item" style={{ animationDelay: `${idx * 0.1}s` }}>
                     {idx < steps.length - 1 && (
-                      <div className={`absolute left-12 top-20 w-1 h-16 ${
+                      <div className={`absolute left-10 sm:left-12 top-16 sm:top-20 w-1 h-16 ${
                         step.completed ? 'bg-green-600' : 'bg-gray-300'
                       }`} />
                     )}
 
-                    <div className={`relative z-10 shrink-0 w-24 h-24 rounded-full flex flex-col items-center justify-center text-3xl ${
+                    <div className={`relative z-10 shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex flex-col items-center justify-center text-xl sm:text-3xl ${
                       step.completed
                         ? 'bg-green-600 text-white'
                         : 'bg-gray-200 text-gray-600'

@@ -333,8 +333,8 @@ export default function FarmerDashboardNew() {
                     const isExpanded = expandedCrop === crop._id;
                     return (
                       <Card key={crop._id} className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-4">
+                        <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4">
+                          <div className="flex items-center gap-4 min-w-0 flex-1">
                             {(crop.images?.[0] || crop.image) && (
                               <img
                                 src={getImageUrl(crop.images?.[0] || crop.image)}
@@ -343,12 +343,12 @@ export default function FarmerDashboardNew() {
                                 onError={(e) => e.target.style.display = 'none'}
                               />
                             )}
-                            <div>
-                              <h3 className="text-lg font-bold text-gray-900">{crop.cropName || crop.name}</h3>
+                            <div className="min-w-0">
+                              <h3 className="text-lg font-bold text-gray-900 break-words">{crop.cropName || crop.name}</h3>
                               <p className="text-sm text-gray-600">{crop.cropType || crop.category} • {crop.pickupLocation || crop.location}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
                             {interestedCount > 0 && (
                               <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold flex items-center gap-1">
                                 <Users className="w-4 h-4" /> {interestedCount} interested
@@ -573,7 +573,7 @@ export default function FarmerDashboardNew() {
                     return (
                       <Card key={order._id} className="p-6">
                         <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-start gap-4">
+                          <div className="flex items-start gap-4 flex-1 min-w-0">
                             <div className="w-16 h-16 rounded-lg overflow-hidden bg-green-100 flex items-center justify-center shrink-0">
                               {order.cropId?.images?.[0] ? (
                                 <img
@@ -590,8 +590,8 @@ export default function FarmerDashboardNew() {
                                 🌾
                               </span>
                             </div>
-                            <div>
-                              <h4 className="font-bold text-gray-900 text-lg">
+                            <div className="min-w-0">
+                              <h4 className="font-bold text-gray-900 text-lg truncate">
                                 Order #{order.orderNumber || order._id?.slice(-6)}
                               </h4>
                               <p className="text-sm text-gray-600">

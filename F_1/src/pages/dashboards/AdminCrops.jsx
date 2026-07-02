@@ -13,7 +13,7 @@ export default function AdminCrops() {
   const { user, logout } = useAuth();
   const { navigate } = useRouter();
   const { addToast } = useToast();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
   const [searchQuery, setSearchQuery] = useState('');
   const [allCrops, setAllCrops] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -178,8 +178,10 @@ export default function AdminCrops() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gray-100 flex">
+        {/* Mobile Backdrop */}
+        {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
         {/* Sidebar */}
-        <div className={`fixed lg:static inset-0 lg:inset-auto transition-all duration-300 ${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-green-700 to-green-800 text-white flex flex-col z-40 ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
+        <div className={`fixed lg:static inset-y-0 left-0 lg:inset-auto transition-all duration-300 ${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-green-700 to-green-800 text-white flex flex-col z-40 ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
           <div className="p-6 border-b border-green-600">
             <div className="flex items-center justify-between">
               {sidebarOpen && (
@@ -238,7 +240,7 @@ export default function AdminCrops() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="hidden lg:block text-gray-600 hover:text-gray-900"
+                className="lg:hidden text-gray-600 hover:text-gray-900"
               >
                 <Menu size={24} />
               </button>

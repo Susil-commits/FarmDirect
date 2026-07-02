@@ -238,7 +238,7 @@ export default function AdminVerification() {
           {/* Request List */}
           <div className="lg:col-span-1 space-y-4">
             {/* Tabs */}
-            <div className="flex gap-2 mb-4">
+            <div className="flex flex-wrap gap-2 mb-4">
               {['pending', 'verified', 'rejected'].map(tab => (
                 <button
                   key={tab}
@@ -331,7 +331,7 @@ export default function AdminVerification() {
                   </div>
 
                   {/* Request Info */}
-                  <div className="grid grid-cols-2 gap-4 mb-6 pb-6 border-b border-gray-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 pb-6 border-b border-gray-200">
                     <div>
                       <p className="text-sm text-gray-600">Submitted Date</p>
                       <p className="font-semibold text-gray-900">{selectedRequest.submittedDate}</p>

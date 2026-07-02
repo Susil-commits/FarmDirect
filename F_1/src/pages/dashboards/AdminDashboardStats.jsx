@@ -76,16 +76,16 @@ export default function AdminDashboardStats() {
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
         {/* Top Navigation Bar */}
-        <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm z-30">
-          <div className="flex items-center gap-3">
-            <BarChart3 size={28} className="text-green-600" />
-            <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+        <div className="sticky top-0 bg-white border-b border-slate-200 px-3 sm:px-6 py-4 flex items-center justify-between shadow-sm z-30">
+          <div className="flex items-center gap-3 min-w-0">
+            <BarChart3 size={28} className="text-green-600 flex-shrink-0" />
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 truncate">Admin Dashboard</h1>
           </div>
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-semibold"
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-semibold flex-shrink-0"
           >
-            <LogOut size={18} /> Logout
+            <LogOut size={18} /> <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
 
@@ -93,39 +93,39 @@ export default function AdminDashboardStats() {
         <div className="p-6">
           <div className="space-y-6 max-w-7xl mx-auto">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
               <Card className="bg-blue-100 border-2 border-blue-600 shadow-xl hover:shadow-2xl transition transform hover:scale-105">
                 <div className="p-8">
                   <p className="text-lg font-bold text-black">Total Users</p>
-                  <p className="text-5xl font-extrabold mt-4 text-blue-700">{statisticsData.totalUsers}</p>
+                  <p className="text-3xl sm:text-5xl font-extrabold mt-4 text-blue-700">{statisticsData.totalUsers}</p>
                 </div>
               </Card>
 
               <Card className="bg-green-100 border-2 border-green-600 shadow-xl hover:shadow-2xl transition transform hover:scale-105">
                 <div className="p-8">
                   <p className="text-lg font-bold text-black">Farmers</p>
-                  <p className="text-5xl font-extrabold mt-4 text-green-700">{statisticsData.farmers}</p>
+                  <p className="text-3xl sm:text-5xl font-extrabold mt-4 text-green-700">{statisticsData.farmers}</p>
                 </div>
               </Card>
 
               <Card className="bg-purple-100 border-2 border-purple-600 shadow-xl hover:shadow-2xl transition transform hover:scale-105">
                 <div className="p-8">
                   <p className="text-lg font-bold text-black">Buyers</p>
-                  <p className="text-5xl font-extrabold mt-4 text-purple-700">{statisticsData.buyers}</p>
+                  <p className="text-3xl sm:text-5xl font-extrabold mt-4 text-purple-700">{statisticsData.buyers}</p>
                 </div>
               </Card>
 
               <Card className="bg-orange-100 border-2 border-orange-600 shadow-xl hover:shadow-2xl transition transform hover:scale-105">
                 <div className="p-8">
                   <p className="text-lg font-bold text-black">Total Crops</p>
-                  <p className="text-5xl font-extrabold mt-4 text-orange-700">{statisticsData.totalCrops}</p>
+                  <p className="text-3xl sm:text-5xl font-extrabold mt-4 text-orange-700">{statisticsData.totalCrops}</p>
                 </div>
               </Card>
 
               <Card className="bg-indigo-100 border-2 border-indigo-600 shadow-xl hover:shadow-2xl transition transform hover:scale-105">
                 <div className="p-8">
                   <p className="text-lg font-bold text-black">Pending KYC</p>
-                  <p className="text-5xl font-extrabold mt-4 text-indigo-700">{statisticsData.pendingFarmers}</p>
+                  <p className="text-3xl sm:text-5xl font-extrabold mt-4 text-indigo-700">{statisticsData.pendingFarmers}</p>
                 </div>
               </Card>
             </div>

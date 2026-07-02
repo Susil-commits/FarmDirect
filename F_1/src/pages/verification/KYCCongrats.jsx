@@ -46,7 +46,7 @@ export default function KYCCongrats() {
           {/* Main Card */}
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
             {/* Top Celebration Bar */}
-            <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-8 py-12 text-center">
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-5 sm:px-8 py-10 sm:py-12 text-center">
               <div className="inline-flex items-center justify-center w-24 h-24 bg-white/20 rounded-full mb-6 backdrop-blur-sm">
                 <CheckCircle size={56} className="text-white" />
               </div>
@@ -59,7 +59,7 @@ export default function KYCCongrats() {
             </div>
 
             {/* Content */}
-            <div className="px-8 py-10">
+            <div className="px-5 sm:px-8 py-8 sm:py-10">
               {/* Role-specific message */}
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 mb-8 border border-green-100">
                 {isFarmer ? (

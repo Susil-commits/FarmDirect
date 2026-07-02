@@ -6,6 +6,7 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useChat } from '../../context/ChatContext';
+import { useSocket } from '../../context/SocketContext';
 import Avatar from '../common/Avatar';
 import MiniCart from '../MiniCart';
 import SearchBar from '../SearchBar';
@@ -30,6 +31,7 @@ export default function Navbar() {
   const { wishlist } = useWishlist();
   const { unreadCount } = useNotifications();
   const { unreadCount: chatUnreadCount } = useChat();
+  const { connected } = useSocket();
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleUserMenu = () => setIsUserMenuOpen(!isUserMenuOpen);
@@ -139,7 +141,7 @@ export default function Navbar() {
               setIsMiniCartOpen(false);
             }}
           >
-            <h1 className="text-2xl font-bold text-green-700">FarmDirect</h1>
+            <h1 className="text-lg sm:text-2xl font-bold text-green-700">FarmDirect</h1>
           </div>
 
           {/* Desktop Menu */}
@@ -177,7 +179,21 @@ export default function Navbar() {
           )}
 
           {/* Right Section - Icons & User */}
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1 sm:gap-4">
+            {/* Realtime connection indicator (authenticated users only) */}
+            {user && (
+              <span
+                className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold transition-colors"
+                title={connected ? 'Real-time connection active' : 'Reconnecting…'}
+                style={{ color: connected ? '#16a34a' : '#d97706' }}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`}
+                />
+                <span className="hidden md:inline">{connected ? 'Live' : 'Offline'}</span>
+              </span>
+            )}
+
             {/* Wishlist Icon - Buyers and Farmers Only */}
             {(!user || user.role === 'buyer' || user.role === 'farmer') && (
               <button
@@ -280,7 +296,7 @@ export default function Navbar() {
             {user && currentRoute !== '/' && (
               <button
                 onClick={() => handleNavigate('/')}
-                className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition duration-200 cursor-pointer"
+                className="hidden sm:inline-flex p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition duration-200 cursor-pointer"
                 aria-label="Go to Home Page"
               >
                 <Home size={20} className="text-green-600" />
@@ -293,7 +309,7 @@ export default function Navbar() {
                 onClick={() => {
                   window.history.back();
                 }}
-                className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition duration-200 cursor-pointer"
+                className="hidden sm:inline-flex p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition duration-200 cursor-pointer"
                 title="Go Back to Previous Page"
                 aria-label="Go back to previous page"
               >

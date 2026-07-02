@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../context/ToastContext';
+import { useRealtime } from '../context/RealtimeContext';
 import PageTransition from '../components/common/PageTransition';
 import Card from '../components/common/Card';
 import ScrollAnimation from '../components/common/ScrollAnimation';
@@ -39,6 +40,7 @@ export default function OrderDetails() {
   const { user } = useAuth();
   const orderId = params.id;
   const { addToast } = useToast();
+  const { orderEvent } = useRealtime();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,6 +50,24 @@ export default function OrderDetails() {
     window.scrollTo(0, 0);
     fetchOrderDetails();
   }, [orderId]);
+
+  // Live updates: when a socket order:updated arrives for THIS order, patch the
+  // status instantly and re-fetch to reconcile timeline + payment status.
+  useEffect(() => {
+    if (!orderEvent) return;
+    if (String(orderEvent.orderId) !== String(orderId)) return;
+    setOrder((prev) =>
+      prev
+        ? {
+            ...prev,
+            orderStatus: orderEvent.orderStatus,
+            updatedAt: orderEvent.updatedAt,
+          }
+        : prev
+    );
+    const t = setTimeout(() => fetchOrderDetails(), 400);
+    return () => clearTimeout(t);
+  }, [orderEvent, orderId]);
 
   const fetchOrderDetails = async () => {
     try {
@@ -229,7 +249,7 @@ export default function OrderDetails() {
                           >
                             {stepCompleted ? '✓' : idx + 1}
                           </div>
-                          <span className="text-xs text-gray-500 mt-2 text-center leading-tight">
+                          <span className="hidden sm:block text-xs text-gray-500 mt-2 text-center leading-tight">
                             {STATUS_LABELS[status]}
                           </span>
                         </div>

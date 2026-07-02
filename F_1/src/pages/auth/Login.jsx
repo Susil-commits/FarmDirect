@@ -148,7 +148,7 @@ export default function Login() {
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center py-12 px-4 relative">
         <Card variant="deep" animated={false} className="w-full max-w-md animate-scale-in relative z-10 bg-white/20 backdrop-blur-lg border border-white/10 shadow-2xl">
-          <div className="p-10">
+          <div className="p-6 sm:p-10">
             {/* Back Button */}
             <div className="mb-6">
               <BackButton label="Go Back" />

@@ -270,7 +270,7 @@ export default function CreateCrop() {
                     </div>
 
                     {/* Price, Quantity, Unit */}
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-gray-900 font-semibold mb-2">
                           Price per Unit (₹) *

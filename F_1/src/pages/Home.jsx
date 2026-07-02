@@ -1,4 +1,4 @@
-import { ArrowRight, Leaf, TrendingUp, Users, MapPin, Sparkles } from 'lucide-react';
+import { ArrowRight, Leaf, TrendingUp, Users, MapPin, Sparkles, Info, Loader2 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
@@ -25,12 +25,13 @@ export default function Home() {
   });
 
   const [stats, setStats] = useState({
-    farmers: 0,
-    customers: 0,
-    varieties: 0,
-    orders: 0,
+    farmers: null,
+    customers: null,
+    varieties: null,
+    orders: null,
     deliveryDays: '3-5',
   });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const [gradientAngle, setGradientAngle] = useState(0);
   const [imageError, setImageError] = useState(false);
@@ -68,18 +69,17 @@ export default function Home() {
 
         if (data?.success && data?.data) {
           setStats({
-            farmers: data.data.users?.farmers || 0,
-            customers: data.data.users?.buyers || 0,
-            varieties: data.data.crops?.total || 0,
-            orders: data.data.orders?.total || 0,
+            farmers: data.data.users?.farmers ?? null,
+            customers: data.data.users?.buyers ?? null,
+            varieties: data.data.crops?.total ?? null,
+            orders: data.data.orders?.total ?? null,
             deliveryDays: '3-5',
           });
-        } else {
-          setStats({ farmers: 5, customers: 8, varieties: 12, orders: 20, deliveryDays: '3-5' });
         }
       } catch (error) {
         console.error('Error fetching stats:', error);
-        setStats({ farmers: 5, customers: 8, varieties: 12, orders: 20, deliveryDays: '3-5' });
+      } finally {
+        setStatsLoading(false);
       }
     };
 
@@ -179,7 +179,7 @@ export default function Home() {
           <div ref={particleRef} className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-12 items-center relative z-10 w-full">
             <ScrollAnimation className="scroll-slide">
               <div>
-                <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
                   <span className="inline-block animate-slide-in-left">Farm to Table</span>{' '}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-600 inline-block animate-gradient-text">
                     Directly
@@ -584,7 +584,7 @@ export default function Home() {
                     <AnimatedNumber 
                       value={stats.farmers} 
                       duration={2000}
-                      suffix={stats.farmers > 0 ? "+" : ""}
+                      suffix={stats.farmers != null ? "+" : ""}
                     />
                   </div>
                   <p className="text-gray-700 font-bold text-lg text-center mb-2">Active Farmers</p>
@@ -602,7 +602,7 @@ export default function Home() {
                     <AnimatedNumber 
                       value={stats.customers} 
                       duration={2000}
-                      suffix={stats.customers > 0 ? "+" : ""}
+                      suffix={stats.customers != null ? "+" : ""}
                     />
                   </div>
                   <p className="text-gray-700 font-bold text-lg text-center mb-2">Happy Customers</p>
@@ -620,7 +620,7 @@ export default function Home() {
                     <AnimatedNumber 
                       value={stats.varieties} 
                       duration={2000}
-                      suffix={stats.varieties > 0 ? "+" : ""}
+                      suffix={stats.varieties != null ? "+" : ""}
                     />
                   </div>
                   <p className="text-gray-700 font-bold text-lg text-center mb-2">Crop Varieties</p>
@@ -638,7 +638,7 @@ export default function Home() {
                     <AnimatedNumber 
                       value={stats.orders} 
                       duration={2000}
-                      suffix={stats.orders > 0 ? "+" : ""}
+                      suffix={stats.orders != null ? "+" : ""}
                     />
                   </div>
                   <p className="text-gray-700 font-bold text-lg text-center mb-2">Total Orders</p>
@@ -649,6 +649,22 @@ export default function Home() {
                 </div>
               </ScrollAnimation>
             </div>
+
+            {/* Backend loading notice */}
+            {statsLoading ? (
+              <div className="mt-8 flex items-center justify-center gap-2 text-gray-500 text-sm">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Loading live stats…</span>
+              </div>
+            ) : (
+              <div className="mt-8 flex items-start justify-center gap-2 text-gray-400 text-xs max-w-xl mx-auto">
+                <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <p>
+                  Our backend is hosted on Render's free tier and may take a few seconds to wake up
+                  (cold start), so the counts above may briefly show fallback values while live data loads.
+                </p>
+              </div>
+            )}
           </div>
         </section>
 

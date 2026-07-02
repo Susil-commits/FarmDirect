@@ -132,22 +132,22 @@ export default function AdminOrders() {
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
         {/* Top Navigation Bar */}
-        <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm z-30">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/admin/dashboard')} className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">
-              <ArrowLeft size={18} /> Back
+        <div className="sticky top-0 bg-white border-b border-slate-200 px-3 sm:px-6 py-4 flex items-center justify-between shadow-sm z-30">
+          <div className="flex items-center gap-3 min-w-0">
+            <button onClick={() => navigate('/admin/dashboard')} className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition flex-shrink-0">
+              <ArrowLeft size={18} /> <span className="hidden sm:inline">Back</span>
             </button>
-            <ShoppingCart size={28} className="text-green-600" />
-            <h1 className="text-2xl font-bold text-gray-800">Order Management</h1>
+            <ShoppingCart size={28} className="text-green-600 flex-shrink-0" />
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 truncate">Order Management</h1>
           </div>
-          <button onClick={fetchOrders} className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-semibold">
-            <RefreshCw size={18} /> Refresh
+          <button onClick={fetchOrders} className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-semibold flex-shrink-0">
+            <RefreshCw size={18} /> <span className="hidden sm:inline">Refresh</span>
           </button>
         </div>
 
         <div className="p-6 max-w-7xl mx-auto">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-3 mb-6">
             <Card className="p-4 bg-gradient-to-br from-slate-50 to-white text-center">
               <p className="text-xs font-semibold text-gray-600 mb-1">Total</p>
               <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
