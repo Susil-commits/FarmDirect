@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useCallback } from 'react';
 import { useSocket } from './SocketContext';
-import { useToast } from './NotificationContext';
+import { useToast } from './ToastContext';
 import { useAuth } from './AuthContext';
 import {
   requestNotificationPermission,
@@ -28,7 +28,7 @@ const RealtimeContext = createContext(null);
 
 export const RealtimeProvider = ({ children }) => {
   const { subscribe, connected } = useSocket();
-  const { showSuccess, showInfo, showWarning } = useToast();
+  const { addToast } = useToast();
   const { user } = useAuth();
 
   // Latest event signals held as state. Each is replaced with a fresh object
@@ -49,13 +49,11 @@ export const RealtimeProvider = ({ children }) => {
   const announce = useCallback(
     (toastType, message, browserTitle, browserBody, browserTag) => {
       // Foreground: in-app toast
-      if (toastType === 'success') showSuccess(message);
-      else if (toastType === 'warning') showWarning(message);
-      else showInfo(message);
+      addToast(message, toastType);
       // Background: OS notification (no-op when tab is visible)
       notifyIfBackground(browserTitle, browserBody, { tag: browserTag });
     },
-    [showSuccess, showInfo, showWarning]
+    [addToast]
   );
 
   // ---- Order events ----
