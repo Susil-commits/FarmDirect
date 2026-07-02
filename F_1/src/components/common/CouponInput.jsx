@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Tag, X, Loader, CheckCircle } from 'lucide-react';
 import { couponService } from '../../services/appService';
 import { useCart } from '../../context/CartContext';
-import { useToast } from '../../context/NotificationContext';
+import { useToast } from '../../context/ToastContext';
 
 /**
  * CouponInput — reusable promo-code field.
@@ -16,7 +16,7 @@ import { useToast } from '../../context/NotificationContext';
  */
 export default function CouponInput({ amount, onApplied, variant = 'cart' }) {
   const { appliedCoupon, applyCoupon, removeCoupon, getTotalPrice } = useCart();
-  const { showSuccess, showError } = useToast();
+  const { addToast } = useToast();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +25,7 @@ export default function CouponInput({ amount, onApplied, variant = 'cart' }) {
   const handleApply = async () => {
     const trimmed = code.trim();
     if (!trimmed) {
-      showError('Please enter a coupon code');
+      addToast('Please enter a coupon code', 'error');
       return;
     }
 
@@ -42,11 +42,11 @@ export default function CouponInput({ amount, onApplied, variant = 'cart' }) {
         description: coupon.description,
         discountAmount,
       });
-      showSuccess(`Coupon "${coupon.code}" applied! You saved ₹${discountAmount}`);
+      addToast(`Coupon "${coupon.code}" applied! You saved ₹${discountAmount}`, 'success');
       setCode('');
       if (onApplied) onApplied(coupon);
     } catch (err) {
-      showError(err?.response?.data?.message || err?.message || 'Invalid coupon code');
+      addToast(err?.response?.data?.message || err?.message || 'Invalid coupon code', 'error');
     } finally {
       setLoading(false);
     }
@@ -54,7 +54,7 @@ export default function CouponInput({ amount, onApplied, variant = 'cart' }) {
 
   const handleRemove = () => {
     removeCoupon();
-    showSuccess('Coupon removed');
+    addToast('Coupon removed', 'info');
   };
 
   if (appliedCoupon) {
