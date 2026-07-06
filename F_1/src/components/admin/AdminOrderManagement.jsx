@@ -114,13 +114,27 @@ export default function AdminOrderManagement({ order }) {
             <div>
               <p className="text-sm text-gray-600">Method</p>
               <p className="font-semibold text-gray-900">
-                {order.paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : order.paymentMethod || 'COD'}
+                {order.paymentMethod === 'razorpay'
+                  ? 'Online (Razorpay)'
+                  : order.paymentMethod === 'cod'
+                  ? 'Cash on Delivery (COD)'
+                  : order.paymentMethod || 'COD'}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Status</p>
-              <p className={`font-semibold ${order.paymentStatus === 'paid' ? 'text-green-600' : 'text-yellow-600'}`}>
-                {order.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
+              <p className={`font-semibold ${
+                order.paymentStatus === 'completed' || order.paymentStatus === 'paid'
+                  ? 'text-green-600'
+                  : order.paymentStatus === 'failed'
+                  ? 'text-red-600'
+                  : 'text-yellow-600'
+              }`}>
+                {order.paymentStatus === 'completed' || order.paymentStatus === 'paid'
+                  ? 'Paid'
+                  : order.paymentStatus === 'failed'
+                  ? 'Failed'
+                  : 'Pending'}
               </p>
             </div>
           </div>

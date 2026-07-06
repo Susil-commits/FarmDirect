@@ -144,7 +144,9 @@ export const startOrder = async (req, res, next) => {
 // @access Private
 export const createOrder = async (req, res, next) => {
   try {
-    const { cropId, quantity, couponCode } = req.body;
+    const { cropId, quantity, couponCode, paymentMethod: requestedMethod } = req.body;
+
+    const paymentMethod = ['cod', 'razorpay'].includes(requestedMethod) ? requestedMethod : 'cod';
 
     if (!cropId) {
       return res.status(400).json({ message: 'Crop ID is required' });
@@ -239,7 +241,7 @@ export const createOrder = async (req, res, next) => {
       pickupLocation: crop.pickupLocation,
       farmerContact: crop.contactNumber,
       buyerContact: req.user.phone || '',
-      paymentMethod: 'cod',
+      paymentMethod,
       paymentStatus: 'pending',
       orderStatus: 'confirmed',
       timeline: [

@@ -64,16 +64,30 @@ const orderSchema = new mongoose.Schema(
       enum: ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'completed', 'cancelled'],
       default: 'confirmed'
     },
-    // Payment method (COD only - handled between farmer and buyer directly)
+    // Payment method: COD (cash on pickup) or Razorpay (online)
     paymentMethod: {
       type: String,
-      enum: ['cod'],
+      enum: ['cod', 'razorpay'],
       default: 'cod'
     },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'completed'],
+      enum: ['pending', 'completed', 'failed'],
       default: 'pending'
+    },
+    // Razorpay payment tracking (populated for online payments)
+    razorpayOrderId: {
+      type: String,
+      default: null,
+      index: true,
+    },
+    razorpayPaymentId: {
+      type: String,
+      default: null,
+    },
+    razorpaySignature: {
+      type: String,
+      default: null,
     },
     // Timeline/tracking - farmer updates this
     timeline: [

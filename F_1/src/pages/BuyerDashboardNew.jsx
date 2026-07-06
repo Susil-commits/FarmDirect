@@ -514,7 +514,7 @@ export default function BuyerDashboardNew() {
                           <div>
                             <p className="text-xs text-gray-500">Payment</p>
                             <p className="font-semibold text-gray-900 capitalize">
-                              {order.paymentMethod || 'COD'}
+                              {order.paymentMethod === 'razorpay' ? 'Online (Razorpay)' : (order.paymentMethod || 'COD')}
                             </p>
                           </div>
                         </div>
