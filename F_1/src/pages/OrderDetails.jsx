@@ -8,6 +8,7 @@ import Card from '../components/common/Card';
 import ScrollAnimation from '../components/common/ScrollAnimation';
 import Button from '../components/common/Button';
 import { orderService } from '../services/appService';
+import paymentService from '../services/paymentService';
 import {
   Package, Truck, CheckCircle, Clock, MapPin, Phone,
   Calendar, IndianRupee, AlertCircle, Leaf, ThumbsUp, Loader
@@ -110,6 +111,60 @@ export default function OrderDetails() {
     }
   };
 
+  const isRazorpayPending =
+    order?.paymentMethod === 'razorpay' &&
+    order?.paymentStatus !== 'completed' &&
+    order?.orderStatus !== 'cancelled';
+
+  const handlePayNow = async () => {
+    setActionLoading(true);
+    try {
+      const init = await paymentService.initializeRazorpayPayment(order._id);
+
+      await paymentService.openRazorpayCheckout({
+        keyId: init.keyId,
+        razorpayOrderId: init.razorpayOrderId,
+        amount: init.amount,
+        name: 'FarmDirect',
+        description: `Payment for ${order.cropName || 'order'}`,
+        prefill: {
+          name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+          email: user?.email || '',
+          contact: user?.phone || '',
+        },
+        onSuccess: async (response) => {
+          try {
+            await paymentService.verifyRazorpayPayment({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+            addToast('Payment successful! Order is now confirmed.', 'success');
+            await fetchOrderDetails();
+          } catch (verr) {
+            addToast(verr?.message || 'Payment verification failed.', 'error');
+          } finally {
+            setActionLoading(false);
+          }
+        },
+        onDismiss: () => {
+          addToast('Payment cancelled. You can retry anytime.', 'warning');
+          setActionLoading(false);
+        },
+        onFailure: (err) => {
+          if (err?.metadata?.order_id) {
+            paymentService.reportRazorpayFailure(err.metadata.order_id, err.description).catch(() => {});
+          }
+          addToast(err?.description || 'Payment failed. Please try again.', 'error');
+          setActionLoading(false);
+        },
+      });
+    } catch (err) {
+      addToast(err?.message || 'Failed to start payment.', 'error');
+      setActionLoading(false);
+    }
+  };
+
   const getStatusStep = (orderStatus) => {
     if (orderStatus === 'cancelled') return -1;
     const idx = ORDER_STATUS_FLOW.indexOf(orderStatus);
@@ -191,8 +246,15 @@ export default function OrderDetails() {
                   <div className="flex items-center gap-2">
                     <IndianRupee className="w-5 h-5 text-green-600" />
                     <span className="font-semibold text-gray-900">
-                      {order.paymentMethod || 'Cash on Delivery (COD)'}
+                      {order.paymentMethod === 'razorpay' ? 'Online (Razorpay)' : (order.paymentMethod || 'Cash on Delivery')}
                     </span>
+                    {order.paymentStatus === 'completed' ? (
+                      <span className="ml-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">Paid</span>
+                    ) : order.paymentStatus === 'failed' ? (
+                      <span className="ml-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">Failed</span>
+                    ) : (
+                      <span className="ml-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 border border-yellow-200">Pending</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -222,6 +284,34 @@ export default function OrderDetails() {
               </div>
             </Card>
           </ScrollAnimation>
+
+          {/* Pending Online Payment - Pay Now */}
+          {isBuyer && isRazorpayPending && (
+            <ScrollAnimation className="scroll-slide mb-8">
+              <Card className="p-6 md:p-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200">
+                <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <IndianRupee className="w-5 h-5 text-blue-600" />
+                  Payment Pending
+                </h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Your order is placed but payment is pending. Complete payment now to confirm your order.
+                </p>
+                <Button
+                  onClick={handlePayNow}
+                  variant="primary"
+                  disabled={actionLoading}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                >
+                  {actionLoading ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <IndianRupee className="w-4 h-4" />
+                  )}
+                  Pay ₹{order.totalAmount?.toLocaleString()} Now
+                </Button>
+              </Card>
+            </ScrollAnimation>
+          )}
 
           {/* Status Progress Bar */}
           {!isCancelled && (

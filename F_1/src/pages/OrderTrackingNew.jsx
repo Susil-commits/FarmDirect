@@ -315,7 +315,7 @@ export default function OrderTrackingNew() {
                             </div>
                             <div className="flex justify-between text-gray-700">
                               <span>Payment Method</span>
-                              <span>{selectedOrder.paymentMethod || 'Cash on Delivery'}</span>
+                              <span>{selectedOrder.paymentMethod === 'razorpay' ? 'Online (Razorpay)' : (selectedOrder.paymentMethod || 'Cash on Delivery')}</span>
                             </div>
                             <div className="flex justify-between font-bold text-lg text-gray-900 pt-3 border-t border-gray-200">
                               <span>Total</span>

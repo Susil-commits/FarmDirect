@@ -5,6 +5,7 @@ import { useRouter } from '../context/RouterContext';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { orderService } from '../services/appService';
+import paymentService from '../services/paymentService';
 import PageTransition from '../components/common/PageTransition.jsx';
 import Button from '../components/common/Button';
 import CouponInput from '../components/common/CouponInput';
@@ -17,6 +18,7 @@ export default function ShoppingCart() {
   const { addToast } = useToast();
   const { isAuthenticated, user } = useAuth();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('cod');
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -40,6 +42,62 @@ export default function ShoppingCart() {
   const handleRemove = (productId, productName) => {
     removeFromCart(productId);
     addToast(`${productName || 'Item'} removed from cart`, 'info');
+  };
+
+  const processCartRazorpayPayment = async (orderIds) => {
+    try {
+      const init = await paymentService.initializeRazorpayPayment(orderIds);
+
+      await paymentService.openRazorpayCheckout({
+        keyId: init.keyId,
+        razorpayOrderId: init.razorpayOrderId,
+        amount: init.amount,
+        name: 'FarmDirect',
+        description: `Payment for ${orderIds.length} order(s)`,
+        prefill: {
+          name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+          email: user?.email || '',
+          contact: user?.phone || '',
+        },
+        onSuccess: async (response) => {
+          try {
+            await paymentService.verifyRazorpayPayment({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+            clearCart();
+            addToast('Payment successful! Orders confirmed.', 'success');
+            navigate('/order-confirmation');
+          } catch (verr) {
+            addToast(verr?.message || 'Payment verification failed. You can retry from your orders.', 'error');
+            navigate('/order-confirmation');
+          } finally {
+            setCheckoutLoading(false);
+          }
+        },
+        onDismiss: () => {
+          addToast('Payment cancelled. You can retry payment from your orders.', 'warning');
+          clearCart();
+          navigate('/order-confirmation');
+          setCheckoutLoading(false);
+        },
+        onFailure: (err) => {
+          if (err?.metadata?.order_id) {
+            paymentService.reportRazorpayFailure(err.metadata.order_id, err.description).catch(() => {});
+          }
+          addToast(err?.description || 'Payment failed. You can retry from your orders.', 'error');
+          clearCart();
+          navigate('/order-confirmation');
+          setCheckoutLoading(false);
+        },
+      });
+    } catch (err) {
+      addToast(err?.message || 'Failed to start payment. Your orders are placed but unpaid.', 'error');
+      clearCart();
+      navigate('/order-confirmation');
+      setCheckoutLoading(false);
+    }
   };
 
   const handleCheckout = async () => {
@@ -69,7 +127,7 @@ export default function ShoppingCart() {
     try {
       let successCount = 0;
       let failedItems = [];
-      let lastCreatedOrderId = null;
+      const createdOrderIds = [];
 
       for (const item of cart) {
         try {
@@ -78,7 +136,7 @@ export default function ShoppingCart() {
             quantity: item.quantity || 1,
             unitPrice: item.price,
             totalAmount: (item.price * (item.quantity || 1)),
-            paymentMethod: 'cod',
+            paymentMethod,
             // Pass the coupon code; backend re-validates + recomputes the discount
             // per-item (server is source of truth).
             couponCode: appliedCoupon?.code || undefined,
@@ -86,7 +144,7 @@ export default function ShoppingCart() {
           // api.js interceptor unwraps to response.data, so result = { message, order }
           const result = await orderService.createOrder(orderData);
           if (result?.order?._id) {
-            lastCreatedOrderId = result.order._id;
+            createdOrderIds.push(result.order._id);
           }
           successCount++;
         } catch (err) {
@@ -96,22 +154,32 @@ export default function ShoppingCart() {
       }
 
       // Save the last successfully created order ID for OrderConfirmation page
-      if (lastCreatedOrderId) {
-        localStorage.setItem('lastOrderId', lastCreatedOrderId);
-      }
-
-      if (successCount > 0) {
-        addToast(
-          `${successCount} order(s) placed successfully! The farmer(s) will be notified.${failedItems.length > 0 ? ` ${failedItems.length} failed.` : ''}`,
-          successCount === cart.length ? 'success' : 'warning'
-        );
+      if (createdOrderIds.length > 0) {
+        localStorage.setItem('lastOrderId', createdOrderIds[createdOrderIds.length - 1]);
       }
 
       if (failedItems.length > 0) {
         addToast(`Failed items: ${failedItems.join(', ')}. Please try again.`, 'error');
       }
 
+      // Online payment: collect payment for all created orders at once.
+      if (paymentMethod === 'razorpay' && createdOrderIds.length > 0) {
+        if (successCount > 0) {
+          addToast(
+            `${successCount} order(s) placed. Complete payment to confirm.`,
+            'info'
+          );
+        }
+        await processCartRazorpayPayment(createdOrderIds);
+        return;
+      }
+
+      // COD path
       if (successCount > 0) {
+        addToast(
+          `${successCount} order(s) placed successfully! The farmer(s) will be notified.`,
+          'success'
+        );
         clearCart();
         navigate('/order-confirmation');
       }
@@ -119,7 +187,9 @@ export default function ShoppingCart() {
       console.error('Checkout error:', err);
       addToast('Failed to place order. Please try again.', 'error');
     } finally {
-      setCheckoutLoading(false);
+      if (paymentMethod !== 'razorpay') {
+        setCheckoutLoading(false);
+      }
     }
   };
 
@@ -285,6 +355,35 @@ export default function ShoppingCart() {
                       Add items worth ₹{(500 - grandTotal).toFixed(0)} more for free delivery
                     </p>
                   )}
+
+                  {/* Payment Method Selector */}
+                  <div className="cart-payment-selector">
+                    <p className="cart-payment-label">Payment Method</p>
+                    <div className="cart-payment-options">
+                      <button
+                        type="button"
+                        className={`cart-payment-option ${paymentMethod === 'cod' ? 'active' : ''}`}
+                        onClick={() => setPaymentMethod('cod')}
+                      >
+                        <span className="cart-payment-icon">💵</span>
+                        <span className="cart-payment-text">
+                          <strong>Cash on Delivery</strong>
+                          <small>Pay at pickup</small>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`cart-payment-option ${paymentMethod === 'razorpay' ? 'active' : ''}`}
+                        onClick={() => setPaymentMethod('razorpay')}
+                      >
+                        <span className="cart-payment-icon">💳</span>
+                        <span className="cart-payment-text">
+                          <strong>Online Payment</strong>
+                          <small>UPI / Card / NetBanking</small>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
 
                   <button
                     onClick={handleCheckout}

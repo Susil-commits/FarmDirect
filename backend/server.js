@@ -23,6 +23,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import farmerRoutes from './routes/farmerRoutes.js';
 import couponRoutes from './routes/couponRoutes.js';
 import dataAccessRoutes from './routes/dataAccessRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 import { uploadSingleFile } from './middleware/localUpload.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -144,6 +145,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/farmer', farmerRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/data', dataAccessRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // File upload route (for profile pictures, crop images, etc.)
 app.post('/api/upload', uploadSingleFile('general'), (req, res) => {

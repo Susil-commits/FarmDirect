@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../context/ToastContext';
 import { useCart } from '../context/CartContext';
 import { cropService, orderService } from '../services/appService';
+import paymentService from '../services/paymentService';
 import PageTransition from '../components/common/PageTransition';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -30,6 +31,7 @@ export default function CheckoutNew() {
 
   const [formData, setFormData] = useState({
     quantity: 1,
+    paymentMethod: 'cod',
     termsAccepted: false
   });
 
@@ -70,11 +72,64 @@ export default function CheckoutNew() {
     return (crop.price || 0) * formData.quantity;
   };
 
+  const processRazorpayPayment = async (createdOrder) => {
+    try {
+      const init = await paymentService.initializeRazorpayPayment(createdOrder._id);
+
+      await paymentService.openRazorpayCheckout({
+        keyId: init.keyId,
+        razorpayOrderId: init.razorpayOrderId,
+        amount: init.amount,
+        name: 'FarmDirect',
+        description: `Order for ${crop.cropName}`,
+        prefill: {
+          name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+          email: user?.email || '',
+          contact: user?.phone || '',
+        },
+        onSuccess: async (response) => {
+          try {
+            await paymentService.verifyRazorpayPayment({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+            setOrderData((prev) => ({ ...prev, paymentStatus: 'completed' }));
+            setStep(3);
+            addToast('Payment successful! Order confirmed.', 'success');
+          } catch (verr) {
+            addToast(verr?.message || 'Payment verification failed. You can retry from order details.', 'error');
+            navigate(`/order/${createdOrder._id}`);
+          } finally {
+            setLoading(false);
+          }
+        },
+        onDismiss: () => {
+          addToast('Payment cancelled. You can retry payment from your order details.', 'warning');
+          navigate(`/order/${createdOrder._id}`);
+          setLoading(false);
+        },
+        onFailure: (err) => {
+          if (err?.metadata?.order_id) {
+            paymentService.reportRazorpayFailure(err.metadata.order_id, err.description).catch(() => {});
+          }
+          addToast(err?.description || 'Payment failed. You can retry from order details.', 'error');
+          navigate(`/order/${createdOrder._id}`);
+          setLoading(false);
+        },
+      });
+    } catch (err) {
+      addToast(err?.message || 'Failed to start payment. You can retry from order details.', 'error');
+      navigate(`/order/${createdOrder._id}`);
+      setLoading(false);
+    }
+  };
+
   const handlePlaceOrder = async () => {
     if (!crop) return;
 
+    setLoading(true);
     try {
-      setLoading(true);
       const total = calculateTotal();
 
       // api.js interceptor unwraps to response.data, so result = { message, order }
@@ -83,20 +138,31 @@ export default function CheckoutNew() {
         quantity: formData.quantity,
         unitPrice: crop.price,
         totalAmount: total,
-        paymentMethod: 'cod',
+        paymentMethod: formData.paymentMethod,
         couponCode: appliedCoupon?.code || undefined,
       });
 
       const createdOrder = result.order;
       setOrderData(createdOrder);
       localStorage.setItem('lastOrderId', createdOrder._id);
+
+      if (formData.paymentMethod === 'razorpay') {
+        // Keep loading spinner visible while the payment modal is open.
+        await processRazorpayPayment(createdOrder);
+        return;
+      }
+
       setStep(3); // Go to confirmation
       addToast(result.message || 'Order placed successfully!', 'success');
     } catch (err) {
       // Error is already unwrapped by api.js interceptor: err = { message: '...' }
       addToast(err?.message || 'Error placing order', 'error');
-    } finally {
       setLoading(false);
+    } finally {
+      // Only clear loading for the COD path; Razorpay clears it inside callbacks.
+      if (formData.paymentMethod !== 'razorpay') {
+        setLoading(false);
+      }
     }
   };
 
@@ -276,10 +342,31 @@ export default function CheckoutNew() {
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <DollarSign className="w-5 h-5 text-blue-600" /> Payment Method
                   </h3>
-                  <div className="p-4 border-2 border-green-600 bg-green-50 rounded-lg">
-                    <p className="font-bold text-gray-900">💳 Cash on Delivery (COD)</p>
-                    <p className="text-sm text-gray-600 mt-1">Pay when you pick up your order from the farm</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'cod' }))}
+                      className={`payment-card ${formData.paymentMethod === 'cod' ? 'active' : ''}`}
+                    >
+                      <div className="text-3xl">💵</div>
+                      <p className="font-bold text-gray-900 mt-1">Cash on Delivery</p>
+                      <p className="text-sm text-gray-600">Pay at pickup</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'razorpay' }))}
+                      className={`payment-card ${formData.paymentMethod === 'razorpay' ? 'active' : ''}`}
+                    >
+                      <div className="text-3xl">💳</div>
+                      <p className="font-bold text-gray-900 mt-1">Online Payment</p>
+                      <p className="text-sm text-gray-600">UPI / Card / NetBanking</p>
+                    </button>
                   </div>
+                  {formData.paymentMethod === 'razorpay' && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      You'll be redirected to a secure Razorpay checkout after placing the order.
+                    </p>
+                  )}
                 </div>
 
                 {/* Description */}
@@ -328,7 +415,9 @@ export default function CheckoutNew() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Payment</span>
-                    <span className="font-semibold text-gray-900">Cash on Delivery</span>
+                    <span className="font-semibold text-gray-900">
+                      {formData.paymentMethod === 'razorpay' ? 'Online (Razorpay)' : 'Cash on Delivery'}
+                    </span>
                   </div>
                   <div className="flex justify-between text-lg font-bold pt-3 border-t">
                     <span>Total</span>
@@ -345,8 +434,10 @@ export default function CheckoutNew() {
                     className="w-5 h-5 text-blue-600 rounded mt-1"
                   />
                   <span className="text-sm text-gray-700">
-                    I confirm that I will pick up the order from the farm location and pay the farmer directly.
-                    I agree to the <strong>Terms & Conditions</strong>.
+                    {formData.paymentMethod === 'cod'
+                      ? 'I confirm that I will pick up the order from the farm location and pay the farmer directly.'
+                      : 'I confirm that I will pick up the order from the farm location. Payment will be made online now.'}
+                    {' '}I agree to the <strong>Terms & Conditions</strong>.
                   </span>
                 </label>
 

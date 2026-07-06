@@ -75,6 +75,12 @@
   animation: slideInUp var(--transition-base, 0.4s ease-out) forwards;
   opacity: 0;
   border-radius: var(--radius-lg, 12px);
+  padding: 1.25rem;
+  border: 2px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
 }
 
 .payment-card:nth-child(1) { animation-delay: 0.1s; }
