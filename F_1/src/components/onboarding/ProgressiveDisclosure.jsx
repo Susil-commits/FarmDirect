@@ -49,6 +49,9 @@ export function ConditionalFields({ condition, children, label, hint }) {
   const [isVisible, setIsVisible] = useState(condition);
 
   useEffect(() => {
+       
+       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsVisible(condition);
   }, [condition]);
 

@@ -6,8 +6,8 @@ import Badge from '../components/common/Badge';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
 import Avatar from '../components/common/Avatar';
-import { useRouter } from '../context/RouterContext';
-import { useWishlist } from '../context/WishlistContext';
+import { useRouter } from '../hooks/useRouter';
+import { useWishlist } from '../hooks/useWishlist';
 import { cropService, userService } from '../services/appService';
 import { getImageUrl } from '../utils/formatters';
 

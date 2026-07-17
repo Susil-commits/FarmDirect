@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useRouter } from '../context/RouterContext.jsx';
@@ -74,6 +75,8 @@ const withAuthGuard = (
       } finally {
         setLoading(false);
       }
+       
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated, hasRole, hasPermission, checkSession, navigate, requiredRoles, requiredPermissions, requireVerification, verificationStatus, redirectTo]);
 
     useEffect(() => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useRouter } from '../../context/RouterContext';
+import { useRouter } from '../../hooks/useRouter';
 import { orderService } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition';
 import Card from '../../components/common/Card';
@@ -62,6 +62,8 @@ export default function AdminOrders() {
   useEffect(() => {
     window.scrollTo(0, 0);
     if (user?.role === 'admin') {
+       
+      // eslint-disable-next-line react-hooks/immutability
       fetchOrders();
     }
   }, [user]);

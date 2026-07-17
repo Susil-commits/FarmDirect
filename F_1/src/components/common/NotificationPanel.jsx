@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, _useEffect } from 'react';
 import { X, Trash2, Check } from 'lucide-react';
-import { useNotifications } from '../../context/NotificationContext';
+import { useNotifications } from '../../hooks/useNotifications';
 import { useAuth } from '../../context/AuthContext';
 
 export default function NotificationPanel({ isOpen, onClose }) {

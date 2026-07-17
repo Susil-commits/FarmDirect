@@ -49,6 +49,7 @@ export default function UserProfile() {
 
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         name: user.name || '',
         email: user.email || '',
@@ -79,11 +80,15 @@ export default function UserProfile() {
       const { userService } = await import('../services/appService');
       const response = await userService.getAddresses();
       setAddresses(response.data?.addresses || response.data || []);
-    } catch {}
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (activeTab === 'orders') fetchOrders();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (activeTab === 'addresses') fetchAddresses();
   }, [activeTab]);
 
@@ -105,7 +110,7 @@ export default function UserProfile() {
       if (updateProfile) await updateProfile(formData);
       addToast('Profile updated successfully', 'success');
       setIsEditing(false);
-    } catch (error) {
+    } catch {
       addToast('Failed to update profile', 'error');
     } finally {
       setIsUploadingPhoto(false);

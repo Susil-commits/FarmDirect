@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { X, ChevronRight, ChevronLeft, Lightbulb } from 'lucide-react';
 import Button from '../common/Button';
 import './GuidedTour.css';
@@ -16,36 +16,8 @@ import './GuidedTour.css';
 export function GuidedTour({ steps, onComplete, onSkip, startOnMount = false }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isActive, setIsActive] = useState(startOnMount);
-  const [completed, setCompleted] = useState(false);
   const [highlightRect, setHighlightRect] = useState(null);
   const tourRef = useRef(null);
-
-  useEffect(() => {
-    if (!isActive || !steps[currentStepIndex]) return;
-
-    const timer = setTimeout(() => {
-      updateHighlight();
-    }, 100);
-
-    window.addEventListener('resize', updateHighlight);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', updateHighlight);
-    };
-  }, [currentStepIndex, isActive, steps]);
-
-  // Handle keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (!isActive) return;
-      if (e.key === 'Escape') handleSkip();
-      if (e.key === 'ArrowRight') handleNext();
-      if (e.key === 'ArrowLeft') handlePrevious();
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isActive, currentStepIndex, steps]);
 
   const updateHighlight = () => {
     const step = steps[currentStepIndex];
@@ -66,6 +38,17 @@ export function GuidedTour({ steps, onComplete, onSkip, startOnMount = false }) 
     });
   };
 
+  const handleComplete = () => {
+    setIsActive(false);
+    if (onComplete) onComplete();
+    localStorage.setItem('tour-completed', 'true');
+  };
+
+  const handleSkip = () => {
+    setIsActive(false);
+    if (onSkip) onSkip();
+  };
+
   const handleNext = () => {
     if (currentStepIndex < steps.length - 1) {
       setCurrentStepIndex(currentStepIndex + 1);
@@ -80,22 +63,38 @@ export function GuidedTour({ steps, onComplete, onSkip, startOnMount = false }) 
     }
   };
 
-  const handleComplete = () => {
-    setCompleted(true);
-    setIsActive(false);
-    if (onComplete) onComplete();
-    localStorage.setItem('tour-completed', 'true');
-  };
+  useEffect(() => {
+    if (!isActive || !steps[currentStepIndex]) return;
 
-  const handleSkip = () => {
-    setIsActive(false);
-    if (onSkip) onSkip();
-  };
+    const timer = setTimeout(() => {
+      updateHighlight();
+    }, 100);
+
+    window.addEventListener('resize', updateHighlight);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateHighlight);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStepIndex, isActive, steps]);
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isActive) return;
+      if (e.key === 'Escape') handleSkip();
+      if (e.key === 'ArrowRight') handleNext();
+      if (e.key === 'ArrowLeft') handlePrevious();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive, currentStepIndex, steps]);
 
   if (!isActive || !steps[currentStepIndex]) return null;
 
   const step = steps[currentStepIndex];
-  const progress = ((currentStepIndex + 1) / steps.length) * 100;
 
   return (
     <>
@@ -200,11 +199,8 @@ export function GuidedTour({ steps, onComplete, onSkip, startOnMount = false }) 
 /**
  * TourTrigger - Button to start a tour
  */
-export function TourTrigger({ label = 'Take a tour', tourId, onStart }) {
-  const [showTour, setShowTour] = useState(false);
-
+export function TourTrigger({ label = 'Take a tour', onStart }) {
   const handleStart = () => {
-    setShowTour(true);
     if (onStart) onStart();
   };
 
@@ -223,7 +219,7 @@ export function TourTrigger({ label = 'Take a tour', tourId, onStart }) {
 /**
  * Tooltip - Contextual help tooltip
  */
-export function Tooltip({ label, content, position = 'top', trigger = 'hover' }) {
+export function Tooltip({ content, position = 'top', trigger = 'hover' }) {
   const [isVisible, setIsVisible] = useState(trigger === 'click' ? false : false);
   const tooltipRef = useRef(null);
 
@@ -269,6 +265,7 @@ export function Tooltip({ label, content, position = 'top', trigger = 'hover' })
 /**
  * HelpHint - Inline help hint
  */
+// eslint-disable-next-line no-unused-vars
 export function HelpHint({ children, icon: Icon = Lightbulb }) {
   return (
     <div className="help-hint">

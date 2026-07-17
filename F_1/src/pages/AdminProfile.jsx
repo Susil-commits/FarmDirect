@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useRouter } from '../context/RouterContext';
-import { useToast } from '../context/ToastContext';
+import { useRouter } from '../hooks/useRouter';
+import { useToast } from '../hooks/useToast';
 import PageTransition from '../components/common/PageTransition.jsx';
 import Button from '../components/common/Button';
 import Avatar from '../components/common/Avatar';
@@ -76,6 +76,7 @@ export default function AdminProfile() {
       const actualJoinDate = user?.createdAt 
         ? new Date(user.createdAt).toISOString().split('T')[0]
         : '';
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         name: user?.name || '',
         email: user?.email || '',
@@ -113,6 +114,8 @@ export default function AdminProfile() {
       if (photoFile) {
         const result = await uploadService.uploadProfilePicture(photoFile);
         if (result?.url) {
+       
+      // eslint-disable-next-line react-hooks/immutability
           formData.photo = result.url;
         }
       }

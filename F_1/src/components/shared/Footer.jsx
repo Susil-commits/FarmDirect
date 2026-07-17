@@ -1,5 +1,5 @@
 import { Globe, MessageCircle, Camera, ExternalLink } from 'lucide-react';
-import { useRouter } from '../../context/RouterContext';
+import { useRouter } from '../../hooks/useRouter';
 
 export default function Footer() {
   const { navigate } = useRouter();

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '../../hooks/useToast';
 import { useAuth } from '../../context/AuthContext';
-import { useRouter } from '../../context/RouterContext';
+import { useRouter } from '../../hooks/useRouter';
 import { adminService, authServiceExtended } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition';
 import { XCircle, Trash2, Upload, AlertTriangle, ArrowLeft } from 'lucide-react';

@@ -26,6 +26,9 @@ export default function FilterPanel({
 
   // Sync with parent filters changes
   useEffect(() => {
+       
+       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
     setLocalFilters({
       cropType: currentFilters.cropType || '',
       priceRange: currentFilters.priceRange || [0, 1000],

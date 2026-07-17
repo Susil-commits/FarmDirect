@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MessageSquare, Clock, MapPin } from 'lucide-react';
-import { useRouter } from '../context/RouterContext';
+import { useRouter } from '../hooks/useRouter';
 import PageTransition from '../components/common/PageTransition';
 
 export default function Support() {

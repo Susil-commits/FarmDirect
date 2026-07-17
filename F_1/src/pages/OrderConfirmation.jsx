@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useRouter } from '../context/RouterContext';
+import { useRouter } from '../hooks/useRouter';
 import PageTransition from '../components/common/PageTransition.jsx';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
@@ -26,6 +26,8 @@ export default function OrderConfirmation() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+       
+      // eslint-disable-next-line react-hooks/immutability
     fetchOrderData();
   }, []);
 

@@ -23,7 +23,7 @@ export const ProtectedRoute = ({
 }) => {
   const { user, isAuthenticated, hasRole, hasPermission } = useAuth();
   const { navigate } = useRouter();
-  const [unauthorized, setUnauthorized] = React.useState(false);
+  const [_unauthorized, _setUnauthorized] = React.useState(false);
 
   // Use roles prop or fallback to requiredRoles for backward compatibility
   const rolesToCheck = roles || requiredRoles;

@@ -22,6 +22,7 @@ export const useFetch = (fetchFunction, dependencies = []) => {
 
   useEffect(() => {
     if (dependencies.length === 0 && fetchFunction) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       executeRequest();
     }
   }, [executeRequest, dependencies, fetchFunction]);

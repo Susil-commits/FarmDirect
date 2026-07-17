@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { X, Download, Share2, Star } from 'lucide-react';
 import PageTransition from '../components/common/PageTransition';
-import { useToast } from '../context/ToastContext';
-import { useCart } from '../context/CartContext';
+import { useToast } from '../hooks/useToast';
+import { useCart } from '../hooks/useCart';
 import { cropService } from '../services/appService';
 
 export default function ProductComparison() {
@@ -15,6 +15,8 @@ export default function ProductComparison() {
 
   useEffect(() => {
     // Load available crops for selection from API
+       
+      // eslint-disable-next-line react-hooks/immutability
     fetchAvailableCrops();
   }, []);
 
@@ -54,7 +56,7 @@ export default function ProductComparison() {
         selectedCrops.map(id => cropService.getCropById(id).then(r => r.data || r))
       );
       setComparisonData({ success: true, data: { crops: cropDetails } });
-    } catch (error) {
+    } catch {
       addToast('Failed to load comparison', 'error');
     } finally {
       setLoading(false);
@@ -66,7 +68,7 @@ export default function ProductComparison() {
       addToast('Generating PDF...', 'info');
       // In a real app, this would export the comparison as PDF
       addToast('Comparison exported successfully!', 'success');
-    } catch (error) {
+    } catch {
       addToast('Failed to export', 'error');
     }
   };

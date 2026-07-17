@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useCallback } from 'react';
 import {
   useProducts,
@@ -100,12 +101,6 @@ export const DataProvider = ({ children }) => {
 /**
  * Hook to use data context
  */
-export const useData = () => {
-  const context = React.useContext(DataContext);
-  if (!context) {
-    throw new Error('useData must be used within DataProvider');
-  }
-  return context;
-};
+
 
 export default DataProvider;

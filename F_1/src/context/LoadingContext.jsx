@@ -1,6 +1,7 @@
-import { createContext, useState, useContext } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useState, _useContext } from 'react';
 
-const LoadingContext = createContext();
+export const LoadingContext = createContext();
 
 export function LoadingProvider({ children }) {
   const [isPageLoading, setIsPageLoading] = useState(false);
@@ -22,10 +23,4 @@ export function LoadingProvider({ children }) {
   );
 }
 
-export function useLoading() {
-  const context = useContext(LoadingContext);
-  if (!context) {
-    throw new Error('useLoading must be used within LoadingProvider');
-  }
-  return context;
-}
+

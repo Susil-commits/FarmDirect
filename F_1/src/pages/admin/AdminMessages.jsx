@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   MessageSquare, Search, Filter, ChevronRight, Trash2, Clock, 
   User, Mail, Download, Archive, Flag, Send
@@ -35,29 +35,27 @@ export default function AdminMessages() {
   // View Mode
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'detail'
   const [replyText, setReplyText] = useState('');
+  // eslint-disable-next-line no-unused-vars
   const [showMoreOptions, setShowMoreOptions] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // Fetch all conversations on mount
-  useEffect(() => {
-    fetchAllConversations();
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  // Apply filters when search or filter changes
-  useEffect(() => {
-    applyFilters();
-  }, [searchTerm, filters, conversations]);
+  const calculateStats = useCallback((convs) => {
+    const totalConversations = convs.length;
+    const unreadMessages = convs.reduce((sum, conv) => sum + (conv.unreadCount || 0), 0);
+    const activeUsers = new Set(convs.map(conv => conv.otherUser?._id)).size;
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    setStats({
+      totalConversations,
+      unreadMessages,
+      activeUsers,
+    });
+  }, []);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const fetchAllConversations = async () => {
+  const fetchAllConversations = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -70,27 +68,16 @@ export default function AdminMessages() {
         calculateStats(response.data);
       }
     } catch (err) {
+      console.error(err);
       // Fallback - show demo data structure for now
       console.log('Will need to implement admin messages endpoint');
       setConversations([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [calculateStats]);
 
-  const calculateStats = (convs) => {
-    const totalConversations = convs.length;
-    const unreadMessages = convs.reduce((sum, conv) => sum + (conv.unreadCount || 0), 0);
-    const activeUsers = new Set(convs.map(conv => conv.otherUser?._id)).size;
-
-    setStats({
-      totalConversations,
-      unreadMessages,
-      activeUsers,
-    });
-  };
-
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = conversations;
 
     // Search filter
@@ -133,7 +120,26 @@ export default function AdminMessages() {
     }
 
     setFilteredConversations(filtered);
-  };
+  }, [conversations, searchTerm, filters]);
+
+  // Fetch all conversations on mount
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchAllConversations();
+  }, [fetchAllConversations]);
+
+  // Apply filters when search or filter changes
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    applyFilters();
+  }, [applyFilters]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+
 
   const fetchMessages = async (conversation) => {
     setMessagesLoading(true);

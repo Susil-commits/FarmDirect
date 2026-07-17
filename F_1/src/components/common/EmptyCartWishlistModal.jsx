@@ -1,6 +1,6 @@
 import React from 'react';
 import { LogIn } from 'lucide-react';
-import { useRouter } from '../../context/RouterContext';
+import { useRouter } from '../../hooks/useRouter';
 import './EmptyCartWishlistModal.css';
 
 export default function EmptyCartWishlistModal({ type = 'cart', onClose }) {

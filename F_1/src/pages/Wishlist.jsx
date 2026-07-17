@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, MapPin, Star, ShoppingCart, Eye, Check, Trash2 } from 'lucide-react';
 import { getImageUrl } from '../utils/formatters';
-import { useWishlist } from '../context/WishlistContext';
-import { useRouter } from '../context/RouterContext';
-import { useCart } from '../context/CartContext';
-import { useToast } from '../context/ToastContext';
+import { useWishlist } from '../hooks/useWishlist';
+import { useRouter } from '../hooks/useRouter';
+import { useCart } from '../hooks/useCart';
+import { useToast } from '../hooks/useToast';
 import PageTransition from '../components/common/PageTransition.jsx';
 import Button from '../components/common/Button';
 import '../styles/Wishlist.css';

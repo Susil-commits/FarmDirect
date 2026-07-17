@@ -3,7 +3,7 @@ import { Mail, ArrowLeft, Check } from 'lucide-react';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { passwordResetService } from '../../services/passwordResetService';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '../../hooks/useToast';
 
 export default function ForgotPassword({ onBack }) {
   const [email, setEmail] = useState('');

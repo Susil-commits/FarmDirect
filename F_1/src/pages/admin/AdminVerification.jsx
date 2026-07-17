@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { adminService } from '../../services/appService';
 import { CheckCircle, XCircle, Clock, Eye, FileText, Lock, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -27,12 +27,24 @@ export default function AdminVerification() {
     window.scrollTo(0, 0);
   }, []);
 
-  // Fetch verification requests on component mount
-  useEffect(() => {
-    fetchVerificationRequests();
-  }, []);
 
-  const fetchVerificationRequests = async () => {
+
+    const mapKYCDocuments = (kycDocs) => {
+    const docs = [];
+    if (kycDocs.governmentId?.url) docs.push({ name: 'Government ID', icon: '🆔', status: 'verified', url: kycDocs.governmentId.url });
+    if (kycDocs.profilePhoto?.url) docs.push({ name: 'Profile Photo', icon: '📷', status: 'verified', url: kycDocs.profilePhoto.url });
+    if (kycDocs.addressProof?.url) docs.push({ name: 'Address Proof', icon: '🏠', status: 'verified', url: kycDocs.addressProof.url });
+    if (kycDocs.landOwnership?.url) docs.push({ name: 'Land Ownership', icon: '🌾', status: 'verified', url: kycDocs.landOwnership.url });
+    if (kycDocs.farmRegistration?.url) docs.push({ name: 'Farm Registration', icon: '📋', status: 'verified', url: kycDocs.farmRegistration.url });
+    if (kycDocs.businessRegistration?.url) docs.push({ name: 'Business Registration', icon: '🏢', status: 'verified', url: kycDocs.businessRegistration.url });
+    if (kycDocs.bankDetails?.url) docs.push({ name: 'Bank Details', icon: '🏦', status: 'verified', url: kycDocs.bankDetails.url });
+    if (kycDocs.taxId?.url) docs.push({ name: 'Tax ID', icon: '🧾', status: 'verified', url: kycDocs.taxId.url });
+    if (kycDocs.bankAccount?.url) docs.push({ name: 'Bank Account', icon: '💳', status: 'verified', url: kycDocs.bankAccount.url });
+    if (kycDocs.landSurvey?.url) docs.push({ name: 'Land Survey', icon: '🗺️', status: 'verified', url: kycDocs.landSurvey.url });
+    return docs;
+  };
+
+  const fetchVerificationRequests = useCallback(async () => {
     try {
       _setLoading(true);
       // Fetch both farmers and buyers for KYC review
@@ -78,22 +90,14 @@ export default function AdminVerification() {
     } finally {
       _setLoading(false);
     }
-  };
+  }, []);
 
-  const mapKYCDocuments = (kycDocs) => {
-    const docs = [];
-    if (kycDocs.governmentId?.url) docs.push({ name: 'Government ID', icon: '🆔', status: 'verified', url: kycDocs.governmentId.url });
-    if (kycDocs.profilePhoto?.url) docs.push({ name: 'Profile Photo', icon: '📷', status: 'verified', url: kycDocs.profilePhoto.url });
-    if (kycDocs.addressProof?.url) docs.push({ name: 'Address Proof', icon: '🏠', status: 'verified', url: kycDocs.addressProof.url });
-    if (kycDocs.landOwnership?.url) docs.push({ name: 'Land Ownership', icon: '🌾', status: 'verified', url: kycDocs.landOwnership.url });
-    if (kycDocs.farmRegistration?.url) docs.push({ name: 'Farm Registration', icon: '📋', status: 'verified', url: kycDocs.farmRegistration.url });
-    if (kycDocs.businessRegistration?.url) docs.push({ name: 'Business Registration', icon: '🏢', status: 'verified', url: kycDocs.businessRegistration.url });
-    if (kycDocs.bankDetails?.url) docs.push({ name: 'Bank Details', icon: '🏦', status: 'verified', url: kycDocs.bankDetails.url });
-    if (kycDocs.taxId?.url) docs.push({ name: 'Tax ID', icon: '🧾', status: 'verified', url: kycDocs.taxId.url });
-    if (kycDocs.bankAccount?.url) docs.push({ name: 'Bank Account', icon: '💳', status: 'verified', url: kycDocs.bankAccount.url });
-    if (kycDocs.landSurvey?.url) docs.push({ name: 'Land Survey', icon: '🗺️', status: 'verified', url: kycDocs.landSurvey.url });
-    return docs;
-  };
+  // Fetch verification requests on component mount
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchVerificationRequests();
+  }, [fetchVerificationRequests]);
+
 
   // Redirect non-admins
   if (!user || user.role !== 'admin') {

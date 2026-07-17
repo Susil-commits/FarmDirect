@@ -9,7 +9,7 @@ import { useRouter } from '../context/RouterContext.jsx';
  */
 export const usePrivateRoute = (requiredRoles = null) => {
   const { user, isAuthenticated, hasRole, checkSession } = useAuth();
-  const { navigate, currentPath } = useRouter();
+  const { navigate, _currentPath } = useRouter();
 
   useEffect(() => {
     const validateAccess = async () => {

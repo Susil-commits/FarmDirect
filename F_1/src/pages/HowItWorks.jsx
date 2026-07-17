@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle, Users, TrendingUp, Award, Zap, Shield } from 'lucide-react';
-import { useRouter } from '../context/RouterContext';
+import { useRouter } from '../hooks/useRouter';
 import PageTransition from '../components/common/PageTransition';
 
 export default function HowItWorks() {

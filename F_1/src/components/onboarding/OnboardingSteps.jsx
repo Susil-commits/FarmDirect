@@ -565,7 +565,7 @@ export function PreferencesStep({ data, updateData, errors }) {
 /**
  * Review Step - Review all information
  */
-export function ReviewStep({ data, errors }) {
+export function ReviewStep({ data }) {
   return (
     <div className="onboarding-step review-step">
       <div className="step-header">

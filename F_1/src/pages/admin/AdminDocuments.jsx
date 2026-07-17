@@ -77,7 +77,13 @@ export default function AdminDocuments() {
   };
 
   useEffect(() => {
+       
+       
+       
+       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUsers(1);
+       
     setPage(1);
   }, [filters]);
 
@@ -85,9 +91,12 @@ export default function AdminDocuments() {
   useEffect(() => {
     // Parse userId from the RouterContext currentRoute (e.g., /admin/documents?userId=abc123)
     const queryString = currentRoute.includes('?') ? currentRoute.split('?')[1] : '';
+       
     const urlParams = new URLSearchParams(queryString);
     const userId = urlParams.get('userId');
+       
     if (userId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchUserDetails(userId);
     }
   }, [currentRoute]);

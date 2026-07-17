@@ -1,49 +1,8 @@
-import React, { createContext, useState, useCallback, useEffect, useRef, useContext } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useState, useCallback, useEffect, useRef, _useContext } from 'react';
 import { notificationService } from '../services/appService.js';
 import { useSocket } from './SocketContext';
 
-export const ToastContext = createContext();
-
-export const ToastProvider = ({ children }) => {
-  const [toasts, setToasts] = useState([]);
-
-  const addToast = useCallback((message, type = 'info', duration = 3000) => {
-    const id = Date.now();
-    
-    setToasts(prev => [...prev, { id, message, type }]);
-    
-    if (duration) {
-      setTimeout(() => {
-        removeToast(id);
-      }, duration);
-    }
-    
-    return id;
-  }, []);
-
-  const removeToast = useCallback((id) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
-  }, []);
-
-  const showSuccess = useCallback((message) => addToast(message, 'success'), [addToast]);
-  const showError = useCallback((message) => addToast(message, 'error', 5000), [addToast]);
-  const showInfo = useCallback((message) => addToast(message, 'info'), [addToast]);
-  const showWarning = useCallback((message) => addToast(message, 'warning'), [addToast]);
-
-  return (
-    <ToastContext.Provider value={{ toasts, addToast, removeToast, showSuccess, showError, showInfo, showWarning }}>
-      {children}
-    </ToastContext.Provider>
-  );
-};
-
-export const useToast = () => {
-  const context = React.useContext(ToastContext);
-  if (!context) {
-    throw new Error('useToast must be used within ToastProvider');
-  }
-  return context;
-};
 
 // Notification system context
 export const NotificationContext = createContext();
@@ -132,8 +91,12 @@ export const NotificationProvider = ({ children }) => {
     // Don't fetch notifications automatically - let components request them on demand
     // This prevents constant re-renders and API calls
     return () => {
+       
+       
+       
       if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
+      // eslint-disable-next-line no-undef
+        clearInterval(intervalId);
       }
     };
   }, []);

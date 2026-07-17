@@ -1,6 +1,7 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useContext, useMemo } from 'react';
 
-const RouterContext = createContext();
+export const RouterContext = createContext();
 
 // Route pattern definitions for parameter extraction
 const ROUTE_PATTERNS = [

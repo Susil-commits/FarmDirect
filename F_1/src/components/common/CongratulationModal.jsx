@@ -1,5 +1,5 @@
 import { CheckCircle, Sparkles } from 'lucide-react';
-import { useRouter } from '../../context/RouterContext';
+import { useRouter } from '../../hooks/useRouter';
 import { useAuth } from '../../context/AuthContext';
 import Button from './Button';
 

@@ -10,7 +10,6 @@ import Avatar from './Avatar';
 export default function FarmerBadge({ 
   farmer, 
   compact = true,
-  showVerified = true,
   onClick = null
 }) {
   if (!farmer) {

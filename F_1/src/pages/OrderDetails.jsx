@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../context/ToastContext';
@@ -47,16 +47,32 @@ export default function OrderDetails() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
+  const fetchOrderDetails = useCallback(async () => {
+    try {
+      setLoading(true);
+      // api.js interceptor unwraps to response.data, so response = { order: {...} }
+      const response = await orderService.getOrderDetails(orderId);
+      setOrder(response.order);
+    } catch {
+      addToast('Failed to load order details', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [orderId, addToast]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
+     
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchOrderDetails();
-  }, [orderId]);
+  }, [orderId, fetchOrderDetails]);
 
   // Live updates: when a socket order:updated arrives for THIS order, patch the
   // status instantly and re-fetch to reconcile timeline + payment status.
   useEffect(() => {
     if (!orderEvent) return;
     if (String(orderEvent.orderId) !== String(orderId)) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOrder((prev) =>
       prev
         ? {
@@ -68,20 +84,7 @@ export default function OrderDetails() {
     );
     const t = setTimeout(() => fetchOrderDetails(), 400);
     return () => clearTimeout(t);
-  }, [orderEvent, orderId]);
-
-  const fetchOrderDetails = async () => {
-    try {
-      setLoading(true);
-      // api.js interceptor unwraps to response.data, so response = { order: {...} }
-      const response = await orderService.getOrderDetails(orderId);
-      setOrder(response.order);
-    } catch {
-      addToast('Failed to load order details', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [orderEvent, orderId, fetchOrderDetails]);
 
   const isBuyer = user?.role === 'buyer';
 

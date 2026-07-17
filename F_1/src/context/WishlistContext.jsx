@@ -1,13 +1,32 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { wishlistService } from '../services/appService';
 import { useAuth } from './AuthContext';
 
-const WishlistContext = createContext();
+export const WishlistContext = createContext();
 
 export function WishlistProvider({ children }) {
   const [wishlist, setWishlist] = useState([]);
+  const loadFromLocalStorageRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const { user, isAuthenticated } = useAuth();
+
+  const loadFromLocalStorage = () => {
+    const saved = localStorage.getItem('farm-wishlist');
+    if (saved) {
+      try {
+        setWishlist(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to load wishlist from localStorage:', e);
+        setWishlist([]);
+      }
+    }
+  };
+
+  // Keep ref updated so it can be called from async callbacks
+  useEffect(() => {
+    loadFromLocalStorageRef.current = loadFromLocalStorage;
+  }, [loadFromLocalStorage]);
 
   // Load wishlist: from API if authenticated, from localStorage if guest
   useEffect(() => {
@@ -47,29 +66,17 @@ export function WishlistProvider({ children }) {
           localStorage.setItem('farm-wishlist', JSON.stringify(normalized));
         } catch (err) {
           console.error('Failed to load wishlist from API, falling back to localStorage:', err);
-          loadFromLocalStorage();
+          loadFromLocalStorageRef.current();
         } finally {
           setLoading(false);
         }
       } else {
-        loadFromLocalStorage();
+        loadFromLocalStorageRef.current();
       }
     };
 
     loadWishlist();
   }, [isAuthenticated, user]);
-
-  const loadFromLocalStorage = () => {
-    const saved = localStorage.getItem('farm-wishlist');
-    if (saved) {
-      try {
-        setWishlist(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to load wishlist from localStorage:', e);
-        setWishlist([]);
-      }
-    }
-  };
 
   // Save to localStorage whenever wishlist changes
   useEffect(() => {
@@ -189,7 +196,7 @@ export function WishlistProvider({ children }) {
             const crop = item.cropId || item;
             return { ...crop, _id: crop._id, id: crop._id || crop.id };
           }));
-        } catch (_e) {
+        } catch {
           // Keep optimistic state
         }
       }
@@ -221,10 +228,12 @@ export function WishlistProvider({ children }) {
   );
 }
 
-export function useWishlist() {
+export function useWishlistContext() {
   const context = useContext(WishlistContext);
   if (!context) {
-    throw new Error('useWishlist must be used within WishlistProvider');
+    throw new Error('useWishlistContext must be used within WishlistProvider');
   }
   return context;
 }
+
+export const useWishlist = useWishlistContext;

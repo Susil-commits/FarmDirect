@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Tag, X, Loader, CheckCircle } from 'lucide-react';
 import { couponService } from '../../services/appService';
-import { useCart } from '../../context/CartContext';
-import { useToast } from '../../context/ToastContext';
+import { useCart } from '../../hooks/useCart';
+import { useToast } from '../../hooks/useToast';
 
 /**
  * CouponInput — reusable promo-code field.

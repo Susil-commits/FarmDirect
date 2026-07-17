@@ -24,9 +24,10 @@ const getProxyUrl = (url) => {
  * Supports: images (img tag) and PDFs (iframe via backend proxy).
  */
 export default function DocumentPreviewModal({ document, onClose }) {
+  const [imageError, setImageError] = useState(false);
+
   if (!document) return null;
 
-  const [imageError, setImageError] = useState(false);
 
   const formatFileSize = (bytes) => {
     if (!bytes) return '0 B';

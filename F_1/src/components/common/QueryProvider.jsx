@@ -4,7 +4,7 @@ import queryClient from '../../config/queryClient.js';
 
 // Conditionally import devtools only in development
 let ReactQueryDevtools = null;
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
   ReactQueryDevtools = React.lazy(() =>
     import('@tanstack/react-query-devtools').then((d) => ({
       default: d.ReactQueryDevtools,

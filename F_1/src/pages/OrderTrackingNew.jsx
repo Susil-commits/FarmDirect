@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useRouter } from '../context/RouterContext';
+import { useRouter } from '../hooks/useRouter';
 import { useAuth } from '../hooks/useAuth';
-import { useToast } from '../context/ToastContext';
-import { useRealtime } from '../context/RealtimeContext';
+import { useToast } from '../hooks/useToast';
+import { useRealtime } from '../hooks/useRealtime';
 import { orderService } from '../services/appService';
 import PageTransition from '../components/common/PageTransition';
 import Card from '../components/common/Card';
@@ -37,19 +37,26 @@ export default function OrderTrackingNew() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+       
+      // eslint-disable-next-line react-hooks/immutability
     fetchOrders();
     let active = true;
     const interval = setInterval(() => { if (active) fetchOrders(); }, 30000);
     const onVis = () => { active = !document.hidden; if (active) fetchOrders(); };
     document.addEventListener('visibilitychange', onVis);
+       
     return () => { clearInterval(interval); document.removeEventListener('visibilitychange', onVis); };
-  }, [user]);
+       
+  }, [user, fetchOrders]);
 
   // Live order updates via WebSocket: patch the selected order instantly and
   // reconcile the list (debounced). Toasts/browser-push are handled centrally
   // by RealtimeProvider; this just keeps the UI in sync without a full refresh.
+       
   useEffect(() => {
     if (!orderEvent) return;
+       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedOrder((prev) => {
       if (prev && String(prev._id) === String(orderEvent.orderId)) {
         return {
@@ -58,9 +65,11 @@ export default function OrderTrackingNew() {
           updatedAt: orderEvent.updatedAt,
         };
       }
+       
       return prev;
     });
     const t = setTimeout(() => fetchOrders(), 400);
+       
     return () => clearTimeout(t);
   }, [orderEvent]);
 

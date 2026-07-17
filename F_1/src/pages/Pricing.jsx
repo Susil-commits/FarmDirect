@@ -1,6 +1,6 @@
 import React from 'react';
 import { Check } from 'lucide-react';
-import { useRouter } from '../context/RouterContext';
+import { useRouter } from '../hooks/useRouter';
 import PageTransition from '../components/common/PageTransition';
 
 export default function Pricing() {

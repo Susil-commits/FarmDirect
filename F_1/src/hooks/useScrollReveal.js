@@ -12,8 +12,6 @@ import { useEffect, useRef } from 'react';
  */
 export const useScrollReveal = ({
   threshold = 0.2,
-  duration = 600,
-  animation = 'scroll-slide',
   repeat = false,
   staggerDelay = 100,
 } = {}) => {
@@ -88,7 +86,7 @@ export const useScrollReveal = ({
  * @param {string} triggerClass - Class to trigger animations
  * @returns {Object} - { containerRef, triggerAnimation }
  */
-export const useSequenceAnimation = (totalItems = 0, itemDelay = 100, triggerClass = 'visible') => {
+export const useSequenceAnimation = (itemDelay = 100, triggerClass = 'visible') => {
   const containerRef = useRef(null);
 
   const triggerAnimation = () => {

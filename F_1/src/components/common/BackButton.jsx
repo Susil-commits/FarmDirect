@@ -1,5 +1,5 @@
 import { ChevronLeft } from 'lucide-react';
-import { useRouter } from '../../context/RouterContext';
+import { useRouter } from '../../hooks/useRouter';
 
 export default function BackButton({ label = 'Go Back', className = '' }) {
   const { navigate } = useRouter();
@@ -16,7 +16,7 @@ export default function BackButton({ label = 'Go Back', className = '' }) {
         // Fallback to home if no history
         navigate('/');
       }
-    } catch (err) {
+    } catch {
       // Fallback to home if history access fails
       console.log('History back failed, going to home');
       navigate('/');

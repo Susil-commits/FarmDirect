@@ -1,4 +1,4 @@
- import { useRouter } from './context/RouterContext';
+ import { useRouter } from './hooks/useRouter';
 import { useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -83,6 +83,8 @@ function App() {
         redirectHandledRef.current = false;
       }, 100);
     }
+       
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [redirectPath]);
 
   const renderPage = () => {

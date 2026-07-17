@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MapPin, Star, Trash2, Minus, Plus, ShoppingBag, ArrowLeft, Check, Leaf, Calendar, Heart, Package, Loader } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-import { useRouter } from '../context/RouterContext';
-import { useToast } from '../context/ToastContext';
+import { useCart } from '../hooks/useCart';
+import { useRouter } from '../hooks/useRouter';
+import { useToast } from '../hooks/useToast';
 import { useAuth } from '../context/AuthContext';
 import { orderService } from '../services/appService';
 import paymentService from '../services/paymentService';
@@ -13,7 +13,7 @@ import '../styles/ShoppingCart.css';
 import { getImageUrl } from '../utils/formatters';
 
 export default function ShoppingCart() {
-  const { cart, removeFromCart, updateQuantity, clearCart, getTotalPrice, appliedCoupon, getDiscountedTotal } = useCart();
+  const { cart, removeFromCart, updateQuantity, clearCart, getTotalPrice, appliedCoupon, _getDiscountedTotal } = useCart();
   const { navigate } = useRouter();
   const { addToast } = useToast();
   const { isAuthenticated, user } = useAuth();

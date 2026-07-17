@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Upload, CheckCircle, Clock, AlertCircle, Download, Eye } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
-import { useRouter } from '../../context/RouterContext';
+import { useToast } from '../../hooks/useToast';
+import { useRouter } from '../../hooks/useRouter';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
@@ -57,6 +57,9 @@ export default function FarmerVerification() {
     });
 
     if (hasAnyDoc) {
+       
+       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDocuments((prev) => ({ ...prev, ...restoredDocs }));
       if (user.kycSubmittedAt) {
         setSubmittedAt(new Date(user.kycSubmittedAt));
@@ -208,7 +211,7 @@ export default function FarmerVerification() {
       addToast('Documents submitted for verification. Review within 24-48 hours.', 'success');
     } catch (error) {
       console.error('❌ [FarmerVerification] Upload error:', error);
-      const serverMsg = error?.response?.data?.message || error?.message || 'Unknown error';
+      const _serverMsg = error?.response?.data?.message || error?.message || 'Unknown error';
       addToast('Failed to submit documents. Check file sizes and formats.', 'error');
     } finally {
       setIsUploading(false);

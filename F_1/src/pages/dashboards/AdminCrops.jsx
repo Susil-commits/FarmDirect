@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useRouter } from '../../context/RouterContext';
-import { useToast } from '../../context/ToastContext';
+import { useRouter } from '../../hooks/useRouter';
+import { useToast } from '../../hooks/useToast';
 import { adminService } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import Card from '../../components/common/Card';
@@ -29,6 +29,8 @@ export default function AdminCrops() {
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
+       
+      // eslint-disable-next-line react-hooks/immutability
     fetchData();
   }, []);
 

@@ -368,7 +368,7 @@ export default function Marketplace() {
   );
 }
 
-function TrendingCard({ crop, index, onView, onToggleWishlist, isFavorite, onQuickAdd }) {
+function TrendingCard({ crop, onView, onToggleWishlist, isFavorite, onQuickAdd }) {
   const [imgError, setImgError] = useState(false);
   const cropImage = crop.images?.[0] || crop.image;
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../context/ToastContext';
@@ -61,14 +61,7 @@ export default function BuyerDashboardNew() {
   const [receiveLoading, setReceiveLoading] = useState({});
   const [pickedUpLoading, setPickedUpLoading] = useState({});
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    if (user?.role === 'buyer') {
-      fetchBuyerData();
-    }
-  }, [user]);
-
-  const fetchBuyerData = async () => {
+  const fetchBuyerData = useCallback(async () => {
     try {
       setLoading(true);
       const [ordersData, interestedData, wishlistData, recommendedData] = await Promise.all([
@@ -111,7 +104,15 @@ export default function BuyerDashboardNew() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    if (user?.role === 'buyer') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchBuyerData();
+    }
+  }, [user, fetchBuyerData]);
 
   const handleUnmarkInterest = async (cropId) => {
     try {
