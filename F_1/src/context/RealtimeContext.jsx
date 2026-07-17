@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useCallback } from 'react';
 import { useSocket } from './SocketContext';
 import { useToast } from './ToastContext';
@@ -24,7 +25,7 @@ import {
  * Note: `notification:new` and chat `message:new` are handled by their own
  * contexts (NotificationContext / ChatContext). This provider covers the rest.
  */
-const RealtimeContext = createContext(null);
+export const RealtimeContext = createContext(null);
 
 export const RealtimeProvider = ({ children }) => {
   const { subscribe, connected } = useSocket();
@@ -151,12 +152,12 @@ export const RealtimeProvider = ({ children }) => {
   );
 };
 
-export const useRealtime = () => {
-  const ctx = useContext(RealtimeContext);
-  if (!ctx) {
-    throw new Error('useRealtime must be used within a RealtimeProvider');
+export function useRealtime() {
+  const context = useContext(RealtimeContext);
+  if (!context) {
+    throw new Error('useRealtime must be used within RealtimeProvider');
   }
-  return ctx;
-};
+  return context;
+}
 
 export default RealtimeContext;

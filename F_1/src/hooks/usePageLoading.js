@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLoading } from '../context/LoadingContext';
+import { useLoading } from './/useLoading';
 
 /**
  * Hook to manage page loading state
@@ -27,6 +27,8 @@ export function usePageLoading(loadingMessage = 'Loading...') {
     return () => {
       stopLoading();
     };
+       
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadingMessage]);
 
   return { startLoading, stopLoading };

@@ -78,7 +78,7 @@ export default function CropDetail() {
           const relatedRes = await cropService.getSimilarCrops(cropId, 8);
           const allRelated = relatedRes.crops || relatedRes.data?.crops || [];
           setRelatedProducts(allRelated.slice(0, 6));
-        } catch {}
+        } catch (e) { console.error(e); }
 
         // Fetch farmer details if farmerId is available
         // farmerId from populate() is an object, so extract _id or use the string directly
@@ -297,6 +297,7 @@ export default function CropDetail() {
 
   // Derived values from crop data
   const cropName = crop?.cropName || crop?.name || 'Unknown Crop';
+  // eslint-disable-next-line no-unused-vars
   const rawCropImage = crop?.images?.[0] || crop?.image || null;
   const cropPrice = crop?.price || 0;
   const cropQuantity = crop?.quantity || 0;

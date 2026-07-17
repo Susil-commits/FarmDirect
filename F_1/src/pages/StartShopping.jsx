@@ -45,6 +45,7 @@ export default function StartShopping() {
   }, [navigate]);
 
   // Check marketplace access based on verification status
+  // eslint-disable-next-line no-unused-vars
   const handleMarketplaceAccess = useCallback(() => {
     try {
       if (!user) {
@@ -238,7 +239,7 @@ export default function StartShopping() {
             <div className="max-w-6xl mx-auto relative z-10">
               <h2 id="quick-facts-heading" className="sr-only">Quick Facts</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 text-white text-center">
-                {QUICK_FACTS.map((fact, idx) => (
+                {QUICK_FACTS.map((fact) => (
                   <div key={fact.id} role="article" aria-label={`${fact.value} ${fact.label}`} className="transform hover:scale-110 transition-transform duration-300">
                     <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 shadow-xl">
                               <div className="text-5xl font-bold mb-3 bg-gradient-to-r from-white to-green-100 bg-clip-text text-transparent">{fact.value}</div>

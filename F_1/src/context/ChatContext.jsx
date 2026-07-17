@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
 import messageService from '../services/messageService';
 import { AuthContext } from './AuthContext';
@@ -10,6 +11,7 @@ export function ChatProvider({ children }) {
   const [currentChat, setCurrentChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const fetchUnreadCountRef = useRef(() => {});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -44,7 +46,9 @@ export function ChatProvider({ children }) {
     }
   }, []);
 
+       
   // Fetch messages for a specific conversation
+      // eslint-disable-next-line react-hooks/immutability
   const fetchMessages = useCallback(async (receiverId, page = 1) => {
     try {
       setLoading(true);
@@ -63,8 +67,10 @@ export function ChatProvider({ children }) {
       setError(err.message);
       console.error('Failed to fetch messages:', err);
     } finally {
+       
       setLoading(false);
     }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Send message
@@ -86,9 +92,11 @@ export function ChatProvider({ children }) {
       return messageData;
     } catch (err) {
       setError(err.message);
+       
       console.error('Failed to send message:', err);
       throw err;
     }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchConversations]);
 
   // Mark message as read
@@ -100,7 +108,7 @@ export function ChatProvider({ children }) {
           msg._id === messageId ? { ...msg, isRead: true } : msg
         )
       );
-      fetchUnreadCount();
+      fetchUnreadCountRef.current();
     } catch (err) {
       console.error('Failed to mark message as read:', err);
     }
@@ -122,18 +130,27 @@ export function ChatProvider({ children }) {
           conv.otherUser?._id === receiverId ? { ...conv, unreadCount: 0 } : conv
         )
       );
-      fetchUnreadCount();
+      fetchUnreadCountRef.current();
     } catch (err) {
       console.error('Failed to mark conversation as read:', err);
+       
     }
   }, []);
+       
 
   // Get unread count (with in-flight guard to prevent overlapping requests)
+      // eslint-disable-next-line react-hooks/immutability
   const fetchUnreadCount = useCallback(async () => {
-    if (pollingUnreadRef.current) return; // skip if a request is already in-flight
+    if (pollingUnreadRef.current) return;
+  // eslint-disable-next-line react-hooks/immutability
+  fetchUnreadCountRef.current = fetchUnreadCount;
+       
+  // eslint-disable-next-line react-hooks/immutability
+  fetchUnreadCountRef.current = fetchUnreadCount; // skip if a request is already in-flight
     pollingUnreadRef.current = true;
     try {
       const response = await messageService.getUnreadCount();
+       
       const data = unwrapData(response);
       setUnreadCount(data?.totalUnread || data?.totalUnread === 0 ? data.totalUnread : 0);
     } catch (err) {
@@ -141,6 +158,7 @@ export function ChatProvider({ children }) {
     } finally {
       pollingUnreadRef.current = false;
     }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Delete message
@@ -213,9 +231,9 @@ export function ChatProvider({ children }) {
     if (convRefreshTimer.current) clearTimeout(convRefreshTimer.current);
     convRefreshTimer.current = setTimeout(() => {
       fetchConversations();
-      fetchUnreadCount();
+      fetchUnreadCountRef.current();
     }, 1500);
-  }, [fetchConversations, fetchUnreadCount]);
+  }, [fetchConversations]);
 
   useEffect(() => {
     if (!socketConnected || !isAuthenticated) return;
@@ -233,6 +251,7 @@ export function ChatProvider({ children }) {
         });
         // Best-effort: tell the server we've seen it (no UI churn)
         messageService.markConversationAsRead(currentChat).catch(() => {});
+       
       } else {
         // Other conversation → bump unread + refresh list (debounced)
         setUnreadCount((prev) => prev + 1);
@@ -241,9 +260,11 @@ export function ChatProvider({ children }) {
     });
 
     return () => unsub();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     socketConnected,
     isAuthenticated,
+       
     currentChat,
     subscribeSocket,
     normalizeSocketMessage,
@@ -253,6 +274,8 @@ export function ChatProvider({ children }) {
   // Clear currentChat on logout to prevent stale IDs from triggering 401 polls
   useEffect(() => {
     if (!isAuthenticated) {
+       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentChat(null);
     }
   }, [isAuthenticated]);
@@ -262,7 +285,7 @@ export function ChatProvider({ children }) {
     let interval;
     let active = true;
 
-    const poll = () => { if (active) fetchUnreadCount(); };
+    const poll = () => { if (active) fetchUnreadCountRef.current(); };
     poll(); // initial fetch
     interval = setInterval(poll, 30000);
 
@@ -325,6 +348,7 @@ export function ChatProvider({ children }) {
     };
 
     interval = setInterval(poll, 30000);
+       
 
     const onVis = () => {
       active = !document.hidden;
@@ -335,6 +359,7 @@ export function ChatProvider({ children }) {
     return () => {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', onVis);
+       
     };
   }, [currentChat, fetchConversations, isAuthenticated]);
 

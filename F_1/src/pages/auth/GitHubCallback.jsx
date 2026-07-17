@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { useRouter } from '../../context/RouterContext';
+import { useRouter } from '../../hooks/useRouter';
 import { useAuth } from '../../context/AuthContext';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '../../hooks/useToast';
 import PageTransition from '../../components/common/PageTransition.jsx';
 
 export default function GitHubCallback() {
   const { navigate } = useRouter();
   const { githubLogin, user, redirectPath, clearRedirectPath } = useAuth();
   const { addToast } = useToast();
-  const [isProcessing, setIsProcessing] = useState(true);
+  const [_isProcessing, setIsProcessing] = useState(true);
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -58,6 +58,8 @@ export default function GitHubCallback() {
     };
 
     handleCallback();
+       
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

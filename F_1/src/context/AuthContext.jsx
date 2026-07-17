@@ -1,7 +1,8 @@
-import React, { createContext, useState, useCallback, useEffect, useContext } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useState, useCallback, useEffect, useContext, useRef } from 'react';
 import { authService, userService } from '../services/appService.js';
 import { socialAuthService } from '../services/socialAuthService.js';
-import { isTokenExpired, decodeToken, hasRole, getUserIdFromToken } from '../utils/jwtUtils.js';
+import { isTokenExpired } from '../utils/jwtUtils.js';
 
 export const AuthContext = createContext();
 
@@ -67,9 +68,9 @@ export const AuthProvider = ({ children }) => {
   
   // NEW: Session and role management
   const [sessionActive, setSessionActive] = useState(false);
-  const [tokenRefreshTime, setTokenRefreshTime] = useState(null);
   const [lastActivity, setLastActivity] = useState(null);
   const [loginHistory, setLoginHistory] = useState([]);
+  const logoutRef = useRef(null);
 
   // Initialize authentication on mount
   useEffect(() => {
@@ -209,7 +210,7 @@ export const AuthProvider = ({ children }) => {
         // Check for idle timeout (30 minutes)
         if (isSessionExpired(1800000)) {
           console.warn('Session expired due to inactivity');
-          logout();
+          if (logoutRef.current) logoutRef.current();
         }
       }, 2000); // 2 second debounce
     };
@@ -348,7 +349,10 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user]);
+
+  // Keep logoutRef up-to-date so it can be called from activity listener without TDZ
+  useEffect(() => { logoutRef.current = logout; }, [logout]);
 
   const updatePassword = useCallback(async (passwordData) => {
     try {
@@ -467,6 +471,8 @@ export const AuthProvider = ({ children }) => {
     socialAuthService.initiateGitHubLogin();
   }, []);
 
+  const refreshUserRef = useRef(null);
+
   const submitVerificationDocuments = useCallback(async (documents) => {
     setLoading(true);
     setError(null);
@@ -521,7 +527,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         // Fallback: fetch fresh user data from backend
         console.log('⚠️ No user in response, fetching fresh data...');
-        await refreshUser();
+        if (refreshUserRef.current) await refreshUserRef.current();
       }
       
       console.log('✅ Verification documents submitted to backend:', data);
@@ -559,6 +565,9 @@ export const AuthProvider = ({ children }) => {
       return null;
     }
   }, []);
+
+  // Keep refreshUserRef up-to-date so it can be called from submitVerificationDocuments without TDZ
+  useEffect(() => { refreshUserRef.current = refreshUser; }, [refreshUser]);
 
   const fetchVerificationStatus = useCallback(async () => {
     try {
@@ -682,7 +691,6 @@ export const AuthProvider = ({ children }) => {
     // NEW: Session Management
     sessionActive,
     lastActivity,
-    tokenRefreshTime,
     checkSession,
     
     // NEW: Role & Permission Guards

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRouter } from '../context/RouterContext';
+import { useRouter } from '../hooks/useRouter';
 import PageTransition from '../components/common/PageTransition.jsx';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
@@ -9,7 +9,7 @@ import { Users, Target, Heart, Zap, Globe, Award, TrendingUp, Shield, Code, Laye
 export default function About() {
   const { navigate } = useRouter();
 
-  const values = [
+  const _values = [
     {
       icon: <Heart size={32} />,
       title: 'Farmer-First',
@@ -49,7 +49,7 @@ export default function About() {
     }
   ];
 
-  const stats = [
+  const _stats = [
     { number: '5000+', label: 'Active Farmers' },
     { number: '50000+', label: 'Happy Customers' },
     { number: '100+', label: 'Crop Varieties' },

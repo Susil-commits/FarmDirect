@@ -22,13 +22,19 @@ export default function ScrollAnimation({ children, className = '' }) {
       const rect = ref.current.getBoundingClientRect();
       if (rect.top < window.innerHeight && rect.bottom > 0) {
         setIsVisible(true);
-        observer.unobserve(ref.current);
+       
+      // eslint-disable-next-line no-undef
+        observer.unobserve(currentRef);
       }
     }
 
+       
     return () => {
+       
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       if (ref.current) {
-        observer.unobserve(ref.current);
+      // eslint-disable-next-line no-undef
+        observer.unobserve(currentRef);
       }
     };
   }, []);

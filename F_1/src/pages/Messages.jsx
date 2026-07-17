@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useRouter } from '../context/RouterContext';
+import { useRouter } from '../hooks/useRouter';
 import { useAuth } from '../context/AuthContext';
 import { useChat } from '../context/ChatContext';
 import ConversationList from '../components/chat/ConversationList';

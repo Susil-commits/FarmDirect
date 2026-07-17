@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Menu, X, ShoppingCart, Heart, User, LogOut, Search, Bell, Home, Grid, Settings, Compass, CheckCircle, MessageCircle } from 'lucide-react';
-import { useRouter } from '../../context/RouterContext';
+import { useRouter } from '../../hooks/useRouter';
 import { useAuth } from '../../context/AuthContext';
-import { useCart } from '../../context/CartContext';
-import { useWishlist } from '../../context/WishlistContext';
-import { useNotifications } from '../../context/NotificationContext';
+import { useCart } from '../../hooks/useCart';
+import { useWishlist } from '../../hooks/useWishlist';
+import { useNotifications } from '../../hooks/useNotifications';
 import { useChat } from '../../context/ChatContext';
-import { useSocket } from '../../context/SocketContext';
+import { useSocket } from '../../hooks/useSocket';
 import Avatar from '../common/Avatar';
 import MiniCart from '../MiniCart';
 import SearchBar from '../SearchBar';

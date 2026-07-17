@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ShoppingCart, Heart } from 'lucide-react';
 import Button from './Button';
-import { useWishlist } from '../../context/WishlistContext';
+import { useWishlist } from '../../hooks/useWishlist';
 import { getImageUrl } from '../../utils/formatters';
 
 /**
@@ -15,11 +15,11 @@ export default function RelatedProducts({
   onAddToCart = null,
   showFarmer = false
 }) {
-  const [scrollPosition, setScrollPosition] = useState(0);
+  const [_scrollPosition, setScrollPosition] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const containerRef = React.useRef(null);
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { _addToWishlist, _removeFromWishlist, _isInWishlist } = useWishlist();
 
   const handleScroll = () => {
     if (!containerRef.current) return;

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, X, Clock, Zap } from 'lucide-react';
-import { useRouter } from '../context/RouterContext';
+import { useRouter } from '../hooks/useRouter';
 import { useSearch } from '../hooks/useSearch';
 import { cropService } from '../services/appService';
 import './SearchBar.css';

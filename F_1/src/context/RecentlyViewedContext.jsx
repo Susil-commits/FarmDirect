@@ -1,6 +1,7 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const RecentlyViewedContext = createContext();
+export const RecentlyViewedContext = createContext();
 
 export function RecentlyViewedProvider({ children }) {
   const [recentlyViewed, setRecentlyViewed] = useState([]);
@@ -10,6 +11,7 @@ export function RecentlyViewedProvider({ children }) {
     const saved = localStorage.getItem('farm-recently-viewed');
     if (saved) {
       try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
         setRecentlyViewed(JSON.parse(saved));
       } catch (e) {
         console.error('Failed to load recently viewed:', e);

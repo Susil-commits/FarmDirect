@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useRouter } from '../../context/RouterContext';
+import { useRouter } from '../../hooks/useRouter';
 import { useAuth } from '../../context/AuthContext';
 import { authServiceExtended } from '../../services/appService';
 import OnboardingWizard from '../../components/onboarding/OnboardingWizard';
@@ -13,7 +13,7 @@ import {
   ReviewStep,
 } from '../../components/onboarding/OnboardingSteps';
 import PageTransition from '../../components/common/PageTransition';
-import { useData } from '../../context/DataContext';
+import { useData } from '../../hooks/useData';
 import './OnboardingFlow.css';
 
 /**
@@ -22,11 +22,11 @@ import './OnboardingFlow.css';
  */
 export default function OnboardingFlow() {
   const { navigate } = useRouter();
-  const { user, login } = useAuth();
+  const { user, _login } = useAuth();
   const { refreshAll } = useData();
   const [_loading, _setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [userRole, setUserRole] = useState(null);
+  const [userRole, _setUserRole] = useState(null);
 
   // Check if user already completed onboarding
   useEffect(() => {

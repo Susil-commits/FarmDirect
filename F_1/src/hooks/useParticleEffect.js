@@ -47,7 +47,7 @@ export const useParticleEffect = ({
 
         // Calculate random direction and distance
         const angle = (i / particleCount) * Math.PI * 2;
-        const velocity = 4 + Math.random() * 4; // Random speed between 4-8
+        const _velocity = 4 + Math.random() * 4; // Random speed between 4-8
         const distance = 80 + Math.random() * 40; // Random distance 80-120px
 
         const tx = Math.cos(angle) * distance;

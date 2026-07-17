@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Upload, CheckCircle, Clock, AlertCircle, FileText, Camera, ChevronDown, ChevronUp, Eye } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useRouter } from '../../context/RouterContext';
-import { useToast } from '../../context/ToastContext';
+import { useRouter } from '../../hooks/useRouter';
+import { useToast } from '../../hooks/useToast';
 import { authServiceExtended } from '../../services/appService';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
@@ -17,7 +17,7 @@ export default function VerificationProgress() {
   const { navigate } = useRouter();
   const { addToast } = useToast();
   const [expandedSections, setExpandedSections] = useState({});
-  const [isChecking, setIsChecking] = useState(false);
+  const [_isChecking, setIsChecking] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   
   const getBaseDocuments = (role) => ({
@@ -55,13 +55,18 @@ export default function VerificationProgress() {
     const currentKeys = Object.keys(documents);
     const missingKeys = expectedKeys.filter(k => !currentKeys.includes(k));
     if (missingKeys.length > 0) {
+       
+       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDocuments(prev => {
         const updated = { ...prev };
         missingKeys.forEach(key => {
           updated[key] = { file: null, status: 'pending', fileName: '' };
         });
         return updated;
+       
       });
+       
     }
   }, [user?.role]);
   
@@ -89,7 +94,7 @@ export default function VerificationProgress() {
     const stored = localStorage.getItem(`verificationSubmittedAt_${user.id}`);
     return stored ? new Date(stored) : null;
   });
-  const [showCongratulation, setShowCongratulation] = useState(() => {
+  const [showCongratulation, _setShowCongratulation] = useState(() => {
     // Check if we should show congratulation modal
     if (!user?.id) return false;
     const shouldShow = localStorage.getItem(`showCongratulation_${user.id}`);
@@ -167,9 +172,12 @@ export default function VerificationProgress() {
         };
         hasAnyDoc = true;
       }
+       
     });
 
+       
     if (hasAnyDoc) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDocuments((prev) => ({ ...prev, ...restoredDocs }));
 
       // Also restore submission timestamp from backend

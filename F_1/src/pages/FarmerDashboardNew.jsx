@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useRouter } from '../context/RouterContext';
+import { useRouter } from '../hooks/useRouter';
 import { useAuth } from '../hooks/useAuth';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../hooks/useToast';
 import { cropService, orderService } from '../services/appService';
 import PageTransition from '../components/common/PageTransition';
 import Card from '../components/common/Card';
@@ -70,10 +70,14 @@ export default function FarmerDashboardNew() {
   useEffect(() => {
     window.scrollTo(0, 0);
     if (user?.role === 'farmer') {
+       
+      // eslint-disable-next-line react-hooks/immutability
       fetchFarmerData();
     }
-  }, [user]);
+  }, [user, fetchFarmerData]);
+       
 
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   const fetchFarmerData = async () => {
     try {
       setLoading(true);
@@ -108,6 +112,7 @@ export default function FarmerDashboardNew() {
       console.error('Error:', error);
       addToast('Failed to load dashboard', 'error');
     } finally {
+       
       setLoading(false);
     }
   };

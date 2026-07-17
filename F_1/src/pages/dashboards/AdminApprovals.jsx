@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useRouter } from '../../context/RouterContext';
+import { useRouter } from '../../hooks/useRouter';
 import { adminService } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import Card from '../../components/common/Card';
@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api.js';
 import { getImageUrl } from '../../utils/formatters';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '../../hooks/useToast';
 
 // Resolve document URL for display — local /uploads/ paths use getImageUrl
 // to prepend the backend origin in production.
@@ -100,12 +100,21 @@ export default function AdminApprovals() {
 
   useEffect(() => {
     if (statusTab === 'pending') {
+       
+      // eslint-disable-next-line react-hooks/immutability
       fetchPendingUsers();
+       
     } else {
+      // eslint-disable-next-line react-hooks/immutability
       fetchRejectedUsers();
+       
     }
     // Clear expanded state when tab changes
+       
+       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
     setExpandedUsers({});
+       
     setUserDocuments({});
   }, [roleTab, statusTab]);
 

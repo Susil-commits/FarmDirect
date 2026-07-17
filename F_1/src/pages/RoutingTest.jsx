@@ -1,4 +1,4 @@
-import { useRouter } from '../context/RouterContext';
+import { useRouter } from '../hooks/useRouter';
 import Button from '../components/common/Button';
 
 export default function RoutingTest() {

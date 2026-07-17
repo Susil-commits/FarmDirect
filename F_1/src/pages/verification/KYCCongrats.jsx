@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useRouter } from '../../context/RouterContext';
+import { useRouter } from '../../hooks/useRouter';
 import { useAuth } from '../../context/AuthContext';
 import { adminService } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition';

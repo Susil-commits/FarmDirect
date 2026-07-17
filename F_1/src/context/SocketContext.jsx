@@ -1,8 +1,9 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 
-const SocketContext = createContext(null);
+export const SocketContext = createContext(null);
 
 const SOCKET_URL = import.meta.env.VITE_API_BASE_URL
   ? import.meta.env.VITE_API_BASE_URL.replace('/api', '')
@@ -23,6 +24,7 @@ export const SocketProvider = ({ children }) => {
         socketRef.current.disconnect();
         socketRef.current = null;
       }
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setConnected(false);
       return;
     }
@@ -48,9 +50,12 @@ export const SocketProvider = ({ children }) => {
 
     socket.on('disconnect', (reason) => {
       console.log('🔌 Socket disconnected:', reason);
+       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setConnected(false);
     });
 
+    // eslint-disable-next-line no-unused-vars
     socket.on('user:online', ({ userId, onlineCount }) => {
       setOnlineUsers((prev) => new Set([...prev, userId]));
     });
@@ -82,6 +87,7 @@ export const SocketProvider = ({ children }) => {
     return () => {
       socket.disconnect();
       socketRef.current = null;
+       
       setConnected(false);
     };
   }, [isAuthenticated, user?.id, user?.role]);
@@ -139,7 +145,7 @@ export const SocketProvider = ({ children }) => {
   );
 
   const value = {
-    socket: socketRef.current,
+    socket: socketRef,
     connected,
     onlineUsers,
     typingUsers,

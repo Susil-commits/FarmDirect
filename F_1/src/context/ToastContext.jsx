@@ -1,8 +1,10 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 
-const ToastContext = createContext();
+export const ToastContext = createContext();
 
 export function ToastProvider({ children }) {
+  const removeToastRef = useRef(null);
   const [toasts, setToasts] = useState([]);
 
   const addToast = useCallback((message, type = 'info', duration = 4000) => {
@@ -24,6 +26,11 @@ export function ToastProvider({ children }) {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
+  // Keep ref updated so it can be called from other contexts without closure issues
+  useEffect(() => {
+    removeToastRef.current = removeToast;
+  }, [removeToast]);
+
   return (
     <ToastContext.Provider value={{ addToast, removeToast }}>
       {children}
@@ -32,10 +39,10 @@ export function ToastProvider({ children }) {
   );
 }
 
-export function useToast() {
+export function useToastContext() {
   const context = useContext(ToastContext);
   if (!context) {
-    throw new Error('useToast must be used within ToastProvider');
+    throw new Error('useToastContext must be used within ToastProvider');
   }
   return context;
 }
@@ -82,3 +89,5 @@ function Toast({ toast, onRemove }) {
     </div>
   );
 }
+
+export const useToast = useToastContext;

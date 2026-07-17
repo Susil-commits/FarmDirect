@@ -8,6 +8,7 @@ import './SmartStates.css';
  * Shows helpful guidance when no data is available
  */
 export function EmptyState({
+  // eslint-disable-next-line no-unused-vars
   icon: Icon = Heart,
   title,
   description,

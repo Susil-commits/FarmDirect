@@ -1,9 +1,9 @@
 import { useRef, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Trash2, ShoppingCart, Heart } from 'lucide-react';
-import { useRouter } from '../context/RouterContext';
-import { useCart } from '../context/CartContext';
-import { useWishlist } from '../context/WishlistContext';
-import { useRecentlyViewed } from '../context/RecentlyViewedContext';
+import { useRouter } from '../hooks/useRouter';
+import { useCart } from '../hooks/useCart';
+import { useWishlist } from '../hooks/useWishlist';
+import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import { getImageUrl } from '../utils/formatters';
 import './RecentlyViewedCarousel.css';
 

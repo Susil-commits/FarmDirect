@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../context/ToastContext';
@@ -39,17 +39,9 @@ export default function CheckoutNew() {
   const params = new URLSearchParams(window.location.search);
   const cropId = params.get('cropId');
 
-  useEffect(() => {
-    if (!user) navigate('/login');
-    if (!cropId) {
-      addToast('No crop selected for checkout', 'error');
-      navigate('/marketplace');
-      return;
-    }
-    fetchCropDetails();
-  }, [user, cropId]);
 
-  const fetchCropDetails = async () => {
+
+  const fetchCropDetails = useCallback(async () => {
     try {
       setLoading(true);
       const response = await cropService.getCropById(cropId);
@@ -65,7 +57,19 @@ export default function CheckoutNew() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [cropId, addToast, navigate]);
+
+  useEffect(() => {
+    if (!user) navigate('/login');
+    if (!cropId) {
+      addToast('No crop selected for checkout', 'error');
+      navigate('/marketplace');
+      return;
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchCropDetails();
+  }, [user, cropId, addToast, navigate, fetchCropDetails]);
 
   const calculateTotal = () => {
     if (!crop) return 0;

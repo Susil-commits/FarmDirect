@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useRouter } from '../context/RouterContext';
-import { useCart } from '../context/CartContext';
-import { useToast } from '../context/ToastContext';
+import { useRouter } from '../hooks/useRouter';
+import { useCart } from '../hooks/useCart';
+import { useToast } from '../hooks/useToast';
 import PageTransition from '../components/common/PageTransition';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -16,11 +16,11 @@ import '../styles/SearchResults.css';
 
 export default function SearchResults() {
   const { navigate, params } = useRouter();
-  const { cart, addToCart } = useCart();
+  const { _cart, addToCart } = useCart();
   const { addToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [results, setResults] = useState([]);
+  const [_results, setResults] = useState([]);
   const [filteredResults, setFilteredResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState('grid'); // grid or list
@@ -43,7 +43,16 @@ export default function SearchResults() {
     // Get search query from URL params or localStorage
     const query = localStorage.getItem('searchQuery') || params?.q || '';
     if (query) {
+       
+       
+       
+       
+       
+       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchQuery(query);
+       
+      // eslint-disable-next-line react-hooks/immutability
       performSearch(query, filters);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

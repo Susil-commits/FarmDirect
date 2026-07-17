@@ -1,4 +1,4 @@
-import { useLoading } from '../../context/LoadingContext';
+import { useLoading } from '../../hooks/useLoading';
 import LoadingSpinner from './LoadingSpinner';
 
 export default function GlobalPageLoader() {

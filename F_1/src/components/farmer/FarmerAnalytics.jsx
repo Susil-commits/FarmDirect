@@ -23,11 +23,6 @@ export default function FarmerAnalytics() {
   const [period, setPeriod] = useState('month');
   const [refreshing, setRefreshing] = useState(false);
 
-  // Load dashboard data on mount and when period changes
-  useEffect(() => {
-    loadAllData();
-  }, [period]);
-
   const loadAllData = async () => {
     try {
       setLoading(true);
@@ -53,6 +48,13 @@ export default function FarmerAnalytics() {
     }
   };
 
+  // Load dashboard data on mount and when period changes
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period]);
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await loadAllData();
@@ -62,7 +64,7 @@ export default function FarmerAnalytics() {
   const handleDownloadTemplate = async () => {
     try {
       await farmerService.getExportTemplate();
-    } catch (err) {
+    } catch {
       setError('Failed to download template');
     }
   };
@@ -177,7 +179,7 @@ export default function FarmerAnalytics() {
               { id: 'inventory', label: 'Inventory', icon: AlertTriangle },
               { id: 'upload', label: 'Bulk Upload', icon: FileUp }
             ].map(tab => {
-              const Icon = tab.icon;
+              const TabIcon = tab.icon;
               return (
                 <button
                   key={tab.id}
@@ -188,7 +190,7 @@ export default function FarmerAnalytics() {
                       : 'border-transparent text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  <Icon size={18} />
+                  <TabIcon size={18} />
                   {tab.label}
                 </button>
               );

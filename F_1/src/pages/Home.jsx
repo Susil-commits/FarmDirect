@@ -5,7 +5,7 @@ import Card from '../components/common/Card';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
 import AnimatedNumber from '../components/common/AnimatedNumber';
-import { useRouter } from '../context/RouterContext';
+import { useRouter } from '../hooks/useRouter';
 import { useAuth } from '../context/AuthContext';
 import { useParticleEffect, useRippleEffect } from '../hooks/useParticleEffect';
 

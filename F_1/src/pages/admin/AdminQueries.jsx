@@ -3,7 +3,7 @@ import { Eye, Trash2, MessageSquare, Filter, Search, RefreshCw, CheckCircle, Clo
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import contactService from '../../services/contactService';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '../../hooks/useToast';
 
 export default function AdminQueries() {
   const [queries, setQueries] = useState([]);
@@ -33,8 +33,14 @@ export default function AdminQueries() {
 
   // Fetch queries and stats
   useEffect(() => {
+       
+       
+      // eslint-disable-next-line react-hooks/immutability
     fetchQueries();
+       
+      // eslint-disable-next-line react-hooks/immutability
     fetchStats();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.status, filters.inquiryType, filters.page, filters.limit]);
 
   const fetchQueries = async () => {

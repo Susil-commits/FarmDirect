@@ -1,18 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { reviewService } from '../services/appService';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../hooks/useToast';
 import '../styles/Reviews.css';
 
 export default function ProductReviews({ productId }) {
   const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const { user } = useAuth();
   const { addToast } = useToast();
-
-  useEffect(() => {
-    fetchReviews();
-  }, [productId]);
+  const [showForm, setShowForm] = useState(false);
+  const [newReview, setNewReview] = useState({
+    rating: 5,
+    title: '',
+    content: '',
+  });
 
   const fetchReviews = async () => {
     try {
@@ -28,12 +30,11 @@ export default function ProductReviews({ productId }) {
     }
   };
 
-  const [showForm, setShowForm] = useState(false);
-  const [newReview, setNewReview] = useState({
-    rating: 5,
-    title: '',
-    content: '',
-  });
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId]);
 
   const averageRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length).toFixed(1)
@@ -219,4 +220,3 @@ export default function ProductReviews({ productId }) {
     </div>
   );
 }
-

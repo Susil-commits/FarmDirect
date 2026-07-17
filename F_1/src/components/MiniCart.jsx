@@ -1,6 +1,6 @@
 import { X, ShoppingCart, Trash2 } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-import { useRouter } from '../context/RouterContext';
+import { useCart } from '../hooks/useCart';
+import { useRouter } from '../hooks/useRouter';
 import { getImageUrl } from '../utils/formatters';
 import QuantitySelector from './QuantitySelector';
 import './MiniCart.css';

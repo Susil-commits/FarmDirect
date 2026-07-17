@@ -11,7 +11,7 @@ import {
 import { useState, useEffect, useRef } from 'react';
 import ChatBubble from './ChatBubble';
 import { useChat } from '../../context/ChatContext';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '../../hooks/useToast';
 import { getImageUrl } from '../../utils/formatters';
 import '../../styles/Messages.css';
 
@@ -139,7 +139,7 @@ export default function ChatPanel({
         blocked ? 'User has been blocked' : 'User has been unblocked',
         blocked ? 'warning' : 'success'
       );
-    } catch (err) {
+    } catch {
       addToast('Failed to update block status', 'error');
     } finally {
       setBlocking(false);
@@ -153,7 +153,7 @@ export default function ChatPanel({
       const allMessageIds = messages.map(m => m._id).filter(Boolean);
       await Promise.all(allMessageIds.map(id => deleteMessage(id)));
       addToast('Chat cleared successfully', 'success');
-    } catch (err) {
+    } catch {
       addToast('Failed to clear chat', 'error');
     }
   };

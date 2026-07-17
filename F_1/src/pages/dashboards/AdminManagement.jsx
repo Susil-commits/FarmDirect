@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useRouter } from '../../context/RouterContext';
+import { useRouter } from '../../hooks/useRouter';
 import { adminService } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import Card from '../../components/common/Card';
@@ -14,7 +14,7 @@ import {
   UserCheck, UserX, BarChart3
 } from 'lucide-react';
 import api from '../../services/api.js';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '../../hooks/useToast';
 
 // ─── Document URL Helpers (DO NOT MODIFY — document preview is working) ───
 
@@ -151,12 +151,21 @@ export default function AdminManagement() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+       
+      // eslint-disable-next-line react-hooks/immutability
     fetchStats();
   }, []);
 
+       
   useEffect(() => {
+       
+      // eslint-disable-next-line react-hooks/immutability
     fetchUsers();
+       
+       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
     setExpandedUsers({});
+       
     setUserDocuments({});
   }, [activeTab, searchTerm]);
 

@@ -3,6 +3,11 @@ import { TrendingUp, TrendingDown, Star } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 
+function SortIcon({ column, sortBy, sortOrder }) {
+  if (sortBy !== column) return <span className="text-gray-300">↕</span>;
+  return sortOrder === 'desc' ? <TrendingDown size={16} /> : <TrendingUp size={16} />;
+}
+
 export default function CropPerformanceTable({ data }) {
   const [sortBy, setSortBy] = useState('revenue');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -59,12 +64,6 @@ export default function CropPerformanceTable({ data }) {
     }
   };
 
-// SortIcon moved outside
-  const SortIcon = ({ column }) => {
-    if (sortBy !== column) return <span className="text-gray-300">↕</span>;
-    return sortOrder === 'desc' ? <TrendingDown size={16} /> : <TrendingUp size={16} />;
-  };
-
   return (
     <Card>
       <div className="p-6">
@@ -87,7 +86,7 @@ export default function CropPerformanceTable({ data }) {
                 >
                   <div className="flex items-center gap-2">
                     Revenue
-                    <SortIcon column="revenue" />
+                    <SortIcon column="revenue" sortBy={sortBy} sortOrder={sortOrder} />
                   </div>
                 </th>
                 <th 
@@ -96,7 +95,7 @@ export default function CropPerformanceTable({ data }) {
                 >
                   <div className="flex items-center gap-2">
                     Orders
-                    <SortIcon column="orders" />
+                    <SortIcon column="orders" sortBy={sortBy} sortOrder={sortOrder} />
                   </div>
                 </th>
                 <th 
@@ -105,7 +104,7 @@ export default function CropPerformanceTable({ data }) {
                 >
                   <div className="flex items-center gap-2">
                     Rating
-                    <SortIcon column="rating" />
+                    <SortIcon column="rating" sortBy={sortBy} sortOrder={sortOrder} />
                   </div>
                 </th>
                 <th 
@@ -114,7 +113,7 @@ export default function CropPerformanceTable({ data }) {
                 >
                   <div className="flex items-center gap-2">
                     Conv. Rate
-                    <SortIcon column="conversion" />
+                    <SortIcon column="conversion" sortBy={sortBy} sortOrder={sortOrder} />
                   </div>
                 </th>
                 <th 
@@ -123,7 +122,7 @@ export default function CropPerformanceTable({ data }) {
                 >
                   <div className="flex items-center gap-2">
                     Performance
-                    <SortIcon column="performance" />
+                    <SortIcon column="performance" sortBy={sortBy} sortOrder={sortOrder} />
                   </div>
                 </th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Status</th>

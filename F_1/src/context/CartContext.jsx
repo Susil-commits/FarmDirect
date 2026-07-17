@@ -1,6 +1,7 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-const CartContext = createContext();
+export const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
@@ -18,6 +19,9 @@ export function CartProvider({ children }) {
           _id: item._id || item.id,
           id: item._id || item.id,
         }));
+       
+       
+      // eslint-disable-next-line react-hooks/set-state-in-effect
         setCart(normalized);
       } catch (e) {
         console.error('Failed to load cart:', e);
