@@ -12,36 +12,6 @@ export default function ScrollAnimation({ children, className = '' }) {
           observer.unobserve(entry.target);
         }
       },
-      { threshold: 0.1 }
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-      
-      // Check if already in viewport on first render
-      const rect = ref.current.getBoundingClientRect();
-      if (rect.top < window.innerHeight && rect.bottom > 0) {
-        setIsVisible(true);
-       
-      // eslint-disable-next-line no-undef
-        observer.unobserve(currentRef);
-      }
-    }
-
-       
-    return () => {
-       
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      if (ref.current) {
-      // eslint-disable-next-line no-undef
-        observer.unobserve(currentRef);
-      }
-    };
-  }, []);
-
-  return (
-    <div 
-      ref={ref} 
       className={`${className} ${isVisible ? 'visible' : ''}`}
       style={{ pointerEvents: isVisible ? 'auto' : 'auto' }}
     >
