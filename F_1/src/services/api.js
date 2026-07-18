@@ -1,7 +1,11 @@
 import axios from 'axios';
 import { isTokenExpired } from '../utils/jwtUtils.js';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+let rawBase = import.meta.env.VITE_API_BASE_URL || '/api';
+if (rawBase !== '/api' && !rawBase.endsWith('/api') && !rawBase.endsWith('/api/')) {
+  rawBase = rawBase.endsWith('/') ? rawBase + 'api' : rawBase + '/api';
+}
+export const API_BASE_URL = rawBase;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
