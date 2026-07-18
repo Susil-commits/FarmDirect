@@ -8,6 +8,7 @@ import AnimatedNumber from '../components/common/AnimatedNumber';
 import { useRouter } from '../hooks/useRouter';
 import { useAuth } from '../context/AuthContext';
 import { useParticleEffect, useRippleEffect } from '../hooks/useParticleEffect';
+import api from '../services/api';
 
 export default function Home() {
   const { navigate } = useRouter();
@@ -55,24 +56,14 @@ export default function Home() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const apiBaseURL = import.meta.env.VITE_API_BASE_URL || '/api';
-        const url = `${apiBaseURL}/users/community/stats`;
+        const response = await api.get('/users/community/stats');
         
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        });
-
-        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-
-        const data = await response.json();
-
-        if (data?.success && data?.data) {
+        if (response?.success && response?.data) {
           setStats({
-            farmers: data.data.users?.farmers ?? null,
-            customers: data.data.users?.buyers ?? null,
-            varieties: data.data.crops?.total ?? null,
-            orders: data.data.orders?.total ?? null,
+            farmers: response.data.users?.farmers ?? null,
+            customers: response.data.users?.buyers ?? null,
+            varieties: response.data.crops?.total ?? null,
+            orders: response.data.orders?.total ?? null,
             deliveryDays: '3-5',
           });
         }
