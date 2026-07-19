@@ -240,19 +240,7 @@ export default function Home() {
         <section id="features" className="py-20 px-4 relative overflow-hidden">
           {/* Video Background - hidden on mobile to avoid 12.8MB download lag */}
           <div className="absolute inset-0 z-0 hidden md:block">
-            <video
-              src="/mixkit-wheat-field.mp4"
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="metadata"
-              className="w-full h-full object-cover"
-              onError={(e) => { e.target.style.display = 'none'; }}
-            />
-            {/* Subtle light overlay only for slight text contrast */}
-            <div className="absolute inset-0 bg-white/5"></div>
-            {/* Gradient fallback shown if the video fails to load */}
+            {/* Gradient fallback shown in place of heavy video */}
             <div className="absolute inset-0 -z-10 bg-gradient-to-br from-green-50 via-amber-50 to-green-100"></div>
           </div>
           {/* Lightweight static gradient for mobile (replaces heavy video) */}

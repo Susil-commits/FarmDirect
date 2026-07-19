@@ -10,6 +10,7 @@ import { ChatProvider } from './context/ChatContext';
  import Navbar from './components/shared/Navbar';
 import Footer from './components/shared/Footer';
 import GlobalPageLoader from './components/common/GlobalPageLoader';
+import PageLoader from './components/common/PageLoader';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Home from './pages/Home';
 import { lazy, Suspense, useEffect, useRef } from 'react';
@@ -298,12 +299,7 @@ function App() {
                   <div className="min-h-screen bg-white flex flex-col">
                     <Navbar />
                     <main className="flex-1">
-                      <Suspense fallback={
-                        <div className="min-h-[60vh] flex flex-col items-center justify-center">
-                          <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-green-600 animate-spin mb-4"></div>
-                          <p className="text-gray-500">Loading page...</p>
-                        </div>
-                      }>
+                      <Suspense fallback={<PageLoader message="Loading FarmDirect..." />}>
                         {renderPage()}
                       </Suspense>
                     </main>
