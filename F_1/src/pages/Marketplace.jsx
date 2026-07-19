@@ -345,7 +345,7 @@ export default function Marketplace() {
               </div>
               <div className="h-48 bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl mb-4 flex items-center justify-center">
                 {quickViewCrop.images?.[0] ? (
-                  <img src={getImageUrl(quickViewCrop.images[0])} alt="" className="w-full h-full object-cover rounded-xl" />
+                  <img src={getImageUrl(quickViewCrop.images[0])} alt={quickViewCrop.cropName || 'Crop image'} className="w-full h-full object-cover rounded-xl" loading="lazy" />
                 ) : (
                   <span className="text-7xl">🌾</span>
                 )}
@@ -376,7 +376,7 @@ function TrendingCard({ crop, onView, onToggleWishlist, isFavorite, onQuickAdd }
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100" onClick={onView}>
       <div className="relative h-36 bg-gradient-to-br from-orange-50 to-amber-100 flex items-center justify-center overflow-hidden">
         {cropImage && !imgError ? (
-          <img src={getImageUrl(cropImage)} alt={crop.cropName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onError={() => setImgError(true)} />
+          <img src={getImageUrl(cropImage)} alt={crop.cropName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" onError={() => setImgError(true)} />
         ) : (
           <span className="text-5xl group-hover:scale-110 transition-transform duration-300">🌾</span>
         )}

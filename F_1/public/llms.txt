@@ -1,0 +1,25 @@
+# FarmDirect Marketplace
+
+> FarmDirect is a direct farmer-to-consumer marketplace connecting rural farmers directly with buyers.
+
+## Key Features
+- Direct crop purchasing from farmers
+- Real-time chat with farmers
+- Secure payments via Razorpay
+- Verified farmer profiles
+
+## Project Structure
+- Frontend: React + Vite + Tailwind CSS
+- Backend: Express + MongoDB + Socket.io
+
+## Pages
+- `/` - Home Page
+- `/marketplace` - Browse all available crops
+- `/crop/[id]` - View crop details
+- `/auth/login` - User authentication
+- `/farmer/dashboard` - Farmer management panel
+- `/buyer/dashboard` - Buyer order tracking
+
+## API
+- Authentication via JWT
+- Real-time updates via WebSockets

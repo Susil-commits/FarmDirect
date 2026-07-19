@@ -12,57 +12,58 @@ import Footer from './components/shared/Footer';
 import GlobalPageLoader from './components/common/GlobalPageLoader';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Home from './pages/Home';
-import Marketplace from './pages/Marketplace';
-import CropDetail from './pages/CropDetail';
-import CreateCrop from './pages/CreateCrop';
-import EditCrop from './pages/EditCrop';
-import FarmerProfile from './pages/FarmerProfile';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import StartShopping from './pages/StartShopping';
-import JoinAsFarmer from './pages/JoinAsFarmer';
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-import GoogleCallback from './pages/auth/GoogleCallback';
-import GitHubCallback from './pages/auth/GitHubCallback';
-import ShoppingCart from './pages/ShoppingCart';
-import OrderConfirmation from './pages/OrderConfirmation';
-import Wishlist from './pages/Wishlist';
-import UserProfile from './pages/UserProfile';
-import ProductComparison from './pages/ProductComparison';
-import PendingVerification from './pages/PendingVerification';
-import AdminProfile from './pages/AdminProfile';
-import AdminDashboardStats from './pages/dashboards/AdminDashboardStats';
-import AdminApprovals from './pages/dashboards/AdminApprovals';
-import AdminManagement from './pages/dashboards/AdminManagement';
-import AdminUsers from './pages/dashboards/AdminUsers';
-import AdminCrops from './pages/dashboards/AdminCrops';
-import AdminOrders from './pages/dashboards/AdminOrders';
-import AdminNotifications from './pages/dashboards/AdminNotifications';
-import FarmerDashboardNew from './pages/FarmerDashboardNew';
-import BuyerDashboardNew from './pages/BuyerDashboardNew';
-import CheckoutNew from './pages/CheckoutNew';
-import OrderTrackingNew from './pages/OrderTrackingNew';
-import SearchResults from './pages/SearchResults';
-import FarmerVerification from './pages/verification/FarmerVerification';
-import BuyerVerification from './pages/verification/BuyerVerification';
-import VerificationProgress from './pages/verification/VerificationProgress';
-import KYCCongrats from './pages/verification/KYCCongrats';
-import KYCSorry from './pages/verification/KYCSorry';
-import AdminVerification from './pages/admin/AdminVerification';
-import AdminDocuments from './pages/admin/AdminDocuments';
-import AdminQueries from './pages/admin/AdminQueries';
-import AdminMessages from './pages/admin/AdminMessages';
-import OrderDetails from './pages/OrderDetails';
-import Privacy from './pages/Privacy';
-import Terms from './pages/Terms';
-import Refund from './pages/Refund';
-import Pricing from './pages/Pricing';
-import Support from './pages/Support';
-import HowItWorks from './pages/HowItWorks';
-import RoutingTest from './pages/RoutingTest';
-import Messages from './pages/Messages';
-import { useEffect, useRef } from 'react';
+import { lazy, Suspense, useEffect, useRef } from 'react';
+
+const Marketplace = lazy(() => import('./pages/Marketplace'));
+const CropDetail = lazy(() => import('./pages/CropDetail'));
+const CreateCrop = lazy(() => import('./pages/CreateCrop'));
+const EditCrop = lazy(() => import('./pages/EditCrop'));
+const FarmerProfile = lazy(() => import('./pages/FarmerProfile'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const StartShopping = lazy(() => import('./pages/StartShopping'));
+const JoinAsFarmer = lazy(() => import('./pages/JoinAsFarmer'));
+const Login = lazy(() => import('./pages/auth/Login'));
+const Register = lazy(() => import('./pages/auth/Register'));
+const GoogleCallback = lazy(() => import('./pages/auth/GoogleCallback'));
+const GitHubCallback = lazy(() => import('./pages/auth/GitHubCallback'));
+const ShoppingCart = lazy(() => import('./pages/ShoppingCart'));
+const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'));
+const Wishlist = lazy(() => import('./pages/Wishlist'));
+const UserProfile = lazy(() => import('./pages/UserProfile'));
+const ProductComparison = lazy(() => import('./pages/ProductComparison'));
+const PendingVerification = lazy(() => import('./pages/PendingVerification'));
+const AdminProfile = lazy(() => import('./pages/AdminProfile'));
+const AdminDashboardStats = lazy(() => import('./pages/dashboards/AdminDashboardStats'));
+const AdminApprovals = lazy(() => import('./pages/dashboards/AdminApprovals'));
+const AdminManagement = lazy(() => import('./pages/dashboards/AdminManagement'));
+const AdminUsers = lazy(() => import('./pages/dashboards/AdminUsers'));
+const AdminCrops = lazy(() => import('./pages/dashboards/AdminCrops'));
+const AdminOrders = lazy(() => import('./pages/dashboards/AdminOrders'));
+const AdminNotifications = lazy(() => import('./pages/dashboards/AdminNotifications'));
+const FarmerDashboardNew = lazy(() => import('./pages/FarmerDashboardNew'));
+const BuyerDashboardNew = lazy(() => import('./pages/BuyerDashboardNew'));
+const CheckoutNew = lazy(() => import('./pages/CheckoutNew'));
+const OrderTrackingNew = lazy(() => import('./pages/OrderTrackingNew'));
+const SearchResults = lazy(() => import('./pages/SearchResults'));
+const FarmerVerification = lazy(() => import('./pages/verification/FarmerVerification'));
+const BuyerVerification = lazy(() => import('./pages/verification/BuyerVerification'));
+const VerificationProgress = lazy(() => import('./pages/verification/VerificationProgress'));
+const KYCCongrats = lazy(() => import('./pages/verification/KYCCongrats'));
+const KYCSorry = lazy(() => import('./pages/verification/KYCSorry'));
+const AdminVerification = lazy(() => import('./pages/admin/AdminVerification'));
+const AdminDocuments = lazy(() => import('./pages/admin/AdminDocuments'));
+const AdminQueries = lazy(() => import('./pages/admin/AdminQueries'));
+const AdminMessages = lazy(() => import('./pages/admin/AdminMessages'));
+const OrderDetails = lazy(() => import('./pages/OrderDetails'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Refund = lazy(() => import('./pages/Refund'));
+const Pricing = lazy(() => import('./pages/Pricing'));
+const Support = lazy(() => import('./pages/Support'));
+const HowItWorks = lazy(() => import('./pages/HowItWorks'));
+const RoutingTest = lazy(() => import('./pages/RoutingTest'));
+const Messages = lazy(() => import('./pages/Messages'));
 
 function App() {
   const { currentRoute, navigate } = useRouter();
@@ -297,7 +298,14 @@ function App() {
                   <div className="min-h-screen bg-white flex flex-col">
                     <Navbar />
                     <main className="flex-1">
-                      {renderPage()}
+                      <Suspense fallback={
+                        <div className="min-h-[60vh] flex flex-col items-center justify-center">
+                          <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-green-600 animate-spin mb-4"></div>
+                          <p className="text-gray-500">Loading page...</p>
+                        </div>
+                      }>
+                        {renderPage()}
+                      </Suspense>
                     </main>
                     <Footer />
                   </div>

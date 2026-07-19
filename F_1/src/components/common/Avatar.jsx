@@ -67,6 +67,7 @@ export default function Avatar({
           src={getImageUrl(user.photo)}
           alt={user.name || 'User'}
           className={`${sizeClasses[size]} rounded-full object-cover border-2 border-gray-200 hover:border-green-400 transition-all`}
+          loading="lazy"
         />
         {showBadge && badge && (
           <div className="absolute bottom-0 right-0 bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold border-2 border-white">
