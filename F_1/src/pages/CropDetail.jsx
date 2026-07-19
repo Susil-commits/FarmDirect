@@ -426,8 +426,9 @@ export default function CropDetail() {
                         key={i}
                         onClick={() => setActiveImageIndex(i)}
                         className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition ${i === activeImageIndex ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200 hover:border-green-300'}`}
+                        aria-label={`View thumbnail ${i + 1}`}
                       >
-                        <img src={getImageUrl(img)} alt="" className="w-full h-full object-cover" />
+                        <img src={getImageUrl(img)} alt={`${cropName} thumbnail ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
                       </button>
                     ))}
                   </div>

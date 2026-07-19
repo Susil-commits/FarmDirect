@@ -186,9 +186,10 @@ export default function Login() {
                   />
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
                     <div className="relative">
                       <input
+                        id="password"
                         type={showPassword ? 'text' : 'password'}
                         name="password"
                         value={formData.password}

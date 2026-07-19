@@ -181,7 +181,7 @@ export default function SearchBar() {
                           >
                             <div className="result-image">
                               {cropImage ? (
-                                <img src={getImageUrl(cropImage)} alt={cropName} />
+                                <img src={getImageUrl(cropImage)} alt={cropName} loading="lazy" />
                               ) : (
                                 <span>{cropImage || '🥬'}</span>
                               )}
