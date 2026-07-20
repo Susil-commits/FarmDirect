@@ -1,6 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
-import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 
 export const SocketContext = createContext(null);
@@ -29,65 +28,76 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    let isMounted = true;
+    let socket = null;
 
-    const socket = io(SOCKET_URL, {
-      auth: { token, role: user.role },
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 10000,
-    });
+    const initSocket = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
 
-    socketRef.current = socket;
+      const { io } = await import('socket.io-client');
+      if (!isMounted) return;
 
-    socket.on('connect', () => {
-      console.log('⚡ Socket connected:', socket.id);
-      setConnected(true);
-    });
-
-    socket.on('disconnect', (reason) => {
-      console.log('🔌 Socket disconnected:', reason);
-       
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setConnected(false);
-    });
-
-    // eslint-disable-next-line no-unused-vars
-    socket.on('user:online', ({ userId, onlineCount }) => {
-      setOnlineUsers((prev) => new Set([...prev, userId]));
-    });
-
-    socket.on('user:offline', ({ userId }) => {
-      setOnlineUsers((prev) => {
-        const next = new Set(prev);
-        next.delete(userId);
-        return next;
+      socket = io(SOCKET_URL, {
+        auth: { token, role: user.role },
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 10000,
       });
-    });
 
-    socket.on('typing:start', ({ conversationId, userId }) => {
-      setTypingUsers((prev) => ({ ...prev, [conversationId]: userId }));
-    });
+      socketRef.current = socket;
 
-    socket.on('typing:stop', ({ conversationId }) => {
-      setTypingUsers((prev) => {
-        const next = { ...prev };
-        delete next[conversationId];
-        return next;
+      socket.on('connect', () => {
+        console.log('⚡ Socket connected:', socket.id);
+        setConnected(true);
       });
-    });
 
-    socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error.message);
-    });
+      socket.on('disconnect', (reason) => {
+        console.log('🔌 Socket disconnected:', reason);
+        setConnected(false);
+      });
+
+      socket.on('user:online', ({ userId, onlineCount }) => {
+        setOnlineUsers((prev) => new Set([...prev, userId]));
+      });
+
+      socket.on('user:offline', ({ userId }) => {
+        setOnlineUsers((prev) => {
+          const next = new Set(prev);
+          next.delete(userId);
+          return next;
+        });
+      });
+
+      socket.on('typing:start', ({ conversationId, userId }) => {
+        setTypingUsers((prev) => ({ ...prev, [conversationId]: userId }));
+      });
+
+      socket.on('typing:stop', ({ conversationId }) => {
+        setTypingUsers((prev) => {
+          const next = { ...prev };
+          delete next[conversationId];
+          return next;
+        });
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error.message);
+      });
+    };
+
+    initSocket();
 
     return () => {
-      socket.disconnect();
+      isMounted = false;
+      if (socket) {
+        socket.disconnect();
+      } else if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
       socketRef.current = null;
-       
       setConnected(false);
     };
   }, [isAuthenticated, user?.id, user?.role]);

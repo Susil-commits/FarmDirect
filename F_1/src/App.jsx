@@ -14,7 +14,7 @@ import PageLoader from './components/common/PageLoader';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { lazy, Suspense, useEffect, useRef } from 'react';
 
-const Home = lazy(() => import('./pages/Home'));
+import Home from './pages/Home';
 const Marketplace = lazy(() => import('./pages/Marketplace'));
 const CropDetail = lazy(() => import('./pages/CropDetail'));
 const CreateCrop = lazy(() => import('./pages/CreateCrop'));
