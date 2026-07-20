@@ -15,7 +15,8 @@ import {
 } from 'lucide-react';
 import '../styles/OrderDetails.css';
 import { getImageUrl } from '../utils/formatters';
-
+import SkeletonLoader from '../components/common/SkeletonLoader';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 const ORDER_STATUS_FLOW = ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'completed'];
 
 const STATUS_LABELS = {
@@ -177,14 +178,7 @@ export default function OrderDetails() {
   if (loading) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4">
-          <div className="max-w-4xl mx-auto">
-            <Card className="p-12 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-              <p className="text-gray-600 mt-4">Loading order details...</p>
-            </Card>
-          </div>
-        </div>
+        <SkeletonLoader variant="detail" />
       </PageTransition>
     );
   }
@@ -212,6 +206,7 @@ export default function OrderDetails() {
   const isCompleted = order.orderStatus === 'completed';
 
   return (
+    <ErrorBoundary>
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4">
         <div className="max-w-4xl mx-auto">
@@ -583,5 +578,6 @@ export default function OrderDetails() {
         </div>
       </div>
     </PageTransition>
+    </ErrorBoundary>
   );
 }

@@ -7,6 +7,8 @@ import RecentlyViewedCarousel from '../components/RecentlyViewedCarousel';
 import FilterPanel from '../components/FilterPanel';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
+import SkeletonLoader from '../components/common/SkeletonLoader';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 import { useRouter } from '../context/RouterContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
@@ -163,6 +165,7 @@ export default function Marketplace() {
   };
 
   return (
+    <ErrorBoundary>
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
@@ -243,20 +246,7 @@ export default function Marketplace() {
               )}
 
               {loading ? (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {[...Array(6)].map((_, i) => (
-                      <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse">
-                        <div className="h-48 bg-gray-200" />
-                        <div className="p-5 space-y-3">
-                          <div className="h-5 bg-gray-200 rounded w-3/4" />
-                          <div className="h-4 bg-gray-200 rounded w-1/2" />
-                          <div className="h-10 bg-gray-200 rounded w-full mt-4" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <SkeletonLoader variant="card-grid" count={6} />
               ) : (
                 <>
                   {trendingCrops.length > 0 && !quickCategory && !filters.cropType && (
@@ -266,7 +256,7 @@ export default function Marketplace() {
                         <h2 className="text-xl font-bold text-gray-900">Trending Now</h2>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                        {trendingCrops.map((crop, index) => (
+                        {trendingCrops?.map((crop, index) => (
                           <TrendingCard
                             key={crop._id || crop.id}
                             crop={crop}
@@ -276,7 +266,7 @@ export default function Marketplace() {
                             isFavorite={isInWishlist(crop._id || crop.id)}
                             onQuickAdd={(e) => handleQuickAddToCart(crop, e)}
                           />
-                        ))}
+                        )) ?? []}
                       </div>
                     </div>
                   )}
@@ -308,7 +298,7 @@ export default function Marketplace() {
 
                   {filteredCrops.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                      {filteredCrops.map((crop, index) => (
+                      {filteredCrops?.map((crop, index) => (
                         <CropCardEnhanced
                           key={crop._id || crop.id}
                           crop={crop}
@@ -318,7 +308,7 @@ export default function Marketplace() {
                           onQuickAdd={(e) => handleQuickAddToCart(crop, e)}
                           index={index}
                         />
-                      ))}
+                      )) ?? []}
                     </div>
                   ) : (
                     <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-200">
@@ -365,6 +355,7 @@ export default function Marketplace() {
         )}
       </div>
     </PageTransition>
+    </ErrorBoundary>
   );
 }
 
@@ -457,10 +448,10 @@ function CropCardEnhanced({ crop, isFavorite, onToggleFavorite, onViewCrop, onQu
         <div className="flex items-center gap-2 mb-3">
           <div className="flex text-yellow-400 text-sm">
             {[...Array(5)].map((_, i) => (
-              <span key={i}>{i < Math.floor(crop.rating || 4) ? '★' : '☆'}</span>
+              <span key={i}>{i < Math.floor(crop?.rating || 4) ? '★' : '☆'}</span>
             ))}
           </div>
-          <span className="text-xs text-gray-400">({crop.totalReviews || 0})</span>
+          <span className="text-xs text-gray-400">({crop?.totalReviews || 0})</span>
         </div>
 
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-3 mb-3 border border-green-100">

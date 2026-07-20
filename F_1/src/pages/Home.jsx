@@ -9,6 +9,7 @@ import { useRouter } from '../hooks/useRouter';
 import { useAuth } from '../context/AuthContext';
 import { useParticleEffect, useRippleEffect } from '../hooks/useParticleEffect';
 import api from '../services/api';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 
 export default function Home() {
   const { navigate } = useRouter();
@@ -124,6 +125,7 @@ export default function Home() {
   ];
 
   return (
+    <ErrorBoundary>
     <PageTransition>
       <div className="min-h-screen bg-white" style={{
         backgroundImage: `linear-gradient(${gradientAngle}deg, #dcfce7 0%, #f0fdfa 35%, #d1fae5 70%, #dcfce7 100%)`,
@@ -706,6 +708,7 @@ export default function Home() {
         </section>
       </div>
     </PageTransition>
+    </ErrorBoundary>
   );
 }
 

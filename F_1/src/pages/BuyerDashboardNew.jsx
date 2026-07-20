@@ -7,6 +7,8 @@ import PageTransition from '../components/common/PageTransition';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import ScrollAnimation from '../components/common/ScrollAnimation';
+import SkeletonLoader from '../components/common/SkeletonLoader';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 import CancelWithReason from '../components/modals/CancelWithReason';
 import {
   ShoppingCart, Heart, Truck, CheckCircle, IndianRupee, Star,
@@ -190,19 +192,13 @@ export default function BuyerDashboardNew() {
   if (loading) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-white py-12 px-4">
-          <div className="max-w-6xl mx-auto">
-            <Card className="p-12 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="text-gray-600 mt-4">Loading your dashboard...</p>
-            </Card>
-          </div>
-        </div>
+        <SkeletonLoader variant="dashboard" />
       </PageTransition>
     );
   }
 
   return (
+    <ErrorBoundary>
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-white py-12 px-4">
         <div className="max-w-6xl mx-auto">
@@ -906,5 +902,6 @@ export default function BuyerDashboardNew() {
       />
 
     </PageTransition>
+    </ErrorBoundary>
   );
 }
