@@ -119,7 +119,7 @@ export default function StartShopping() {
                       <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse"></div>
                     )}
                     <img
-                      src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=600&fit=crop"
+                      src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=665&h=499&fit=crop&fm=webp&q=80"
                       alt="Fresh produce from farmers"
                       className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
                       loading="eager"
