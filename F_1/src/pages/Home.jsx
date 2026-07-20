@@ -5,6 +5,7 @@ import Card from '../components/common/Card';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
 import AnimatedNumber from '../components/common/AnimatedNumber';
+import LazySection from '../components/common/LazySection';
 import { useRouter } from '../hooks/useRouter';
 import { useAuth } from '../context/AuthContext';
 import { useParticleEffect, useRippleEffect } from '../hooks/useParticleEffect';
@@ -242,6 +243,7 @@ export default function Home() {
 
 
         {/* Features - with Video Background (desktop only; static gradient on mobile to prevent lag) */}
+        <LazySection height="600px">
         <section id="features" className="py-20 px-4 relative overflow-hidden">
           {/* Video Background - hidden on mobile to avoid 12.8MB download lag */}
           <div className="absolute inset-0 z-0 hidden md:block">
@@ -278,8 +280,10 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </LazySection>
 
         {/* How It Works - User Guide */}
+        <LazySection height="1200px">
         <section className="py-20 px-4 relative bg-gradient-to-br from-white via-green-50 to-white">
           <div className="max-w-6xl mx-auto relative z-10">
             <ScrollAnimation className="scroll-slide mb-16">
@@ -530,8 +534,10 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </LazySection>
 
         {/* FAQs Section */}
+        <LazySection height="500px">
         <section className="py-16 px-4 bg-gray-50">
           <div className="max-w-4xl mx-auto">
             <ScrollAnimation className="scroll-slide mb-12">
@@ -555,7 +561,9 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </LazySection>
 
+        <LazySection height="600px">
         <section className="py-20 px-4 relative bg-white">
           <div className="max-w-6xl mx-auto">
             <ScrollAnimation className="scroll-slide mb-16">
@@ -654,8 +662,10 @@ export default function Home() {
             )}
           </div>
         </section>
+        </LazySection>
 
         {/* Testimonials - Premium Section */}
+        <LazySection height="400px">
         <section className="py-20 px-4 relative bg-gradient-to-br from-gray-50 via-green-50 to-gray-50">
           <div className="max-w-6xl mx-auto relative z-10">
             <ScrollAnimation className="scroll-slide mb-16">
@@ -709,6 +719,7 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </LazySection>
       </div>
     </PageTransition>
     </ErrorBoundary>
