@@ -299,7 +299,7 @@ function App() {
                   <div className="min-h-screen bg-white flex flex-col">
                     <Navbar />
                     <main className="flex-1">
-                      <Suspense fallback={<PageLoader message="Loading FarmDirect..." />}>
+                      <Suspense fallback={<div className="min-h-screen"><PageLoader message="Loading FarmDirect..." /></div>}>
                         {renderPage()}
                       </Suspense>
                     </main>
