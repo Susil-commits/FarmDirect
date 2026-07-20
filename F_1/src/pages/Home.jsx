@@ -40,22 +40,12 @@ export default function Home() {
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
-  const [gradientAngle, setGradientAngle] = useState(0);
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
   // Reset scroll position to top on page load/refresh
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
-
-  // Animate gradient background
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setGradientAngle((prev) => (prev + 1) % 360);
-    }, 50); // Smooth gradient rotation
-
-    return () => clearInterval(interval);
   }, []);
 
   // Fetch real stats from API
@@ -100,13 +90,17 @@ export default function Home() {
     <ErrorBoundary>
     <PageTransition>
       <div className="min-h-screen bg-white" style={{
-        backgroundImage: `linear-gradient(${gradientAngle}deg, #dcfce7 0%, #f0fdfa 35%, #d1fae5 70%, #dcfce7 100%)`,
+        background: `linear-gradient(135deg, #dcfce7 0%, #f0fdfa 35%, #d1fae5 70%, #dcfce7 100%)`,
+        backgroundSize: '400% 400%',
+        animation: 'gradientShift 15s ease infinite',
         backgroundAttachment: 'fixed',
       }}>
         <style>{`
           @media (prefers-color-scheme: dark) {
             .home-page-background {
-              background: linear-gradient(${gradientAngle}deg, #1f2937 0%, #111827 35%, #0f172a 70%, #1f2937 100%) !important;
+              background: linear-gradient(135deg, #1f2937 0%, #111827 35%, #0f172a 70%, #1f2937 100%) !important;
+              background-size: 400% 400% !important;
+              animation: gradientShift 15s ease infinite !important;
             }
           }
         `}</style>
@@ -116,8 +110,9 @@ export default function Home() {
           <div 
             className="absolute inset-0 opacity-40 pointer-events-none"
             style={{
-              background: `linear-gradient(${gradientAngle}deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 50%, rgba(6, 182, 212, 0.1) 100%)`,
-              animation: 'gradientFlow 8s ease-in-out infinite',
+              background: `linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 50%, rgba(6, 182, 212, 0.1) 100%)`,
+              backgroundSize: '200% 200%',
+              animation: 'gradientShift 8s ease-in-out infinite',
             }}
           ></div>
 
