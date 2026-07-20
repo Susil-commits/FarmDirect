@@ -174,7 +174,7 @@ export default function Home() {
               <div>
                 <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
                   <span className="inline-block animate-slide-in-left">Farm to Table</span>{' '}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-600 inline-block animate-gradient-text">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-700 inline-block animate-gradient-text">
                     Directly
                   </span>
                 </h1>
@@ -217,10 +217,13 @@ export default function Home() {
                     <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse"></div>
                   )}
                   <img
-                    src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=600&fit=crop"
+                    src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=600&fit=crop&fm=webp&q=80"
                     alt="Fresh produce from farmers"
+                    width="800"
+                    height="600"
                     className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
                     loading="eager"
+                    fetchPriority="high"
                     onLoad={() => setImageLoading(false)}
                     onError={() => {
                       setImageError(true);
@@ -544,7 +547,7 @@ export default function Home() {
               ].map((faq, i) => (
                 <ScrollAnimation key={i} className="scroll-slide" style={{ animationDelay: `${i * 0.05}s` }}>
                   <Card className="p-6 bg-white">
-                    <h4 className="font-bold text-gray-900 mb-2 text-lg">❓ {faq.q}</h4>
+                    <h3 className="font-bold text-gray-900 mb-2 text-lg">❓ {faq.q}</h3>
                     <p className="text-gray-600">{faq.a}</p>
                   </Card>
                 </ScrollAnimation>
