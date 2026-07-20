@@ -188,7 +188,7 @@ export default function Home() {
                     <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse"></div>
                   )}
                   <img
-                    src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=600&fit=crop&fm=webp&q=80"
+                    src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=600&fit=crop&fm=webp&q=60&auto=format"
                     alt="Fresh produce from farmers"
                     width="800"
                     height="600"
