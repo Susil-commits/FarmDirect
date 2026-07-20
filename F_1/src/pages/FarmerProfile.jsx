@@ -10,6 +10,8 @@ import { useRouter } from '../hooks/useRouter';
 import { useWishlist } from '../hooks/useWishlist';
 import { cropService, userService } from '../services/appService';
 import { getImageUrl } from '../utils/formatters';
+import SkeletonLoader from '../components/common/SkeletonLoader';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 
 export default function FarmerProfile() {
   const { navigate, params } = useRouter();
@@ -49,12 +51,7 @@ export default function FarmerProfile() {
   if (loading) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-12 h-12 rounded-full border-4 border-slate-600 border-t-emerald-400 animate-spin mx-auto mb-4"></div>
-            <p className="text-slate-300 font-medium">Loading farmer profile...</p>
-          </div>
-        </div>
+        <SkeletonLoader variant="page" />
       </PageTransition>
     );
   }
@@ -82,6 +79,7 @@ export default function FarmerProfile() {
   }
 
   return (
+    <ErrorBoundary>
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         {/* Premium Header Section */}
@@ -476,5 +474,6 @@ export default function FarmerProfile() {
         </div>
       </div>
     </PageTransition>
+    </ErrorBoundary>
   );
 }

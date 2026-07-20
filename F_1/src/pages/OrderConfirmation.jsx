@@ -8,6 +8,8 @@ import { CheckCircle, Package, Truck, MapPin, Clock, Loader, AlertCircle, Phone 
 import { orderService } from '../services/appService';
 import '../styles/OrderConfirmation.css';
 import { getImageUrl } from '../utils/formatters';
+import SkeletonLoader from '../components/common/SkeletonLoader';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 
 const STATUS_LABELS = {
   confirmed: 'Confirmed',
@@ -139,6 +141,117 @@ export default function OrderConfirmation() {
     if (name.includes('apple')) return '🍎';
     if (name.includes('corn') || name.includes('maize')) return '🌽';
     if (name.includes('chili') || name.includes('chilli')) return '🌶️';
+    fetchOrderData();
+  }, []);
+
+  const fetchOrderData = async () => {
+    try {
+      const orderId = localStorage.getItem('lastOrderId');
+      if (!orderId) {
+        setError('No recent order found. Please place an order first.');
+        setLoading(false);
+        return;
+      }
+
+      // api.js interceptor unwraps to response.data, so response = { order: {...} }
+      const response = await orderService.getOrderById(orderId);
+      const orderData = response.order;
+      setOrder(orderData);
+      localStorage.removeItem('lastOrderId');
+    } catch (err) {
+      console.error('Failed to fetch order:', err);
+      setError('Could not load order details. Your order has been placed successfully.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'N/A';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-IN', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  const formatTime = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const getOrderTimeline = () => {
+    const steps = [
+      {
+        number: 1,
+        title: 'Order Confirmed',
+        description: 'Your order has been successfully placed',
+        icon: '✓',
+        time: order?.createdAt ? `${formatDate(order.createdAt)}, ${formatTime(order.createdAt)}` : 'Just now',
+        completed: true,
+        status: 'confirmed',
+      },
+      {
+        number: 2,
+        title: 'Farmer Preparing',
+        description: 'The farmer is preparing your fresh crops',
+        icon: '👨‍🌾',
+        time: 'After confirmation',
+        completed: order?.timeline?.some(t => t.status === 'preparing'),
+        status: 'preparing',
+      },
+      {
+        number: 3,
+        title: 'Ready for Pickup',
+        description: 'Your order is packed and ready for pickup',
+        icon: '📦',
+        time: 'At the pickup location',
+        completed: order?.timeline?.some(t => t.status === 'ready_for_pickup'),
+        status: 'ready_for_pickup',
+      },
+      {
+        number: 4,
+        title: 'Picked Up',
+        description: 'Order has been picked up by the buyer',
+        icon: '🚚',
+        time: order?.timeline?.find(t => t.status === 'picked_up')?.timestamp
+          ? formatDate(order.timeline.find(t => t.status === 'picked_up').timestamp)
+          : 'After pickup',
+        completed: order?.timeline?.some(t => t.status === 'picked_up'),
+        status: 'picked_up',
+      },
+      {
+        number: 5,
+        title: 'Completed!',
+        description: 'Order successfully completed',
+        icon: '✅',
+        time: order?.completedAt ? formatDate(order.completedAt) : 'After delivery',
+        completed: order?.orderStatus === 'completed',
+        status: 'completed',
+      },
+    ];
+    return steps;
+  };
+
+  const getItemEmoji = (cropName) => {
+    const name = (cropName || '').toLowerCase();
+    if (name.includes('tomato')) return '🍅';
+    if (name.includes('carrot')) return '🥕';
+    if (name.includes('potato')) return '🥔';
+    if (name.includes('onion')) return '🧅';
+    if (name.includes('rice')) return '🍚';
+    if (name.includes('wheat')) return '🌾';
+    if (name.includes('mango')) return '🥭';
+    if (name.includes('banana')) return '🍌';
+    if (name.includes('apple')) return '🍎';
+    if (name.includes('corn') || name.includes('maize')) return '🌽';
+    if (name.includes('chili') || name.includes('chilli')) return '🌶️';
     if (name.includes('leaf') || name.includes('spinach') || name.includes('green')) return '🥬';
     if (name.includes('cucumber')) return '🥒';
     if (name.includes('eggplant') || name.includes('brinjal')) return '🍆';
@@ -148,12 +261,7 @@ export default function OrderConfirmation() {
   if (loading) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 py-12 px-4 flex items-center justify-center">
-          <div className="text-center">
-            <Loader size={48} className="animate-spin text-green-600 mx-auto mb-4" />
-            <p className="text-gray-600 text-lg">Loading your order details...</p>
-          </div>
-        </div>
+        <SkeletonLoader variant="detail" />
       </PageTransition>
     );
   }
@@ -188,6 +296,7 @@ export default function OrderConfirmation() {
   const currentStatus = order.orderStatus || 'confirmed';
 
   return (
+    <ErrorBoundary>
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 py-12 px-4 relative">
         <div className="max-w-4xl mx-auto relative z-10">
@@ -469,5 +578,6 @@ export default function OrderConfirmation() {
         </div>
       </div>
     </PageTransition>
+    </ErrorBoundary>
   );
 }

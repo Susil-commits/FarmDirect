@@ -5,6 +5,8 @@ import Card from '../components/common/Card.jsx';
 import Button from '../components/common/Button.jsx';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation.jsx';
+import SkeletonLoader from '../components/common/SkeletonLoader.jsx';
+import ErrorBoundary from '../components/common/ErrorBoundary.jsx';
 import { AlertCircle, CheckCircle, ArrowLeft, Edit2, Upload, X } from 'lucide-react';
 import { cropService } from '../services/appService.js';
 
@@ -194,12 +196,7 @@ export default function EditCrop() {
     return (
       <ProtectedRoute roles="farmer">
         <PageTransition>
-          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-green-600 animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading crop details...</p>
-            </div>
-          </div>
+          <SkeletonLoader variant="page" />
         </PageTransition>
       </ProtectedRoute>
     );
@@ -225,6 +222,7 @@ export default function EditCrop() {
   }
 
   return (
+    <ErrorBoundary>
     <ProtectedRoute roles="farmer">
       <PageTransition>
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white py-8 px-4">
@@ -537,5 +535,6 @@ export default function EditCrop() {
         </div>
       </PageTransition>
     </ProtectedRoute>
+    </ErrorBoundary>
   );
 }

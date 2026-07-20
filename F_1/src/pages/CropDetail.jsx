@@ -8,6 +8,8 @@ import FarmerDetailCard from '../components/common/FarmerDetailCard';
 import RelatedProducts from '../components/common/RelatedProducts';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
+import SkeletonLoader from '../components/common/SkeletonLoader';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 import LoginPrompt from '../components/modals/LoginPrompt';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
@@ -311,12 +313,7 @@ export default function CropDetail() {
   if (loading) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4 flex items-center justify-center">
-          <div className="text-center">
-            <Loader size={48} className="text-green-600 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600 text-lg font-semibold">Loading crop details...</p>
-          </div>
-        </div>
+        <SkeletonLoader variant="detail" />
       </PageTransition>
     );
   }
@@ -353,6 +350,7 @@ export default function CropDetail() {
   // ... (keep existing return statement)
 
   return (
+    <ErrorBoundary>
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4 relative">
         <div className="absolute inset-0 premium-gradient pointer-events-none"></div>
@@ -397,13 +395,13 @@ export default function CropDetail() {
                             <ChevronRight size={24} />
                           </button>
                           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                            {cropImages.map((_, i) => (
+                            {cropImages?.map((_, i) => (
                               <button
                                 key={i}
                                 onClick={() => setActiveImageIndex(i)}
                                 className={`w-2.5 h-2.5 rounded-full transition-all ${i === activeImageIndex ? 'bg-white scale-125 shadow' : 'bg-white/50 hover:bg-white/70'}`}
                               />
-                            ))}
+                            )) ?? []}
                           </div>
                         </>
                       )}
@@ -421,7 +419,7 @@ export default function CropDetail() {
                 </div>
                 {cropImages.length > 1 && (
                   <div className="flex gap-2 p-3 bg-gray-50 overflow-x-auto">
-                    {cropImages.map((img, i) => (
+                    {cropImages?.map((img, i) => (
                       <button
                         key={i}
                         onClick={() => setActiveImageIndex(i)}
@@ -430,7 +428,7 @@ export default function CropDetail() {
                       >
                         <img src={getImageUrl(img)} alt={`${cropName} thumbnail ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
                       </button>
-                    ))}
+                    )) ?? []}
                   </div>
                 )}
                 <div className="p-6">
@@ -537,12 +535,12 @@ export default function CropDetail() {
                     <ScrollAnimation className="scroll-slide mb-6 pb-6 border-b">
                       <p className="font-semibold text-gray-900 mb-3">📋 Specifications</p>
                       <div className="space-y-2 text-sm">
-                        {Object.entries(crop.specifications).map(([key, value], i) => (
+                        {Object.entries(crop.specifications || {})?.map(([key, value], i) => (
                           <div key={key} className="flex justify-between stagger-item" style={{ animationDelay: `${i * 0.05}s` }}>
                             <span className="text-gray-600">{key}</span>
                             <span className="font-semibold text-gray-900">{value}</span>
                           </div>
-                        ))}
+                        )) ?? []}
                       </div>
                     </ScrollAnimation>
                   )}
@@ -562,20 +560,20 @@ export default function CropDetail() {
                     <div className="p-6">
                       <h2 className="text-2xl font-bold text-gray-900 mb-6">⭐ Customer Reviews</h2>
                       <div className="space-y-6">
-                        {crop.reviews_list.map((review, i) => (
+                        {crop.reviews_list?.map((review, i) => (
                           <div key={i} className="pb-6 border-b last:border-b-0 stagger-item" style={{ animationDelay: `${i * 0.1}s` }}>
                             <div className="flex items-center gap-3 mb-2">
                               <div className="w-10 h-10 bg-green-100 text-green-700 rounded-full flex items-center justify-center font-semibold">
-                                {review.name.charAt(0)}
+                                {review?.name?.charAt(0) || 'U'}
                               </div>
                               <div>
-                                <p className="font-semibold text-gray-900">{review.name}</p>
-                                <p className="text-yellow-400 text-sm">⭐ {review.rating}</p>
+                                <p className="font-semibold text-gray-900">{review?.name}</p>
+                                <p className="text-yellow-400 text-sm">⭐ {review?.rating}</p>
                               </div>
                             </div>
-                            <p className="text-gray-700">{review.text}</p>
+                            <p className="text-gray-700">{review?.text}</p>
                           </div>
-                        ))}
+                        )) ?? []}
                       </div>
                     </div>
                   </Card>
@@ -754,5 +752,6 @@ export default function CropDetail() {
         message="Please login to mark interest in this crop and connect with the farmer"
       />
     </PageTransition>
+    </ErrorBoundary>
   );
 }

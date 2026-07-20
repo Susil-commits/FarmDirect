@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from '../hooks/useRouter';
 import { useCart } from '../hooks/useCart';
 import { useToast } from '../hooks/useToast';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from '../hooks/useRouter';
+import { useCart } from '../hooks/useCart';
+import { useToast } from '../hooks/useToast';
 import PageTransition from '../components/common/PageTransition';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -12,6 +16,8 @@ import {
   Search, X, Heart, MapPin, Star, IndianRupee, Filter,
   ChevronDown, GridIcon, List, ArrowUpDown
 } from 'lucide-react';
+import SkeletonLoader from '../components/common/SkeletonLoader';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 import '../styles/SearchResults.css';
 
 export default function SearchResults() {
@@ -134,19 +140,13 @@ export default function SearchResults() {
   if (loading) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4">
-          <div className="max-w-7xl mx-auto">
-            <Card className="p-12 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-              <p className="text-gray-600 mt-4">Searching crops...</p>
-            </Card>
-          </div>
-        </div>
+        <SkeletonLoader variant="marketplace" />
       </PageTransition>
     );
   }
 
   return (
+    <ErrorBoundary>
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4">
         <div className="max-w-7xl mx-auto">
@@ -416,5 +416,6 @@ export default function SearchResults() {
         </div>
       </div>
     </PageTransition>
+    </ErrorBoundary>
   );
 }
