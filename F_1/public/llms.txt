@@ -23,3 +23,7 @@
 ## API
 - Authentication via JWT
 - Real-time updates via WebSockets
+
+## Optional
+- [GitHub Repository](https://github.com/FarmDirect)
+- [Documentation](https://farmdirect.docs)
