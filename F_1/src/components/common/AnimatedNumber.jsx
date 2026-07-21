@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 /**
  * Component that animates counting from 0 to a target number
@@ -24,42 +24,11 @@ export default function AnimatedNumber({
   animateOnVisible = false,
   placeholder = '--',
 }) {
-  // While the real value is unknown (loading / failed), show a placeholder
-  // instead of animating from 0.
   const isPlaceholder = value === null || value === undefined || Number.isNaN(value);
-  const [displayValue, setDisplayValue] = useState(0);
   const [isVisible, setIsVisible] = useState(!animateOnVisible);
-  const [elementId] = useState(() => {
-    // Generate unique ID without Math.random
-    return `animated-number-${Date.now()}-${Math.floor(performance.now() % 1000)}`;
-  });
+  const nodeRef = useRef(null);
 
-  useEffect(() => {
-    if (isPlaceholder || !isVisible) return;
-
-    const startTime = Date.now();
-    const startValue = 0;
-    const difference = value - startValue;
-
-    const timer = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // Easing function for smooth animation
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      const currentValue = startValue + difference * easeOut;
-
-      setDisplayValue(Math.floor(currentValue * Math.pow(10, decimals)) / Math.pow(10, decimals));
-
-      if (progress === 1) {
-        clearInterval(timer);
-        setDisplayValue(value);
-      }
-    }, 16); // ~60fps
-
-    return () => clearInterval(timer);
-  }, [value, duration, decimals, isVisible, isPlaceholder]);
-
+  // Intersection Observer to trigger animation when visible
   useEffect(() => {
     if (!animateOnVisible) return;
 
@@ -67,40 +36,78 @@ export default function AnimatedNumber({
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          observer.unobserve(entry.target);
+          observer.disconnect();
         }
       },
       { threshold: 0.5 }
     );
 
-    const element = document.getElementById(elementId);
-    if (element) {
-      observer.observe(element);
+    if (nodeRef.current) {
+      observer.observe(nodeRef.current);
     }
 
     return () => observer.disconnect();
-  }, [elementId, animateOnVisible]);
+  }, [animateOnVisible]);
+
+  // High-performance animation using requestAnimationFrame and direct DOM manipulation
+  useEffect(() => {
+    if (isPlaceholder || !isVisible || !nodeRef.current) return;
+
+    let startTime = null;
+    let animationFrameId;
+    const startValue = 0;
+    const difference = value - startValue;
+
+    const updateValue = (currentTime) => {
+      if (!startTime) startTime = currentTime;
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Easing function for smooth animation
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const currentValue = startValue + difference * easeOut;
+
+      const numericValue = Math.floor(currentValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
+      const formattedValue = format ? format(numericValue) : numericValue.toFixed(decimals);
+
+      if (nodeRef.current) {
+        // Direct DOM update avoids React state re-renders (~60fps)
+        nodeRef.current.textContent = `${prefix}${formattedValue}${suffix}`;
+      }
+
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(updateValue);
+      } else if (nodeRef.current) {
+        // Ensure final exact value is set
+        const finalFormatted = format ? format(value) : value.toFixed(decimals);
+        nodeRef.current.textContent = `${prefix}${finalFormatted}${suffix}`;
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(updateValue);
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [value, duration, decimals, isVisible, isPlaceholder, prefix, suffix, format]);
 
   if (isPlaceholder) {
     return (
-      <span id={elementId} className={className}>
+      <span ref={nodeRef} className={className}>
         {placeholder}
       </span>
     );
   }
 
-  const formattedValue = format
-    ? format(displayValue)
-    : displayValue.toFixed(decimals);
+  // Initial render starts at 0
+  const initialValue = 0;
+  const formattedInitial = format ? format(initialValue) : initialValue.toFixed(decimals);
 
   return (
-    <span
-      id={elementId}
-      className={className}
-    >
-      {prefix}
-      {formattedValue}
-      {suffix}
+    <span ref={nodeRef} className={className}>
+      {prefix}{formattedInitial}{suffix}
     </span>
   );
 }
