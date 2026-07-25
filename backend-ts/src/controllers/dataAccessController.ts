@@ -6,6 +6,13 @@ import User from '../models/User.js';
 import Wishlist from '../models/Wishlist.js';
 import type { Request, Response } from 'express';
 
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+let publicCropsCache: CacheEntry<any> | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 // ============ FARMER ENDPOINTS ============
 export const getFarmerCrops = asyncHandler(async (req: Request, res: Response) => {
   const crops = await CropListing.find({ farmerId: req.user!._id }).lean()
@@ -73,12 +80,34 @@ export const getPublicApprovedCrops = asyncHandler(async (req: Request, res: Res
   if (search) query.$or = [{ cropName: { $regex: search, $options: 'i' } }, { description: { $regex: search, $options: 'i' } }];
   if (category) query.category = category;
 
-  const crops = await CropListing.find(query).lean()
-    .populate({ path: 'farmerId', match: { kycStatus: 'verified' }, select: 'name email phone address rating' })
-    .limit(Number(limit) * 1).skip((Number(page) - 1) * Number(limit)).sort({ createdAt: -1 });
-  const validCrops = crops.filter((c) => c.farmerId !== null);
-  const total = await CropListing.countDocuments(query);
-  res.status(200).json({ success: true, count: validCrops.length, total, pages: Math.ceil(total / Number(limit)), currentPage: Number(page), data: validCrops });
+  // Use cache if no search or category filters are applied and requesting page 1
+  const isCacheable = !search && !category && page === '1';
+  if (isCacheable && publicCropsCache && (Date.now() - publicCropsCache.timestamp < CACHE_TTL)) {
+    return res.status(200).json(publicCropsCache.data);
+  }
+
+  try {
+    const crops = await CropListing.find(query).lean()
+      .populate({ path: 'farmerId', match: { kycStatus: 'verified' }, select: 'name email phone address rating' })
+      .limit(Number(limit) * 1).skip((Number(page) - 1) * Number(limit)).sort({ createdAt: -1 });
+    const validCrops = crops.filter((c) => c.farmerId !== null);
+    const total = await CropListing.countDocuments(query);
+    
+    const responseData = { success: true, count: validCrops.length, total, pages: Math.ceil(total / Number(limit)), currentPage: Number(page), data: validCrops };
+    
+    if (isCacheable) {
+      publicCropsCache = { data: responseData, timestamp: Date.now() };
+    }
+    
+    return res.status(200).json(responseData);
+  } catch (error) {
+    // Fallback to cache if DB fails and cache exists
+    if (isCacheable && publicCropsCache) {
+      console.warn('Database error fetching crops, serving stale cache', error);
+      return res.status(200).json(publicCropsCache.data);
+    }
+    throw error;
+  }
 });
 
 export const getPublicFarmerProfile = asyncHandler(async (req: Request, res: Response) => {

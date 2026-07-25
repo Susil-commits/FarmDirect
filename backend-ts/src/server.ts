@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import { createServer, type Server as HttpServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import cookieParser from 'cookie-parser';
 
 import { env } from './config/env.js';
 import { connectDB, disconnectDB } from './config/db.js';
@@ -102,9 +103,10 @@ const pollingLimiter = rateLimit({
 app.use('/api/messages/unread', pollingLimiter);
 app.use('/api/notifications/unread', pollingLimiter);
 
-// 7. Body parsing
+// 7. Body & Cookie parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(cookieParser());
 
 // 8. Response compression
 app.use(compression({ threshold: 1024 }));
