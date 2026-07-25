@@ -3,7 +3,7 @@ import Card from '../../components/common/Card';
 
 export default function HowItWorksSection() {
   return (
-    <section className="py-20 px-4 relative bg-gradient-to-br from-white via-green-50 to-white">
+    <section className="py-20 px-4 relative z-10">
       <div className="max-w-6xl mx-auto relative z-10">
         <ScrollAnimation className="scroll-slide mb-16">
           <div className="text-center">

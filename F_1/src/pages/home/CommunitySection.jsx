@@ -4,7 +4,7 @@ import { Loader2, Info } from 'lucide-react';
 
 export default function CommunitySection({ stats, statsLoading }) {
   return (
-    <section className="py-20 px-4 relative bg-white">
+    <section className="py-20 px-4 relative z-10">
       <div className="max-w-6xl mx-auto">
         <ScrollAnimation className="scroll-slide mb-16">
           <h2 className="text-4xl font-bold text-gray-900 text-center animate-slide-in-down mb-2">Our Growing Community</h2>

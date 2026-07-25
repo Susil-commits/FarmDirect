@@ -103,41 +103,49 @@ export default function Home() {
   return (
     <ErrorBoundary>
     <PageTransition>
-      <div className="min-h-screen bg-white" style={{
-        background: `linear-gradient(135deg, #dcfce7 0%, #f0fdfa 35%, #d1fae5 70%, #dcfce7 100%)`,
-        backgroundSize: '400% 400%',
-        animation: 'gradientShift 15s ease infinite',
-        backgroundAttachment: 'fixed',
-      }}>
+      <div className="min-h-screen bg-white relative">
+        {/* Organic Animated Mesh Background */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+          <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-green-300/40 to-emerald-200/20 blur-3xl animate-blob"></div>
+          <div className="absolute top-[20%] -right-[10%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-br from-teal-200/40 to-cyan-100/20 blur-3xl animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-[20%] left-[20%] w-[80vw] h-[80vw] rounded-full bg-gradient-to-tr from-green-200/30 to-emerald-100/30 blur-3xl animate-blob animation-delay-4000"></div>
+          <div className="absolute inset-0 bg-white/40 backdrop-blur-[100px]"></div>
+        </div>
+
         <style>{`
           @media (prefers-color-scheme: dark) {
             .home-page-background {
-              background: linear-gradient(135deg, #1f2937 0%, #111827 35%, #0f172a 70%, #1f2937 100%) !important;
-              background-size: 400% 400% !important;
-              animation: gradientShift 15s ease infinite !important;
+              background: #0f172a !important;
             }
           }
+          @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+          }
+          .animate-blob {
+            animation: blob 15s infinite;
+          }
+          .animation-delay-2000 {
+            animation-delay: 2s;
+          }
+          .animation-delay-4000 {
+            animation-delay: 4s;
+          }
         `}</style>
+
         {/* Hero Section - Premium Enhanced */}
         <section ref={heroRef} className="pt-8 pb-20 px-4 relative overflow-hidden min-h-screen flex items-center">
-          {/* Animated gradient overlay */}
-          <div 
-            className="absolute inset-0 opacity-60 pointer-events-none"
-            style={{
-              background: `radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.15) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 100%)`,
-              animation: 'pulse 8s ease-in-out infinite',
-            }}
-          ></div>
-
           {/* Floating particles background - optimized */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
                 className={`absolute animate-float ${i > 2 ? 'hidden sm:block' : ''}`}
                 style={particleProps[i]}
               >
-                <Leaf className="w-full h-full text-green-600 drop-shadow-xl" />
+                <Leaf className="w-full h-full text-green-600/30 drop-shadow-xl" />
               </div>
             ))}
           </div>
@@ -153,14 +161,14 @@ export default function Home() {
                   100% Fresh & Local
                 </div>
                 
-                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 mb-6 leading-[1.1] tracking-tight">
+                <h1 className="text-6xl sm:text-7xl lg:text-8xl font-black text-gray-900 mb-6 leading-[1.05] tracking-tighter">
                   <span className="block animate-slide-in-left">Farm to Table</span>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 inline-block animate-gradient-text">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-green-500 to-teal-500 inline-block animate-gradient-text drop-shadow-sm">
                     Directly
                   </span>
                 </h1>
                 
-                <p className="text-xl text-gray-700 mb-8 animate-slide-in-left leading-relaxed font-medium" style={{ animationDelay: '0.1s' }}>
+                <p className="text-xl sm:text-2xl text-gray-700 mb-10 animate-slide-in-left leading-relaxed font-medium max-w-2xl" style={{ animationDelay: '0.1s' }}>
                   Connect directly with local farmers. Get fresh, organic produce at fair prices with zero middlemen. Just honest trade and better food.
                 </p>
                 
@@ -208,37 +216,37 @@ export default function Home() {
             </ScrollAnimation>
 
             {/* Premium Hero Image Banner */}
-            <div className="relative z-10 lg:h-[600px] flex items-center justify-center animate-slide-in-right perspective-1000">
-              <div className="relative w-full max-w-lg mx-auto aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl transform rotate-y-[-5deg] rotate-x-[5deg] hover:rotate-0 transition-transform duration-700 ease-out glass-deep p-3 group">
-                <div className="absolute inset-0 bg-gradient-to-tr from-green-400/20 to-teal-400/20 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-overlay"></div>
+            <div className="relative z-10 lg:h-[650px] flex items-center justify-center animate-slide-in-right perspective-1000 mt-12 lg:mt-0">
+              <div className="relative w-full max-w-lg mx-auto aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl transform rotate-y-[-5deg] rotate-x-[5deg] hover:rotate-0 transition-transform duration-700 ease-out border-4 border-white/50 group">
+                <div className="absolute inset-0 bg-gradient-to-tr from-green-500/20 to-emerald-500/10 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-overlay"></div>
                 <OptimizedImage
-                  src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=1000&fit=crop&fm=webp&q=80&auto=format"
-                  alt="Fresh organic produce straight from the farm"
+                  src="https://images.unsplash.com/photo-1605000797499-95a51c5269ae?w=800&h=1000&fit=crop&fm=webp&q=80&auto=format"
+                  alt="A happy local farmer holding fresh produce"
                   width="800"
                   height="1000"
-                  className="w-full h-full object-cover rounded-[2rem] shadow-inner group-hover:scale-105 transition-transform duration-700 ease-out"
+                  className="w-full h-full object-cover rounded-[2.5rem] shadow-inner group-hover:scale-[1.03] transition-transform duration-700 ease-out"
                   priority={true}
                 />
                 
                 {/* Floating badge 1 */}
-                <div className="absolute top-10 -left-6 glass-deep px-5 py-3 rounded-2xl shadow-xl z-20 animate-float flex items-center gap-3">
-                  <div className="bg-green-100 p-2 rounded-full">
-                    <Leaf className="w-6 h-6 text-green-600" />
+                <div className="absolute top-12 -left-4 sm:-left-8 bg-white/80 backdrop-blur-xl border border-white/60 px-6 py-4 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-20 animate-float flex items-center gap-4 hover:scale-105 transition-transform duration-300">
+                  <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-3 rounded-2xl shadow-sm">
+                    <Leaf className="w-7 h-7 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-900">100% Organic</p>
-                    <p className="text-xs text-gray-600">Certified Farms</p>
+                    <p className="text-base font-black text-gray-900 tracking-tight">100% Organic</p>
+                    <p className="text-sm text-gray-600 font-medium">Certified Farms</p>
                   </div>
                 </div>
 
                 {/* Floating badge 2 */}
-                <div className="absolute bottom-16 -right-6 glass px-5 py-3 rounded-2xl shadow-xl z-20 animate-float" style={{ animationDelay: '1.5s' }}>
-                  <div className="flex -space-x-2 mb-1">
+                <div className="absolute bottom-20 -right-4 sm:-right-8 bg-white/80 backdrop-blur-xl border border-white/60 px-6 py-4 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-20 animate-float hover:scale-105 transition-transform duration-300" style={{ animationDelay: '1.5s' }}>
+                  <div className="flex -space-x-3 mb-2 justify-center">
                     {[1, 2, 3, 4].map((i) => (
-                      <img key={i} className="w-8 h-8 rounded-full border-2 border-white" src={`https://i.pravatar.cc/100?img=${i + 10}`} alt={`User ${i}`} />
+                      <img key={i} className="w-10 h-10 rounded-full border-2 border-white shadow-sm" src={`https://i.pravatar.cc/100?img=${i + 10}`} alt={`User ${i}`} />
                     ))}
                   </div>
-                  <p className="text-xs font-bold text-gray-900">Join {stats.customers || '10k'}+ Buyers</p>
+                  <p className="text-sm font-black text-gray-900 tracking-tight text-center">Join {stats.customers || '10k'}+ Buyers</p>
                 </div>
               </div>
             </div>
