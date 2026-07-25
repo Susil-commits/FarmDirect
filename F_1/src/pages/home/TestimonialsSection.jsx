@@ -7,27 +7,27 @@ export default function TestimonialsSection() {
       text: 'FarmDirect has revolutionized how I shop for fresh produce. Direct from farmers means fresher veggies and better prices!',
       name: 'Priya Sharma',
       role: 'Regular Customer from Mumbai',
-      avatar: 'P',
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&q=80',
       rating: 5,
     },
     {
       text: 'As a farmer, I can finally reach customers without middlemen taking their cut. Sales have increased by 40%!',
       name: 'Rajesh Patel',
       role: 'Organic Farmer from Gujarat',
-      avatar: 'R',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&q=80',
       rating: 5,
     },
     {
       text: 'The quality of produce is exceptional. I appreciate knowing exactly where my food comes from.',
       name: 'Anjali Desai',
       role: 'Health-conscious Buyer',
-      avatar: 'A',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&q=80',
       rating: 5,
     },
   ];
 
   return (
-    <section className="py-20 px-4 relative bg-gradient-to-br from-gray-50 via-green-50 to-gray-50">
+    <section className="py-20 px-4 relative z-10">
       <div className="max-w-6xl mx-auto relative z-10">
         <ScrollAnimation className="scroll-slide mb-16">
           <div className="text-center">
@@ -65,9 +65,11 @@ export default function TestimonialsSection() {
                   
                   {/* User Info with Animated Avatar */}
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-400 flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:shadow-green-200/50 hover:scale-110 transition-all duration-300 animate-bounce-soft">
-                      {testi.avatar}
-                    </div>
+                    <img 
+                      src={testi.avatar} 
+                      alt={testi.name}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-green-200 shadow-md group-hover:shadow-green-200/50 hover:scale-110 transition-all duration-300 animate-bounce-soft"
+                    />
                     <div>
                       <p className="font-bold text-gray-900 text-base group-hover:text-green-600 transition-colors">{testi.name}</p>
                       <p className="text-gray-500 text-sm">{testi.role}</p>

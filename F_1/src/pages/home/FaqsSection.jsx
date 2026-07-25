@@ -11,7 +11,7 @@ export default function FaqsSection() {
   ];
 
   return (
-    <section className="py-16 px-4 bg-gray-50">
+    <section className="py-16 px-4 relative z-10">
       <div className="max-w-4xl mx-auto">
         <ScrollAnimation className="scroll-slide mb-12">
           <h2 className="text-3xl font-bold text-gray-900 text-center">Common Questions Answered</h2>
@@ -19,7 +19,7 @@ export default function FaqsSection() {
         <div className="space-y-4">
           {faqs.map((faq, i) => (
             <ScrollAnimation key={i} className="scroll-slide" style={{ animationDelay: `${i * 0.05}s` }}>
-              <Card className="p-6 bg-white">
+              <Card className="p-6 bg-white/80 backdrop-blur-md shadow-sm border border-white/50">
                 <h3 className="font-bold text-gray-900 mb-2 text-lg">❓ {faq.q}</h3>
                 <p className="text-gray-600">{faq.a}</p>
               </Card>

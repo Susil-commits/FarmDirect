@@ -10,14 +10,7 @@ export default function FeaturesSection() {
   ];
 
   return (
-    <section id="features" className="py-20 px-4 relative overflow-hidden">
-      {/* Video Background - hidden on mobile to avoid 12.8MB download lag */}
-      <div className="absolute inset-0 z-0 hidden md:block">
-        {/* Gradient fallback shown in place of heavy video */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-green-50 via-amber-50 to-green-100"></div>
-      </div>
-      {/* Lightweight static gradient for mobile (replaces heavy video) */}
-      <div className="absolute inset-0 z-0 md:hidden bg-gradient-to-br from-green-50 via-amber-50 to-green-100"></div>
+    <section id="features" className="py-20 px-4 relative z-10">
 
       <div className="max-w-6xl mx-auto relative z-10">
         <ScrollAnimation className="scroll-slide mb-12">
