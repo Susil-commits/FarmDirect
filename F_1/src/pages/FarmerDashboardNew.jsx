@@ -61,13 +61,10 @@ export default function FarmerDashboardNew() {
   const [expandedCrop, setExpandedCrop] = useState(null);
   const [startOrderLoading, setStartOrderLoading] = useState({});
 
-  // Cancel/Deny modal state
+  // Cancel modal state
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelTargetOrder, setCancelTargetOrder] = useState(null);
   const [cancelLoading, setCancelLoading] = useState(false);
-  const [denyModalOpen, setDenyModalOpen] = useState(false);
-  const [denyTargetOrder, setDenyTargetOrder] = useState(null);
-  const [denyLoading, setDenyLoading] = useState(false);
 
   const fetchFarmerData = async () => {
     try {
@@ -110,8 +107,10 @@ export default function FarmerDashboardNew() {
   useEffect(() => {
     window.scrollTo(0, 0);
     if (user?.role === 'farmer') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchFarmerData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handleDeleteCrop = async (cropId) => {
@@ -182,27 +181,6 @@ export default function FarmerDashboardNew() {
     }
   };
 
-  const handleDenyWithReason = (order) => {
-    setDenyTargetOrder(order);
-    setDenyModalOpen(true);
-  };
-
-  const handleDenyConfirm = async (reason) => {
-    if (!denyTargetOrder) return;
-    setDenyLoading(true);
-    try {
-      await orderService.denyOrder(denyTargetOrder._id, reason);
-      addToast('Order denied. Buyer has been notified.', 'success');
-      await fetchFarmerData();
-    } catch (err) {
-      addToast(err?.message || 'Failed to deny order', 'error');
-    } finally {
-      setDenyLoading(false);
-      setDenyModalOpen(false);
-      setDenyTargetOrder(null);
-    }
-  };
-
   const getNextStatus = (currentStatus) => {
     const idx = ORDER_STATUS_FLOW.indexOf(currentStatus);
     if (idx >= 0 && idx < ORDER_STATUS_FLOW.length - 1) {
@@ -232,8 +210,10 @@ export default function FarmerDashboardNew() {
   return (
     <ErrorBoundary>
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4">
-        <div className="max-w-6xl mx-auto">
+      <div className="min-h-screen premium-gradient py-12 px-4 relative overflow-hidden">
+        <div className="absolute top-[10%] right-[-10%] w-[50%] h-[50%] bg-green-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="max-w-6xl mx-auto relative z-10">
           <ScrollAnimation className="scroll-slide mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Farmer Dashboard</h1>
             <p className="text-gray-600">Manage inventory, view interested buyers & track orders</p>
@@ -241,42 +221,42 @@ export default function FarmerDashboardNew() {
 
           <ScrollAnimation className="scroll-slide mb-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-              <Card className="p-6 bg-gradient-to-br from-blue-50 to-white">
+              <Card className="p-6 glass-deep border border-white/50 lg:col-span-2 shadow-lg premium-hover">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-semibold text-gray-600">Total Revenue</p>
                   <IndianRupee className="w-5 h-5 text-green-600" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900">₹{analytics.totalRevenue.toLocaleString()}</p>
+                <p className="text-3xl font-bold text-gray-900">₹{analytics.totalRevenue.toLocaleString()}</p>
               </Card>
-              <Card className="p-6 bg-gradient-to-br from-emerald-50 to-white">
+              <Card className="p-6 glass-light border border-white/50 shadow-md premium-hover">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-600">Total Orders</p>
+                  <p className="text-sm font-semibold text-gray-600">Orders</p>
                   <ShoppingCart className="w-5 h-5 text-emerald-600" />
                 </div>
                 <p className="text-2xl font-bold text-gray-900">{analytics.totalSales}</p>
               </Card>
-              <Card className="p-6 bg-gradient-to-br from-orange-50 to-white">
+              <Card className="p-6 glass-light border border-white/50 shadow-md premium-hover">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-semibold text-gray-600">Pending</p>
                   <Clock className="w-5 h-5 text-orange-600" />
                 </div>
                 <p className="text-2xl font-bold text-gray-900">{analytics.pendingOrders}</p>
               </Card>
-              <Card className="p-6 bg-gradient-to-br from-green-50 to-white">
+              <Card className="p-6 glass-light border border-white/50 shadow-md premium-hover">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-semibold text-gray-600">Completed</p>
                   <CheckCircle className="w-5 h-5 text-green-600" />
                 </div>
                 <p className="text-2xl font-bold text-gray-900">{analytics.completedOrders}</p>
               </Card>
-              <Card className="p-6 bg-gradient-to-br from-purple-50 to-white">
+              <Card className="p-6 glass-light border border-white/50 shadow-md premium-hover">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-600">Inventory</p>
+                  <p className="text-sm font-semibold text-gray-600">Interested</p>
                   <Package className="w-5 h-5 text-purple-600" />
                 </div>
                 <p className="text-2xl font-bold text-gray-900">{analytics.totalInventory}</p>
               </Card>
-              <Card className="p-6 bg-gradient-to-br from-indigo-50 to-white">
+              <Card className="p-6 glass-light border border-white/50 shadow-md premium-hover">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-semibold text-gray-600">Avg Order</p>
                   <TrendingUp className="w-5 h-5 text-indigo-600" />
@@ -287,7 +267,7 @@ export default function FarmerDashboardNew() {
           </ScrollAnimation>
 
           <ScrollAnimation className="scroll-slide mb-8">
-            <div className="flex gap-2 border-b border-gray-200 overflow-x-auto">
+            <div className="flex gap-2 border-b border-gray-200/50 overflow-x-auto pb-1 no-scrollbar">
               {['inventory', 'orders', 'analytics'].map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-3 font-semibold whitespace-nowrap transition-all border-b-2 ${activeTab === tab ? 'border-green-600 text-green-600' : 'border-transparent text-gray-600'}`}>
                   {tab === 'inventory' && '📦 Inventory'}{tab === 'orders' && '📋 Orders'}{tab === 'analytics' && '📊 Analytics'}
@@ -307,7 +287,7 @@ export default function FarmerDashboardNew() {
                   ))}
                 </div>
                 <Button onClick={() => navigate('/create-crop')} variant="primary" className="flex items-center gap-2">
-                  <Plus className="w-4 h-4" /> Add Crop
+                  <Package className="w-4 h-4" /> Add Crop
                 </Button>
               </div>
               {filteredCrops.length === 0 ? (
@@ -371,7 +351,6 @@ export default function FarmerDashboardNew() {
                                     const buyerId = buyer.buyerId?._id || buyer.buyerId;
                                     const isStarting = startOrderLoading[buyerId];
                                     const fullName = [buyerData.firstName, buyerData.lastName].filter(Boolean).join(' ') || buyerData.name || 'Buyer';
-                                    const kycDocs = buyerData.kycDocuments || {};
                                     const kycDetails = buyerData.kycDetails || {};
                                     const kycStatus = buyerData.kycStatus || 'not_submitted';
                                     const profilePic = buyerData.profilePicture || buyerData.profilePhotoUrl || kycDetails?.profilePhotoUrl;
@@ -556,16 +535,6 @@ export default function FarmerDashboardNew() {
             />
           )}
 
-          {denyModalOpen && (
-            <CancelWithReason
-              isOpen={denyModalOpen}
-              onClose={() => setDenyModalOpen(false)}
-              onConfirm={handleDenyConfirm}
-              title="Deny Order"
-              message={`Are you sure you want to deny order #${denyTargetOrder?.orderNumber || denyTargetOrder?._id?.slice(-6)}? This will refund the buyer.`}
-              loading={denyLoading}
-            />
-          )}
         </div>
       </div>
     </PageTransition>

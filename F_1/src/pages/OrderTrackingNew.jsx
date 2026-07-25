@@ -49,7 +49,8 @@ export default function OrderTrackingNew() {
        
     return () => { clearInterval(interval); document.removeEventListener('visibilitychange', onVis); };
        
-  }, [user, fetchOrders]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // Live order updates via WebSocket: patch the selected order instantly and
   // reconcile the list (debounced). Toasts/browser-push are handled centrally
@@ -73,6 +74,7 @@ export default function OrderTrackingNew() {
     const t = setTimeout(() => fetchOrders(), 400);
        
     return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderEvent]);
 
   const fetchOrders = async () => {

@@ -116,6 +116,7 @@ export default function AdminApprovals() {
     setExpandedUsers({});
        
     setUserDocuments({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roleTab, statusTab]);
 
   const fetchPendingUsers = async () => {

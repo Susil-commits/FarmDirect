@@ -77,14 +77,10 @@ export default function AdminDocuments() {
   };
 
   useEffect(() => {
-       
-       
-       
-       
       // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUsers(1);
-       
     setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   // Check if userId is in route params and load user documents

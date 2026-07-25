@@ -88,7 +88,7 @@ export default function UserProfile() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (activeTab === 'orders') fetchOrders();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     if (activeTab === 'addresses') fetchAddresses();
   }, [activeTab]);
 
@@ -213,15 +213,15 @@ export default function UserProfile() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-        <div className="pt-6 px-6 md:px-12">
+      <div className="min-h-screen premium-gradient relative overflow-hidden">
+        <div className="pt-6 px-6 md:px-12 relative z-10">
           <BackButton label="Back" />
         </div>
 
-        <div className="relative h-56 bg-gradient-to-r from-green-600 via-emerald-500 to-teal-600 overflow-hidden">
+        <div className="relative h-56 glass-deep border-b border-white/40 overflow-hidden">
           <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full filter blur-3xl"></div>
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white rounded-full filter blur-3xl"></div>
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-green-300 rounded-full filter blur-3xl pointer-events-none"></div>
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-300 rounded-full filter blur-3xl pointer-events-none"></div>
           </div>
           <div className="relative h-full flex items-center px-6 md:px-12">
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
@@ -256,17 +256,17 @@ export default function UserProfile() {
         <div className="max-w-6xl mx-auto px-4 md:px-6 -mt-12 relative z-10">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
             {stats.map((stat, i) => (
-              <div key={i} className="bg-white rounded-2xl shadow-lg p-5 hover:shadow-xl transition-all duration-300">
+              <div key={i} className="glass-deep border border-white/40 rounded-2xl p-5 premium-hover">
                 <div className={`w-10 h-10 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center mb-3`}>
                   <stat.icon size={20} className="text-white" />
                 </div>
                 <p className="text-2xl font-extrabold text-gray-900">{stat.value}</p>
-                <p className="text-xs text-gray-500 font-semibold mt-1">{stat.label}</p>
+                <p className="text-xs text-gray-600 font-semibold mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-1 mb-8 flex gap-1 overflow-x-auto">
+          <div className="glass-light border border-white/50 rounded-2xl p-1 mb-8 flex gap-1 overflow-x-auto">
             {[
               { id: 'profile', label: 'Profile', icon: '👤' },
               { id: 'orders', label: 'Orders', icon: '📦' },
@@ -279,7 +279,7 @@ export default function UserProfile() {
                 className={`flex-1 px-6 py-4 rounded-xl font-semibold transition duration-300 whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    : 'text-gray-700 hover:text-gray-900 premium-hover'
                 }`}
               >
                 {tab.icon} {tab.label}

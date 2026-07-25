@@ -68,6 +68,7 @@ export default function VerificationProgress() {
       });
        
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.role]);
   
   // Check if user has NA-marked address fields (farmers who marked address as N/A during registration)

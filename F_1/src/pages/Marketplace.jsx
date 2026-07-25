@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Heart, Filter, Loader, AlertCircle, Check, TrendingUp, Star, Search, X, SlidersHorizontal, Flame, ShoppingCart, Eye } from 'lucide-react';
+import { MapPin, Heart, Filter, Loader, AlertCircle, Check, TrendingUp, Star, Search, X, SlidersHorizontal, Flame, ShoppingCart, Eye, Mic, MicOff } from 'lucide-react';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
@@ -9,12 +9,15 @@ import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
 import SkeletonLoader from '../components/common/SkeletonLoader';
 import ErrorBoundary from '../components/common/ErrorBoundary';
+import TiltCard from '../components/common/TiltCard';
+import LiveActivityTicker from '../components/common/LiveActivityTicker';
 import { useRouter } from '../context/RouterContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
 import { useCart } from '../context/CartContext';
 import { cropService } from '../services/appService';
 import { getImageUrl } from '../utils/formatters';
+import { useVoiceSearch } from '../hooks/useVoiceSearch';
 import '../styles/Marketplace.css';
 
 const QUICK_CATEGORIES = [
@@ -37,7 +40,8 @@ export default function Marketplace() {
     location: '',
     verifiedFarmersOnly: false,
     organicOnly: false,
-    sortBy: 'newest'
+    sortBy: 'newest',
+    searchQuery: ''
   });
   const [crops, setCrops] = useState([]);
   const [trendingCrops, setTrendingCrops] = useState([]);
@@ -46,6 +50,11 @@ export default function Marketplace() {
   const [quickCategory, setQuickCategory] = useState('');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [quickViewCrop, setQuickViewCrop] = useState(null);
+
+  const { isListening, supported, startListening, stopListening } = useVoiceSearch((text) => {
+    setFilters(prev => ({ ...prev, searchQuery: text }));
+    addToast('Voice recognized: ' + text, 'info');
+  });
 
   const locations = ['Punjab', 'Himachal', 'Haryana', 'Karnataka', 'Maharashtra', 'Uttar Pradesh', 'Delhi', 'West Bengal'];
   const cropTypes = ['vegetables', 'fruits', 'grains', 'herbs', 'other'];
@@ -93,7 +102,8 @@ export default function Marketplace() {
     const typeMatch = !filters.cropType || crop.category === filters.cropType || crop.cropType === filters.cropType;
     const verifiedMatch = !filters.verifiedFarmersOnly || crop.farmer_verified;
     const organicMatch = !filters.organicOnly || crop.certifications?.includes('Organic') || crop.category === 'Organic';
-    return priceMatch && locationMatch && typeMatch && verifiedMatch && organicMatch;
+    const searchMatch = !filters.searchQuery || crop.cropName?.toLowerCase().includes(filters.searchQuery.toLowerCase()) || crop.description?.toLowerCase().includes(filters.searchQuery.toLowerCase());
+    return priceMatch && locationMatch && typeMatch && verifiedMatch && organicMatch && searchMatch;
   }).sort((a, b) => {
     switch (filters.sortBy) {
       case 'popular': return (b.totalReviews || 0) - (a.totalReviews || 0);
@@ -160,7 +170,7 @@ export default function Marketplace() {
   };
 
   const resetFilters = () => {
-    setFilters({ cropType: '', priceRange: [0, 1000], location: '', verifiedFarmersOnly: false, organicOnly: false, sortBy: 'newest' });
+    setFilters({ cropType: '', priceRange: [0, 1000], location: '', verifiedFarmersOnly: false, organicOnly: false, sortBy: 'newest', searchQuery: '' });
     setQuickCategory('');
   };
 
@@ -185,6 +195,37 @@ export default function Marketplace() {
                   <SlidersHorizontal size={18} />
                   Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
                 </button>
+              </div>
+            </div>
+
+            {/* Smart Search Bar */}
+            <div className="mb-8 relative max-w-2xl">
+              <div className="relative group">
+                <div className={`absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl blur-lg opacity-25 group-hover:opacity-40 transition-opacity ${isListening ? 'animate-pulse opacity-60' : ''}`}></div>
+                <div className="relative flex items-center bg-white/90 backdrop-blur-sm border border-gray-200 rounded-2xl p-2 shadow-sm focus-within:ring-2 focus-within:ring-green-500 focus-within:border-transparent transition-all">
+                  <Search className="text-gray-400 ml-3 mr-2" size={22} />
+                  <input
+                    type="text"
+                    placeholder="Search fresh produce, organic veggies..."
+                    value={filters.searchQuery}
+                    onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
+                    className="flex-1 bg-transparent border-none focus:outline-none text-gray-800 placeholder-gray-400 py-3"
+                  />
+                  {filters.searchQuery && (
+                    <button onClick={() => setFilters(prev => ({ ...prev, searchQuery: '' }))} className="p-2 text-gray-400 hover:text-gray-600 transition">
+                      <X size={18} />
+                    </button>
+                  )}
+                  {supported && (
+                    <button
+                      onClick={isListening ? stopListening : startListening}
+                      className={`p-3 rounded-xl ml-1 transition-all ${isListening ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-600'}`}
+                      title={isListening ? "Stop listening" : "Voice Search"}
+                    >
+                      {isListening ? <MicOff size={20} className="animate-pulse" /> : <Mic size={20} />}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </ScrollAnimation>
@@ -257,15 +298,16 @@ export default function Marketplace() {
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                         {trendingCrops?.map((crop, index) => (
-                          <TrendingCard
-                            key={crop._id || crop.id}
-                            crop={crop}
-                            index={index}
-                            onView={() => handleViewCrop(crop._id || crop.id)}
-                            onToggleWishlist={() => toggleWishlist(crop)}
-                            isFavorite={isInWishlist(crop._id || crop.id)}
-                            onQuickAdd={(e) => handleQuickAddToCart(crop, e)}
-                          />
+                          <TiltCard key={crop._id || crop.id} maxTilt={10} scale={1.03}>
+                            <TrendingCard
+                              crop={crop}
+                              index={index}
+                              onView={() => handleViewCrop(crop._id || crop.id)}
+                              onToggleWishlist={() => toggleWishlist(crop)}
+                              isFavorite={isInWishlist(crop._id || crop.id)}
+                              onQuickAdd={(e) => handleQuickAddToCart(crop, e)}
+                            />
+                          </TiltCard>
                         )) ?? []}
                       </div>
                     </div>
@@ -299,15 +341,16 @@ export default function Marketplace() {
                   {filteredCrops.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                       {filteredCrops?.map((crop, index) => (
-                        <CropCardEnhanced
-                          key={crop._id || crop.id}
-                          crop={crop}
-                          isFavorite={isInWishlist(crop._id || crop.id)}
-                          onToggleFavorite={() => toggleWishlist(crop)}
-                          onViewCrop={() => handleViewCrop(crop._id || crop.id)}
-                          onQuickAdd={(e) => handleQuickAddToCart(crop, e)}
-                          index={index}
-                        />
+                        <TiltCard key={crop._id || crop.id} maxTilt={8}>
+                          <CropCardEnhanced
+                            crop={crop}
+                            isFavorite={isInWishlist(crop._id || crop.id)}
+                            onToggleFavorite={() => toggleWishlist(crop)}
+                            onViewCrop={() => handleViewCrop(crop._id || crop.id)}
+                            onQuickAdd={(e) => handleQuickAddToCart(crop, e)}
+                            index={index}
+                          />
+                        </TiltCard>
                       )) ?? []}
                     </div>
                   ) : (
@@ -354,6 +397,7 @@ export default function Marketplace() {
           </div>
         )}
       </div>
+      <LiveActivityTicker />
     </PageTransition>
     </ErrorBoundary>
   );
