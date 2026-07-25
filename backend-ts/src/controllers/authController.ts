@@ -110,10 +110,16 @@ export async function register(req: Request, res: Response, next: NextFunction):
     const token = generateToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: env.nodeEnv === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
     res.status(201).json({
       message: 'User registered successfully',
       token,
-      refreshToken,
       user: publicUser(user),
       serverStartTime: getServerStartTime(),
     });
@@ -151,10 +157,16 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
     const token = generateToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: env.nodeEnv === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
     res.status(200).json({
       message: 'Login successful',
       token,
-      refreshToken,
       user: publicUser(user),
       serverStartTime: getServerStartTime(),
     });
@@ -219,6 +231,11 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
 // ===================== LOGOUT =====================
 
 export function logout(_req: Request, res: Response): void {
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    secure: env.nodeEnv === 'production',
+    sameSite: 'strict'
+  });
   res.status(200).json({ message: 'Logged out successfully' });
 }
 
@@ -340,7 +357,7 @@ export async function updatePassword(req: Request, res: Response, next: NextFunc
 
 export async function refreshTokenHandler(req: Request, res: Response): Promise<void> {
   try {
-    const { refreshToken } = req.body as { refreshToken?: string };
+    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
     if (!refreshToken) {
       sendError(res, 'Refresh token is required', 400);
       return;
@@ -351,7 +368,16 @@ export async function refreshTokenHandler(req: Request, res: Response): Promise<
       return;
     }
     const newToken = generateToken(decoded.id);
-    res.status(200).json({ message: 'Token refreshed successfully', token: newToken, refreshToken });
+    const newRefreshToken = generateRefreshToken(decoded.id);
+    
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: env.nodeEnv === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    res.status(200).json({ message: 'Token refreshed successfully', token: newToken });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     res.status(401).json({ message: 'Failed to refresh token', error: message });

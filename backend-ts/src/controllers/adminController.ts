@@ -49,21 +49,52 @@ function paginated(res: Response, data: unknown, total: number, page: number, li
   });
 }
 
+let cachedCommunityStats: { data: any, timestamp: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export const getPublicCommunityStats = asyncHandler(async (_req: Request, res: Response) => {
-  const [totalFarmers, totalBuyers, totalCrops, totalOrders] = await Promise.all([
-    User.countDocuments({ role: UserRole.Farmer, status: UserStatus.Active }),
-    User.countDocuments({ role: UserRole.Buyer, status: UserStatus.Active }),
-    CropListing.countDocuments({ status: 'active' }),
-    Order.countDocuments({ orderStatus: { $in: [OrderStatus.Completed] } }),
-  ]);
-  res.status(200).json({
-    success: true,
-    data: {
+  try {
+    const now = Date.now();
+    if (cachedCommunityStats && now - cachedCommunityStats.timestamp < CACHE_TTL) {
+      res.status(200).json({
+        success: true,
+        data: cachedCommunityStats.data,
+      });
+      return;
+    }
+
+    const [totalFarmers, totalBuyers, totalCrops, totalOrders] = await Promise.all([
+      User.countDocuments({ role: UserRole.Farmer, status: UserStatus.Active }),
+      User.countDocuments({ role: UserRole.Buyer, status: UserStatus.Active }),
+      CropListing.countDocuments({ status: 'active' }),
+      Order.countDocuments({ orderStatus: { $in: [OrderStatus.Completed] } }),
+    ]);
+    
+    const data = {
       users: { farmers: totalFarmers || 0, buyers: totalBuyers || 0 },
       crops: { total: totalCrops || 0 },
       orders: { total: totalOrders || 0 },
-    },
-  });
+    };
+
+    cachedCommunityStats = { data, timestamp: now };
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error('Error fetching community stats:', error);
+    // Serve stale cache if available when DB fails
+    if (cachedCommunityStats) {
+      res.status(200).json({
+        success: true,
+        data: cachedCommunityStats.data,
+        cached: true,
+      });
+      return;
+    }
+    throw error; // Let asyncHandler handle it
+  }
 });
 
 export const getDashboardStats = asyncHandler(async (_req: Request, res: Response) => {
