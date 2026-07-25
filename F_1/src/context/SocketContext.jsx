@@ -59,7 +59,7 @@ export const SocketProvider = ({ children }) => {
         setConnected(false);
       });
 
-      socket.on('user:online', ({ userId, onlineCount }) => {
+      socket.on('user:online', ({ userId }) => {
         setOnlineUsers((prev) => new Set([...prev, userId]));
       });
 
