@@ -13,6 +13,7 @@ import OptimizedImage from '../components/common/OptimizedImage';
 import LiveActivityTicker from '../components/common/LiveActivityTicker';
 
 const FeaturesSection = lazy(() => import('./home/FeaturesSection'));
+const RawFactsSection = lazy(() => import('./home/RawFactsSection'));
 const HowItWorksSection = lazy(() => import('./home/HowItWorksSection'));
 const FaqsSection = lazy(() => import('./home/FaqsSection'));
 const CommunitySection = lazy(() => import('./home/CommunitySection'));
@@ -42,9 +43,19 @@ export default function Home() {
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
+  // Scroll parallax state
+  const [scrollY, setScrollY] = useState(0);
+
   // Reset scroll position to top on page load/refresh
   useEffect(() => {
     window.scrollTo(0, 0);
+    
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Fetch real stats from API
@@ -106,9 +117,18 @@ export default function Home() {
       <div className="min-h-screen bg-white relative">
         {/* Organic Animated Mesh Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-          <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-green-300/40 to-emerald-200/20 blur-3xl animate-blob"></div>
-          <div className="absolute top-[20%] -right-[10%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-br from-teal-200/40 to-cyan-100/20 blur-3xl animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-[20%] left-[20%] w-[80vw] h-[80vw] rounded-full bg-gradient-to-tr from-green-200/30 to-emerald-100/30 blur-3xl animate-blob animation-delay-4000"></div>
+          <div 
+            className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-green-300/40 to-emerald-200/20 blur-3xl animate-blob transition-transform duration-300 ease-out"
+            style={{ transform: `translateY(${scrollY * 0.15}px)` }}
+          ></div>
+          <div 
+            className="absolute top-[20%] -right-[10%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-br from-teal-200/40 to-cyan-100/20 blur-3xl animate-blob animation-delay-2000 transition-transform duration-300 ease-out"
+            style={{ transform: `translateY(${scrollY * -0.1}px)` }}
+          ></div>
+          <div 
+            className="absolute -bottom-[20%] left-[20%] w-[80vw] h-[80vw] rounded-full bg-gradient-to-tr from-green-200/30 to-emerald-100/30 blur-3xl animate-blob animation-delay-4000 transition-transform duration-300 ease-out"
+            style={{ transform: `translateY(${scrollY * 0.05}px)` }}
+          ></div>
           <div className="absolute inset-0 bg-white/40 backdrop-blur-[100px]"></div>
         </div>
 
@@ -136,9 +156,12 @@ export default function Home() {
         `}</style>
 
         {/* Cinematic Centered Hero Section */}
-        <section ref={heroRef} className="pt-32 pb-0 px-4 relative min-h-screen flex flex-col items-center justify-start overflow-hidden">
+        <section ref={heroRef} className="pt-32 pb-24 px-4 relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
           {/* Floating particles background - optimized */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
+          <div 
+            className="absolute inset-0 overflow-hidden pointer-events-none z-10 transition-transform duration-300 ease-out"
+            style={{ transform: `translateY(${scrollY * 0.2}px)` }}
+          >
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
@@ -202,45 +225,14 @@ export default function Home() {
               </div>
             </ScrollAnimation>
           </div>
-
-          {/* Ultra-wide immersive image showcase */}
-          <div className="w-full max-w-[100rem] mx-auto mt-16 sm:mt-24 relative z-20 px-0 sm:px-6 flex-1 flex flex-col justify-end">
-            <ScrollAnimation className="scroll-slide h-full w-full">
-              <div className="relative w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] rounded-t-[3rem] sm:rounded-t-[5rem] overflow-hidden shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.1)] border-t-8 border-x-8 border-white/60 group">
-                <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/10 z-10 pointer-events-none"></div>
-                <OptimizedImage
-                  src="https://images.unsplash.com/photo-1595855761895-30dbfaee5e49?w=1600&h=800&fit=crop&fm=webp&q=80&auto=format"
-                  alt="A wide view of a beautiful organic farm with a happy farmer"
-                  width="1600"
-                  height="800"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s] ease-out"
-                  priority={true}
-                />
-                
-                {/* Floating badge 1 - Moved to the left edge of the image */}
-                <div className="absolute top-10 left-4 sm:top-20 sm:left-10 bg-white/90 backdrop-blur-xl border border-white/60 px-4 sm:px-5 py-3 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-20 animate-float flex items-center gap-3">
-                  <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-2 rounded-xl shadow-sm">
-                    <Leaf className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-black text-gray-900 tracking-tight">100% Organic</p>
-                    <p className="text-[10px] sm:text-xs text-gray-600 font-medium">Certified Farms</p>
-                  </div>
-                </div>
-
-                {/* Floating badge 2 - Moved to the right edge of the image */}
-                <div className="absolute bottom-10 right-4 sm:bottom-20 sm:right-10 bg-white/90 backdrop-blur-xl border border-white/60 px-4 sm:px-5 py-3 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-20 animate-float" style={{ animationDelay: '1.5s' }}>
-                  <div className="flex -space-x-2 mb-1 justify-center">
-                    {[1, 2, 3, 4].map((i) => (
-                      <img key={i} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-white shadow-sm" src={`https://i.pravatar.cc/100?img=${i + 10}`} alt={`User ${i}`} />
-                    ))}
-                  </div>
-                  <p className="text-[10px] sm:text-xs font-black text-gray-900 tracking-tight text-center">Join {stats.customers || '10k'}+ Buyers</p>
-                </div>
-              </div>
-            </ScrollAnimation>
-          </div>
         </section>
+
+        {/* Raw Facts Data Section */}
+        <LazySection height="400px">
+          <Suspense fallback={<div style={{ height: '400px' }} />}>
+            <RawFactsSection />
+          </Suspense>
+        </LazySection>
 
         {/* Features */}
         <LazySection height="600px">
