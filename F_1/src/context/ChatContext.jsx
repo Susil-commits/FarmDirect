@@ -16,11 +16,11 @@ export function ChatProvider({ children }) {
   const [error, setError] = useState(null);
 
   // Track the latest message ID we've seen to detect new messages during polling
-  const lastMessageIdRef = { current: null };
+  const lastMessageIdRef = useRef(null);
 
   // Guards to prevent overlapping polling requests (prevents request storms on slow networks)
-  const pollingUnreadRef = { current: false };
-  const pollingMessagesRef = { current: false };
+  const pollingUnreadRef = useRef(false);
+  const pollingMessagesRef = useRef(false);
 
   // Helper to unwrap API responses that use { success, data } envelope
   const unwrapData = (response) => {
@@ -48,7 +48,7 @@ export function ChatProvider({ children }) {
 
        
   // Fetch messages for a specific conversation
-      // eslint-disable-next-line react-hooks/immutability
+       
   const fetchMessages = useCallback(async (receiverId, page = 1) => {
     try {
       setLoading(true);
@@ -70,7 +70,7 @@ export function ChatProvider({ children }) {
        
       setLoading(false);
     }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+       
   }, []);
 
   // Send message
@@ -96,7 +96,7 @@ export function ChatProvider({ children }) {
       console.error('Failed to send message:', err);
       throw err;
     }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+       
   }, [fetchConversations]);
 
   // Mark message as read
@@ -139,13 +139,13 @@ export function ChatProvider({ children }) {
        
 
   // Get unread count (with in-flight guard to prevent overlapping requests)
-      // eslint-disable-next-line react-hooks/immutability
+       
   const fetchUnreadCount = useCallback(async () => {
     if (pollingUnreadRef.current) return;
   // eslint-disable-next-line react-hooks/immutability
   fetchUnreadCountRef.current = fetchUnreadCount;
        
-  // eslint-disable-next-line react-hooks/immutability
+   
   fetchUnreadCountRef.current = fetchUnreadCount; // skip if a request is already in-flight
     pollingUnreadRef.current = true;
     try {
@@ -158,7 +158,7 @@ export function ChatProvider({ children }) {
     } finally {
       pollingUnreadRef.current = false;
     }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+       
   }, []);
 
   // Delete message
@@ -260,7 +260,7 @@ export function ChatProvider({ children }) {
     });
 
     return () => unsub();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+       
   }, [
     socketConnected,
     isAuthenticated,

@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useState, useCallback, useEffect, useRef, _useContext } from 'react';
+import React, { createContext, useState, useCallback, useEffect, _useContext } from 'react';
 import { notificationService } from '../services/appService.js';
 import { useSocket } from './SocketContext';
 
@@ -11,7 +11,6 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const pollingIntervalRef = useRef(null);
   const { subscribe, connected } = useSocket();
 
   useEffect(() => {
@@ -85,21 +84,7 @@ export const NotificationProvider = ({ children }) => {
     }
   }, []);
 
-  // Only start polling when component mounts and stop before unmounting
-  // Avoid unnecessary polling attempts that cause errors and re-renders
-  useEffect(() => {
-    // Don't fetch notifications automatically - let components request them on demand
-    // This prevents constant re-renders and API calls
-    return () => {
-       
-       
-       
-      if (pollingIntervalRef.current) {
-      // eslint-disable-next-line no-undef
-        clearInterval(intervalId);
-      }
-    };
-  }, []);
+
 
   return (
     <NotificationContext.Provider

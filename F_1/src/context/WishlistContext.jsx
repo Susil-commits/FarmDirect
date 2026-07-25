@@ -11,7 +11,7 @@ export function WishlistProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const { user, isAuthenticated } = useAuth();
 
-  const loadFromLocalStorage = () => {
+  const loadFromLocalStorage = useCallback(() => {
     const saved = localStorage.getItem('farm-wishlist');
     if (saved) {
       try {
@@ -21,7 +21,7 @@ export function WishlistProvider({ children }) {
         setWishlist([]);
       }
     }
-  };
+  }, []);
 
   // Keep ref updated so it can be called from async callbacks
   useEffect(() => {

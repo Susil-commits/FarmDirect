@@ -48,28 +48,21 @@ const refreshAuthToken = async () => {
   }
   lastRefreshAttempt = now;
 
-  // Guard: do NOT call the refresh endpoint if there is no refresh token.
-  // This prevents 400 errors when calling refresh-token on public pages
-  // where the user isn't logged in (the interceptor fires on any 401).
-  const storedRefreshToken = localStorage.getItem('refreshToken');
-  if (!storedRefreshToken) {
-    throw new Error('No refresh token available');
+  // Guard: If there is no access token, don't bother refreshing (user is likely logged out)
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('No authentication token available');
   }
 
   try {
-    const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
-      refreshToken: storedRefreshToken
-    }, {
+    const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {}, {
       withCredentials: true
     });
 
-    const { token, refreshToken } = response.data;
+    const { token: newToken } = response.data;
     
-    // Store new tokens
-    localStorage.setItem('token', token);
-    if (refreshToken) {
-      localStorage.setItem('refreshToken', refreshToken);
-    }
+    // Store new token
+    localStorage.setItem('token', newToken);
 
     // Update timestamp for session activity
     localStorage.setItem('lastActivityTime', Date.now().toString());
@@ -80,7 +73,6 @@ const refreshAuthToken = async () => {
     // because that causes infinite reload loops when the backend is unreachable.
     // Instead, clear tokens and let the app's AuthContext handle the logout + redirect.
     localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
     localStorage.removeItem('userData');
     throw error;
   }
@@ -158,7 +150,6 @@ api.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed - clear auth data and let app redirect naturally
         localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
         localStorage.removeItem('userData');
         localStorage.removeItem('verificationStatus');
         // Don't redirect here - let the component handle it
