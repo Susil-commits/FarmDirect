@@ -15,20 +15,22 @@ export default function ScrollAnimation({ children, className = '' }) {
       { threshold: 0.1 }
     );
 
-    if (ref.current) {
-      observer.observe(ref.current);
+    const currentRef = ref.current;
+
+    if (currentRef) {
+      observer.observe(currentRef);
       
       // Check if already in viewport on first render
-      const rect = ref.current.getBoundingClientRect();
+      const rect = currentRef.getBoundingClientRect();
       if (rect.top < window.innerHeight && rect.bottom > 0) {
         setIsVisible(true);
-        observer.unobserve(ref.current);
+        observer.unobserve(currentRef);
       }
     }
 
     return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
     };
   }, []);
