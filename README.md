@@ -256,13 +256,25 @@ GITHUB_CLIENT_SECRET=
 
 ---
 
-## Features
+### Platform Highlights
+
+| Feature | Description |
+|---------|-------------|
+| **Premium Experience** | Modern glassmorphism UI, smooth scroll animations, and optimized performance |
+| **Interactive 3D UI** | Hover-responsive 3D tilt cards and dynamic micro-animations across the app |
+| **Smart Voice Search** | Built-in Web Speech API integration for hands-free crop searching |
+| **Live Activity Ticker** | Real-time global notifications showcasing community activity on the platform |
+| **Eco-Score Engine** | Dynamic freshness and sustainability index calculated for every crop |
+| **Real-time Engine** | WebSocket-based order tracking and instant messaging |
+| **PWA Ready** | Installable on mobile devices with offline capabilities |
 
 ### For Buyers
 
 | Feature | Description |
 |---------|-------------|
 | Browse marketplace | Search/filter crops by category, price, location, rating, certification |
+| Voice Search | Tap the mic icon to search for crops using your voice |
+| Eco-Score | View dynamic sustainability & freshness scores for crops before buying |
 | Express interest | Mark interest in a crop → farmer gets notified in real-time |
 | Place orders | Cash-on-Delivery or Razorpay online payment |
 | Order tracking | Real-time WebSocket status updates + timeline |

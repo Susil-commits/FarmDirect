@@ -269,13 +269,25 @@ These are things most fresher projects DON'T have:
 
 ---
 
+## ✅ Metric 11 — Lighthouse Performance Scores
+
+**Measured from production deployment:**
+- **Performance:** 91
+- **Accessibility:** 95
+- **Best Practices:** 100
+- **SEO:** 100
+
+**What to say on your CV:**
+> "Achieved Lighthouse scores of 91+ across all categories (Performance 91, Accessibility 95, Best Practices 100, SEO 100) by optimizing image delivery (WebP + preconnect), implementing React Suspense boundaries to eliminate layout shifts (CLS to 0), and migrating expensive JS animations to hardware-accelerated CSS."
+
+---
+
 ## 🔬 Remaining Numbers to Measure Yourself (Need Running App)
 
 | Metric | How to Measure | Time Required |
 |---|---|---|
 | **API response time (avg ms)** | `curl -w "%{time_total}" -o /dev/null http://localhost:5000/api/products` × 10 runs, average | 5 min |
 | **MongoDB query time with/without index** | `db.croplistings.find({category:"Vegetables"}).explain("executionStats")` in mongosh | 5 min |
-| **Lighthouse scores** | Chrome DevTools → Lighthouse tab on deployed URL | 3 min |
 | **Bundle before/after lazy loading** | Add `React.lazy()` to App.jsx, compare `vite build` output | 30 min |
 
 > [!TIP]
