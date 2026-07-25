@@ -128,12 +128,12 @@ export default function Navbar() {
   const navItems = getNavItems();
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/10 border-b border-white/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <div className="fixed top-0 left-0 w-full z-50 pt-4 px-4 pointer-events-none transition-all duration-300">
+      <nav className="max-w-6xl mx-auto bg-white/70 backdrop-blur-xl border border-white/50 shadow-lg rounded-full pointer-events-auto transition-all duration-300 hover:bg-white/80 hover:shadow-xl">
+        <div className="flex justify-between items-center h-16 px-6 sm:px-8">
           {/* Logo & Brand */}
           <div 
-            className="flex items-center gap-2 cursor-pointer shrink-0" 
+            className="flex items-center gap-2 cursor-pointer shrink-0 group" 
             onClick={() => {
               navigate('/');
               setIsOpen(false);
@@ -141,7 +141,10 @@ export default function Navbar() {
               setIsMiniCartOpen(false);
             }}
           >
-            <h1 className="text-lg sm:text-2xl font-bold text-green-700">FarmDirect</h1>
+            <div className="bg-gradient-to-br from-green-500 to-emerald-600 w-8 h-8 rounded-full flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-300">
+              <span className="text-white font-bold text-sm tracking-tighter">FD</span>
+            </div>
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight hidden sm:block">Farm<span className="text-green-600">Direct</span></h1>
           </div>
 
           {/* Desktop Menu */}
@@ -568,7 +571,7 @@ export default function Navbar() {
             </div>
           </div>
         )}
-      </div>
+      </nav>
       
       {/* Mini Cart Dropdown */}
       <MiniCart isOpen={isMiniCartOpen} onClose={() => setIsMiniCartOpen(false)} />
@@ -603,6 +606,6 @@ export default function Navbar() {
           onClose={() => setShowNotifications(false)}
         />
       )}
-    </nav>
+    </div>
   );
 }

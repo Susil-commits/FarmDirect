@@ -135,8 +135,8 @@ export default function Home() {
           }
         `}</style>
 
-        {/* Hero Section - Premium Enhanced */}
-        <section ref={heroRef} className="pt-8 pb-20 px-4 relative overflow-hidden min-h-screen flex items-center">
+        {/* Cinematic Centered Hero Section */}
+        <section ref={heroRef} className="pt-32 pb-0 px-4 relative min-h-screen flex flex-col items-center justify-start overflow-hidden">
           {/* Floating particles background - optimized */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
             {[...Array(6)].map((_, i) => (
@@ -150,106 +150,95 @@ export default function Home() {
             ))}
           </div>
 
-          <div ref={particleRef} className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10 w-full px-4 sm:px-6 lg:px-8">
+          {/* Centered Content */}
+          <div ref={particleRef} className="max-w-5xl mx-auto text-center relative z-20 w-full px-4 sm:px-6 lg:px-8 mt-4 sm:mt-10">
             <ScrollAnimation className="scroll-slide z-20">
-              <div className="glass-light p-8 sm:p-10 rounded-3xl border border-white/40 shadow-2xl backdrop-blur-xl">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-green text-green-800 font-semibold mb-6 animate-slide-in-down">
-                  <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                  </span>
-                  100% Fresh & Local
-                </div>
-                
-                <h1 className="text-6xl sm:text-7xl lg:text-8xl font-black text-gray-900 mb-6 leading-[1.05] tracking-tighter">
-                  <span className="block animate-slide-in-left">Farm to Table</span>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-green-500 to-teal-500 inline-block animate-gradient-text drop-shadow-sm">
-                    Directly
-                  </span>
-                </h1>
-                
-                <p className="text-xl sm:text-2xl text-gray-700 mb-10 animate-slide-in-left leading-relaxed font-medium max-w-2xl" style={{ animationDelay: '0.1s' }}>
-                  Connect directly with local farmers. Get fresh, organic produce at fair prices with zero middlemen. Just honest trade and better food.
-                </p>
-                
-                <div className="flex flex-col sm:flex-row gap-5 animate-slide-in-left" style={{ animationDelay: '0.2s' }}>
-                  <Button 
-                    ref={rippleRef}
-                    variant="primary" 
-                    size="lg" 
-                    className="flex items-center gap-3 justify-center shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all duration-300 text-lg px-8 py-4 rounded-xl group"
-                    onClick={(e) => {
-                      try {
-                        triggerBurst(e.currentTarget.clientWidth / 2, e.currentTarget.clientHeight / 2);
-                        handleNavigation('/start-shopping');
-                      } catch (error) {
-                        console.error('Button click error:', error);
-                      }
-                    }}
-                    aria-label="Start buying fresh produce"
-                  >
-                    Start Shopping
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    className="flex items-center gap-2 justify-center glass hover:bg-white/50 transition-all duration-300 text-lg px-8 py-4 rounded-xl text-gray-800 font-semibold"
-                    onClick={() => handleNavigation('/join-as-farmer')}
-                  >
-                    Join as Farmer
-                  </Button>
-                </div>
-                
-                <div className="mt-10 pt-8 border-t border-gray-200/50 flex items-center gap-8 animate-slide-in-up" style={{ animationDelay: '0.3s' }}>
-                  <div>
-                    <p className="text-3xl font-bold text-gray-900">{stats.farmers || '500'}+</p>
-                    <p className="text-sm text-gray-600 font-medium mt-1">Verified Farmers</p>
-                  </div>
-                  <div className="w-px h-12 bg-gray-300/50"></div>
-                  <div>
-                    <p className="text-3xl font-bold text-gray-900">{stats.customers || '10k'}+</p>
-                    <p className="text-sm text-gray-600 font-medium mt-1">Happy Customers</p>
-                  </div>
-                </div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-white/80 shadow-sm backdrop-blur-md text-green-800 font-semibold mb-6 sm:mb-8 animate-slide-in-down mx-auto">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+                100% Fresh & Local
+              </div>
+              
+              <h1 className="text-6xl sm:text-7xl lg:text-[6.5rem] font-black text-gray-900 mb-6 sm:mb-8 leading-[1.05] tracking-tighter max-w-4xl mx-auto drop-shadow-sm">
+                <span className="block animate-slide-in-down">Farm to Table</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-green-500 to-teal-500 inline-block animate-gradient-text drop-shadow-sm">
+                  Directly
+                </span>
+              </h1>
+              
+              <p className="text-lg sm:text-2xl text-gray-700 mb-10 sm:mb-12 animate-slide-in-up leading-relaxed font-medium max-w-2xl mx-auto" style={{ animationDelay: '0.1s' }}>
+                Connect directly with local farmers. Get fresh, organic produce at fair prices with zero middlemen. Just honest trade and better food.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 animate-slide-in-up justify-center items-center" style={{ animationDelay: '0.2s' }}>
+                <Button 
+                  ref={rippleRef}
+                  variant="primary" 
+                  size="lg" 
+                  className="flex items-center gap-3 justify-center shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all duration-300 text-lg sm:text-xl px-8 sm:px-10 py-4 sm:py-5 rounded-full group w-full sm:w-auto"
+                  onClick={(e) => {
+                    try {
+                      triggerBurst(e.currentTarget.clientWidth / 2, e.currentTarget.clientHeight / 2);
+                      handleNavigation('/start-shopping');
+                    } catch (error) {
+                      console.error('Button click error:', error);
+                    }
+                  }}
+                  aria-label="Start buying fresh produce"
+                >
+                  Start Shopping
+                  <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-1 transition-transform" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="flex items-center gap-2 justify-center bg-white/50 backdrop-blur-sm border-2 border-green-600/20 hover:border-green-600 hover:bg-white/80 transition-all duration-300 text-lg sm:text-xl px-8 sm:px-10 py-4 sm:py-5 rounded-full text-gray-800 font-semibold w-full sm:w-auto"
+                  onClick={() => handleNavigation('/join-as-farmer')}
+                >
+                  Join as Farmer
+                </Button>
               </div>
             </ScrollAnimation>
+          </div>
 
-            {/* Premium Hero Image Banner */}
-            <div className="relative z-10 lg:h-[650px] flex items-center justify-center animate-slide-in-right perspective-1000 mt-12 lg:mt-0">
-              <div className="relative w-full max-w-lg mx-auto aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl transform rotate-y-[-5deg] rotate-x-[5deg] hover:rotate-0 transition-transform duration-700 ease-out border-4 border-white/50 group">
-                <div className="absolute inset-0 bg-gradient-to-tr from-green-500/20 to-emerald-500/10 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-overlay"></div>
+          {/* Ultra-wide immersive image showcase */}
+          <div className="w-full max-w-[100rem] mx-auto mt-16 sm:mt-24 relative z-20 px-0 sm:px-6 flex-1 flex flex-col justify-end">
+            <ScrollAnimation className="scroll-slide h-full w-full">
+              <div className="relative w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] rounded-t-[3rem] sm:rounded-t-[5rem] overflow-hidden shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.1)] border-t-8 border-x-8 border-white/60 group">
+                <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/10 z-10 pointer-events-none"></div>
                 <OptimizedImage
-                  src="https://images.unsplash.com/photo-1605000797499-95a51c5269ae?w=800&h=1000&fit=crop&fm=webp&q=80&auto=format"
-                  alt="A happy local farmer holding fresh produce"
-                  width="800"
-                  height="1000"
-                  className="w-full h-full object-cover rounded-[2.5rem] shadow-inner group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+                  src="https://images.unsplash.com/photo-1595855761895-30dbfaee5e49?w=1600&h=800&fit=crop&fm=webp&q=80&auto=format"
+                  alt="A wide view of a beautiful organic farm with a happy farmer"
+                  width="1600"
+                  height="800"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s] ease-out"
                   priority={true}
                 />
                 
-                {/* Floating badge 1 */}
-                <div className="absolute top-12 -left-4 sm:-left-8 bg-white/80 backdrop-blur-xl border border-white/60 px-6 py-4 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-20 animate-float flex items-center gap-4 hover:scale-105 transition-transform duration-300">
-                  <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-3 rounded-2xl shadow-sm">
-                    <Leaf className="w-7 h-7 text-green-600" />
+                {/* Floating badge 1 - Moved to the left edge of the image */}
+                <div className="absolute top-10 left-4 sm:top-20 sm:left-10 bg-white/90 backdrop-blur-xl border border-white/60 px-4 sm:px-5 py-3 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-20 animate-float flex items-center gap-3">
+                  <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-2 rounded-xl shadow-sm">
+                    <Leaf className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-base font-black text-gray-900 tracking-tight">100% Organic</p>
-                    <p className="text-sm text-gray-600 font-medium">Certified Farms</p>
+                    <p className="text-sm font-black text-gray-900 tracking-tight">100% Organic</p>
+                    <p className="text-[10px] sm:text-xs text-gray-600 font-medium">Certified Farms</p>
                   </div>
                 </div>
 
-                {/* Floating badge 2 */}
-                <div className="absolute bottom-20 -right-4 sm:-right-8 bg-white/80 backdrop-blur-xl border border-white/60 px-6 py-4 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-20 animate-float hover:scale-105 transition-transform duration-300" style={{ animationDelay: '1.5s' }}>
-                  <div className="flex -space-x-3 mb-2 justify-center">
+                {/* Floating badge 2 - Moved to the right edge of the image */}
+                <div className="absolute bottom-10 right-4 sm:bottom-20 sm:right-10 bg-white/90 backdrop-blur-xl border border-white/60 px-4 sm:px-5 py-3 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-20 animate-float" style={{ animationDelay: '1.5s' }}>
+                  <div className="flex -space-x-2 mb-1 justify-center">
                     {[1, 2, 3, 4].map((i) => (
-                      <img key={i} className="w-10 h-10 rounded-full border-2 border-white shadow-sm" src={`https://i.pravatar.cc/100?img=${i + 10}`} alt={`User ${i}`} />
+                      <img key={i} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-white shadow-sm" src={`https://i.pravatar.cc/100?img=${i + 10}`} alt={`User ${i}`} />
                     ))}
                   </div>
-                  <p className="text-sm font-black text-gray-900 tracking-tight text-center">Join {stats.customers || '10k'}+ Buyers</p>
+                  <p className="text-[10px] sm:text-xs font-black text-gray-900 tracking-tight text-center">Join {stats.customers || '10k'}+ Buyers</p>
                 </div>
               </div>
-            </div>
+            </ScrollAnimation>
           </div>
         </section>
 
