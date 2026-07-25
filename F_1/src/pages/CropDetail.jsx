@@ -310,6 +310,18 @@ export default function CropDetail() {
   const availability = crop?.availability || 'available';
   const isAvailable = availability === 'available';
 
+  // Calculate Mock Eco-Score (Out of 100)
+  const isOrganic = crop?.certifications?.includes('Organic') || crop?.category === 'Organic';
+  const calculateEcoScore = () => {
+    let baseScore = 75; // Default good score
+    if (isOrganic) baseScore += 15;
+    if (farmer?.verified) baseScore += 5;
+    if (crop?.totalReviews > 10) baseScore += 3;
+    return Math.min(baseScore, 99); // Max 99
+  };
+  const ecoScore = calculateEcoScore();
+  const ecoColor = ecoScore > 90 ? 'text-green-500' : ecoScore > 80 ? 'text-emerald-500' : 'text-amber-500';
+
   if (loading) {
     return (
       <PageTransition>
@@ -454,6 +466,39 @@ export default function CropDetail() {
                     {farmer?.verified && (
                       <Badge label="Verified Farmer" variant="primary" icon="✓" />
                     )}
+                  </div>
+
+                  {/* Eco-Score / Freshness Index */}
+                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-gray-100 shadow-sm mb-6 animate-slide-in-down" style={{ animationDelay: '0.15s' }}>
+                    <div className="relative w-14 h-14 flex items-center justify-center rounded-full bg-white shadow-inner">
+                      <svg className="w-full h-full transform -rotate-90 absolute inset-0" viewBox="0 0 36 36">
+                        <path
+                          className="text-gray-100"
+                          strokeWidth="3"
+                          stroke="currentColor"
+                          fill="none"
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                        <path
+                          className={`${ecoColor} transition-all duration-1000 ease-out`}
+                          strokeWidth="3"
+                          strokeDasharray={`${ecoScore}, 100`}
+                          strokeLinecap="round"
+                          stroke="currentColor"
+                          fill="none"
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                      </svg>
+                      <span className="text-sm font-black text-gray-800">{ecoScore}</span>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-900 flex items-center gap-1">
+                        <Leaf size={14} className="text-emerald-500" /> Eco-Score
+                      </h4>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {ecoScore > 90 ? 'Exceptional freshness & eco-friendly' : ecoScore > 80 ? 'Great quality and sustainable' : 'Good farm produce'}
+                      </p>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 pb-6 border-b animate-slide-in-down" style={{ animationDelay: '0.2s' }}>

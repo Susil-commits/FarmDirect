@@ -200,8 +200,11 @@ export default function BuyerDashboardNew() {
   return (
     <ErrorBoundary>
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-white py-12 px-4">
-        <div className="max-w-6xl mx-auto">
+      <div className="min-h-screen premium-gradient py-12 px-4 relative overflow-hidden">
+        {/* Decorative background circles */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-green-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="max-w-6xl mx-auto relative z-10">
           <ScrollAnimation className="scroll-slide mb-8">
             <button
               onClick={() => navigate(-1)}
@@ -258,7 +261,7 @@ export default function BuyerDashboardNew() {
 
           {/* Quick Actions */}
           <ScrollAnimation className="scroll-slide mb-8">
-            <Card className="p-6 bg-gradient-to-r from-blue-50 to-cyan-50">
+            <Card className="p-6 glass-deep border border-white/50">
               <h3 className="text-lg font-bold mb-4 text-gray-900">Quick Actions</h3>
               <div className="flex gap-4 flex-wrap">
                 <Button onClick={() => navigate('/marketplace')} variant="primary">
@@ -279,7 +282,7 @@ export default function BuyerDashboardNew() {
 
           {/* Tabs */}
           <ScrollAnimation className="scroll-slide mb-8">
-            <div className="flex gap-2 border-b border-gray-200 overflow-x-auto">
+            <div className="flex gap-2 border-b border-gray-200/50 overflow-x-auto pb-1 no-scrollbar">
               {['overview', 'orders', 'interested', 'history', 'wishlist'].map(tab => (
                 <button
                   key={tab}
@@ -304,7 +307,7 @@ export default function BuyerDashboardNew() {
           {activeTab === 'overview' && (
             <ScrollAnimation className="scroll-slide space-y-6">
               {/* Recent Orders */}
-              <Card className="p-6">
+              <Card className="p-6 glass-deep border border-white/60 shadow-xl">
                 <h3 className="text-lg font-bold mb-4 text-gray-900">Recent Orders</h3>
                 {orders.length === 0 ? (
                   <div className="text-center py-8">
@@ -323,7 +326,7 @@ export default function BuyerDashboardNew() {
                     {orders.slice(0, 3).map(order => (
                       <div
                         key={order._id}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+                        className="flex items-center justify-between p-4 glass-light rounded-xl hover:bg-white/60 premium-hover cursor-pointer mb-3 border border-gray-100"
                         onClick={() => navigate(`/order/${order._id}`)}
                       >
                         <div>

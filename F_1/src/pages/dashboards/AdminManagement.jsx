@@ -167,6 +167,7 @@ export default function AdminManagement() {
     setExpandedUsers({});
        
     setUserDocuments({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, searchTerm]);
 
   // ─── Fetch dashboard stats ───

@@ -10,8 +10,8 @@ import { useRouter } from '../hooks/useRouter';
 import { useWishlist } from '../hooks/useWishlist';
 import { cropService, userService } from '../services/appService';
 import { getImageUrl } from '../utils/formatters';
-import SkeletonLoader from '../components/common/SkeletonLoader';
 import ErrorBoundary from '../components/common/ErrorBoundary';
+import TiltCard from '../components/common/TiltCard';
 
 export default function FarmerProfile() {
   const { navigate, params } = useRouter();
@@ -182,62 +182,64 @@ export default function FarmerProfile() {
               {crops.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {crops.map((crop, idx) => (
-                    <div key={crop.id || crop._id || idx} className="bg-slate-700/50 border border-slate-600 rounded-xl overflow-hidden hover:shadow-2xl hover:border-emerald-500/50 transition duration-300 transform hover:scale-[1.02]">
-                      <div className="p-4 relative group">
-                        {/* Image */}
-                        <div className="relative mb-4 overflow-hidden rounded-lg">
-                          <div className="bg-gradient-to-br from-emerald-900/50 to-green-900/50 rounded-lg relative min-h-40 flex items-center justify-center group-hover:shadow-lg transition-shadow">
-                            {crop.image ? (
-                              <img
-                                src={getImageUrl(crop.image)}
-                                alt={crop.name}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    <TiltCard key={crop.id || crop._id || idx} maxTilt={8}>
+                      <div className="bg-slate-700/50 border border-slate-600 rounded-xl overflow-hidden hover:shadow-2xl hover:border-emerald-500/50 transition duration-300 transform">
+                        <div className="p-4 relative group">
+                          {/* Image */}
+                          <div className="relative mb-4 overflow-hidden rounded-lg">
+                            <div className="bg-gradient-to-br from-emerald-900/50 to-green-900/50 rounded-lg relative min-h-40 flex items-center justify-center group-hover:shadow-lg transition-shadow">
+                              {crop.image ? (
+                                <img
+                                  src={getImageUrl(crop.image)}
+                                  alt={crop.name}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                              ) : (
+                                <span className="text-5xl">{crop.image || '🌾'}</span>
+                              )}
+                            </div>
+
+                            {/* Wishlist */}
+                            <button 
+                              onClick={() => {
+                                if (isInWishlist(crop.id || crop._id)) {
+                                  removeFromWishlist(crop.id || crop._id);
+                                } else {
+                                  addToWishlist(crop);
+                                }
+                              }}
+                              className="absolute top-4 right-4 p-2 rounded-full bg-slate-800/80 hover:bg-red-500/20 transition-colors z-10 backdrop-blur-sm"
+                            >
+                              <Heart 
+                                size={20} 
+                                fill={isInWishlist(crop.id || crop._id) ? 'currentColor' : 'none'}
+                                className={isInWishlist(crop.id || crop._id) ? 'text-red-400' : 'text-slate-300'}
                               />
-                            ) : (
-                              <span className="text-5xl">{crop.image || '🌾'}</span>
-                            )}
+                            </button>
                           </div>
 
-                          {/* Wishlist */}
-                          <button 
-                            onClick={() => {
-                              if (isInWishlist(crop.id || crop._id)) {
-                                removeFromWishlist(crop.id || crop._id);
-                              } else {
-                                addToWishlist(crop);
-                              }
-                            }}
-                            className="absolute top-4 right-4 p-2 rounded-full bg-slate-800/80 hover:bg-red-500/20 transition-colors z-10 backdrop-blur-sm"
+                          {/* Info */}
+                          <h3 className="font-bold text-white mb-1">{crop.name}</h3>
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="text-lg font-bold text-emerald-400">₹{crop.price}/kg</span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-yellow-400">⭐</span>
+                              <span className="text-sm font-semibold text-slate-300">{crop.rating || '4.5'}</span>
+                              <span className="text-xs text-slate-500">({crop.reviews || 0})</span>
+                            </div>
+                          </div>
+
+                          <Button 
+                            variant="primary" 
+                            size="sm" 
+                            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
+                            onClick={() => navigate(`/crop/${crop.id || crop._id}`)}
                           >
-                            <Heart 
-                              size={20} 
-                              fill={isInWishlist(crop.id || crop._id) ? 'currentColor' : 'none'}
-                              className={isInWishlist(crop.id || crop._id) ? 'text-red-400' : 'text-slate-300'}
-                            />
-                          </button>
+                            <ShoppingCart size={16} /> View Details
+                          </Button>
                         </div>
-
-                        {/* Info */}
-                        <h3 className="font-bold text-white mb-1">{crop.name}</h3>
-                        <div className="flex items-center justify-between mb-4">
-                          <span className="text-lg font-bold text-emerald-400">₹{crop.price}/kg</span>
-                          <div className="flex items-center gap-1">
-                            <span className="text-yellow-400">⭐</span>
-                            <span className="text-sm font-semibold text-slate-300">{crop.rating || '4.5'}</span>
-                            <span className="text-xs text-slate-500">({crop.reviews || 0})</span>
-                          </div>
-                        </div>
-
-                        <Button 
-                          variant="primary" 
-                          size="sm" 
-                          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
-                          onClick={() => navigate(`/crop/${crop.id || crop._id}`)}
-                        >
-                          <ShoppingCart size={16} /> View Details
-                        </Button>
                       </div>
-                    </div>
+                    </TiltCard>
                   ))}
                 </div>
               ) : (

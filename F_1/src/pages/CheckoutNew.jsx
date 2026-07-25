@@ -67,7 +67,6 @@ export default function CheckoutNew() {
       return;
     }
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCropDetails();
   }, [user, cropId, addToast, navigate, fetchCropDetails]);
 
@@ -183,11 +182,12 @@ export default function CheckoutNew() {
   if (!crop) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 py-12 px-4 flex items-center justify-center">
-          <div className="text-center">
+        <div className="min-h-screen premium-gradient py-12 px-4 flex items-center justify-center">
+          <div className="text-center glass-light p-10 rounded-3xl border border-white/40 shadow-xl">
             <AlertCircle size={48} className="text-amber-600 mx-auto mb-4" />
-            <p className="text-gray-600 text-lg">Crop not found</p>
-            <Button variant="primary" className="mt-4" onClick={() => navigate('/marketplace')}>
+            <p className="text-gray-900 text-xl font-bold mb-2">Crop not found</p>
+            <p className="text-gray-600 mb-6">The crop you are looking for is unavailable.</p>
+            <Button variant="primary" onClick={() => navigate('/marketplace')}>
               Back to Marketplace
             </Button>
           </div>
@@ -199,8 +199,11 @@ export default function CheckoutNew() {
   return (
     <PageTransition>
       {loading && <PageLoader message="Processing your order..." />}
-      <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-white py-12 px-4">
-        <div className="max-w-3xl mx-auto">
+      <div className="min-h-screen premium-gradient py-12 px-4 relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-[5%] right-[-10%] w-[40%] h-[40%] bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-[5%] left-[-10%] w-[30%] h-[30%] bg-green-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="max-w-3xl mx-auto relative z-10">
           {/* Step Indicator */}
           <ScrollAnimation className="scroll-slide mb-8">
             <div className="flex items-center justify-center gap-4 mb-12">
@@ -235,14 +238,14 @@ export default function CheckoutNew() {
           {/* STEP 1: REVIEW CROP */}
           {step === 1 && (
             <ScrollAnimation className="scroll-slide">
-              <Card className="p-8">
+              <Card className="p-8 glass-deep border border-white/60 shadow-xl">
                 <div className="flex items-center gap-3 mb-6">
                   <Sprout className="w-6 h-6 text-green-600" />
                   <h2 className="text-2xl font-bold text-gray-900">Review Your Order</h2>
                 </div>
 
                 {/* Crop Details */}
-                <div className="bg-green-50 rounded-xl p-6 mb-6">
+                <div className="glass-light rounded-xl p-6 mb-6 border border-white/50">
                   <div className="flex items-start gap-4">
                     {crop.images?.[0] && (
                       <img
@@ -396,11 +399,11 @@ export default function CheckoutNew() {
           {/* STEP 2: CONFIRM */}
           {step === 2 && (
             <ScrollAnimation className="scroll-slide">
-              <Card className="p-8">
+              <Card className="p-8 glass-deep border border-white/60 shadow-xl">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Confirm Your Order</h2>
 
                 {/* Summary */}
-                <div className="bg-gray-50 rounded-lg p-6 mb-6 space-y-3">
+                <div className="glass-light rounded-lg p-6 mb-6 space-y-3 border border-white/50">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Crop</span>
                     <span className="font-semibold text-gray-900">{crop.cropName}</span>
@@ -465,7 +468,7 @@ export default function CheckoutNew() {
           {/* STEP 3: CONFIRMATION */}
           {step === 3 && orderData && (
             <ScrollAnimation className="scroll-slide">
-              <Card className="p-8 text-center">
+              <Card className="p-12 text-center glass-deep border border-white/60 shadow-xl">
                 <div className="flex justify-center mb-6">
                   <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center animate-pulse">
                     <CheckCircle className="w-10 h-10 text-green-600" />
@@ -474,7 +477,7 @@ export default function CheckoutNew() {
                 <h2 className="text-3xl font-bold text-gray-900 mb-2">Order Confirmed!</h2>
                 <p className="text-gray-600 mb-6">Your order has been successfully placed</p>
 
-                <div className="bg-gray-50 p-6 rounded-lg mb-6 text-left">
+                <div className="glass-light border border-white/50 p-6 rounded-lg mb-6 text-left">
                   <p className="text-sm text-gray-600 mb-2">Order Number</p>
                   <p className="text-2xl font-bold text-gray-900 mb-4">
                     #{orderData.orderNumber || (orderData._id || '').slice(-8).toUpperCase()}
