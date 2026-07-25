@@ -260,8 +260,8 @@ GITHUB_CLIENT_SECRET=
 
 | Feature | Description |
 |---------|-------------|
-| **Premium Experience** | Modern glassmorphism UI, smooth scroll animations, and optimized performance |
-| **Interactive 3D UI** | Hover-responsive 3D tilt cards and dynamic micro-animations across the app |
+| **Premium Experience** | Modern glassmorphism UI, smooth scroll animations, and optimized performance (90+ Lighthouse Score) |
+| **Interactive 3D UI** | Hover-responsive 3D tilt cards, dynamic micro-animations, and parallax scroll effects across the app |
 | **Smart Voice Search** | Built-in Web Speech API integration for hands-free crop searching |
 | **Live Activity Ticker** | Real-time global notifications showcasing community activity on the platform |
 | **Eco-Score Engine** | Dynamic freshness and sustainability index calculated for every crop |
