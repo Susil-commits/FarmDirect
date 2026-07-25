@@ -1,5 +1,4 @@
 import ScrollAnimation from '../../components/common/ScrollAnimation';
-import Card from '../../components/common/Card';
 
 export default function TestimonialsSection() {
   const testimonials = [
@@ -27,56 +26,63 @@ export default function TestimonialsSection() {
   ];
 
   return (
-    <section className="py-20 px-4 relative z-10">
-      <div className="max-w-6xl mx-auto relative z-10">
-        <ScrollAnimation className="scroll-slide mb-16">
-          <div className="text-center">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4 animate-slide-in-down">What People Say</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">Join thousands of satisfied farmers and buyers who are transforming agriculture</p>
-          </div>
+    <section className="py-24 px-4 sm:px-6 lg:px-8 relative z-10 bg-gradient-to-b from-green-50/30 to-transparent">
+      <div className="max-w-7xl mx-auto">
+        <ScrollAnimation className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-4">
+            What People Say
+          </h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto font-medium">
+            Join thousands of satisfied farmers and buyers who are transforming agriculture.
+          </p>
         </ScrollAnimation>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {testimonials.map((testi, i) => (
-            <ScrollAnimation key={i} className="scroll-slide" style={{ animationDelay: `${i * 0.1}s` }}>
-              <Card hover className="h-full bg-gradient-to-br from-white to-gray-50 border border-gray-100 hover:shadow-lg transition-all duration-300 group">
-                <div className="p-8">
-                  {/* Animated Stars */}
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(testi.rating)].map((_, idx) => (
-                      <span 
-                        key={idx} 
-                        className="text-yellow-400 text-lg animate-bounce-up"
-                        style={{ animationDelay: `${idx * 0.1}s` }}
-                      >
-                        ★
-                      </span>
-                    ))}
-                  </div>
-                  
-                  {/* Quote */}
-                  <p className="text-gray-700 italic mb-6 leading-relaxed flex gap-3">
-                    <span className="text-3xl text-green-600 font-bold leading-none animate-fade-in">"</span>
-                    <span>{testi.text}</span>
-                    <span className="text-3xl text-green-600 font-bold leading-none animate-fade-in">"</span>
-                  </p>
-                  
-                  {/* Animated Divider */}
-                  <div className="h-1 w-12 bg-gradient-to-r from-green-400 to-emerald-400 rounded mb-6 group-hover:w-20 transition-all duration-500"></div>
-                  
-                  {/* User Info with Animated Avatar */}
-                  <div className="flex items-center gap-4">
+            <ScrollAnimation key={i} className="h-full" style={{ animationDelay: `${i * 0.1}s` }}>
+              <div className="h-full bg-white/80 backdrop-blur-xl border border-white/60 rounded-3xl p-8 shadow-sm hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-300 group hover:-translate-y-2 flex flex-col relative">
+                {/* Decorative Quote Mark */}
+                <div className="absolute top-6 right-8 text-6xl text-green-100 font-serif opacity-50 group-hover:opacity-100 group-hover:scale-110 group-hover:-rotate-12 transition-all duration-500 pointer-events-none">
+                  "
+                </div>
+
+                {/* Animated Stars */}
+                <div className="flex gap-1 mb-6">
+                  {[...Array(testi.rating)].map((_, idx) => (
+                    <span 
+                      key={idx} 
+                      className="text-amber-400 text-lg group-hover:animate-bounce-up"
+                      style={{ animationDelay: `${idx * 0.1}s` }}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+                
+                {/* Quote */}
+                <p className="text-gray-700 italic mb-8 leading-relaxed font-medium relative z-10 flex-grow">
+                  "{testi.text}"
+                </p>
+                
+                {/* Animated Divider */}
+                <div className="h-1 w-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded mb-6 group-hover:w-full transition-all duration-700 ease-in-out opacity-50 group-hover:opacity-100"></div>
+                
+                {/* User Info with Animated Avatar */}
+                <div className="flex items-center gap-4 mt-auto">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-green-400 rounded-full blur-md opacity-0 group-hover:opacity-40 transition-opacity duration-300"></div>
                     <img 
                       src={testi.avatar} 
                       alt={testi.name}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-green-200 shadow-md group-hover:shadow-green-200/50 hover:scale-110 transition-all duration-300 animate-bounce-soft"
+                      className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm relative z-10 transform group-hover:scale-110 transition-transform duration-300"
                     />
-                    <div>
-                      <p className="font-bold text-gray-900 text-base group-hover:text-green-600 transition-colors">{testi.name}</p>
-                      <p className="text-gray-500 text-sm">{testi.role}</p>
-                    </div>
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900 text-base tracking-tight">{testi.name}</p>
+                    <p className="text-gray-500 text-sm font-medium">{testi.role}</p>
                   </div>
                 </div>
-              </Card>
+              </div>
             </ScrollAnimation>
           ))}
         </div>
