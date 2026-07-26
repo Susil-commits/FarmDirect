@@ -1,9 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export const useVoiceSearch = (onResult) => {
   const [isListening, setIsListening] = useState(false);
   const [supported, setSupported] = useState(false);
   const [recognition, setRecognition] = useState(null);
+
+  // BUG 7 FIX: Store onResult in a ref so the recognition handler always calls
+  // the latest version without needing to recreate the recognition object.
+  const onResultRef = useRef(onResult);
+  useEffect(() => {
+    onResultRef.current = onResult;
+  }, [onResult]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -22,8 +29,9 @@ export const useVoiceSearch = (onResult) => {
 
         recog.onresult = (event) => {
           const transcript = event.results[0][0].transcript;
-          if (onResult) {
-            onResult(transcript);
+          // Always call the latest onResult via ref — avoids stale closure
+          if (onResultRef.current) {
+            onResultRef.current(transcript);
           }
           setIsListening(false);
         };
@@ -40,7 +48,8 @@ export const useVoiceSearch = (onResult) => {
         setRecognition(recog);
       }
     }
-  }, [onResult]);
+  // Recognition object is created once on mount; onResult updates go through the ref.
+  }, []);
 
   const startListening = useCallback(() => {
     if (recognition && !isListening) {

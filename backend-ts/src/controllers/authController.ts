@@ -203,13 +203,22 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
       address, city, state, pincode,
     } = req.body as Record<string, unknown>;
 
+    // BUG 4 FIX: Only include profilePicture in the update when at least one
+    // photo-related field is explicitly provided. Without this guard, sending
+    // an update with only `phone` would set profilePicture to `undefined` in
+    // MongoDB, silently wiping the user's saved photo.
+    const updateDoc: Record<string, unknown> = {
+      name, phone, location, bio, avatar,
+      address, city, state, pincode,
+    };
+    const resolvedPhoto = photo || profilePicture || avatar;
+    if (resolvedPhoto !== undefined) {
+      updateDoc.profilePicture = resolvedPhoto;
+    }
+
     const user = (await User.findByIdAndUpdate(
       req.user!._id,
-      {
-        name, phone, location, bio, avatar,
-        profilePicture: photo || profilePicture || avatar,
-        address, city, state, pincode,
-      },
+      updateDoc,
       { new: true, runValidators: true },
     )) as unknown as PublicUserDoc | null;
 

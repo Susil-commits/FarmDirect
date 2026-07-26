@@ -1,13 +1,13 @@
- import { useRouter } from './hooks/useRouter';
+import { useRouter } from './hooks/useRouter';
 import { useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { ToastProvider } from './context/ToastContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ChatProvider } from './context/ChatContext';
- import { RecentlyViewedProvider } from './context/RecentlyViewedContext';
- import { RealtimeProvider } from './context/RealtimeContext';
- import Navbar from './components/shared/Navbar';
+import { RecentlyViewedProvider } from './context/RecentlyViewedContext';
+import { RealtimeProvider } from './context/RealtimeContext';
+import Navbar from './components/shared/Navbar';
 import Footer from './components/shared/Footer';
 import GlobalPageLoader from './components/common/GlobalPageLoader';
 import PageLoader from './components/common/PageLoader';

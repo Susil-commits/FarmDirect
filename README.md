@@ -425,6 +425,26 @@ npm start            # node dist/server.js
 
 ---
 
+## Recent Full-Stack Bug Fixes
+
+An extensive audit across both the React frontend and TypeScript backend resulted in 11 critical and high-severity fixes:
+
+| # | File | Bug Fixed | Severity |
+|---|------|-----------|----------|
+| 1 | `appService.js` | **Password reset**: token was in URL path → moved to request body to match backend POST route | Critical |
+| 2 | `appService.js` | **Logout**: now calls backend `POST /auth/logout` to clear the HttpOnly `refreshToken` cookie | High |
+| 3 | `api.js` | **Token refresh**: was returning the old expired token → now returns the new one | Critical |
+| 4 | `api.js` | **Error shape**: rejection payload now always includes `.status` for consistent error handling | High |
+| 5 | `api.js` / `directApi.js` | **Production logs**: debug `console.log` blocks gated behind `import.meta.env.DEV` | Medium |
+| 6 | `AuthContext.jsx` | **Deleted account redirect**: `/login` → `/auth/login` (route didn't exist) | High |
+| 7 | `AuthContext.jsx` | **resetPassword**: removed invalid `token`/`user` extraction (backend returns only `{success, message}`) | Medium |
+| 8 | `useVoiceSearch.js` | **Stale closure**: `onResult` now read from a ref — recognition always calls the latest callback | High |
+| 9 | `AdminApprovals.jsx` | **Documents panel**: `response.data` → `response` (interceptor already unwraps data) | Critical |
+| 10 | `App.jsx` | Removed leading whitespace from import lines | Low |
+| 11 | `authController.ts` | **`updateProfile`**: no longer sets `profilePicture: undefined` when no photo field is sent | Critical |
+
+---
+
 ## Documentation
 
 | Document | What it covers |

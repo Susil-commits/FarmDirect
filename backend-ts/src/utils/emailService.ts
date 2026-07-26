@@ -56,7 +56,8 @@ export async function sendEmail(mailOptions: EmailOptions): Promise<EmailResult>
     }
 
     const result = await transporter.sendMail(mailOptions as nodemailer.SendMailOptions);
-    console.log(`Email sent successfully to ${mailOptions.to}`);
+    // B16 FIX: Only log in development — avoid leaking email addresses to prod logs
+    if (env.isDev) console.log(`Email sent successfully to ${mailOptions.to}`);
     return { success: true, message: 'Email sent successfully', messageId: result.messageId };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

@@ -43,7 +43,7 @@ export async function getDashboardStats(req: Request, res: Response, next: NextF
       totalRevenue: completedOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0),
       totalOrdersReceived: orders.length,
       completedOrders: completedOrders.length,
-      pendingOrders: orders.filter((o) => ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up'].includes(o.orderStatus)).length,
+      pendingOrders: orders.filter((o) => [OrderStatus.Confirmed, OrderStatus.Preparing, OrderStatus.ReadyForPickup, OrderStatus.PickedUp].includes(o.orderStatus as OrderStatus)).length,
       cancelledOrders: orders.filter((o) => o.orderStatus === OrderStatus.Cancelled).length,
       totalInventory: crops.reduce((sum, c) => sum + (c.quantity || 0), 0),
       lowStockItems: crops.filter((c) => c.quantity <= (c.lowStockThreshold ?? 10)).length,

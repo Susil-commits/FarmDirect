@@ -54,6 +54,8 @@ export const addReview = asyncHandler(async (req: Request, res: Response) => {
     existingReview.comment = comment;
     await existingReview.save();
     await updateCropRating(cropId);
+    // B1 FIX: Also re-calculate the farmer's aggregate rating after an edit
+    await updateFarmerRating(crop.farmerId);
     return res.status(200).json({ success: true, message: 'Review updated successfully', data: existingReview });
   }
 
@@ -98,8 +100,12 @@ export const deleteReview = asyncHandler(async (req: Request, res: Response) => 
     return sendError(res, 'Not authorized to delete this review', 403);
   }
   const cropId = review.cropId;
+  // B2 FIX: Load the crop so we can update the farmer's aggregate rating after deletion
+  const crop = await CropListing.findById(cropId).select('farmerId');
   await Review.findByIdAndDelete(reviewId);
   await updateCropRating(cropId);
+  // Re-calculate the farmer's rating now that the review is gone
+  if (crop) await updateFarmerRating(crop.farmerId);
   res.status(200).json({ success: true, message: 'Review deleted successfully' });
 });
 
