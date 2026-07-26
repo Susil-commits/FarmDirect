@@ -4,14 +4,22 @@ import directApi from './directApi.js';
 export const authService = {
   register: (userData) => api.post('/auth/register', userData),
   login: (credentials) => api.post('/auth/login', credentials),
-  logout: () => {
-    localStorage.removeItem('token');
-    return Promise.resolve();
+  logout: async () => {
+    try {
+      // Call backend to clear the HttpOnly refreshToken cookie
+      await api.post('/auth/logout');
+    } catch {
+      // Ignore errors — even if the backend is unreachable, clear local state
+    } finally {
+      localStorage.removeItem('token');
+    }
   },
   getCurrentUser: () => api.get('/auth/me'),
-  updatePassword: (passwordData) => api.put('/auth/password', passwordData),
+  // B12 FIX: Route is PUT /auth/update-password, not /auth/password
+  updatePassword: (passwordData) => api.put('/auth/update-password', passwordData),
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-  resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
+  // Token is sent in the request body — matches backend POST /auth/reset-password
+  resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
   submitKYC: (documents) => api.post('/auth/submit-kyc', { documents }),
   // Send KYC documents as FormData with actual files (multipart/form-data)
   // Uses directApi to bypass Vite proxy which corrupts multipart boundaries

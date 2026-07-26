@@ -162,7 +162,9 @@ export const searchMessages = asyncHandler(async (req: Request, res: Response) =
   const { q, receiverId } = req.query as { q?: string; receiverId?: string };
   const userId = req.user!._id;
   if (!q || q.trim().length === 0) return sendError(res, 'Search query is required', 400);
-  const conversationId = (Message as unknown as MessageModel).generateConversationId(userId.toString(), String(receiverId));
+  // B8 FIX: receiverId is required — without it String(undefined) creates a broken conversationId
+  if (!receiverId) return sendError(res, 'receiverId is required', 400);
+  const conversationId = (Message as unknown as MessageModel).generateConversationId(userId.toString(), receiverId);
   const results = await Message.find({ conversationId, content: { $regex: q, $options: 'i' }, isDeleted: false })
     .lean().sort({ createdAt: -1 }).limit(50);
   res.status(200).json({ success: true, data: results });

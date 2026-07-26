@@ -163,7 +163,8 @@ export const AuthProvider = ({ children }) => {
               localStorage.removeItem('lastActivityTime');
               setUser(null);
               setSessionActive(false);
-              setRedirectPath('/login?deleted=true');
+              // BUG 8 FIX: correct path is /auth/login, not /login
+              setRedirectPath('/auth/login?deleted=true');
               setError('Your account has been deleted. Please contact support if this was not intentional.');
               setLoading(false);
               return;
@@ -377,12 +378,8 @@ export const AuthProvider = ({ children }) => {
   const resetPassword = useCallback(async (token, password) => {
     try {
       const response = await authService.resetPassword(token, password);
-      localStorage.setItem('token', response.token);
-      if (response.refreshToken) {
-        localStorage.setItem('refreshToken', response.refreshToken);
-      }
-      setUser(response.user);
-      setSessionActive(true);
+      // BUG 16 FIX: Backend POST /auth/reset-password returns { success, message } only.
+      // No token or user is returned — user must log in again after password reset.
       return response;
     } catch (err) {
       setError(err);

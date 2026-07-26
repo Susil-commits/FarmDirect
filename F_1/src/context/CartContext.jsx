@@ -54,7 +54,7 @@ export function CartProvider({ children }) {
           return {
             ...item,
             name: updated.cropName || updated.name || item.name,
-            cropName: updated.cropName || updated.cropName || item.cropName,
+            cropName: updated.cropName || item.cropName,
             price: updated.price ?? item.price,
             images: updated.images || item.images,
             image: updated.images?.[0] || item.image,

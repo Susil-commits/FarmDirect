@@ -67,7 +67,8 @@ const refreshAuthToken = async () => {
     // Update timestamp for session activity
     localStorage.setItem('lastActivityTime', Date.now().toString());
 
-    return token;
+    // BUG 2 FIX: return newToken, not the old `token` variable
+    return newToken;
   } catch (error) {
     // Refresh failed — clear auth data silently. Do NOT hard-redirect (window.location.href)
     // because that causes infinite reload loops when the backend is unreachable.
@@ -83,8 +84,8 @@ api.interceptors.request.use(
   async (config) => {
     let token = localStorage.getItem('token');
     
-    // DEBUG: Log FormData requests to trace multipart upload issues
-    if (config.data instanceof FormData) {
+    // DEBUG: Log FormData requests to trace multipart upload issues (dev only)
+    if (import.meta.env.DEV && config.data instanceof FormData) {
       console.log('🔍 [api.js] FormData request to:', config.url);
       console.log('🔍 [api.js] Content-Type:', config.headers['Content-Type']);
       console.log('🔍 [api.js] FormData entries:');
@@ -167,7 +168,14 @@ api.interceptors.response.use(
       console.error('Network error or no response from server');
     }
 
-    return Promise.reject(error.response?.data || error);
+    // BUG 3 FIX: Normalize error so all components get consistent shape.
+    // Attach HTTP status to the rejection payload whether it's a structured
+    // backend error object or a raw Error, so callers can always check err.status.
+    const payload = error.response?.data || error;
+    if (error.response?.status && typeof payload === 'object' && payload !== null) {
+      payload.status = error.response.status;
+    }
+    return Promise.reject(payload);
   }
 );
 

@@ -60,7 +60,8 @@ export default function CheckoutNew() {
   }, [cropId, addToast, navigate]);
 
   useEffect(() => {
-    if (!user) navigate('/login');
+    // B4 FIX: Route is /auth/login not /login
+    if (!user) navigate('/auth/login');
     if (!cropId) {
       addToast('No crop selected for checkout', 'error');
       navigate('/marketplace');

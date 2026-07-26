@@ -194,8 +194,10 @@ export default function AdminApprovals() {
     if (!userDocuments[userId]) {
       try {
         setDocLoadingUsers(prev => ({ ...prev, [userId]: true }));
+        // BUG 5 FIX: api.js interceptor already returns response.data as the resolved value.
+        // Accessing .data again gives undefined. Use `response` directly.
         const response = await api.get(`/admin/documents/${userId}`);
-        setUserDocuments(prev => ({ ...prev, [userId]: response.data || null }));
+        setUserDocuments(prev => ({ ...prev, [userId]: response || null }));
       } catch (err) {
         console.error('Failed to fetch user documents:', err);
         setUserDocuments(prev => ({ ...prev, [userId]: { error: true } }));

@@ -25,8 +25,8 @@ directApi.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   
-  // Debug: Log outgoing requests (especially file uploads)
-  if (config.data instanceof FormData) {
+  // Debug: Log outgoing requests (development only)
+  if (import.meta.env.DEV && config.data instanceof FormData) {
     const entries = [];
     for (let [key, value] of config.data.entries()) {
       entries.push(value instanceof File ? `${key}: ${value.name} (${value.size}B)` : `${key}: ${value}`);
@@ -37,16 +37,20 @@ directApi.interceptors.request.use((config) => {
   return config;
 });
 
-// Debug: Log responses
+// Debug: Log responses (development only)
 directApi.interceptors.response.use(
   (response) => {
-    console.log(`✅ [directApi] ${response.status} from ${response.config.url}`);
+    if (import.meta.env.DEV) {
+      console.log(`✅ [directApi] ${response.status} from ${response.config.url}`);
+    }
     return response;
   },
   (error) => {
-    console.error(`❌ [directApi] Error from ${error.config?.url}:`, error.message);
-    if (error.response) {
-      console.error(`  Status: ${error.response.status}, Data:`, error.response.data);
+    if (import.meta.env.DEV) {
+      console.error(`❌ [directApi] Error from ${error.config?.url}:`, error.message);
+      if (error.response) {
+        console.error(`  Status: ${error.response.status}, Data:`, error.response.data);
+      }
     }
     return Promise.reject(error);
   }

@@ -49,7 +49,14 @@ function paginated(res: Response, data: unknown, total: number, page: number, li
   });
 }
 
-let cachedCommunityStats: { data: any, timestamp: number } | null = null;
+interface CommunityStatsData {
+  users: { farmers: number; buyers: number };
+  crops: { total: number };
+  orders: { total: number };
+}
+
+// B15 FIX: Type the cache entry properly instead of using `any`
+let cachedCommunityStats: { data: CommunityStatsData; timestamp: number } | null = null;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 export const getPublicCommunityStats = asyncHandler(async (_req: Request, res: Response) => {
@@ -208,9 +215,15 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
     });
   } catch (notifErr) { console.error('Deletion notification error:', notifErr); }
 
-  if (userRole === UserRole.Farmer) await CropListing.deleteMany({ farmerId: userId });
+  if (userRole === UserRole.Farmer) {
+    // B3 FIX: Delete all crops + reviews received on those crops
+    const farmerCropIds = await CropListing.find({ farmerId: userId }).distinct('_id');
+    await CropListing.deleteMany({ farmerId: userId });
+    await Review.deleteMany({ cropId: { $in: farmerCropIds } });
+  }
+  // B3 FIX: Delete reviews written by this user (correct field is `userId`, not `reviewerId`)
+  await Review.deleteMany({ userId });
   await Order.deleteMany({ $or: [{ buyerId: userId }, { farmerId: userId }] });
-  await Review.deleteMany({ $or: [{ reviewerId: userId }, { revieweeId: userId }] });
   await Wishlist.deleteMany({ userId });
   await Notification.deleteMany({ userId });
   await User.findByIdAndDelete(userId);
@@ -368,7 +381,8 @@ export const getAllOrders = asyncHandler(async (req: Request, res: Response) => 
   const skip = (Number(page) - 1) * Number(limit);
   const query: Record<string, unknown> = {};
   if (status) query.orderStatus = status;
-  if (search) query._id = { $regex: search, $options: 'i' };
+  // B10 FIX: ObjectId fields cannot use $regex — search on orderNumber (string) instead
+  if (search) query.orderNumber = { $regex: search, $options: 'i' };
   const [orders, total] = await Promise.all([
     Order.find(query).populate('buyerId', 'firstName lastName email phone city state').populate('farmerId', 'firstName lastName name farmName phone city state').populate('cropId', 'cropName images price unit').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
     Order.countDocuments(query),
