@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useState, useContext, useMemo } from 'react';
+import { createContext, useState, useContext, useMemo, useEffect } from 'react';
 
 export const RouterContext = createContext();
 
@@ -39,9 +39,20 @@ function extractParams(routePath) {
 }
 
 export function RouterProvider({ children }) {
-  // Initialize to home (/) on every refresh - routes are NOT persisted
-  // This ensures that refreshing any page redirects to home
-  const [currentRoute, setCurrentRoute] = useState('/');
+  // Initialize to the current URL path + search params
+  const [currentRoute, setCurrentRoute] = useState(
+    window.location.pathname + window.location.search || '/'
+  );
+
+  // Handle browser's popstate (back/forward buttons)
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentRoute(window.location.pathname + window.location.search);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const navigate = (path) => {
     // Handle browser back navigation (navigate(-1))
@@ -62,6 +73,7 @@ export function RouterProvider({ children }) {
     }
     
     console.log('Updating route to:', routePath);
+    window.history.pushState({}, '', routePath);
     setCurrentRoute(routePath);
     window.scrollTo(0, 0);
   };

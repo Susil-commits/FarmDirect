@@ -327,6 +327,7 @@ export default function Navbar() {
                   onClick={toggleUserMenu}
                   className="rounded-full hover:ring-2 hover:ring-green-400 ring-offset-1 transition duration-200 cursor-pointer"
                   title={user.name || 'Profile'}
+                  aria-label={user.name ? `User Menu for ${user.name}` : 'User Menu'}
                 >
                   <Avatar user={user} size="sm" />
                 </button>
@@ -393,6 +394,7 @@ export default function Navbar() {
             <button
               onClick={toggleMenu}
               className="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition cursor-pointer"
+              aria-label="Toggle mobile menu"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
