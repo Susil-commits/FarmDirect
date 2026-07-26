@@ -218,7 +218,7 @@ export default function Home() {
                   variant="outline" 
                   size="lg" 
                   className="flex items-center gap-2 justify-center bg-white/50 backdrop-blur-sm border-2 border-green-600/20 hover:border-green-600 hover:bg-white/80 transition-all duration-300 text-lg sm:text-xl px-8 sm:px-10 py-4 sm:py-5 rounded-full text-gray-800 font-semibold w-full sm:w-auto"
-                  onClick={() => handleNavigation('/join-as-farmer')}
+                  onClick={() => handleNavigation('/join-farmer')}
                 >
                   Join as Farmer
                 </Button>
