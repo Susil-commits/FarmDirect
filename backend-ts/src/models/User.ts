@@ -22,6 +22,7 @@ const userSchema = new Schema<IUser>(
     profilePicture: { type: String, default: null },
     bio: { type: String, default: '' },
     address: { type: String, trim: true },
+    location: { type: String, trim: true },
     city: { type: String, trim: true },
     state: { type: String, trim: true },
     pincode: { type: String, trim: true },

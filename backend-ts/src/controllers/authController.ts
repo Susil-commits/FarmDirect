@@ -59,6 +59,8 @@ function publicUser(user: PublicUserDoc) {
     kycStatus: user.kycStatus,
     kycResultSeen: user.kycResultSeen,
     kycRejectionReason: user.kycRejectionReason,
+    kycSubmittedAt: user.kycSubmittedAt,
+    kycDocuments: user.kycDocuments ?? {},
     photo: user.profilePicture,
   };
 }
@@ -570,6 +572,61 @@ export async function deleteAccount(req: Request, res: Response, next: NextFunct
     });
   } catch (error) {
     console.error('Account deletion error:', error);
+    next(error);
+  }
+}
+
+// ===================== COMPLETE ONBOARDING =====================
+
+/**
+ * POST /auth/complete-onboarding
+ * Allows a newly registered user to supply additional profile details
+ * (role-specific fields like farmName, farmArea, etc.) that were not
+ * collected at registration. Idempotent — safe to call multiple times.
+ */
+export async function completeOnboarding(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = req.user!._id;
+    const {
+      farmName, farmArea, cropsGrown, experience,
+      bio, phone, address, city, state, pincode,
+    } = req.body as Record<string, unknown>;
+
+    const user = (await User.findById(userId)) as unknown as PublicUserDoc | null;
+    if (!user) {
+      sendError(res, 'User not found', 404);
+      return;
+    }
+
+    const updates: Record<string, unknown> = {};
+    if (farmName !== undefined) updates.farmName = farmName;
+    if (farmArea !== undefined) updates.farmArea = farmArea;
+    if (cropsGrown !== undefined) updates.cropsGrown = cropsGrown;
+    if (experience !== undefined) updates.experience = Number(experience);
+    if (bio !== undefined) updates.bio = bio;
+    if (phone !== undefined) updates.phone = phone;
+    if (address !== undefined) updates.address = address;
+    if (city !== undefined) updates.city = city;
+    if (state !== undefined) updates.state = state;
+    if (pincode !== undefined) updates.pincode = pincode;
+
+    const updated = (await User.findByIdAndUpdate(
+      userId,
+      { $set: updates },
+      { new: true },
+    )) as unknown as PublicUserDoc | null;
+
+    if (!updated) {
+      sendError(res, 'User not found', 404);
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Onboarding completed successfully',
+      user: publicUser(updated),
+    });
+  } catch (error) {
     next(error);
   }
 }

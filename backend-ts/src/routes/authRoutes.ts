@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {
   register, login, getCurrentUser, updateProfile, logout, refreshTokenHandler,
-  submitKYCDocuments, deleteAccount,
+  submitKYCDocuments, deleteAccount, completeOnboarding,
   forgotPassword, resetPassword, updatePassword,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
@@ -22,6 +22,7 @@ router.put('/update-profile', protect, updateProfile);
 router.put('/update-password', protect, updatePassword);
 router.post('/logout', protect, logout);
 router.post('/delete-account', protect, deleteAccount);
+router.post('/complete-onboarding', protect, completeOnboarding);
 
 // KYC routes
 router.post('/kyc/submit', protect, uploadMultipleFiles('kyc_documents', 10), submitKYCDocuments);

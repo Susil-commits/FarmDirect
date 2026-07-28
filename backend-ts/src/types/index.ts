@@ -92,6 +92,7 @@ export interface IUser extends Timestamps, Document {
   profilePicture?: string | null;
   bio?: string;
   address?: string;
+  location?: string;
   city?: string;
   state?: string;
   pincode?: string;
