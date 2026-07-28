@@ -10,7 +10,7 @@
  */
 import axios from 'axios';
 
-const BACKEND_URL = import.meta.env.VITE_API_DIRECT_URL || 'http://localhost:5000/api';
+const BACKEND_URL = import.meta.env.VITE_API_DIRECT_URL || 'http://localhost:10000/api';
 
 const directApi = axios.create({
   baseURL: BACKEND_URL,
@@ -51,6 +51,13 @@ directApi.interceptors.response.use(
       if (error.response) {
         console.error(`  Status: ${error.response.status}, Data:`, error.response.data);
       }
+    }
+    // On 401 during file upload, clear stale tokens so the user gets redirected to login
+    // rather than seeing a confusing error. The main `api.js` interceptor handles full
+    // token refresh; directApi is intentionally simpler (upload-only path).
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userData');
     }
     return Promise.reject(error);
   }

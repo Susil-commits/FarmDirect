@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useState, useCallback, useEffect, _useContext } from 'react';
+import React, { createContext, useState, useCallback, useEffect } from 'react';
 import { notificationService } from '../services/appService.js';
 import { useSocket } from './SocketContext';
 

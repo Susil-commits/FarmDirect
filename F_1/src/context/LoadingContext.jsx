@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useState, _useContext } from 'react';
+import { createContext, useState } from 'react';
 
 export const LoadingContext = createContext();
 

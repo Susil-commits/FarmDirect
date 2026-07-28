@@ -139,18 +139,11 @@ export function ChatProvider({ children }) {
        
 
   // Get unread count (with in-flight guard to prevent overlapping requests)
-       
   const fetchUnreadCount = useCallback(async () => {
-    if (pollingUnreadRef.current) return;
-  // eslint-disable-next-line react-hooks/immutability
-  fetchUnreadCountRef.current = fetchUnreadCount;
-       
-   
-  fetchUnreadCountRef.current = fetchUnreadCount; // skip if a request is already in-flight
+    if (pollingUnreadRef.current) return; // skip if a request is already in-flight
     pollingUnreadRef.current = true;
     try {
       const response = await messageService.getUnreadCount();
-       
       const data = unwrapData(response);
       setUnreadCount(data?.totalUnread || data?.totalUnread === 0 ? data.totalUnread : 0);
     } catch (err) {
@@ -158,7 +151,6 @@ export function ChatProvider({ children }) {
     } finally {
       pollingUnreadRef.current = false;
     }
-       
   }, []);
 
   // Delete message

@@ -155,6 +155,8 @@ export const SocketProvider = ({ children }) => {
   );
 
   const value = {
+    // `socket` is a React ref — access via `socket.current?.emit(...)` in effects/handlers.
+    // Do NOT read socket.current during render; it's not reactive.
     socket: socketRef,
     connected,
     onlineUsers,
