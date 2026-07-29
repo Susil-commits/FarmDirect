@@ -125,41 +125,25 @@ export default function ShoppingCart() {
     setCheckoutLoading(true);
 
     try {
-      let successCount = 0;
-      let failedItems = [];
-      const createdOrderIds = [];
+      const items = cart.map(item => ({
+        cropId: item._id || item.id,
+        quantity: item.quantity || 1,
+        unitPrice: item.price
+      }));
 
-      for (const item of cart) {
-        try {
-          const orderData = {
-            cropId: item._id || item.id,
-            quantity: item.quantity || 1,
-            unitPrice: item.price,
-            totalAmount: (item.price * (item.quantity || 1)),
-            paymentMethod,
-            // Pass the coupon code; backend re-validates + recomputes the discount
-            // per-item (server is source of truth).
-            couponCode: appliedCoupon?.code || undefined,
-          };
-          // api.js interceptor unwraps to response.data, so result = { message, order }
-          const result = await orderService.createOrder(orderData);
-          if (result?.order?._id) {
-            createdOrderIds.push(result.order._id);
-          }
-          successCount++;
-        } catch (err) {
-          console.error(`Failed to create order for ${item.cropName}:`, err);
-          failedItems.push(item.cropName || 'Unknown item');
-        }
-      }
+      const payload = {
+        items,
+        paymentMethod,
+        couponCode: appliedCoupon?.code || undefined,
+      };
+
+      const result = await orderService.checkoutCart(payload);
+      const createdOrderIds = result.orderIds || [];
+      const successCount = createdOrderIds.length;
 
       // Save the last successfully created order ID for OrderConfirmation page
       if (createdOrderIds.length > 0) {
         localStorage.setItem('lastOrderId', createdOrderIds[createdOrderIds.length - 1]);
-      }
-
-      if (failedItems.length > 0) {
-        addToast(`Failed items: ${failedItems.join(', ')}. Please try again.`, 'error');
       }
 
       // Online payment: collect payment for all created orders at once.

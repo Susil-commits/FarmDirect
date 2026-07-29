@@ -558,10 +558,12 @@ export async function deleteAccount(req: Request, res: Response, next: NextFunct
     const Notification = (await import('../models/Notification.js')).default;
 
     if (user.role === UserRole.Farmer) {
+      const farmerCropIds = await CropListing.find({ farmerId: userId }).distinct('_id');
       await CropListing.deleteMany({ farmerId: userId });
+      await Review.deleteMany({ cropId: { $in: farmerCropIds } });
     }
     await Order.deleteMany({ $or: [{ buyerId: userId }, { farmerId: userId }] });
-    await Review.deleteMany({ $or: [{ reviewerId: userId }, { revieweeId: userId }] });
+    await Review.deleteMany({ userId });
     await Wishlist.deleteMany({ userId });
     await Notification.deleteMany({ userId });
     await User.findByIdAndDelete(userId);

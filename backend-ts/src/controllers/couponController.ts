@@ -94,7 +94,7 @@ export async function redeemCoupon(code: string, userId: Types.ObjectId | string
       },
       {
         $inc: { usedCount: 1 },
-        $addToSet: { usedBy: userId },
+        $push: { usedBy: userId },
       },
       { new: true },
     );

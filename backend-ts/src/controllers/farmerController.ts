@@ -71,12 +71,13 @@ export async function getCropAnalytics(req: Request, res: Response, next: NextFu
 
     const analytics = crops.map((crop) => {
       const cropOrders = orders.filter((o) => (o.cropId as unknown as { _id?: string })?._id?.toString() === String(crop._id));
+      const completedCropOrders = cropOrders.filter((o) => o.orderStatus === OrderStatus.Completed);
       return {
         cropId: crop._id, cropName: crop.cropName, category: crop.category, price: crop.price,
         rating: crop.rating, reviews: crop.totalReviews, views: crop.views,
         unitsSold: crop.sold, ordersReceived: cropOrders.length,
-        totalRevenue: cropOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0),
-        avgOrderValue: cropOrders.length > 0 ? (cropOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) / cropOrders.length).toFixed(2) : 0,
+        totalRevenue: completedCropOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0),
+        avgOrderValue: completedCropOrders.length > 0 ? (completedCropOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) / completedCropOrders.length).toFixed(2) : 0,
         conversionRate: (crop.views ?? 0) > 0 ? (((crop.sold ?? 0) / (crop.views ?? 1)) * 100).toFixed(2) : 0,
         currentQuantity: crop.quantity, status: crop.status,
         performanceScore: calculatePerformanceScore(crop, cropOrders.length),

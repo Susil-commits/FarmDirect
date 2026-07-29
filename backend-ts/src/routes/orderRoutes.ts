@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import {
-  startOrder, createOrder, getOrders, getOrderById, updateOrderStatus, addOrderReview,
+  startOrder, createOrder, checkoutCart, getOrders, getOrderById, updateOrderStatus, addOrderReview,
   cancelOrder, denyOrder, markOrderReceived, getOrderStatus, trackOrder, getOrderStats,
   markCODPaymentReceived, getCODPaymentStatus, getPendingCODPayments
 } from '../controllers/orderController.js';
@@ -10,6 +10,7 @@ import { UserRole } from '../types/enums.js';
 const router = Router();
 
 router.post('/start', protect, authorize(UserRole.Farmer), requireKYC, startOrder);
+router.post('/checkout-cart', protect, authorize(UserRole.Buyer), requireKYC, checkoutCart);
 router.post('/', protect, authorize(UserRole.Buyer), requireKYC, createOrder);
 router.get('/', protect, getOrders);
 router.get('/stats/summary', protect, getOrderStats);
