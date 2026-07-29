@@ -70,6 +70,7 @@ export const orderService = {
   getOrderById: (id) => api.get(`/orders/${id}`),
   getOrderDetails: (id) => api.get(`/orders/${id}`),
   createOrder: (data) => api.post('/orders', data),
+  checkoutCart: (data) => api.post('/orders/checkout-cart', data),
   updateOrderStatus: (id, status) => api.put(`/orders/${id}/status`, { status }),
   cancelOrder: (id, cancellationReason) => api.patch(`/orders/${id}/cancel`, { cancellationReason }),
   denyOrder: (id, denialReason) => api.post(`/orders/${id}/deny`, { denialReason }),

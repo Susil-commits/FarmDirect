@@ -282,9 +282,14 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
 
     try {
       await Notification.create({
-        userId: crop.farmerId, title: 'New Order Received', message: `Order #${order.orderNumber} for "${crop.cropName}" (${orderQty} ${crop.unit}).`,
-        type: 'order', relatedId: String(order._id), priority: 'high', actionUrl: `/farmer/orders/${order._id}`,
-        data: { orderId: order._id, orderNumber: order.orderNumber, cropName: crop.cropName, quantity: orderQty, totalAmount, buyerId: req.user!._id },
+        userId: crop.farmerId,
+        title: 'New Order Received',
+        message: `You have a new order for ${orderQty} ${crop.unit} of ${crop.cropName}.`,
+        type: 'order',
+        relatedId: String(order._id),
+        priority: 'high',
+        actionUrl: `/farmer/orders/${order._id}`,
+        data: { orderId: order._id, cropId: crop._id, orderNumber: order.orderNumber, buyerId: req.user!._id },
       });
     } catch (notifErr) {
       console.error('Failed to create order notification:', notifErr);
@@ -293,6 +298,158 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
     notifyOrderUpdate(order, 'order:created');
     res.status(201).json({ message: 'Order placed successfully! Farmer will start preparing your order.', order });
   } catch (error) {
+    next(error);
+  }
+}
+
+export async function checkoutCart(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { items, couponCode, paymentMethod: requestedMethod } = req.body as {
+      items: { cropId: string; quantity?: number; unitPrice?: number }[];
+      couponCode?: string;
+      paymentMethod?: PaymentMethod;
+    };
+
+    if (!items || items.length === 0) {
+      sendError(res, 'Cart is empty', 400);
+      return;
+    }
+
+    const paymentMethod = requestedMethod === PaymentMethod.Razorpay ? PaymentMethod.Razorpay : PaymentMethod.Cod;
+    const buyerId = req.user!._id;
+
+    const cropIds = items.map((i) => i.cropId);
+    const crops = await CropListing.find({ _id: { $in: cropIds } });
+    if (crops.length !== items.length) {
+      sendError(res, 'One or more crops in the cart were not found', 404);
+      return;
+    }
+
+    let totalBaseAmount = 0;
+    const validatedItems = items.map((item) => {
+      const crop = crops.find((c) => String(c._id) === item.cropId);
+      if (!crop) throw new Error('Crop not found');
+      
+      if (crop.availability !== CropAvailability.Available) {
+        throw new Error(`Crop ${crop.cropName} is no longer available`);
+      }
+      
+      const orderQty = item.quantity || 1;
+      if (crop.quantity < orderQty) {
+        throw new Error(`Insufficient quantity for ${crop.cropName}. Available: ${crop.quantity} ${crop.unit}`);
+      }
+      
+      const itemBaseAmount = crop.price * orderQty;
+      totalBaseAmount += itemBaseAmount;
+
+      return { crop, orderQty, itemBaseAmount };
+    });
+
+    const cartSize = validatedItems.length;
+    const volumeDiscountPercent = cartSize >= 3 ? 10 : cartSize >= 2 ? 5 : 0;
+    const volumeDiscountAmount = (totalBaseAmount * volumeDiscountPercent) / 100;
+    const amountAfterVolume = totalBaseAmount - volumeDiscountAmount;
+
+    let totalCouponDiscount = 0;
+    let appliedCouponCode: string | null = null;
+
+    if (couponCode && couponCode.trim()) {
+      const couponDoc = await Coupon.findOne({ code: couponCode.trim().toUpperCase(), isActive: true });
+      if (!couponDoc) {
+        sendError(res, 'Invalid or expired coupon code', 400);
+        return;
+      }
+      const now = new Date();
+      if (couponDoc.validFrom && now < couponDoc.validFrom) { sendError(res, 'This coupon is not active yet', 400); return; }
+      if (couponDoc.validUntil && now > couponDoc.validUntil) { sendError(res, 'This coupon has expired', 400); return; }
+      if (couponDoc.usageLimit !== null && couponDoc.usageLimit !== undefined && couponDoc.usedCount >= couponDoc.usageLimit) { sendError(res, 'This coupon has reached its usage limit', 400); return; }
+      const userUses = couponDoc.usedBy.filter((id) => id.toString() === buyerId.toString()).length;
+      if (userUses >= couponDoc.perUserLimit) { sendError(res, 'You have already used this coupon', 400); return; }
+
+      const result = computeDiscount(couponDoc, amountAfterVolume);
+      if (!result) { sendError(res, `Minimum order amount of ₹${couponDoc.minOrderAmount} required for this coupon`, 400); return; }
+      
+      totalCouponDiscount = result.discountAmount;
+      appliedCouponCode = couponDoc.code;
+    }
+
+    const totalDiscountAmount = volumeDiscountAmount + totalCouponDiscount;
+    const createdOrderIds: string[] = [];
+
+    for (const item of validatedItems) {
+      const itemShareRatio = item.itemBaseAmount / totalBaseAmount;
+      const itemDiscount = Math.round(totalDiscountAmount * itemShareRatio * 100) / 100;
+      const itemFinalTotal = item.itemBaseAmount - itemDiscount;
+
+      const order = await Order.create({
+        orderNumber: 'ORD-' + randomUUID().replace(/-/g, '').substring(0, 12).toUpperCase(),
+        buyerId,
+        farmerId: item.crop.farmerId,
+        cropId: item.crop._id,
+        cropName: item.crop.cropName,
+        quantity: item.orderQty,
+        unitPrice: item.crop.price,
+        originalAmount: item.itemBaseAmount,
+        discountAmount: itemDiscount,
+        couponCode: appliedCouponCode,
+        totalAmount: Math.max(0, Math.round(itemFinalTotal * 100) / 100),
+        pickupLocation: item.crop.pickupLocation,
+        farmerContact: item.crop.contactNumber,
+        buyerContact: '',
+        paymentMethod,
+        paymentStatus: PaymentStatus.Pending,
+        orderStatus: OrderStatus.Confirmed,
+        timeline: [{ event: 'ORDER_CONFIRMED', description: 'Order confirmed. Farmer will prepare your order.', timestamp: new Date() }],
+      });
+
+      const updatedCrop = await CropListing.findOneAndUpdate(
+        { _id: item.crop._id, quantity: { $gte: item.orderQty } },
+        {
+          $inc: { quantity: -item.orderQty, sold: item.orderQty },
+          $set: { 'interestedBuyers.$[elem].status': 'ordered', 'interestedBuyers.$[elem].orderId': order._id },
+        },
+        { arrayFilters: [{ 'elem.buyerId': buyerId }], new: true },
+      );
+      
+      if (!updatedCrop) {
+        throw new Error(`Insufficient stock for ${item.crop.cropName}`);
+      }
+      if (updatedCrop.quantity <= 0) {
+        await CropListing.findByIdAndUpdate(item.crop._id, { availability: CropAvailability.NotAvailable });
+      }
+
+      createdOrderIds.push(String(order._id));
+
+      try {
+        await Notification.create({
+          userId: item.crop.farmerId,
+          title: 'New Order Received',
+          message: `You have a new order for ${item.orderQty} ${item.crop.unit} of ${item.crop.cropName}.`,
+          type: 'order',
+          relatedId: String(order._id),
+          priority: 'high',
+          actionUrl: `/farmer/orders/${order._id}`,
+          data: { orderId: order._id, cropId: item.crop._id, orderNumber: order.orderNumber, buyerId },
+        });
+      } catch (notifErr) {
+        console.error('Failed to create order notification:', notifErr);
+      }
+      notifyOrderUpdate(order, 'order:created');
+    }
+
+    if (appliedCouponCode) {
+      await redeemCoupon(appliedCouponCode, buyerId);
+    }
+
+    res.status(201).json({
+      message: 'Cart checkout successful',
+      orderIds: createdOrderIds,
+    });
+  } catch (error: any) {
+    if (error.message && (error.message.includes('Crop not found') || error.message.includes('no longer available') || error.message.includes('Insufficient stock') || error.message.includes('Insufficient quantity'))) {
+      sendError(res, error.message, 400);
+      return;
+    }
     next(error);
   }
 }

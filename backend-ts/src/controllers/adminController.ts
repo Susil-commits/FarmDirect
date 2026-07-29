@@ -520,7 +520,10 @@ export const getDashboardAnalytics = asyncHandler(async (_req: Request, res: Res
     Order.countDocuments(), Order.countDocuments({ orderStatus: OrderStatus.Completed }), Order.countDocuments({ orderStatus: { $in: PENDING_STATUSES } }),
   ]);
   // Use aggregate instead of find().select('totalAmount') to avoid OOM on large datasets
-  const [revenueResult] = await Order.aggregate([{ $group: { _id: null, total: { $sum: '$totalAmount' } } }]);
+  const [revenueResult] = await Order.aggregate([
+    { $match: { orderStatus: OrderStatus.Completed } },
+    { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+  ]);
   const totalRevenue = revenueResult?.total || 0;
   res.status(200).json({ success: true, analytics: { users: { total: totalUsers, farmers: totalFarmers, buyers: totalBuyers, pendingKYC }, crops: { total: totalCrops, approved: approvedCrops, pending: pendingCrops }, orders: { total: totalOrders, completed: completedOrders, pending: pendingOrders }, revenue: totalRevenue } });
 });
@@ -529,7 +532,7 @@ export const getFarmerAnalytics = asyncHandler(async (req: Request, res: Respons
   const farmer = await User.findById(req.params.farmerId);
   if (!farmer || farmer.role !== UserRole.Farmer) return sendError(res, 'Farmer not found', 404);
   const [crops, orders] = await Promise.all([CropListing.find({ farmerId: farmer._id }).lean(), Order.find({ farmerId: farmer._id }).lean()]);
-  const totalEarnings = orders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const totalEarnings = orders.filter((o) => o.orderStatus === OrderStatus.Completed).reduce((sum, o) => sum + o.totalAmount, 0);
   res.status(200).json({ success: true, farmer: { _id: farmer._id, name: farmer.name, email: farmer.email }, analytics: { crops: crops.length, orders: orders.length, deliveredOrders: orders.filter((o) => o.orderStatus === OrderStatus.Completed).length, totalEarnings, rating: farmer.rating, kycStatus: farmer.kycStatus }, recentOrders: orders.slice(-10) });
 });
 
@@ -537,7 +540,7 @@ export const getBuyerAnalytics = asyncHandler(async (req: Request, res: Response
   const buyer = await User.findById(req.params.buyerId);
   if (!buyer || buyer.role !== UserRole.Buyer) return sendError(res, 'Buyer not found', 404);
   const orders = await Order.find({ buyerId: buyer._id }).lean();
-  const totalSpent = orders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const totalSpent = orders.filter((o) => o.orderStatus === OrderStatus.Completed).reduce((sum, o) => sum + o.totalAmount, 0);
   res.status(200).json({ success: true, buyer: { _id: buyer._id, name: buyer.name, email: buyer.email }, analytics: { orders: orders.length, completedOrders: orders.filter((o) => o.orderStatus === OrderStatus.Completed).length, totalSpent, rating: buyer.rating }, recentOrders: orders.slice(-10) });
 });
 

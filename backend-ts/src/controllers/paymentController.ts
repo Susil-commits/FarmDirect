@@ -5,7 +5,7 @@ import { getRazorpayInstance, isRazorpayConfigured } from '../config/razorpay.js
 import { notifyOrderUpdate } from '../socket/eventHandlers.js';
 import { sendError } from '../utils/apiResponse.js';
 import { env } from '../config/env.js';
-import { PaymentMethod, PaymentStatus } from '../types/enums.js';
+import { PaymentMethod, PaymentStatus, OrderStatus } from '../types/enums.js';
 import type { Request, Response, NextFunction } from 'express';
 
 export const VALID_PAYMENT_METHODS = [PaymentMethod.Cod, PaymentMethod.Razorpay];
@@ -27,7 +27,7 @@ export async function createRazorpayOrder(req: Request, res: Response, next: Nex
     const orders = await Order.find({ _id: { $in: ids }, buyerId: req.user!._id });
     if (orders.length === 0) { sendError(res, 'No matching orders found for this buyer', 404); return; }
 
-    const unpaidOrders = orders.filter((o) => o.paymentStatus !== PaymentStatus.Completed);
+    const unpaidOrders = orders.filter((o) => o.paymentStatus !== PaymentStatus.Completed && o.orderStatus !== OrderStatus.Cancelled);
     if (unpaidOrders.length === 0) { sendError(res, 'All selected orders are already paid', 400); return; }
 
     const totalAmount = unpaidOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
