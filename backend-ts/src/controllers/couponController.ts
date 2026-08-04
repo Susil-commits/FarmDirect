@@ -82,13 +82,18 @@ export async function redeemCoupon(code: string, userId: Types.ObjectId | string
   try {
     // Atomic update: only increments if usage limit has not been reached AND user hasn't exceeded per-user limit.
     // This prevents race conditions where two concurrent requests both pass the pre-check.
+    // B20 FIX: The previous filter had `{ usageLimit: undefined }` which is a
+    // no-op in BSON — MongoDB strips `undefined` values, so unlimited-use coupons
+    // stored with `usageLimit: undefined` (not `null`) would never match that branch.
+    // The corrected filter uses `$or: [null check, $expr comparison]` which correctly
+    // matches both null/missing and within-limit usages.
     const coupon = await Coupon.findOneAndUpdate(
       {
         code: code.toUpperCase().trim(),
         isActive: true,
         $or: [
           { usageLimit: null },
-          { usageLimit: undefined },
+          { usageLimit: { $exists: false } },
           { $expr: { $lt: ['$usedCount', '$usageLimit'] } },
         ],
       },
@@ -127,7 +132,20 @@ export const getAllCoupons = asyncHandler(async (req: Request, res: Response) =>
 });
 
 export const createCoupon = asyncHandler(async (req: Request, res: Response) => {
-  const coupon = await Coupon.create({ ...req.body, createdBy: req.user!._id });
+  // B21 FIX: Whitelist allowed fields from req.body instead of spreading the
+  // entire body into Coupon.create. Without a whitelist, a caller could inject
+  // `usedCount: 0`, `usedBy: [...]`, or `isActive: true` overriding server-side defaults.
+  const {
+    code, type, value, minOrderAmount, maxDiscountAmount,
+    description, usageLimit, perUserLimit, validFrom, validUntil, isActive,
+  } = req.body as Record<string, unknown>;
+
+  const coupon = await Coupon.create({
+    code, type, value, minOrderAmount, maxDiscountAmount,
+    description, usageLimit, perUserLimit, validFrom, validUntil,
+    isActive: isActive ?? true,
+    createdBy: req.user!._id,
+  });
   res.status(201).json({ success: true, coupon });
 });
 

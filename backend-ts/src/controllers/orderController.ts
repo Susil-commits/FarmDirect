@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import CropListing from '../models/CropListing.js';
 import User from '../models/User.js';
@@ -39,25 +40,17 @@ const STATUS_DESCRIPTIONS: Record<string, string> = {
 };
 
 async function recordCropCompletion(order: OrderLike): Promise<void> {
-  const crop = await CropListing.findById(order.cropId);
-  if (!crop) return;
-
-  const updateFields: Record<string, unknown> = {};
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  if (crop.quantity <= 0) {
-    updateFields.status = CropStatus.SoldOut;
-    updateFields.availability = CropAvailability.NotAvailable;
-  }
-
-  const todaySalesEntry = (crop.dailySales || []).find(
-    (ds) => new Date(ds.date).toDateString() === today.toDateString(),
-  );
+  // B6 FIX: read the crop after the stat increment so quantity reflects the
+  // actual post-decrement value (avoids stale-read sold-out check).
+  const todaySalesEntry = await CropListing.findOne(
+    { _id: order.cropId, 'dailySales.date': { $gte: today, $lt: new Date(today.getTime() + 86400000) } },
+  ).lean().select('quantity dailySales');
 
   if (todaySalesEntry) {
     await CropListing.findByIdAndUpdate(order.cropId, {
-      ...updateFields,
       $inc: {
         'dailySales.$[elem].quantity': order.quantity,
         'dailySales.$[elem].revenue': order.totalAmount,
@@ -69,12 +62,20 @@ async function recordCropCompletion(order: OrderLike): Promise<void> {
     });
   } else {
     await CropListing.findByIdAndUpdate(order.cropId, {
-      ...updateFields,
       $push: { dailySales: { date: today, quantity: order.quantity, revenue: order.totalAmount } },
       $inc: {
         'monthlyStats.totalRevenue': order.totalAmount,
         'monthlyStats.totalUnits': order.quantity,
       },
+    });
+  }
+
+  // Re-read the final quantity to set sold-out status accurately (B6 FIX)
+  const updatedCrop = await CropListing.findById(order.cropId).lean().select('quantity');
+  if (updatedCrop && updatedCrop.quantity <= 0) {
+    await CropListing.findByIdAndUpdate(order.cropId, {
+      status: CropStatus.SoldOut,
+      availability: CropAvailability.NotAvailable,
     });
   }
 }
@@ -260,9 +261,9 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
       timeline: [{ event: 'ORDER_CONFIRMED', description: 'Order confirmed. Farmer will prepare your order.', timestamp: new Date() }],
     });
 
-    if (appliedCouponCode) await redeemCoupon(appliedCouponCode, req.user!._id);
-
-    // Atomic decrement: guards against concurrent orders exhausting stock
+    // B2 FIX: Atomic decrement FIRST — only redeem coupon after stock is secured.
+    // Previously redeemCoupon was called before this check, consuming the coupon
+    // even when the order was immediately deleted due to out-of-stock.
     const updatedCrop = await CropListing.findOneAndUpdate(
       { _id: cropId, quantity: { $gte: orderQty } },
       {
@@ -279,6 +280,9 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
     if (updatedCrop.quantity <= 0) {
       await CropListing.findByIdAndUpdate(cropId, { availability: CropAvailability.NotAvailable });
     }
+
+    // Redeem coupon only after stock has been successfully secured (B2 FIX)
+    if (appliedCouponCode) await redeemCoupon(appliedCouponCode, req.user!._id);
 
     try {
       await Notification.create({
@@ -303,6 +307,7 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
 }
 
 export async function checkoutCart(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const session = await mongoose.startSession();
   try {
     const { items, couponCode, paymentMethod: requestedMethod } = req.body as {
       items: { cropId: string; quantity?: number; unitPrice?: number }[];
@@ -329,19 +334,18 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
     const validatedItems = items.map((item) => {
       const crop = crops.find((c) => String(c._id) === item.cropId);
       if (!crop) throw new Error('Crop not found');
-      
+
       if (crop.availability !== CropAvailability.Available) {
         throw new Error(`Crop ${crop.cropName} is no longer available`);
       }
-      
+
       const orderQty = item.quantity || 1;
       if (crop.quantity < orderQty) {
         throw new Error(`Insufficient quantity for ${crop.cropName}. Available: ${crop.quantity} ${crop.unit}`);
       }
-      
+
       const itemBaseAmount = crop.price * orderQty;
       totalBaseAmount += itemBaseAmount;
-
       return { crop, orderQty, itemBaseAmount };
     });
 
@@ -355,10 +359,7 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
 
     if (couponCode && couponCode.trim()) {
       const couponDoc = await Coupon.findOne({ code: couponCode.trim().toUpperCase(), isActive: true });
-      if (!couponDoc) {
-        sendError(res, 'Invalid or expired coupon code', 400);
-        return;
-      }
+      if (!couponDoc) { sendError(res, 'Invalid or expired coupon code', 400); return; }
       const now = new Date();
       if (couponDoc.validFrom && now < couponDoc.validFrom) { sendError(res, 'This coupon is not active yet', 400); return; }
       if (couponDoc.validUntil && now > couponDoc.validUntil) { sendError(res, 'This coupon has expired', 400); return; }
@@ -368,7 +369,6 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
 
       const result = computeDiscount(couponDoc, amountAfterVolume);
       if (!result) { sendError(res, `Minimum order amount of ₹${couponDoc.minOrderAmount} required for this coupon`, 400); return; }
-      
       totalCouponDiscount = result.discountAmount;
       appliedCouponCode = couponDoc.code;
     }
@@ -376,52 +376,67 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
     const totalDiscountAmount = volumeDiscountAmount + totalCouponDiscount;
     const createdOrderIds: string[] = [];
 
-    for (const item of validatedItems) {
-      const itemShareRatio = item.itemBaseAmount / totalBaseAmount;
-      const itemDiscount = Math.round(totalDiscountAmount * itemShareRatio * 100) / 100;
-      const itemFinalTotal = item.itemBaseAmount - itemDiscount;
+    // B1 FIX: Wrap the entire multi-item checkout loop in a MongoDB session +
+    // transaction so that if any one crop's stock decrement fails, ALL order
+    // inserts and stock changes are atomically rolled back — no orphaned orders.
+    await session.withTransaction(async () => {
+      // Reset in case of retry
+      createdOrderIds.length = 0;
 
-      const order = await Order.create({
-        orderNumber: 'ORD-' + randomUUID().replace(/-/g, '').substring(0, 12).toUpperCase(),
-        buyerId,
-        farmerId: item.crop.farmerId,
-        cropId: item.crop._id,
-        cropName: item.crop.cropName,
-        quantity: item.orderQty,
-        unitPrice: item.crop.price,
-        originalAmount: item.itemBaseAmount,
-        discountAmount: itemDiscount,
-        couponCode: appliedCouponCode,
-        totalAmount: Math.max(0, Math.round(itemFinalTotal * 100) / 100),
-        pickupLocation: item.crop.pickupLocation,
-        farmerContact: item.crop.contactNumber,
-        buyerContact: '',
-        paymentMethod,
-        paymentStatus: PaymentStatus.Pending,
-        orderStatus: OrderStatus.Confirmed,
-        timeline: [{ event: 'ORDER_CONFIRMED', description: 'Order confirmed. Farmer will prepare your order.', timestamp: new Date() }],
-      });
+      for (const item of validatedItems) {
+        const itemShareRatio = item.itemBaseAmount / totalBaseAmount;
+        const itemDiscount = Math.round(totalDiscountAmount * itemShareRatio * 100) / 100;
+        const itemFinalTotal = item.itemBaseAmount - itemDiscount;
 
-      const updatedCrop = await CropListing.findOneAndUpdate(
-        { _id: item.crop._id, quantity: { $gte: item.orderQty } },
-        {
-          $inc: { quantity: -item.orderQty, sold: item.orderQty },
-          $set: { 'interestedBuyers.$[elem].status': 'ordered', 'interestedBuyers.$[elem].orderId': order._id },
-        },
-        { arrayFilters: [{ 'elem.buyerId': buyerId }], new: true },
-      );
-      
-      if (!updatedCrop) {
-        throw new Error(`Insufficient stock for ${item.crop.cropName}`);
-      }
-      if (updatedCrop.quantity <= 0) {
-        await CropListing.findByIdAndUpdate(item.crop._id, { availability: CropAvailability.NotAvailable });
-      }
+        const [order] = await Order.create(
+          [{
+            orderNumber: 'ORD-' + randomUUID().replace(/-/g, '').substring(0, 12).toUpperCase(),
+            buyerId,
+            farmerId: item.crop.farmerId,
+            cropId: item.crop._id,
+            cropName: item.crop.cropName,
+            quantity: item.orderQty,
+            unitPrice: item.crop.price,
+            originalAmount: item.itemBaseAmount,
+            discountAmount: itemDiscount,
+            couponCode: appliedCouponCode,
+            totalAmount: Math.max(0, Math.round(itemFinalTotal * 100) / 100),
+            pickupLocation: item.crop.pickupLocation,
+            farmerContact: item.crop.contactNumber,
+            buyerContact: '',
+            paymentMethod,
+            paymentStatus: PaymentStatus.Pending,
+            orderStatus: OrderStatus.Confirmed,
+            timeline: [{ event: 'ORDER_CONFIRMED', description: 'Order confirmed. Farmer will prepare your order.', timestamp: new Date() }],
+          }],
+          { session },
+        );
 
-      createdOrderIds.push(String(order._id));
+        const updatedCrop = await CropListing.findOneAndUpdate(
+          { _id: item.crop._id, quantity: { $gte: item.orderQty } },
+          {
+            $inc: { quantity: -item.orderQty, sold: item.orderQty },
+            $set: { 'interestedBuyers.$[elem].status': 'ordered', 'interestedBuyers.$[elem].orderId': order._id },
+          },
+          { arrayFilters: [{ 'elem.buyerId': buyerId }], new: true, session },
+        );
 
-      try {
-        await Notification.create({
+        if (!updatedCrop) {
+          // Throwing inside withTransaction triggers automatic abort + retry
+          throw new Error(`Insufficient stock for ${item.crop.cropName}`);
+        }
+        if (updatedCrop.quantity <= 0) {
+          await CropListing.findByIdAndUpdate(
+            item.crop._id,
+            { availability: CropAvailability.NotAvailable },
+            { session },
+          );
+        }
+
+        createdOrderIds.push(String(order._id));
+
+        // Notifications are fire-and-forget (outside transaction is fine)
+        Notification.create({
           userId: item.crop.farmerId,
           title: 'New Order Received',
           message: `You have a new order for ${item.orderQty} ${item.crop.unit} of ${item.crop.cropName}.`,
@@ -430,13 +445,13 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
           priority: 'high',
           actionUrl: `/farmer/orders/${order._id}`,
           data: { orderId: order._id, cropId: item.crop._id, orderNumber: order.orderNumber, buyerId },
-        });
-      } catch (notifErr) {
-        console.error('Failed to create order notification:', notifErr);
-      }
-      notifyOrderUpdate(order, 'order:created');
-    }
+        }).catch((notifErr: unknown) => console.error('Failed to create order notification:', notifErr));
 
+        notifyOrderUpdate(order, 'order:created');
+      }
+    });
+
+    // Redeem coupon only after all stock decrements committed successfully (B2 pattern)
     if (appliedCouponCode) {
       await redeemCoupon(appliedCouponCode, buyerId);
     }
@@ -445,12 +460,15 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
       message: 'Cart checkout successful',
       orderIds: createdOrderIds,
     });
-  } catch (error: any) {
-    if (error.message && (error.message.includes('Crop not found') || error.message.includes('no longer available') || error.message.includes('Insufficient stock') || error.message.includes('Insufficient quantity'))) {
-      sendError(res, error.message, 400);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : '';
+    if (msg && (msg.includes('Crop not found') || msg.includes('no longer available') || msg.includes('Insufficient stock') || msg.includes('Insufficient quantity'))) {
+      sendError(res, msg, 400);
       return;
     }
     next(error);
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -662,9 +680,19 @@ export async function cancelOrder(req: Request, res: Response, next: NextFunctio
 
 export async function getOrderStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const order = await Order.findById(req.params.id).lean().select('orderStatus orderNumber timeline');
+    // B3 FIX: Fetch the full order (not lean-selected) so we can verify ownership
+    // before returning status/timeline. Previously any authenticated user could
+    // probe any order's timeline by ID.
+    const order = await Order.findById(req.params.id).lean().select('orderStatus orderNumber timeline buyerId farmerId');
     if (!order) {
       sendError(res, 'Order not found', 404);
+      return;
+    }
+    const isBuyer = (order.buyerId as unknown as { toString(): string }).toString() === req.user!._id.toString();
+    const isFarmer = (order.farmerId as unknown as { toString(): string }).toString() === req.user!._id.toString();
+    const isAdmin = req.user!.role === UserRole.Admin;
+    if (!isBuyer && !isFarmer && !isAdmin) {
+      sendError(res, 'Not authorized to view this order status', 403);
       return;
     }
     res.status(200).json({ status: order.orderStatus, orderNumber: order.orderNumber, timeline: order.timeline });
@@ -675,14 +703,25 @@ export async function getOrderStatus(req: Request, res: Response, next: NextFunc
 
 export async function trackOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    // B5 FIX: Load the raw order first to verify caller ownership before
+    // returning contact numbers and pickup location.
+    const raw = await Order.findById(req.params.id).lean().select('buyerId farmerId');
+    if (!raw) {
+      sendError(res, 'Order not found', 404);
+      return;
+    }
+    const isBuyer = (raw.buyerId as unknown as { toString(): string }).toString() === req.user!._id.toString();
+    const isFarmer = (raw.farmerId as unknown as { toString(): string }).toString() === req.user!._id.toString();
+    const isAdmin = req.user!.role === UserRole.Admin;
+    if (!isBuyer && !isFarmer && !isAdmin) {
+      sendError(res, 'Not authorized to track this order', 403);
+      return;
+    }
+
     const order = await Order.findById(req.params.id).lean()
       .select('orderNumber orderStatus timeline pickupLocation farmerContact buyerContact cropName quantity unitPrice totalAmount')
       .populate('farmerId', 'firstName lastName name phone farmName')
       .populate('buyerId', 'firstName lastName name phone');
-    if (!order) {
-      sendError(res, 'Order not found', 404);
-      return;
-    }
     res.status(200).json({ order });
   } catch (error) {
     next(error);
@@ -820,29 +859,42 @@ export async function markOrderReceived(req: Request, res: Response, next: NextF
 export async function markCODPaymentReceived(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
-    const { amount, notes } = req.body;
+    const { notes } = req.body as { notes?: string };
     const order = await Order.findById(id);
-    
+
     if (!order) { sendError(res, 'Order not found', 404); return; }
-    
+
     // Only farmer (or admin) who owns the order can mark COD as received
     if (req.user!.role !== UserRole.Admin && order.farmerId.toString() !== req.user!._id.toString()) {
       sendError(res, 'Not authorized', 403);
       return;
     }
-    
+
     if (order.paymentMethod !== PaymentMethod.Cod) {
       sendError(res, 'Order is not a COD order', 400);
       return;
     }
-    
+
+    // B4 FIX: Payment can only be collected after the buyer has actually picked
+    // up the goods. Allowing COD receipt on a 'confirmed' order (before pickup)
+    // could let a farmer claim payment that was never delivered.
+    const allowedStatuses: OrderStatus[] = [OrderStatus.PickedUp, OrderStatus.Completed];
+    if (!allowedStatuses.includes(order.orderStatus)) {
+      sendError(
+        res,
+        `COD payment can only be marked on orders in '${OrderStatus.PickedUp}' or '${OrderStatus.Completed}' status. Current status: '${order.orderStatus}'`,
+        400,
+      );
+      return;
+    }
+
     order.paymentStatus = PaymentStatus.Completed;
-    order.timeline.push({ 
-      event: 'PAYMENT_RECEIVED', 
-      description: `COD payment received${notes ? ': ' + notes : ''}`, 
-      timestamp: new Date() 
+    order.timeline.push({
+      event: 'PAYMENT_RECEIVED',
+      description: `COD payment received${notes ? ': ' + notes : ''}`,
+      timestamp: new Date(),
     });
-    
+
     await order.save();
     res.status(200).json({ success: true, message: 'COD payment marked as received', order });
   } catch (error) {

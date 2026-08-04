@@ -12,7 +12,11 @@ const suspendedAllowedPaths = [
   '/api/contact',
 ];
 
-/** Require a valid JWT; attaches the minimal user object to `req.user`. */
+/** Require a valid JWT; attaches the minimal user object to `req.user`.
+ *  B18 FIX: Also attaches the full Mongoose document to `req.userDoc` so
+ *  downstream middleware (requireKYC) can reuse it without a second DB hit.
+ *  The compound index `{ _id: 1, status: 1 }` on the User collection is
+ *  recommended to make this lookup O(log n). */
 export const protect: RequestHandler = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
@@ -36,6 +40,8 @@ export const protect: RequestHandler = async (req, res, next) => {
       email: user.email,
       status: user.status,
     };
+    // Attach full document for middleware reuse (avoids N duplicate DB lookups)
+    req.userDoc = user;
 
     if (user.status === UserStatus.Banned || user.status === UserStatus.Suspended) {
       const isAllowed = suspendedAllowedPaths.some((p) => req.originalUrl.startsWith(p));
@@ -69,7 +75,9 @@ export const authorize = (...roles: UserRole[]): RequestHandler => {
   };
 };
 
-/** Require KYC verification (farmers & buyers; admin is exempt). */
+/** Require KYC verification (farmers & buyers; admin is exempt).
+ *  B19 FIX: Reuses `req.userDoc` set by the `protect` middleware instead
+ *  of making a second `User.findById` DB call on every KYC-protected request. */
 export const requireKYC: RequestHandler = async (req, res, next) => {
   try {
     if (!req.user) {
@@ -78,7 +86,8 @@ export const requireKYC: RequestHandler = async (req, res, next) => {
     if (req.user.role === UserRole.Admin) {
       return next();
     }
-    const user = await User.findById(req.user._id);
+    // Prefer the already-loaded userDoc; fall back to a fresh query only if missing
+    const user = req.userDoc ?? await User.findById(req.user._id);
     if (!user || user.kycStatus !== KycStatus.Verified) {
       return res.status(403).json({
         success: false,

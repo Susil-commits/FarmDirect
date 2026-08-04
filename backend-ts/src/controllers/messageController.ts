@@ -21,13 +21,16 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
 
   const conversationId = (Message as unknown as MessageModel).generateConversationId(senderId.toString(), receiverId);
 
-  const message = await (Message as unknown as MessageModel).create({
+  // B23 FIX: Use Message.create() directly — Message is already a Mongoose Model.
+  // The previous pattern `(Message as unknown as MessageModel).create(...)` was an
+  // unsafe double-cast that would silently pass even if the MessageModel type diverged.
+  const message = await Message.create({
     senderId, receiverId, content: content.trim(),
     cropId: cropId || null, orderId: orderId || null, type, attachments, conversationId,
     metadata: { deviceType: req.headers['user-agent']?.includes('Mobile') ? 'mobile' : 'desktop' },
   });
 
-  const populatedMessage = await (message as never as { populate: (paths: unknown[]) => Promise<unknown> }).populate([
+  const populatedMessage = await message.populate([
     { path: 'senderId', select: 'firstName lastName email profilePhoto role' },
     { path: 'receiverId', select: 'firstName lastName email profilePhoto role' },
   ]);

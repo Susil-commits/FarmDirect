@@ -8,32 +8,45 @@ import { OrderStatus, UserRole } from '../types/enums.js';
 import type { Request, Response } from 'express';
 import type { Types } from 'mongoose';
 
+// B22: Rating recomputation uses MongoDB aggregation ($avg) instead of
+// loading all reviews into memory and computing in JavaScript.
+// This is slightly more concurrency-safe (the computed value reflects
+// whichever documents are committed at aggregate-read time) and is
+// significantly more efficient at scale.
+// Full serialisation via MongoDB transactions would be needed for
+// perfect consistency under extreme concurrent load, but this is
+// sufficient for a marketplace with normal review rates.
 async function updateCropRating(cropId: Types.ObjectId | string): Promise<void> {
-  const reviews = await Review.find({ cropId });
-  if (reviews.length === 0) {
-    await CropListing.findByIdAndUpdate(cropId, { rating: 0, totalReviews: 0 });
-    return;
-  }
-  const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-  const averageRating = (totalRating / reviews.length).toFixed(2);
-  await CropListing.findByIdAndUpdate(cropId, { rating: parseFloat(averageRating), totalReviews: reviews.length });
+  const result = await Review.aggregate([
+    { $match: { cropId: typeof cropId === 'string' ? { $oid: cropId } : cropId } },
+    { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } },
+  ]);
+  const { avg = 0, count = 0 } = result[0] ?? {};
+  await CropListing.findByIdAndUpdate(cropId, {
+    rating: count > 0 ? parseFloat(avg.toFixed(2)) : 0,
+    totalReviews: count,
+  });
 }
 
 async function updateFarmerRating(farmerId: Types.ObjectId | string): Promise<void> {
-  const crops = await CropListing.find({ farmerId });
-  const cropIds = crops.map((crop) => crop._id);
-  if (cropIds.length === 0) {
-    await User.findByIdAndUpdate(farmerId, { rating: 0, totalReviews: 0 });
-    return;
-  }
-  const reviews = await Review.find({ cropId: { $in: cropIds } });
-  if (reviews.length === 0) {
-    await User.findByIdAndUpdate(farmerId, { rating: 0, totalReviews: 0 });
-    return;
-  }
-  const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-  const averageRating = (totalRating / reviews.length).toFixed(2);
-  await User.findByIdAndUpdate(farmerId, { rating: parseFloat(averageRating), totalReviews: reviews.length });
+  const result = await Review.aggregate([
+    {
+      $lookup: {
+        from: 'croplistings',
+        localField: 'cropId',
+        foreignField: '_id',
+        as: 'crop',
+        pipeline: [{ $match: { farmerId: typeof farmerId === 'string' ? { $oid: farmerId } : farmerId } }, { $project: { _id: 1 } }],
+      },
+    },
+    { $match: { 'crop.0': { $exists: true } } },
+    { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } },
+  ]);
+  const { avg = 0, count = 0 } = result[0] ?? {};
+  await User.findByIdAndUpdate(farmerId, {
+    rating: count > 0 ? parseFloat(avg.toFixed(2)) : 0,
+    totalReviews: count,
+  });
 }
 
 export const addReview = asyncHandler(async (req: Request, res: Response) => {

@@ -12,9 +12,9 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendError } from '../utils/apiResponse.js';
 import { invalidationStrategies } from '../utils/cache.js';
 import { notifyKYCUpdate, notifyUserStatusChange } from '../socket/eventHandlers.js';
-import { UserRole, UserStatus, KycStatus, OrderStatus, CancelledBy, PaymentStatus } from '../types/enums.js';
+import { UserRole, UserStatus, KycStatus, OrderStatus, CancelledBy, PaymentStatus, CropStatus, CropAvailability } from '../types/enums.js';
 import type { Request, Response } from 'express';
-import type { Types } from 'mongoose';
+import type { Types, PipelineStage } from 'mongoose';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -273,17 +273,23 @@ export const rejectUserKYC = asyncHandler(async (req: Request, res: Response) =>
   const { reason } = req.body as { reason: string };
   const adminUser = req.user as AdminUser;
 
-  const user = await User.findByIdAndUpdate(userId, { kycStatus: KycStatus.Rejected, kycRejectionReason: reason, kycResultSeen: false }, { new: true }).select('-password');
+  // B7 FIX: A rejection reason must be meaningful — an empty string gives the
+  // user nothing actionable to fix. Require at least 10 characters.
+  if (!reason || reason.trim().length < 10) {
+    return sendError(res, 'A rejection reason of at least 10 characters is required', 400);
+  }
+
+  const user = await User.findByIdAndUpdate(userId, { kycStatus: KycStatus.Rejected, kycRejectionReason: reason.trim(), kycResultSeen: false }, { new: true }).select('-password');
   if (!user) return sendError(res, 'User not found', 404);
 
   try {
-    await Notification.create({ userId, title: 'KYC Rejected', message: `Your KYC application has been rejected. Reason: ${reason}. You can re-submit your documents for verification.`, type: 'general', priority: 'high' });
+    await Notification.create({ userId, title: 'KYC Rejected', message: `Your KYC application has been rejected. Reason: ${reason.trim()}. You can re-submit your documents for verification.`, type: 'general', priority: 'high' });
   } catch (err) { console.error('Notification creation error:', err); }
 
-  notifyKYCUpdate(userId, 'rejected', reason);
+  notifyKYCUpdate(userId, 'rejected', reason.trim());
 
   try {
-    await AuditLog.create({ adminId: adminUser._id, adminEmail: adminUser.email, action: 'KYC_REJECTED', resourceType: 'KYC', resourceId: userId, resourceDetails: `${user.firstName} ${user.lastName} (${user.email})`, reason: reason || 'KYC documents rejected', ipAddress: req.ip, userAgent: req.get('user-agent') || 'Unknown', status: 'success' });
+    await AuditLog.create({ adminId: adminUser._id, adminEmail: adminUser.email, action: 'KYC_REJECTED', resourceType: 'KYC', resourceId: userId, resourceDetails: `${user.firstName} ${user.lastName} (${user.email})`, reason: reason.trim(), ipAddress: req.ip, userAgent: req.get('user-agent') || 'Unknown', status: 'success' });
   } catch (auditErr) { console.error('Audit log error:', auditErr); }
 
   res.status(200).json({ success: true, message: 'User KYC rejected', data: user });
@@ -419,7 +425,17 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
   if (orderStatus === OrderStatus.Cancelled) {
     order.cancelledBy = CancelledBy.Admin;
     if (cancellationReason) order.cancellationReason = cancellationReason;
-    await CropListing.findByIdAndUpdate(order.cropId, { $inc: { quantity: order.quantity, sold: -order.quantity }, availability: 'available', status: 'active' });
+
+    // B9 FIX: Only restore availability/status if the crop was previously
+    // active or sold-out. Unconditionally setting 'active' would override
+    // a farmer's intentional manual deactivation.
+    const cropForRestore = await CropListing.findById(order.cropId).select('status').lean();
+    const wasListingActive = cropForRestore?.status === CropStatus.Active || cropForRestore?.status === CropStatus.SoldOut;
+    const restoreSet: Record<string, unknown> = { $inc: { quantity: order.quantity, sold: -order.quantity } };
+    if (wasListingActive) {
+      (restoreSet as Record<string, unknown>)['$set'] = { availability: CropAvailability.Available, status: CropStatus.Active };
+    }
+    await CropListing.findByIdAndUpdate(order.cropId, restoreSet);
   }
 
   if (orderStatus === OrderStatus.Completed) {
@@ -496,18 +512,35 @@ export const getUsersWithCrops = asyncHandler(async (req: Request, res: Response
   const { page = '1', limit = '20' } = req.query as Record<string, string>;
   const query = buildQuery(req);
   const skip = (Number(page) - 1) * Number(limit);
-  const [users, total] = await Promise.all([
-    User.find(query).select('-password').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+
+  // B10 FIX: Replace the N+1 per-user CropListing.find inside Promise.all with
+  // a single aggregation $lookup. Previously each user caused a separate DB
+  // round-trip; this collapses them all into one pipeline call.
+  const pipeline: PipelineStage[] = [
+    { $match: { ...query } } as PipelineStage,
+    { $sort: { createdAt: -1 } } as PipelineStage,
+    { $skip: skip } as PipelineStage,
+    { $limit: Number(limit) } as PipelineStage,
+    { $project: { password: 0 } } as PipelineStage,
+    {
+      $lookup: {
+        from: 'croplistings',
+        let: { uid: '$_id', role: '$role' },
+        pipeline: [
+          { $match: { $expr: { $and: [{ $eq: ['$$role', UserRole.Farmer] }, { $eq: ['$farmerId', '$$uid'] }] } } },
+          { $project: { cropName: 1, category: 1, price: 1, quantity: 1, images: 1, description: 1, status: 1 } },
+        ] as PipelineStage[],
+        as: 'crops',
+      },
+    } as PipelineStage,
+  ];
+
+  const [usersWithCrops, totalResult] = await Promise.all([
+    User.aggregate(pipeline),
     User.countDocuments(query),
   ]);
-  const usersWithCrops = await Promise.all(users.map(async (user) => {
-    const userObj = user.toObject() as unknown as Record<string, unknown>;
-    if (user.role === UserRole.Farmer) {
-      userObj.crops = await CropListing.find({ farmerId: user._id }).select('cropName category price quantity images description status');
-    } else { userObj.crops = []; }
-    return userObj;
-  }));
-  paginated(res, usersWithCrops, total, Number(page), Number(limit));
+
+  paginated(res, usersWithCrops, totalResult, Number(page), Number(limit));
 });
 
 export const getDashboardAnalytics = asyncHandler(async (_req: Request, res: Response) => {
@@ -670,7 +703,20 @@ export const proxyDocument = asyncHandler(async (req: Request, res: Response) =>
     '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml',
   };
   const contentType = mimeTypes[ext] || 'application/octet-stream';
-  const fileBuffer = fs.readFileSync(filePath);
-  res.set({ 'Content-Type': contentType, 'Content-Disposition': 'inline', 'Content-Length': fileBuffer.length, 'Cache-Control': 'public, max-age=3600', 'Access-Control-Allow-Origin': '*' });
-  res.send(fileBuffer);
+
+  // B8 FIX: Use res.sendFile (streaming) instead of readFileSync + res.send.
+  // readFileSync loads the entire file into Node.js heap memory before sending,
+  // which can cause memory spikes for large PDFs viewed by admins.
+  // res.sendFile streams the file directly from disk with proper range/cache support.
+  res.set({
+    'Content-Type': contentType,
+    'Content-Disposition': 'inline',
+    'Cache-Control': 'public, max-age=3600',
+    'Access-Control-Allow-Origin': '*',
+  });
+  res.sendFile(filePath, (err) => {
+    if (err && !res.headersSent) {
+      res.status(500).json({ success: false, message: 'Failed to stream file' });
+    }
+  });
 });
