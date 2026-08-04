@@ -30,26 +30,75 @@ function getStartDate(period: string): Date {
 export async function getDashboardStats(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const farmerId = req.user!._id;
-    const crops = await CropListing.find({ farmerId }).lean();
-    const orders = await Order.find({ farmerId }).populate('cropId', 'price').lean();
 
-    const completedOrders = orders.filter((o) => o.orderStatus === OrderStatus.Completed);
+    // B15 FIX: Replace load-all-into-memory find() with aggregate queries that
+    // return only computed scalars. Previously this endpoint loaded every crop
+    // document and every order document for a farmer — O(n) memory per request.
+    const [cropStats, orderStats] = await Promise.all([
+      CropListing.aggregate([
+        { $match: { farmerId } },
+        {
+          $group: {
+            _id: null,
+            totalCrops: { $sum: 1 },
+            totalActiveListing: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } },
+            totalApprovedListing: { $sum: { $cond: [{ $eq: ['$listingApprovalStatus', 'approved'] }, 1, 0] } },
+            totalPendingListing: { $sum: { $cond: [{ $eq: ['$listingApprovalStatus', 'pending'] }, 1, 0] } },
+            totalRejectedListing: { $sum: { $cond: [{ $eq: ['$listingApprovalStatus', 'rejected'] }, 1, 0] } },
+            totalInventory: { $sum: '$quantity' },
+            lowStockItems: {
+              $sum: { $cond: [{ $lte: ['$quantity', '$lowStockThreshold'] }, 1, 0] },
+            },
+            soldOut: { $sum: { $cond: [{ $eq: ['$status', 'soldOut'] }, 1, 0] } },
+            totalUnitsSold: { $sum: '$sold' },
+            avgRating: { $avg: '$rating' },
+          },
+        },
+      ]),
+      Order.aggregate([
+        { $match: { farmerId } },
+        {
+          $group: {
+            _id: null,
+            totalOrdersReceived: { $sum: 1 },
+            completedOrders: { $sum: { $cond: [{ $eq: ['$orderStatus', OrderStatus.Completed] }, 1, 0] } },
+            pendingOrders: {
+              $sum: {
+                $cond: [
+                  { $in: ['$orderStatus', [OrderStatus.Confirmed, OrderStatus.Preparing, OrderStatus.ReadyForPickup, OrderStatus.PickedUp]] },
+                  1,
+                  0,
+                ],
+              },
+            },
+            cancelledOrders: { $sum: { $cond: [{ $eq: ['$orderStatus', OrderStatus.Cancelled] }, 1, 0] } },
+            totalRevenue: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', OrderStatus.Completed] }, '$totalAmount', 0] },
+            },
+          },
+        },
+      ]),
+    ]);
+
+    const c = cropStats[0] ?? {};
+    const o = orderStats[0] ?? {};
+
     const stats = {
-      totalActiveListing: crops.filter((c) => c.status === 'active').length,
-      totalApprovedListing: crops.filter((c) => c.listingApprovalStatus === 'approved').length,
-      totalPendingListing: crops.filter((c) => c.listingApprovalStatus === 'pending').length,
-      totalRejectedListing: crops.filter((c) => c.listingApprovalStatus === 'rejected').length,
-      totalCrops: crops.length,
-      totalRevenue: completedOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0),
-      totalOrdersReceived: orders.length,
-      completedOrders: completedOrders.length,
-      pendingOrders: orders.filter((o) => [OrderStatus.Confirmed, OrderStatus.Preparing, OrderStatus.ReadyForPickup, OrderStatus.PickedUp].includes(o.orderStatus as OrderStatus)).length,
-      cancelledOrders: orders.filter((o) => o.orderStatus === OrderStatus.Cancelled).length,
-      totalInventory: crops.reduce((sum, c) => sum + (c.quantity || 0), 0),
-      lowStockItems: crops.filter((c) => c.quantity <= (c.lowStockThreshold ?? 10)).length,
-      soldOut: crops.filter((c) => c.status === 'soldOut').length,
-      averageRating: crops.length > 0 ? (crops.reduce((sum, c) => sum + (c.rating || 0), 0) / crops.length).toFixed(2) : 0,
-      totalUnitsSold: crops.reduce((sum, c) => sum + (c.sold || 0), 0),
+      totalActiveListing: c.totalActiveListing ?? 0,
+      totalApprovedListing: c.totalApprovedListing ?? 0,
+      totalPendingListing: c.totalPendingListing ?? 0,
+      totalRejectedListing: c.totalRejectedListing ?? 0,
+      totalCrops: c.totalCrops ?? 0,
+      totalRevenue: o.totalRevenue ?? 0,
+      totalOrdersReceived: o.totalOrdersReceived ?? 0,
+      completedOrders: o.completedOrders ?? 0,
+      pendingOrders: o.pendingOrders ?? 0,
+      cancelledOrders: o.cancelledOrders ?? 0,
+      totalInventory: c.totalInventory ?? 0,
+      lowStockItems: c.lowStockItems ?? 0,
+      soldOut: c.soldOut ?? 0,
+      averageRating: c.avgRating != null ? Number(c.avgRating.toFixed(2)) : 0,
+      totalUnitsSold: c.totalUnitsSold ?? 0,
     };
     res.status(200).json({ success: true, data: stats });
   } catch (error) {
@@ -164,11 +213,35 @@ export async function getCategoryBreakdown(req: Request, res: Response, next: Ne
     const { period = 'month' } = req.query as Record<string, string>;
     const startDate = getStartDate(period);
     const now = new Date();
-    const breakdown = await CropListing.aggregate([
-      { $match: { farmerId, createdAt: { $gte: startDate, $lte: now } } },
-      { $group: { _id: '$category', count: { $sum: 1 }, totalRevenue: { $sum: { $multiply: ['$price', '$sold'] } }, totalSold: { $sum: '$sold' }, avgRating: { $avg: '$rating' } } },
+
+    // B17 FIX: Use Order aggregation grouped by crop category instead of
+    // CropListing's price*sold proxy. The old method conflated all-time 'sold'
+    // counts with listings created in the period, producing wrong revenue figures.
+    // This pipeline joins Orders (created in period) to their CropListing category.
+    const breakdown = await Order.aggregate([
+      { $match: { farmerId, createdAt: { $gte: startDate, $lte: now }, orderStatus: OrderStatus.Completed } },
+      {
+        $lookup: {
+          from: 'croplistings',
+          localField: 'cropId',
+          foreignField: '_id',
+          as: 'crop',
+          pipeline: [{ $project: { category: 1, rating: 1 } }],
+        },
+      },
+      { $unwind: { path: '$crop', preserveNullAndEmptyArrays: false } },
+      {
+        $group: {
+          _id: '$crop.category',
+          count: { $sum: 1 },
+          totalRevenue: { $sum: '$totalAmount' },
+          totalSold: { $sum: '$quantity' },
+          avgRating: { $avg: '$crop.rating' },
+        },
+      },
       { $sort: { totalRevenue: -1 } },
     ]);
+
     res.status(200).json({ success: true, period, data: breakdown });
   } catch (error) {
     next(error);
@@ -265,10 +338,10 @@ export async function bulkUploadCrops(req: Request, res: Response, next: NextFun
         farmerId,
         cropName: rowData.cropname,
         // Default to Vegetables if cropType not in CSV (schema requires it via enum)
-        cropType: rowData.croptype || 'vegetables', 
+        cropType: rowData.croptype || 'vegetables',
         category: rowData.category,
         price: parseFloat(rowData.price),
-        quantity: parseInt(rowData.quantity),
+        quantity: parseInt(rowData.quantity, 10),  // B16 FIX: explicit radix 10
         description: rowData.description || 'No description provided',
         unit: rowData.unit || 'kg',
         discount: parseFloat(rowData.discount) || 0,

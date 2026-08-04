@@ -43,9 +43,6 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 // Reset server start time on app initialization
 resetServerStartTime();
 
-// Connect to MongoDB
-connectDB();
-
 // ---- Security & Performance Middleware (order matters) ----
 
 // 1. Request ID (adds X-Request-Id header for log correlation)
@@ -205,13 +202,25 @@ process.on('uncaughtException', (error) => {
   gracefulShutdown('uncaughtException');
 });
 
-// Start server
-const PORT = env.port;
-httpServer.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Environment: ${env.nodeEnv}`);
-  console.log(`Rate limiting: 600 req/15min (global), 120 req/min (polling), 30 req/15min (auth)`);
-  console.log(`WebSocket: Ready`);
+// B24 FIX: Wrap server startup in an async function so that connectDB() is
+// awaited before httpServer.listen() is called. Previously, connectDB was
+// invoked synchronously at module-load time, meaning the server could begin
+// accepting HTTP requests before the DB connection was established —
+// leading to "MongoNotConnectedError" on the first few requests after cold start.
+async function start(): Promise<void> {
+  await connectDB();
+  const PORT = env.port;
+  httpServer.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Environment: ${env.nodeEnv}`);
+    console.log(`Rate limiting: 600 req/15min (global), 120 req/min (polling), 30 req/15min (auth)`);
+    console.log(`WebSocket: Ready`);
+  });
+}
+
+start().catch((err) => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
 });
 
 export default app;

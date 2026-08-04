@@ -7,12 +7,21 @@ import { notifyCropInterest } from '../socket/eventHandlers.js';
 import { sendError } from '../utils/apiResponse.js';
 import {
   CropStatus, CropAvailability, CropType, InterestedBuyerStatus, UserRole, KycStatus,
+  OrderStatus, CancelledBy,
 } from '../types/enums.js';
 import type { Request, Response, NextFunction } from 'express';
 import type { ICropSpecifications } from '../types/index.js';
 
 export async function createCrop(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    // B11 FIX: Guard upload error FIRST. Previously this check appeared after KYC
+    // and field validation, so upload errors were reported only after passing
+    // other checks unnecessarily. Move it to the top of the handler.
+    if (req.uploadError) {
+      sendError(res, req.uploadError || 'Image upload failed', 400);
+      return;
+    }
+
     const {
       cropName, cropType, category, price, quantity, unit, description,
       pickupLocation, contactNumber, specifications: rawSpecs,
@@ -40,11 +49,6 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
         kycStatus: user.kycStatus,
         error: 'Complete your KYC verification before listing crops',
       });
-      return;
-    }
-
-    if (req.uploadError) {
-      sendError(res, req.uploadError || 'Image upload failed', 400);
       return;
     }
 
@@ -119,9 +123,14 @@ export async function getCrops(req: Request, res: Response, next: NextFunction):
       ];
     }
 
+    // B13 FIX: Whitelist sort fields to prevent arbitrary MongoDB field injection.
+    // A malicious client passing sortBy=password or sortBy=__proto__ is now blocked.
+    const ALLOWED_SORT_FIELDS = new Set(['createdAt', 'price', 'rating', 'sold', 'views', 'quantity']);
+    const safeSortBy = ALLOWED_SORT_FIELDS.has(sortBy) ? sortBy : 'createdAt';
+
     const skip = (Number(page) - 1) * Number(limit);
     const sortDir = sortOrder === 'asc' ? 1 : -1;
-    const sortOptions: Record<string, 1 | -1> = { [sortBy]: sortDir };
+    const sortOptions: Record<string, 1 | -1> = { [safeSortBy]: sortDir };
 
     const [crops, total] = await Promise.all([
       CropListing.find(query).lean()
@@ -332,16 +341,46 @@ export async function deleteCrop(req: Request, res: Response, next: NextFunction
       return;
     }
 
+    // B12 FIX: Don't hard-delete active orders when a crop is deleted.
+    // Silently wiping in-progress orders loses buyer data and leaves buyers
+    // with no record. Instead, cancel all non-terminal orders with a clear
+    // reason, then restore inventory for each, and fire buyer notifications.
+    const activeOrders = await Order.find({
+      cropId: req.params.id,
+      orderStatus: { $nin: [OrderStatus.Completed, OrderStatus.Cancelled] },
+    });
+
+    for (const activeOrder of activeOrders) {
+      activeOrder.orderStatus = OrderStatus.Cancelled;
+      activeOrder.cancellationReason = 'Crop listing was removed by the farmer';
+      activeOrder.cancelledBy = CancelledBy.Farmer;
+      activeOrder.cancelledAt = new Date();
+      activeOrder.timeline.push({
+        event: 'CANCELLED',
+        description: 'Order auto-cancelled: crop listing deleted by farmer',
+        timestamp: new Date(),
+      });
+      await activeOrder.save();
+
+      Notification.create({
+        userId: activeOrder.buyerId,
+        title: 'Order Cancelled — Crop Removed',
+        message: `Your order #${activeOrder.orderNumber} for "${crop.cropName}" has been cancelled because the farmer removed the listing.`,
+        type: 'order',
+        relatedId: String(activeOrder._id),
+        priority: 'high',
+        actionUrl: `/buyer/orders/${activeOrder._id}`,
+      }).catch((e: unknown) => console.error('Failed to create cancellation notification:', e));
+    }
+
     await Promise.all([
-      Order.deleteMany({ cropId: req.params.id }),
       Wishlist.deleteMany({ cropId: req.params.id }),
-      // Review imported dynamically below to mirror original structure
       (await import('../models/Review.js')).default.deleteMany({ cropId: req.params.id }),
-      Notification.deleteMany({ relatedId: req.params.id }),
+      Notification.deleteMany({ relatedId: req.params.id, type: { $ne: 'order' } }),
     ]);
 
     await CropListing.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: 'Crop deleted successfully. All related orders, wishlists, and reviews cleaned up.' });
+    res.status(200).json({ message: 'Crop deleted successfully. Active orders were cancelled and buyers notified.' });
   } catch (error) {
     next(error);
   }
@@ -363,11 +402,15 @@ export async function getCropsByFarmer(req: Request, res: Response, next: NextFu
 
 export async function getMyListings(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    // B14 FIX: Only populate the fields a farmer legitimately needs to see for
+    // their interested buyers. The previous list exposed highly sensitive KYC
+    // data (kycDocuments, kycDetails, aadharNumber, etc.) which should never
+    // be visible outside the admin panel.
     const crops = await CropListing.find({ farmerId: req.user!._id })
       .lean()
       .populate(
         'interestedBuyers.buyerId',
-        'firstName lastName name phone email city state address pincode profilePicture bio kycStatus kycDocuments kycDetails kycVerifiedAt kycSubmittedAt verified emailVerified rating totalReviews createdAt',
+        'firstName lastName name phone email city state',
       )
       .sort({ createdAt: -1 });
     res.status(200).json({ crops });
