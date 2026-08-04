@@ -31,6 +31,22 @@ export default function Register() {
   const [addressNA, setAddressNA] = useState(false); // For farmers who mark address as NA
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+
+  const calculatePasswordStrength = (password) => {
+    let strength = 0;
+    if (password.length > 5) strength += 20;
+    if (password.length > 7) strength += 20;
+    if (/[A-Z]/.test(password)) strength += 20;
+    if (/[0-9]/.test(password)) strength += 20;
+    if (/[^A-Za-z0-9]/.test(password)) strength += 20;
+    return strength;
+  };
+
+  const handlePasswordChange = (e) => {
+    handleChange(e);
+    setPasswordStrength(calculatePasswordStrength(e.target.value));
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -410,17 +426,38 @@ export default function Register() {
                 )}
               </div>
 
-              <Input
-                label="Password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                error={errors.password}
-                glass={true}
-                autoComplete="new-password"
-              />
+              <div className="relative">
+                <Input
+                  label="Password"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handlePasswordChange}
+                  required
+                  error={errors.password}
+                  glass={true}
+                  autoComplete="new-password"
+                />
+                {formData.password && (
+                  <div className="mt-2">
+                    <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-300 ${
+                          passwordStrength < 40 ? 'bg-red-500' : 
+                          passwordStrength < 80 ? 'bg-yellow-500' : 'bg-green-500'
+                        }`}
+                        style={{ width: `${Math.max(10, passwordStrength)}%` }}
+                      ></div>
+                    </div>
+                    <p className={`text-xs mt-1 text-right font-medium ${
+                      passwordStrength < 40 ? 'text-red-600' : 
+                      passwordStrength < 80 ? 'text-yellow-600' : 'text-green-600'
+                    }`}>
+                      {passwordStrength < 40 ? 'Weak' : passwordStrength < 80 ? 'Medium' : 'Strong'}
+                    </p>
+                  </div>
+                )}
+              </div>
 
               <Input
                 label="Confirm Password"
@@ -462,6 +499,19 @@ export default function Register() {
                 Login
               </button>
             </p>
+
+            {/* Trust Badges */}
+            <div className="flex justify-center items-center gap-6 mt-8 pt-6 border-t border-gray-200/50">
+              <div className="flex flex-col items-center">
+                <Lock size={18} className="text-slate-400 mb-1" />
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">256-bit Secure</span>
+              </div>
+              <div className="w-px h-8 bg-gray-200/80"></div>
+              <div className="flex flex-col items-center">
+                <User size={18} className="text-slate-400 mb-1" />
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Data Privacy</span>
+              </div>
+            </div>
           </div>
         </Card>
       </div>

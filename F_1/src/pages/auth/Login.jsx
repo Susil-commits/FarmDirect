@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Lock, User } from 'lucide-react';
 import { useRouter } from '../../hooks/useRouter';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
@@ -241,7 +241,7 @@ export default function Login() {
 
 
                 {/* Register Link */}
-                <p className="text-center text-gray-600 text-sm">
+                <p className="text-center text-gray-600 text-sm mt-6">
                   Don't have an account?{' '}
                   <button
                     type="button"
@@ -251,6 +251,19 @@ export default function Login() {
                     Sign up here
                   </button>
                 </p>
+
+                {/* Trust Badges */}
+                <div className="flex justify-center items-center gap-6 mt-8 pt-6 border-t border-gray-200/50">
+                  <div className="flex flex-col items-center">
+                    <Lock size={18} className="text-slate-400 mb-1" />
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">256-bit Secure</span>
+                  </div>
+                  <div className="w-px h-8 bg-gray-200/80"></div>
+                  <div className="flex flex-col items-center">
+                    <User size={18} className="text-slate-400 mb-1" />
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Data Privacy</span>
+                  </div>
+                </div>
               </>
             )}
           </div>

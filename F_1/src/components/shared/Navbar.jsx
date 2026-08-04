@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, X, ShoppingCart, Heart, User, LogOut, Search, Bell, Home, Grid, Settings, Compass, CheckCircle, MessageCircle } from 'lucide-react';
+import { Menu, X, ShoppingCart, Heart, User, LogOut, Search, Bell, Home, Grid, Settings, Compass, CheckCircle, MessageCircle, Lock, ShieldCheck } from 'lucide-react';
 import { useRouter } from '../../hooks/useRouter';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../hooks/useCart';
@@ -129,7 +129,7 @@ export default function Navbar() {
 
   return (
     <div className="fixed top-0 left-0 w-full z-50 pt-4 px-4 pointer-events-none transition-all duration-300">
-      <nav className="max-w-6xl mx-auto bg-white/70 backdrop-blur-xl border border-white/50 shadow-lg rounded-full pointer-events-auto transition-all duration-300 hover:bg-white/80 hover:shadow-xl">
+      <nav className="max-w-6xl mx-auto bg-white/95 backdrop-blur-2xl border-2 border-slate-100 shadow-md rounded-full pointer-events-auto transition-all duration-300 hover:shadow-lg">
         <div className="flex justify-between items-center h-16 px-6 sm:px-8">
           {/* Logo & Brand */}
           <div 
@@ -183,18 +183,24 @@ export default function Navbar() {
 
           {/* Right Section - Icons & User */}
           <div className="flex items-center gap-1 sm:gap-4">
-            {/* Realtime connection indicator (authenticated users only) */}
+            {/* Security Session & Realtime indicators (authenticated users only) */}
             {user && (
-              <span
-                className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold transition-colors"
-                title={connected ? 'Real-time connection active' : 'Reconnecting…'}
-                style={{ color: connected ? '#16a34a' : '#d97706' }}
-              >
+              <div className="hidden md:flex items-center gap-2 mr-2 border-r border-slate-200 pr-3">
+                <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 rounded-full text-xs font-bold text-emerald-700 uppercase tracking-wide">
+                  <ShieldCheck size={14} />
+                  Secure
+                </span>
                 <span
-                  className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`}
-                />
-                <span className="hidden md:inline">{connected ? 'Live' : 'Offline'}</span>
-              </span>
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold transition-colors"
+                  title={connected ? 'Real-time connection active' : 'Reconnecting…'}
+                  style={{ color: connected ? '#16a34a' : '#d97706' }}
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`}
+                  />
+                  <span>{connected ? 'Live' : 'Offline'}</span>
+                </span>
+              </div>
             )}
 
             {/* Wishlist Icon - Buyers and Farmers Only */}

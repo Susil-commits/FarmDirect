@@ -7,6 +7,7 @@ import { createServer, type Server as HttpServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
+import mongoSanitize from 'express-mongo-sanitize';
 
 import { env } from './config/env.js';
 import { connectDB, disconnectDB } from './config/db.js';
@@ -48,10 +49,24 @@ resetServerStartTime();
 // 1. Request ID (adds X-Request-Id header for log correlation)
 app.use(requestId);
 
-// 2. Helmet: secure HTTP headers
+// 2. Helmet: secure HTTP headers with strict CSP
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://images.unsplash.com"],
+      connectSrc: ["'self'", "https://api.razorpay.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'self'", "https://api.razorpay.com"],
+    },
+  },
+  xXssProtection: true,
+  xFrameOptions: { action: 'deny' },
 }));
 
 // 3. CORS — supports comma-separated origins
@@ -100,10 +115,11 @@ const pollingLimiter = rateLimit({
 app.use('/api/messages/unread', pollingLimiter);
 app.use('/api/notifications/unread', pollingLimiter);
 
-// 7. Body & Cookie parsing
+// 7. Body & Cookie parsing & Data Sanitization
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
+app.use(mongoSanitize()); // Prevent NoSQL injection
 
 // 8. Response compression
 app.use(compression({ threshold: 1024 }));

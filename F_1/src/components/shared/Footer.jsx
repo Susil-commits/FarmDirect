@@ -1,4 +1,4 @@
-import { Globe, MessageCircle, Camera, ExternalLink } from 'lucide-react';
+import { Globe, MessageCircle, Camera, ExternalLink, ShieldCheck, Lock, CheckCircle } from 'lucide-react';
 import { useRouter } from '../../hooks/useRouter';
 
 export default function Footer() {
@@ -85,6 +85,31 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+
+        {/* Security Badges */}
+        <div className="border-t border-gray-800 py-6 mb-4 flex flex-wrap justify-center gap-6 md:gap-12">
+          <div className="flex items-center gap-3 text-gray-400">
+            <ShieldCheck size={28} className="text-green-500" />
+            <div>
+              <p className="text-xs font-bold text-gray-300 uppercase tracking-wider">SSL Secured</p>
+              <p className="text-[10px]">256-bit Encryption</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-gray-400">
+            <Lock size={28} className="text-blue-500" />
+            <div>
+              <p className="text-xs font-bold text-gray-300 uppercase tracking-wider">Secure Payments</p>
+              <p className="text-[10px]">PCI DSS Compliant</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-gray-400">
+            <CheckCircle size={28} className="text-emerald-500" />
+            <div>
+              <p className="text-xs font-bold text-gray-300 uppercase tracking-wider">Verified Farmers</p>
+              <p className="text-[10px]">Strict KYC Process</p>
+            </div>
           </div>
         </div>
 

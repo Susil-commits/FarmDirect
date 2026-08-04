@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-primary: #0f172a; /* Slate 900 */
+  --color-brand-secondary: #1e293b; /* Slate 800 */
+  --color-brand-accent: #059669; /* Emerald 600 - strong green */
+  --color-brand-accent-hover: #047857; /* Emerald 700 */
+  --color-brand-surface: #ffffff;
+  --color-brand-surface-alt: #f8fafc; /* Slate 50 */
+  --color-brand-text: #0f172a;
+  --color-brand-text-muted: #64748b; /* Slate 500 */
+  --color-brand-border: #e2e8f0; /* Slate 200 */
+  --color-brand-border-strong: #cbd5e1; /* Slate 300 */
+}
+
 /* ================================
    HIDE SCROLLBARS GLOBALLY
    ================================ */
