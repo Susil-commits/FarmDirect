@@ -13,7 +13,7 @@ import ScrollAnimation from '../components/common/ScrollAnimation';
 import PageLoader from '../components/common/PageLoader';
 import {
   MapPin, Phone, DollarSign, CheckCircle, Package,
-  ArrowLeft, AlertCircle, Sprout
+  ArrowLeft, AlertCircle, Sprout, ShieldCheck, Lock
 } from 'lucide-react';
 import '../styles/Checkout.css';
 import { getImageUrl } from '../utils/formatters';
@@ -449,6 +449,11 @@ export default function CheckoutNew() {
                   </span>
                 </label>
 
+                <div className="mb-6 p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-center gap-2">
+                  <Lock size={16} className="text-emerald-700" />
+                  <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-widest">End-to-End Encrypted</span>
+                </div>
+
                 <div className="flex gap-4">
                   <Button onClick={() => setStep(1)} variant="outline">
                     ← Back
@@ -456,10 +461,12 @@ export default function CheckoutNew() {
                   <Button
                     onClick={handlePlaceOrder}
                     variant="primary"
-                    className="flex-1"
+                    className="flex-1 relative overflow-hidden group"
                     disabled={!formData.termsAccepted}
                   >
-                    Place Order ✓
+                    <span className="flex items-center justify-center gap-2 relative z-10">
+                      <ShieldCheck size={18} /> Securely Place Order
+                    </span>
                   </Button>
                 </div>
               </Card>

@@ -12,7 +12,7 @@ import FileInput from '../components/common/FileInput';
 import Card from '../components/common/Card';
 import BackButton from '../components/common/BackButton';
 import LogoutConfirmationModal from '../components/common/LogoutConfirmationModal';
-import { Camera, Mail, Phone, MapPin, Shield, LogOut, Settings, ShoppingBag, Lock, Bell, AlertTriangle, Package, Heart, Clock, TrendingUp, ChevronRight, Plus, Trash2, Edit3, Check } from 'lucide-react';
+import { Camera, Mail, Phone, MapPin, Shield, LogOut, Settings, ShoppingBag, Lock, Bell, AlertTriangle, Package, Heart, Clock, TrendingUp, ChevronRight, Plus, Trash2, Edit3, Check, Monitor, Smartphone } from 'lucide-react';
 import '../styles/UserProfile.css';
 
 export default function UserProfile() {
@@ -529,18 +529,47 @@ export default function UserProfile() {
                 <Card>
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-6 pb-6 border-b-2 border-gray-200">
-                      <div className="bg-green-100 p-3 rounded-lg"><Shield size={24} className="text-green-600" /></div>
-                      <h3 className="text-2xl font-bold text-gray-900">Security</h3>
+                      <div className="bg-emerald-100 p-3 rounded-lg"><Shield size={24} className="text-emerald-700" /></div>
+                      <h3 className="text-2xl font-bold text-gray-900">Security Center</h3>
                     </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between p-5 bg-gradient-to-r from-green-50 to-emerald-100 rounded-lg hover:shadow-md transition">
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between p-5 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-lg hover:shadow-md transition">
                         <div className="flex-1">
-                          <p className="font-bold text-gray-900">Two-Factor Authentication</p>
-                          <p className="text-sm text-gray-600">Enhance account security with 2FA</p>
+                          <p className="font-bold text-gray-900 flex items-center gap-2">Two-Factor Authentication (2FA) <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-[10px] font-bold uppercase rounded">Recommended</span></p>
+                          <p className="text-sm text-gray-600 mt-1">Protect your account with an extra layer of security.</p>
                         </div>
-                        <input type="checkbox" className="w-6 h-6 cursor-pointer" />
+                        <button className="px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-slate-800 transition">Enable</button>
                       </div>
-                      <button className="w-full px-6 py-4 bg-gradient-to-r from-blue-100 to-blue-200 hover:from-blue-200 hover:to-blue-300 text-blue-700 rounded-lg font-bold transition shadow-sm hover:shadow-md">
+
+                      <div className="border border-slate-200 rounded-lg overflow-hidden">
+                        <div className="bg-slate-50 px-5 py-3 border-b border-slate-200">
+                          <p className="font-bold text-gray-900 text-sm uppercase tracking-wide">Active Sessions</p>
+                        </div>
+                        <div className="divide-y divide-slate-100">
+                          <div className="p-4 flex items-center justify-between bg-white">
+                            <div className="flex items-center gap-3">
+                              <Monitor size={20} className="text-emerald-600" />
+                              <div>
+                                <p className="text-sm font-bold text-gray-900">Windows PC - Chrome</p>
+                                <p className="text-xs text-gray-500">Mumbai, India • Current Session</p>
+                              </div>
+                            </div>
+                            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Active</span>
+                          </div>
+                          <div className="p-4 flex items-center justify-between bg-white">
+                            <div className="flex items-center gap-3">
+                              <Smartphone size={20} className="text-slate-400" />
+                              <div>
+                                <p className="text-sm font-bold text-gray-900">iPhone 13 - Safari</p>
+                                <p className="text-xs text-gray-500">Delhi, India • Last active 2 hours ago</p>
+                              </div>
+                            </div>
+                            <button className="text-xs font-bold text-red-600 hover:underline">Revoke</button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button className="w-full px-6 py-4 bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg font-bold transition shadow-sm">
                         <Lock size={18} className="inline mr-2" /> Change Password
                       </button>
                     </div>

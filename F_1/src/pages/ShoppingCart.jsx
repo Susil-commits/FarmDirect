@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { MapPin, Star, Trash2, Minus, Plus, ShoppingBag, ArrowLeft, Check, Leaf, Calendar, Heart, Package, Loader } from 'lucide-react';
+import { MapPin, Star, Trash2, Minus, Plus, ShoppingBag, ArrowLeft, Check, Leaf, Calendar, Heart, Package, Loader, ShieldCheck, Lock } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useRouter } from '../hooks/useRouter';
 import { useToast } from '../hooks/useToast';
@@ -368,34 +368,40 @@ export default function ShoppingCart() {
                       </button>
                     </div>
                   </div>
+                  {/* Secure Checkout Banner */}
+                  <div className="mt-6 mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-center gap-2">
+                    <Lock size={16} className="text-emerald-700" />
+                    <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-widest">End-to-End Encrypted</span>
+                  </div>
 
                   <button
                     onClick={handleCheckout}
-                    className="cart-checkout-btn"
+                    className="cart-checkout-btn relative overflow-hidden group"
                     disabled={checkoutLoading}
                   >
                     {checkoutLoading ? (
-                      <>
-                        <Loader size={18} className="animate-spin" /> Placing Order...
-                      </>
+                      <span className="flex items-center justify-center gap-2 relative z-10">
+                        <Loader size={18} className="animate-spin" /> Processing Securely...
+                      </span>
                     ) : (
-                      'Proceed to Checkout'
+                      <span className="flex items-center justify-center gap-2 relative z-10">
+                        <ShieldCheck size={18} /> Proceed to Secure Checkout
+                      </span>
                     )}
                   </button>
 
                   <button
                     onClick={() => navigate('/marketplace')}
-                    className="cart-continue-btn"
+                    className="cart-continue-btn mt-4"
                   >
                     <ArrowLeft size={16} />
                     Continue Shopping
                   </button>
 
                   {/* Trust Badges */}
-                  <div className="cart-trust-row">
-                    <span>🔒 Secure Checkout</span>
-                    <span>🚚 Fast Delivery</span>
-                    <span>✅ Quality Assured</span>
+                  <div className="cart-trust-row flex justify-center gap-4 mt-6 pt-4 border-t border-gray-100 text-xs text-slate-500 font-medium">
+                    <span className="flex items-center gap-1"><Lock size={14} className="text-emerald-500"/> SSL Secured</span>
+                    <span className="flex items-center gap-1"><Check size={14} className="text-emerald-500"/> Quality Assured</span>
                   </div>
                 </div>
               </div>
