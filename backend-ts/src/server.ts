@@ -43,6 +43,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Trust proxy for rate limiting behind load balancers (e.g. Render/Heroku)
+app.set('trust proxy', 1);
+
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
