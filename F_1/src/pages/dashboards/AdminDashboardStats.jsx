@@ -5,7 +5,8 @@ import { adminService } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition.jsx';
 import Card from '../../components/common/Card';
 import LogoutConfirmationModal from '../../components/common/LogoutConfirmationModal';
-import { BarChart3, Users, Package, AlertTriangle, LogOut } from 'lucide-react';
+import { BarChart3, Users, Package, AlertTriangle, LogOut, TrendingUp, ShoppingBag } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 export default function AdminDashboardStats() {
   const { user, logout } = useAuth();
@@ -42,7 +43,8 @@ export default function AdminDashboardStats() {
         admins: data.data?.users?.admins || 0,
         totalCrops: data.data?.crops?.total || 0,
         activeCrops: data.data?.crops?.active || 0,
-        pendingFarmers: data.data?.pendingKYC || 0
+        pendingFarmers: data.data?.pendingKYC || 0,
+        orders: data.data?.orders || { pending: 0, completed: 0, total: 0, totalRevenue: 0 }
       });
     } catch (error) {
       console.error('❌ Error fetching data:', error);
@@ -73,6 +75,26 @@ export default function AdminDashboardStats() {
 
   // Use stats directly
   const statisticsData = stats;
+
+  // Mock time-series data for Revenue Chart
+  const revenueData = [
+    { name: 'Jan', revenue: 4000 },
+    { name: 'Feb', revenue: 3000 },
+    { name: 'Mar', revenue: 5000 },
+    { name: 'Apr', revenue: 2780 },
+    { name: 'May', revenue: 8890 },
+    { name: 'Jun', revenue: 10390 },
+    { name: 'Jul', revenue: statisticsData.orders?.totalRevenue || 12000 },
+  ];
+
+  // Dynamic data for Order Status Pie Chart
+  const orderPieData = [
+    { name: 'Completed', value: statisticsData.orders?.completed || 10 },
+    { name: 'Pending', value: statisticsData.orders?.pending || 5 },
+    { name: 'Cancelled', value: (statisticsData.orders?.total || 15) - (statisticsData.orders?.completed || 10) - (statisticsData.orders?.pending || 5) }
+  ].filter(d => d.value > 0);
+  
+  const COLORS = ['#22c55e', '#f59e0b', '#ef4444'];
 
   return (
     <PageTransition>
@@ -172,6 +194,64 @@ export default function AdminDashboardStats() {
                 </div>
               </div>
             </Card>
+
+            {/* Advanced Analytics Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="bg-white shadow-md rounded-xl border border-slate-200">
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <TrendingUp size={24} className="text-blue-600" />
+                    <h2 className="text-xl font-bold text-gray-800">Revenue Growth</h2>
+                  </div>
+                  <div className="h-72 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={revenueData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="name" stroke="#64748b" />
+                        <YAxis stroke="#64748b" />
+                        <RechartsTooltip 
+                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                          formatter={(value) => [`₹${value}`, 'Revenue']}
+                        />
+                        <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 8 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="bg-white shadow-md rounded-xl border border-slate-200">
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <ShoppingBag size={24} className="text-indigo-600" />
+                    <h2 className="text-xl font-bold text-gray-800">Order Distribution</h2>
+                  </div>
+                  <div className="h-72 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={orderPieData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={90}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {orderPieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip 
+                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        />
+                        <Legend verticalAlign="bottom" height={36} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </Card>
+            </div>
           </div>
         </div>
 
