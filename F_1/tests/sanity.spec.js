@@ -38,7 +38,7 @@ test.describe('Basic App Sanity Check', () => {
       await expect(page).toHaveURL(/.*login/);
       
       // Ensure the email field is visible
-      await expect(page.getByPlaceholder(/email/i).first()).toBeVisible();
+      await expect(page.locator('input[type="email"]').first()).toBeVisible();
     }
   });
 });
