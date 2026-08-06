@@ -10,6 +10,7 @@ import Button from '../components/common/Button';
 import ScrollAnimation from '../components/common/ScrollAnimation';
 import SkeletonLoader from '../components/common/SkeletonLoader';
 import ErrorBoundary from '../components/common/ErrorBoundary';
+import OrderMap from '../components/orders/OrderMap';
 import {
   MapPin, Phone, Truck, Package, CheckCircle, Clock,
   User, MessageCircle, ArrowLeft, IndianRupee, Leaf, ThumbsUp, Loader
@@ -345,6 +346,14 @@ export default function OrderTrackingNew() {
                             📍 Pickup from farmer's location. Coordinate with the farmer for pickup timing.
                           </p>
                         </div>
+                      </Card>
+
+                      {/* Live Order Tracking Map */}
+                      <Card className="p-6">
+                        <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                          <MapPin className="w-5 h-5 text-red-500" />Live Route Tracking
+                        </h3>
+                        <OrderMap order={selectedOrder} />
                       </Card>
 
                       {/* Contact Information */}
