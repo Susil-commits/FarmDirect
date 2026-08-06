@@ -13,6 +13,7 @@ import GlobalPageLoader from './components/common/GlobalPageLoader';
 import PageLoader from './components/common/PageLoader';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import NetworkStatusBanner from './components/common/NetworkStatusBanner';
+import PwaBadge from './components/common/PwaBadge';
 import { lazy, Suspense, useEffect, useRef } from 'react';
 
 const Home = lazy(() => import('./pages/Home'));
@@ -296,6 +297,7 @@ function App() {
                 <ErrorBoundary>
                   <GlobalPageLoader />
                   <NetworkStatusBanner />
+                  <PwaBadge />
                   <div className="min-h-screen bg-white flex flex-col">
                     <Navbar />
                     <main className="flex-1">
