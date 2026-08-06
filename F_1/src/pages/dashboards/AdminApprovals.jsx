@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars, no-empty */
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../hooks/useRouter';

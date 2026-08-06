@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars, no-empty */
+/* eslint-disable no-empty */
 /**
  * Direct backend API instance for file uploads.
  * 
