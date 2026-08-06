@@ -393,7 +393,7 @@ export async function getCropsByFarmer(req: Request, res: Response, next: NextFu
       sendError(res, 'Valid farmer ID is required', 400);
       return;
     }
-    const crops = await CropListing.find({ farmerId, status: CropStatus.Active }).lean().sort({ createdAt: -1 });
+    const crops = await CropListing.find({ farmerId, status: CropStatus.Active }).lean().sort({ createdAt: -1 }).limit(100);
     res.status(200).json({ crops });
   } catch (error) {
     next(error);
@@ -412,7 +412,8 @@ export async function getMyListings(req: Request, res: Response, next: NextFunct
         'interestedBuyers.buyerId',
         'firstName lastName name phone email city state',
       )
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(100);
     res.status(200).json({ crops });
   } catch (error) {
     next(error);
@@ -506,8 +507,10 @@ export async function getInterestedBuyers(req: Request, res: Response, next: Nex
 export async function getMyInterestedCrops(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const crops = await CropListing.find({ 'interestedBuyers.buyerId': req.user!._id })
+      .lean()
       .populate('farmerId', 'firstName lastName name phone farmName city state')
-      .sort({ updatedAt: -1 });
+      .sort({ updatedAt: -1 })
+      .limit(100);
 
     const cropsWithStatus = crops.map((crop) => {
       const myInterest = crop.interestedBuyers.find((ib) => ib.buyerId.toString() === req.user!._id.toString());
