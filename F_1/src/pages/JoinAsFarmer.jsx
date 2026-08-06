@@ -132,7 +132,7 @@ export default function JoinAsFarmer() {
             <ScrollAnimation className="scroll-slide mt-12">
               <div className="rounded-2xl overflow-hidden glass premium-glow h-80 md:h-96 flex items-center justify-center">
                 <img
-                  src="https://images.unsplash.com/photo-1592424001844-325d7b5d259c?auto=format&fit=crop&q=80"
+                  src="https://i.pinimg.com/474x/71/c2/2d/71c22dcb20e1d22a8737839675f6f875.jpg"
                   alt="Farmer selling fresh produce"
                   className="w-full h-full object-cover"
                 />
