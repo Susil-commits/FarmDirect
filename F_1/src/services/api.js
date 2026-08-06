@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { isTokenExpired } from '../utils/jwtUtils.js';
+import { safeStorage } from '../utils/storage.js';
 
 let rawBase = import.meta.env.VITE_API_BASE_URL || '/api';
 if (rawBase !== '/api' && !rawBase.endsWith('/api') && !rawBase.endsWith('/api/')) {
@@ -47,7 +48,7 @@ const refreshAuthToken = async () => {
   lastRefreshAttempt = now;
 
   // Guard: If there is no access token, don't bother refreshing (user is likely logged out)
-  const token = localStorage.getItem('token');
+  const token = safeStorage.getItem('token');
   if (!token) {
     throw new Error('No authentication token available');
   }
@@ -61,17 +62,17 @@ const refreshAuthToken = async () => {
     const { token: newToken } = response.data;
 
     // Store new token
-    localStorage.setItem('token', newToken);
+    safeStorage.setItem('token', newToken);
 
     // Update timestamp for session activity
-    localStorage.setItem('lastActivityTime', Date.now().toString());
+    safeStorage.setItem('lastActivityTime', Date.now().toString());
 
     return newToken;
   } catch (error) {
     // Refresh failed — clear auth data silently. Do NOT hard-redirect (window.location.href)
     // because that causes infinite reload loops when the backend is unreachable.
-    localStorage.removeItem('token');
-    localStorage.removeItem('userData');
+    safeStorage.removeItem('token');
+    safeStorage.removeItem('userData');
     throw error;
   }
 };
@@ -89,7 +90,7 @@ const api = axios.create({
 // Request interceptor - Check token expiry and refresh if needed
 api.interceptors.request.use(
   async (config) => {
-    let token = localStorage.getItem('token');
+    let token = safeStorage.getItem('token');
 
     // DEBUG: Log FormData requests to trace multipart upload issues (dev only)
     if (import.meta.env.DEV && config.data instanceof FormData) {
@@ -128,7 +129,7 @@ api.interceptors.request.use(
 
     // Update last activity time (but not for refresh calls)
     if (!config.url?.includes('/auth/refresh-token')) {
-      localStorage.setItem('lastActivityTime', Date.now().toString());
+      safeStorage.setItem('lastActivityTime', Date.now().toString());
     }
 
     return config;
@@ -162,9 +163,9 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         // Refresh failed - clear auth data and let app redirect naturally
-        localStorage.removeItem('token');
-        localStorage.removeItem('userData');
-        localStorage.removeItem('verificationStatus');
+        safeStorage.removeItem('token');
+        safeStorage.removeItem('userData');
+        safeStorage.removeItem('verificationStatus');
         return Promise.reject(refreshError);
       }
     }
