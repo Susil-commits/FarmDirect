@@ -333,7 +333,7 @@ export default function CropDetail() {
   if (error || !crop) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white px-4 pt-28 pb-12">
           <div className="max-w-4xl mx-auto">
             <Card variant="warning">
               <div className="p-8 flex items-center gap-4">
@@ -364,7 +364,7 @@ export default function CropDetail() {
   return (
     <ErrorBoundary>
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4 relative">
+      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white px-4 relative pt-28 pb-12">
         <div className="absolute inset-0 premium-gradient pointer-events-none"></div>
         <div className="max-w-6xl mx-auto relative z-10">
           

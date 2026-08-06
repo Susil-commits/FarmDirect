@@ -253,7 +253,7 @@ export default function AdminProfile() {
   if (!user || user.role !== 'admin') {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4 pt-28 pb-12">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Access Denied</h2>
             <p className="text-gray-600 mb-8">This page is only accessible to administrators</p>
@@ -268,7 +268,7 @@ export default function AdminProfile() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-28 pb-12">
         {/* Premium Header Section */}
         <div className="relative min-h-64 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 overflow-hidden">
           {/* Animated background elements */}

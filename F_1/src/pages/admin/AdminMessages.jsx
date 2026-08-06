@@ -206,7 +206,7 @@ export default function AdminMessages() {
   if (viewMode === 'list') {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white pt-28 pb-12">
           {/* Hero Section */}
           <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white py-8 px-4">
             <div className="max-w-7xl mx-auto">
@@ -408,7 +408,7 @@ export default function AdminMessages() {
   if (viewMode === 'detail' && selectedConversation) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white pt-28 pb-12">
           {/* Header */}
           <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white py-6 px-4 sticky top-0 z-40 shadow-lg">
             <div className="max-w-6xl mx-auto flex items-center justify-between">

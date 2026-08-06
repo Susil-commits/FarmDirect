@@ -102,7 +102,7 @@ export default function AdminVerification() {
   // Redirect non-admins
   if (!user || user.role !== 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 pt-28 pb-12">
         <Card className="w-full max-w-md">
           <div className="p-8 text-center">
             <p className="text-gray-600 mb-4">Access Denied: Only admins can access this page</p>
@@ -212,7 +212,7 @@ export default function AdminVerification() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-gray-50 px-4 pt-28 pb-12">
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <div className="mb-6">

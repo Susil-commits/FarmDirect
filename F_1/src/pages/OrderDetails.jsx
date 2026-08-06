@@ -186,7 +186,7 @@ export default function OrderDetails() {
   if (!order) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white px-4 pt-28 pb-12">
           <div className="max-w-4xl mx-auto">
             <Card className="p-12 text-center">
               <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
@@ -208,7 +208,7 @@ export default function OrderDetails() {
   return (
     <ErrorBoundary>
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white px-4 pt-28 pb-12">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <ScrollAnimation className="scroll-slide mb-8">

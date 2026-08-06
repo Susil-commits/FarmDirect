@@ -58,9 +58,9 @@ export default function About() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white">
+      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white pt-28 pb-12">
         {/* Back Button */}
-        <div className="bg-white border-b border-gray-200 px-4 py-3">
+        <div className="bg-white border-b border-gray-200 px-4 pt-32 pb-3">
           <div className="max-w-6xl mx-auto">
             <button
               onClick={() => navigate('/')}

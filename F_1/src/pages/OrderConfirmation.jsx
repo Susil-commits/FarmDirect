@@ -158,7 +158,7 @@ export default function OrderConfirmation() {
   if (error || !order) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 py-12 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 px-4 pt-28 pb-12">
           <div className="max-w-2xl mx-auto text-center">
             <div className="mb-6 flex justify-center">
               <div className="bg-amber-100 text-amber-600 w-24 h-24 rounded-full flex items-center justify-center">
@@ -187,7 +187,7 @@ export default function OrderConfirmation() {
   return (
     <ErrorBoundary>
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 py-12 px-4 relative">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 px-4 relative pt-28 pb-12">
         <div className="max-w-4xl mx-auto relative z-10">
           
           {/* Success Message */}

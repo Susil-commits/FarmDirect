@@ -56,7 +56,7 @@ export default function AdminDashboardStats() {
   if (!user || user.role !== 'admin') {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center px-4">
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center px-4 pt-28 pb-12">
           <div className="text-center">
             <AlertTriangle size={48} className="mx-auto mb-4 text-orange-500" />
             <h2 className="text-3xl font-bold text-white mb-4">Access Denied</h2>
@@ -98,7 +98,7 @@ export default function AdminDashboardStats() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pt-28 pb-12">
         {/* Top Navigation Bar */}
         <div className="sticky top-0 bg-white border-b border-slate-200 px-3 sm:px-6 py-4 flex items-center justify-between shadow-sm z-30">
           <div className="flex items-center gap-3 min-w-0">

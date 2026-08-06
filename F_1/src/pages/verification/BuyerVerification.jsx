@@ -72,7 +72,7 @@ export default function BuyerVerification() {
   // Redirect non-buyers
   if (!user || user.role !== 'buyer') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 pt-28 pb-12">
         <Card className="w-full max-w-md">
           <div className="p-8 text-center">
             <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
@@ -89,7 +89,7 @@ export default function BuyerVerification() {
   // If already verified
   if (user?.kycStatus === 'verified') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 pt-28 pb-12">
         <Card className="w-full max-w-md">
           <div className="p-8 text-center">
             <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
@@ -233,7 +233,7 @@ export default function BuyerVerification() {
   const requiredCount = requiredDocs.filter(doc => doc.required).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-gray-50 px-4 pt-28 pb-12">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">

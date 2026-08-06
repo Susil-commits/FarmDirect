@@ -183,7 +183,7 @@ export default function CheckoutNew() {
   if (!crop) {
     return (
       <PageTransition>
-        <div className="min-h-screen premium-gradient py-12 px-4 flex items-center justify-center">
+        <div className="min-h-screen premium-gradient px-4 flex items-center justify-center pt-28 pb-12">
           <div className="text-center glass-light p-10 rounded-3xl border border-white/40 shadow-xl">
             <AlertCircle size={48} className="text-amber-600 mx-auto mb-4" />
             <p className="text-gray-900 text-xl font-bold mb-2">Crop not found</p>
@@ -200,7 +200,7 @@ export default function CheckoutNew() {
   return (
     <PageTransition>
       {loading && <PageLoader message="Processing your order..." />}
-      <div className="min-h-screen premium-gradient py-12 px-4 relative overflow-hidden">
+      <div className="min-h-screen premium-gradient px-4 relative overflow-hidden pt-28 pb-12">
         {/* Decorative elements */}
         <div className="absolute top-[5%] right-[-10%] w-[40%] h-[40%] bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-[5%] left-[-10%] w-[30%] h-[30%] bg-green-400/10 rounded-full blur-3xl pointer-events-none"></div>
