@@ -149,7 +149,6 @@ export default function Register() {
     setErrors({});
     
     try {
-      console.log('📝 Attempting registration for:', formData.email);
       const _response = await register({
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -165,7 +164,6 @@ export default function Register() {
         pincode: addressNA ? 'NA' : formData.pincode,
       });
 
-      console.log('✅ Registration successful!');
       addToast('Account created successfully! Redirecting to login...', 'success');
       
       // Clear form data after successful registration
@@ -216,7 +214,6 @@ export default function Register() {
         errorMessage = 'Network error. Please check your connection and try again.';
       }
       
-      console.log('📢 Showing error to user:', errorMessage);
       addToast(errorMessage, 'error');
     }
   };

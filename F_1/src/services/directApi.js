@@ -31,7 +31,6 @@ directApi.interceptors.request.use((config) => {
     for (let [key, value] of config.data.entries()) {
       entries.push(value instanceof File ? `${key}: ${value.name} (${value.size}B)` : `${key}: ${value}`);
     }
-    console.log(`🚀 [directApi] ${config.method?.toUpperCase()} ${config.baseURL}${config.url} — FormData:`, entries);
   }
   
   return config;
@@ -41,7 +40,6 @@ directApi.interceptors.request.use((config) => {
 directApi.interceptors.response.use(
   (response) => {
     if (import.meta.env.DEV) {
-      console.log(`✅ [directApi] ${response.status} from ${response.config.url}`);
     }
     return response;
   },

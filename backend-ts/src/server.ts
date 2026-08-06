@@ -134,7 +134,6 @@ app.use(compression({ threshold: 1024 }));
 // Request logging (development only)
 if (env.isDev) {
   app.use((req: Request, _res: Response, next) => {
-    console.log(`${req.method} ${req.path}`);
     next();
   });
 }
@@ -230,9 +229,7 @@ initSocket(httpServer, { origin: env.corsOrigins });
 
 // ---- Graceful shutdown ----
 function gracefulShutdown(signal: string): void {
-  console.log(`\n${signal} received. Shutting down gracefully...`);
   httpServer.close(async () => {
-    console.log('HTTP server closed.');
     await disconnectDB();
     process.exit(0);
   });
@@ -263,10 +260,6 @@ async function start(): Promise<void> {
   await connectDB();
   const PORT = env.port;
   httpServer.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`Environment: ${env.nodeEnv}`);
-    console.log(`Rate limiting: 600 req/15min (global), 120 req/min (polling), 30 req/15min (auth)`);
-    console.log(`WebSocket: Ready`);
   });
 }
 

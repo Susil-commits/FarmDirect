@@ -54,7 +54,6 @@ export function initSocket(httpServer: HttpServer, corsOptions: CorsConfig): Ser
     socket.join(`user:${userId}`);
     socket.join(`role:${role}`);
 
-    console.log(`Socket connected: ${userId} (${role}) — ${connectedUsers.size} online`);
     io!.emit('user:online', { userId, role, onlineCount: connectedUsers.size });
 
     socket.on('join:order', (orderId: string) => socket.join(`order:${orderId}`));
@@ -71,12 +70,10 @@ export function initSocket(httpServer: HttpServer, corsOptions: CorsConfig): Ser
 
     socket.on('disconnect', (reason: string) => {
       connectedUsers.delete(userId);
-      console.log(`Socket disconnected: ${userId} (${reason}) — ${connectedUsers.size} online`);
       io!.emit('user:offline', { userId, role, onlineCount: connectedUsers.size });
     });
   });
 
-  console.log('WebSocket server initialized');
   return io;
 }
 

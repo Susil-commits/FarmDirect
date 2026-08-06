@@ -489,7 +489,6 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      console.log('📤 Submitting verification documents...');
       
       let data;
       
@@ -503,11 +502,9 @@ export const AuthProvider = ({ children }) => {
         data = await authService.submitKYCFormData(documents);
       } else {
         // Fallback for JSON payload
-        console.log('📄 Sending JSON payload');
         data = await authService.submitKYC(documents);
       }
 
-      console.log('📡 API Response:', data);
       
       // Update context state
       setVerificationData(documents);
@@ -535,14 +532,11 @@ export const AuthProvider = ({ children }) => {
         const updatedUser = { ...user, ...data.user };
         setUser(updatedUser);
         localStorage.setItem('userData', JSON.stringify(updatedUser));
-        console.log('✅ User updated with kycDocuments:', Object.keys(data.user.kycDocuments || {}));
       } else {
         // Fallback: fetch fresh user data from backend
-        console.log('⚠️ No user in response, fetching fresh data...');
         if (refreshUserRef.current) await refreshUserRef.current();
       }
       
-      console.log('✅ Verification documents submitted to backend:', data);
       return { status: 'success', message: 'Documents submitted for verification' };
     } catch (err) {
       console.error('❌ Error submitting documents:', err);
@@ -569,7 +563,6 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('verificationStatus', verifyStatus);
         }
         
-        console.log('🔄 User refreshed from backend, kycDocuments:', Object.keys(userData.kycDocuments || {}));
         return userData;
       }
     } catch (err) {

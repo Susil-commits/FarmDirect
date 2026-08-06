@@ -78,7 +78,6 @@ function App() {
   useEffect(() => {
     if (redirectPath && !redirectHandledRef.current) {
       redirectHandledRef.current = true;
-      console.log('🔄 Redirecting to:', redirectPath);
       navigate(redirectPath);
       clearRedirectPath();
       // Reset the flag after a small delay so it can handle new redirects
@@ -104,7 +103,6 @@ function App() {
       );
     }
 
-    console.log('renderPage called with route:', currentRoute);
     
     // Helper function to get user role - checks both state and localStorage
     // This handles async state updates after login to prevent race conditions

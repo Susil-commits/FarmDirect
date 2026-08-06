@@ -200,16 +200,12 @@ export default function BuyerVerification() {
         }
       });
 
-      console.log('📤 [BuyerVerification] Uploading files:', Object.keys(fileMap));
-      console.log('📤 [BuyerVerification] File details:', Object.entries(fileMap).map(([k, v]) => `${k}: ${v.name} (${v.size} bytes)`));
 
       await uploadService.uploadKYCDocuments(fileMap, 'buyer_kyc');
 
       // CRITICAL: Refresh user data to get kycDocuments from backend
       // This ensures the pre-populate useEffect can find the docs on next page load
-      console.log('🔄 [BuyerVerification] Refreshing user data...');
       const refreshedUser = await refreshUser();
-      console.log('🔄 [BuyerVerification] User refreshed, kycDocuments:', Object.keys(refreshedUser?.kycDocuments || {}));
 
       setSubmittedAt(new Date().toLocaleDateString());
       setAllSubmitted(true);

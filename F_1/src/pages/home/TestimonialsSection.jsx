@@ -71,7 +71,7 @@ export default function TestimonialsSection() {
                 <div className="flex items-center gap-4 mt-auto">
                   <div className="relative">
                     <div className="absolute inset-0 bg-green-400 rounded-full blur-md opacity-0 group-hover:opacity-40 transition-opacity duration-300"></div>
-                    <img 
+                    <img loading="lazy" 
                       src={testi.avatar} 
                       alt={testi.name}
                       className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm relative z-10 transform group-hover:scale-110 transition-transform duration-300"

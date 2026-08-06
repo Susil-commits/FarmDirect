@@ -79,18 +79,10 @@ export async function sendEmail(mailOptions: EmailOptions): Promise<EmailResult>
     }
 
     if (!transporter) {
-      console.log('\n--- EMAIL MOCKED (SMTP not configured) ---');
-      console.log(`To: ${mailOptions.to}`);
-      console.log(`Subject: ${mailOptions.subject}`);
-      console.log(`Body length: ${String(mailOptions.html || mailOptions.text || '').length} chars`);
-      console.log('-------------------------------------------\n');
       return { success: true, message: 'Email logged to console (dev mode)' };
     }
 
     if (env.isDev) {
-      console.log('Email Service - Development Mode:');
-      console.log(`  To: ${mailOptions.to}`);
-      console.log(`  Subject: ${mailOptions.subject}`);
     }
 
     const result = await attemptSend(mailOptions as nodemailer.SendMailOptions);
@@ -110,7 +102,6 @@ export async function verifyConnection(): Promise<boolean> {
   try {
     if (!transporter) return true;
     await transporter.verify();
-    console.log('Email service is ready');
     return true;
   } catch (error) {
     console.error('Email service error:', error instanceof Error ? error.message : error);

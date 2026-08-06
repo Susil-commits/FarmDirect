@@ -207,7 +207,7 @@ export function ProfileStep({ data, updateData, errors }) {
             />
             <div className="photo-placeholder">
               {data.profilePhoto ? (
-                <img src={data.profilePhoto} alt="Profile" />
+                <img loading="lazy" src={data.profilePhoto} alt="Profile" />
               ) : (
                 <User size={48} />
               )}

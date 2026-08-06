@@ -144,7 +144,7 @@ const ImageUpload = ({
         {/* Preview */}
         {preview && (
           <div className="preview-container">
-            <img src={preview} alt="preview" className="preview-image" />
+            <img loading="lazy" src={preview} alt="preview" className="preview-image" />
             <div className="preview-info">
               <p className="file-name">{fileName}</p>
               {!success && <p className="ready-text">Ready to upload</p>}

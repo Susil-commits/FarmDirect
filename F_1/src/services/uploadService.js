@@ -64,16 +64,13 @@ export const uploadService = {
       Object.entries(fileMap).forEach(([docType, file]) => {
         if (file) {
           formData.append(docType, file);
-          console.log(`📎 [uploadService] Appended: ${docType} = ${file.name} (${file.size} bytes, ${file.type})`);
         }
       });
       formData.append('documentType', documentType);
 
-      console.log(`📤 [uploadService] Sending ${Object.keys(fileMap).length} files to /auth/kyc/submit (type: ${documentType})`);
       
       const response = await directApi.post('/auth/kyc/submit', formData);
       
-      console.log('✅ [uploadService] Upload response:', response.data);
       return response.data;
     } catch (error) {
       console.error('❌ [uploadService] KYC upload error:', error);
