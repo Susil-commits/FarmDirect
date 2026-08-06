@@ -100,7 +100,7 @@ app.use(globalLimiter);
 // 5. Stricter rate limiter for auth routes
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 30,
+  max: 15, // Tightened from 30 to prevent brute force
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many authentication attempts, please try again later.' },
@@ -119,8 +119,8 @@ app.use('/api/messages/unread', pollingLimiter);
 app.use('/api/notifications/unread', pollingLimiter);
 
 // 7. Body & Cookie parsing & Data Sanitization
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(express.json({ limit: '10kb' })); // Restricted from 10mb to 10kb to prevent payload DoS
+app.use(express.urlencoded({ limit: '10kb', extended: true }));
 app.use(cookieParser());
 app.use(mongoSanitize()); // Prevent NoSQL injection
 app.use(hpp()); // Prevent HTTP Parameter Pollution
