@@ -211,48 +211,64 @@ export default function Navbar() {
 
             {/* Wishlist Icon - Buyers and Farmers Only */}
             {(!user || user.role === 'buyer' || user.role === 'farmer') && (
-              <button
-                onClick={() => {
-                  if (!user) {
-                    setEmptyModalType('wishlist');
-                    setShowEmptyModal(true);
-                  } else {
-                    handleNavigate('/wishlist');
-                  }
-                }}
-                className="relative p-2 text-gray-600 hover:text-red-500 hover:bg-red-50 rounded-lg transition duration-200 cursor-pointer"
-                aria-label={user ? `Wishlist with ${wishlist.length} items` : "Browse and save items"}
-              >
-                <Heart size={20} fill={user && wishlist.length > 0 ? "currentColor" : "none"} />
-                {wishlist.length > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold px-1">
-                    {wishlist.length > 99 ? '99+' : wishlist.length}
-                  </span>
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    if (!user) {
+                      setEmptyModalType('wishlist');
+                      setShowEmptyModal(true);
+                    } else {
+                      handleNavigate('/wishlist');
+                    }
+                  }}
+                  className="relative p-2 text-gray-600 hover:text-red-500 hover:bg-red-50 rounded-lg transition duration-200 cursor-pointer"
+                  aria-label={user ? `Wishlist with ${wishlist.length} items` : "Browse and save items"}
+                >
+                  <Heart size={20} fill={user && wishlist.length > 0 ? "currentColor" : "none"} />
+                  {wishlist.length > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold px-1">
+                      {wishlist.length > 99 ? '99+' : wishlist.length}
+                    </span>
+                  )}
+                </button>
+                {showEmptyModal && emptyModalType === 'wishlist' && (
+                  <EmptyCartWishlistModal
+                    type="wishlist"
+                    onClose={() => setShowEmptyModal(false)}
+                  />
                 )}
-              </button>
+              </div>
             )}
 
             {/* Cart Icon - Buyers and Farmers Only */}
             {(!user || user.role === 'buyer' || user.role === 'farmer') && (
-              <button
-                onClick={() => {
-                  if (!user) {
-                    setEmptyModalType('cart');
-                    setShowEmptyModal(true);
-                  } else {
-                    toggleMiniCart();
-                  }
-                }}
-                className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition duration-200 cursor-pointer"
-                aria-label={user ? `Shopping cart with ${cartTotal} items` : "Start shopping in marketplace"}
-              >
-                <ShoppingCart size={20} />
-                {cartTotal > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-green-600 text-white text-xs rounded-full flex items-center justify-center font-bold px-1 animate-pulse">
-                    {cartTotal > 99 ? '99+' : cartTotal}
-                  </span>
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    if (!user) {
+                      setEmptyModalType('cart');
+                      setShowEmptyModal(true);
+                    } else {
+                      toggleMiniCart();
+                    }
+                  }}
+                  className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition duration-200 cursor-pointer"
+                  aria-label={user ? `Shopping cart with ${cartTotal} items` : "Start shopping in marketplace"}
+                >
+                  <ShoppingCart size={20} />
+                  {cartTotal > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-green-600 text-white text-xs rounded-full flex items-center justify-center font-bold px-1 animate-pulse">
+                      {cartTotal > 99 ? '99+' : cartTotal}
+                    </span>
+                  )}
+                </button>
+                {showEmptyModal && emptyModalType === 'cart' && (
+                  <EmptyCartWishlistModal
+                    type="cart"
+                    onClose={() => setShowEmptyModal(false)}
+                  />
                 )}
-              </button>
+              </div>
             )}
 
             {/* Notifications - All authenticated users */}
@@ -590,13 +606,7 @@ export default function Navbar() {
       {/* Mini Cart Dropdown */}
       <MiniCart isOpen={isMiniCartOpen} onClose={() => setIsMiniCartOpen(false)} />
 
-      {/* Empty Cart/Wishlist Modal */}
-      {showEmptyModal && (
-        <EmptyCartWishlistModal
-          type={emptyModalType}
-          onClose={() => setShowEmptyModal(false)}
-        />
-      )}
+      {/* Empty Cart/Wishlist Modal is now rendered inside the relative button wrappers */}
 
       {/* Empty Notification Modal */}
       {showNotificationEmpty && (
