@@ -2,6 +2,7 @@ import './utils/localStoragePatch.js'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import './i18n' // i18n initialization
 import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext'
 import { RouterProvider } from './context/RouterContext'

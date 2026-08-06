@@ -1,5 +1,6 @@
 import { ArrowRight, Leaf } from 'lucide-react';
 import { useState, useEffect, useRef, lazy, Suspense, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Button from '../components/common/Button';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
@@ -20,6 +21,7 @@ const CommunitySection = lazy(() => import('./home/CommunitySection'));
 const TestimonialsSection = lazy(() => import('./home/TestimonialsSection'));
 
 export default function Home() {
+  const { t } = useTranslation();
   const { navigate } = useRouter();
   const { _user } = useAuth();
   const heroRef = useRef(null);
@@ -185,14 +187,14 @@ export default function Home() {
               </div>
               
               <h1 className="text-6xl sm:text-7xl lg:text-[6.5rem] font-black text-gray-900 mb-6 sm:mb-8 leading-[1.05] tracking-tighter max-w-4xl mx-auto drop-shadow-sm">
-                <span className="block animate-slide-in-down">Farm to Table</span>
+                <span className="block animate-slide-in-down">{t('home.hero_title', 'Farm to Table Directly').split(' ')[0]} {t('home.hero_title', 'Farm to Table Directly').split(' ')[1]} {t('home.hero_title', 'Farm to Table Directly').split(' ')[2]}</span>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-green-500 to-teal-500 inline-block animate-gradient-text drop-shadow-sm">
-                  Directly
+                  {t('home.hero_title', 'Farm to Table Directly').split(' ').slice(3).join(' ')}
                 </span>
               </h1>
               
               <p className="text-lg sm:text-2xl text-gray-700 mb-10 sm:mb-12 animate-slide-in-up leading-relaxed font-medium max-w-2xl mx-auto" style={{ animationDelay: '0.1s' }}>
-                Connect directly with local farmers. Get fresh, organic produce at fair prices with zero middlemen. Just honest trade and better food.
+                {t('home.hero_subtitle', 'Connect directly with local farmers. Get fresh, organic produce at fair prices with zero middlemen. Just honest trade and better food.')}
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 animate-slide-in-up justify-center items-center" style={{ animationDelay: '0.2s' }}>
@@ -211,7 +213,7 @@ export default function Home() {
                   }}
                   aria-label="Start buying fresh produce"
                 >
-                  Start Shopping
+                  {t('home.shop_now', 'Start Shopping')}
                   <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-1 transition-transform" />
                 </Button>
                 <Button 
@@ -220,7 +222,7 @@ export default function Home() {
                   className="flex items-center gap-2 justify-center bg-white/50 backdrop-blur-sm border-2 border-green-600/20 hover:border-green-600 hover:bg-white/80 transition-all duration-300 text-lg sm:text-xl px-8 sm:px-10 py-4 sm:py-5 rounded-full text-gray-800 font-semibold w-full sm:w-auto"
                   onClick={() => handleNavigation('/join-farmer')}
                 >
-                  Join as Farmer
+                  {t('home.join_farmer', 'Join as Farmer')}
                 </Button>
               </div>
             </ScrollAnimation>

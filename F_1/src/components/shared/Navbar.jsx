@@ -14,6 +14,7 @@ import EmptyCartWishlistModal from '../common/EmptyCartWishlistModal';
 import NotificationEmptyModal from '../common/NotificationEmptyModal';
 import LogoutConfirmationModal from '../common/LogoutConfirmationModal';
 import NotificationPanel from '../common/NotificationPanel';
+import LanguageSwitcher from '../common/LanguageSwitcher';
 import './Navbar.css';
 
 export default function Navbar() {
@@ -183,6 +184,11 @@ export default function Navbar() {
 
           {/* Right Section - Icons & User */}
           <div className="flex items-center gap-1 sm:gap-4">
+            {/* Language Switcher */}
+            <div className="hidden sm:block">
+              <LanguageSwitcher />
+            </div>
+
             {/* Security Session & Realtime indicators (authenticated users only) */}
             {user && (
               <div className="hidden md:flex items-center gap-2 mr-2 border-r border-slate-200 pr-3">
