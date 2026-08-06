@@ -1,0 +1,20 @@
+{
+  "navbar": {
+    "home": "Home",
+    "marketplace": "Marketplace",
+    "dashboard": "Dashboard",
+    "login": "Login",
+    "register": "Register",
+    "search": "Search crops...",
+    "cart": "Cart",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "home": {
+    "hero_title": "Fresh From Farm to Your Table",
+    "hero_subtitle": "Connect directly with local farmers. Get fresh, organic produce while supporting rural communities.",
+    "shop_now": "Shop Now",
+    "join_farmer": "Join as Farmer",
+    "featured_crops": "Featured Crops"
+  }
+}
