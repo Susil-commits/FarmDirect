@@ -92,6 +92,18 @@ That's it. Open `http://localhost:5173`, register, submit KYC, and start trading
 
 ---
 
+## 🌟 Recent Updates (August 2026 Session)
+
+We recently completed a major **Enterprise-Grade Master Plan** comprising 4 major epics and full core resilience upgrades:
+
+1. **Backend & Core Resilience:** Migrated the Node.js backend to **Cluster Mode** for multi-core scaling, implemented an **LRU Cache** middleware for fast API responses, and added a full suite of **Jest/Supertest E2E tests**.
+2. **Epic 1 (PWA):** Transformed the frontend into a fully installable **Progressive Web App (PWA)** using `vite-plugin-pwa`, complete with offline caching and manifest setup.
+3. **Epic 2 (Multi-Language i18n):** Integrated **react-i18next** to break language barriers, featuring full English and Hindi translations with a dynamic Navbar language toggle.
+4. **Epic 3 (Admin Analytics):** Supercharged the Admin Dashboard with **Recharts**, delivering beautiful interactive visualization charts for *Revenue Growth* and *Order Distribution*.
+5. **Epic 4 (Live Tracking):** Integrated **React-Leaflet** maps into the Order Tracking dashboard, allowing users to view dynamic geospatial routes between the Farmer and Buyer.
+
+---
+
 ## Architecture at a Glance
 
 ```
