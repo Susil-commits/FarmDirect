@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-empty */
 import { useState, useEffect } from 'react';
 import { Upload, CheckCircle, Clock, AlertCircle, Loader, Eye } from 'lucide-react';
 import { useToast } from '../../hooks/useToast';

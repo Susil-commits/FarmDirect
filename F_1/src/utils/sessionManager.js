@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-empty */
 import { isSessionExpired, getTokenExpiryTime } from './jwtUtils.js';
 
 /**

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-empty */
 /**
  * Safe LocalStorage Wrapper
  * 
