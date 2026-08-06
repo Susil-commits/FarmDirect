@@ -1,14 +1,18 @@
 // Format currency (INR)
 export const formatCurrency = (amount, currency = 'INR') => {
+  const num = Number(amount);
+  if (isNaN(num)) return '₹0';
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency
-  }).format(amount);
+  }).format(num);
 };
 
 // Format date
 export const formatDate = (date, format = 'short') => {
+  if (!date) return '';
   const d = new Date(date);
+  if (isNaN(d.getTime())) return '';
   
   const options = {
     short: { year: 'numeric', month: 'short', day: 'numeric' },
@@ -18,12 +22,14 @@ export const formatDate = (date, format = 'short') => {
     datetime: { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }
   };
   
-  return d.toLocaleDateString('en-IN', options[format]);
+  return d.toLocaleDateString('en-IN', options[format] ?? options.short);
 };
 
 // Format relative time (e.g., "2 hours ago")
 export const formatRelativeTime = (date) => {
+  if (!date) return '';
   const d = new Date(date);
+  if (isNaN(d.getTime())) return '';
   const now = new Date();
   const seconds = Math.floor((now - d) / 1000);
   
@@ -50,7 +56,8 @@ export const formatRelativeTime = (date) => {
 
 // Format phone number
 export const formatPhoneNumber = (phone) => {
-  const cleaned = phone.replace(/\D/g, '');
+  if (!phone) return '';
+  const cleaned = String(phone).replace(/\D/g, '');
   if (cleaned.length !== 10) return phone;
   
   return `+91 ${cleaned.slice(0, 5)} ${cleaned.slice(5, 10)}`;
@@ -58,6 +65,7 @@ export const formatPhoneNumber = (phone) => {
 
 // Format number with commas
 export const formatNumber = (num) => {
+  if (num === null || num === undefined || isNaN(Number(num))) return '0';
   return new Intl.NumberFormat('en-IN').format(num);
 };
 
@@ -69,7 +77,8 @@ export const truncateText = (text, length = 100) => {
 
 // Format rating
 export const formatRating = (rating) => {
-  return parseFloat(rating).toFixed(1);
+  const n = parseFloat(rating);
+  return isNaN(n) ? '0.0' : n.toFixed(1);
 };
 
 // Capitalize string
@@ -120,6 +129,7 @@ export const getStatusColor = (status) => {
 
 // Format product title
 export const formatProductTitle = (title) => {
+  if (!title) return '';
   return title.split(' ').map(word => capitalize(word)).join(' ');
 };
 
@@ -166,8 +176,27 @@ export const getPriorityColor = (priority) => {
 
 // Format review stars
 export const formatStars = (rating) => {
-  const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
-  return stars;
+  const n = Math.max(0, Math.min(5, Math.floor(Number(rating) || 0)));
+  return '★'.repeat(n) + '☆'.repeat(5 - n);
+};
+
+/**
+ * Format order status into a human-readable label.
+ * @param {string} status - Order status from the backend enum
+ * @returns {{ label: string, color: string }}
+ */
+export const formatOrderStatus = (status) => {
+  const map = {
+    pending:           { label: 'Pending',           color: 'yellow' },
+    confirmed:         { label: 'Confirmed',         color: 'blue'   },
+    preparing:         { label: 'Preparing',         color: 'orange' },
+    ready_for_pickup:  { label: 'Ready for Pickup',  color: 'teal'   },
+    picked_up:         { label: 'Picked Up',         color: 'indigo' },
+    completed:         { label: 'Completed',         color: 'green'  },
+    cancelled:         { label: 'Cancelled',         color: 'red'    },
+    denied:            { label: 'Denied',            color: 'red'    },
+  };
+  return map[status] ?? { label: capitalize(status || 'Unknown'), color: 'gray' };
 };
 
 /**

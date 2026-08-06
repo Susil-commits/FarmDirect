@@ -8,11 +8,23 @@ export interface UploadResult {
   publicId?: string;
 }
 
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB hard cap (beyond multer limit)
+
 export async function uploadFile(
   fileBuffer: Buffer,
   fileName: string,
   folder = 'general',
 ): Promise<UploadResult> {
+  // Guard: empty buffer
+  if (!fileBuffer || fileBuffer.length === 0) {
+    throw new Error('Cannot upload an empty file buffer');
+  }
+
+  // Guard: hard cap beyond multer's limit
+  if (fileBuffer.length > MAX_FILE_SIZE_BYTES) {
+    throw new Error(`File exceeds maximum allowed size (${MAX_FILE_SIZE_BYTES / 1024 / 1024} MB)`);
+  }
+
   if (!isCloudinaryConfigured()) {
     const local: LocalStorageResult = saveToLocalStorage(fileBuffer, fileName, folder);
     return { url: local.url, fileName: local.fileName, fileSize: local.fileSize };
@@ -36,17 +48,26 @@ export async function uploadFile(
       publicId: result.public_id,
     };
   } catch (error) {
-    console.error(
-      'Cloudinary upload failed, falling back to local:',
-      error instanceof Error ? error.message : error,
-    );
+    const message = error instanceof Error ? error.message : String(error);
+
+    // Classify the error type for better debugging
+    if (message.includes('Invalid API Key') || message.includes('Invalid API Secret')) {
+      console.error('Cloudinary auth error — falling back to local storage:', message);
+    } else if (message.includes('ENOTFOUND') || message.includes('ETIMEDOUT') || message.includes('ECONNREFUSED')) {
+      console.error('Cloudinary network error — falling back to local storage:', message);
+    } else if (message.includes('format') || message.includes('Invalid image')) {
+      console.error('Cloudinary format error — falling back to local storage:', message);
+    } else {
+      console.error('Cloudinary upload failed — falling back to local storage:', message);
+    }
+
     const local = saveToLocalStorage(fileBuffer, fileName, folder);
     return { url: local.url, fileName: local.fileName, fileSize: local.fileSize };
   }
 }
 
 export async function deleteFile(fileUrl: string): Promise<boolean> {
-  if (!fileUrl) return false;
+  if (!fileUrl || typeof fileUrl !== 'string') return false;
 
   if (isCloudinaryConfigured() && fileUrl.includes('res.cloudinary.com')) {
     try {

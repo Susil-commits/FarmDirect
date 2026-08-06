@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction, RequestHandler } from 'express';
 import { verifyToken } from '../utils/jwt.js';
 import User from '../models/User.js';
 import { UserRole, KycStatus, UserStatus } from '../types/enums.js';
-import { sendError } from '../utils/apiResponse.js';
+import { ApiError } from '../utils/apiError.js';
 
 const suspendedAllowedPaths = [
   '/api/notifications',
@@ -19,19 +19,27 @@ const suspendedAllowedPaths = [
  *  recommended to make this lookup O(log n). */
 export const protect: RequestHandler = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return sendError(res, 'No token provided', 401);
+    const authHeader = req.headers.authorization;
+
+    // Guard against malformed Authorization header
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return next(ApiError.unauthorized('No authentication token provided'));
     }
 
+    const parts = authHeader.split(' ');
+    if (parts.length !== 2 || !parts[1]) {
+      return next(ApiError.unauthorized('Malformed authorization header'));
+    }
+
+    const token = parts[1];
     const decoded = verifyToken(token);
     if (!decoded) {
-      return sendError(res, 'Invalid or expired token', 401);
+      return next(ApiError.unauthorized('Invalid or expired token'));
     }
 
     const user = await User.findById(decoded.id);
     if (!user) {
-      return sendError(res, 'User not found', 404);
+      return next(ApiError.notFound('User not found'));
     }
 
     req.user = {
@@ -46,30 +54,30 @@ export const protect: RequestHandler = async (req, res, next) => {
     if (user.status === UserStatus.Banned || user.status === UserStatus.Suspended) {
       const isAllowed = suspendedAllowedPaths.some((p) => req.originalUrl.startsWith(p));
       if (!isAllowed) {
-        return res.status(403).json({
-          success: false,
-          message: `Your account is ${user.status}. Go to notifications to learn why or contact support.`,
-          accountStatus: user.status,
-          suspensionReason: user.suspensionReason,
-        });
+        return next(new ApiError(403, `Your account is ${user.status}. Go to notifications to learn why or contact support.`, {
+          details: {
+            accountStatus: user.status,
+            suspensionReason: (user as unknown as { suspensionReason?: string }).suspensionReason,
+          },
+          code: 'ACCOUNT_SUSPENDED',
+        }));
       }
     }
 
     next();
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    res.status(500).json({ success: false, message: 'Authentication failed', error: message });
+    next(ApiError.fromUnknown(error, 'Authentication failed'));
   }
 };
 
 /** Restrict a route to one or more roles. */
 export const authorize = (...roles: UserRole[]): RequestHandler => {
-  return (req, res, next) => {
+  return (req, _res, next) => {
     if (!req.user) {
-      return sendError(res, 'Not authenticated', 401);
+      return next(ApiError.unauthorized('Not authenticated'));
     }
     if (!roles.includes(req.user.role)) {
-      return sendError(res, 'Not authorized for this action', 403);
+      return next(ApiError.forbidden(`This action requires one of these roles: ${roles.join(', ')}`));
     }
     next();
   };
@@ -78,10 +86,10 @@ export const authorize = (...roles: UserRole[]): RequestHandler => {
 /** Require KYC verification (farmers & buyers; admin is exempt).
  *  B19 FIX: Reuses `req.userDoc` set by the `protect` middleware instead
  *  of making a second `User.findById` DB call on every KYC-protected request. */
-export const requireKYC: RequestHandler = async (req, res, next) => {
+export const requireKYC: RequestHandler = async (req, _res, next) => {
   try {
     if (!req.user) {
-      return sendError(res, 'Not authenticated', 401);
+      return next(ApiError.unauthorized('Not authenticated'));
     }
     if (req.user.role === UserRole.Admin) {
       return next();
@@ -89,41 +97,40 @@ export const requireKYC: RequestHandler = async (req, res, next) => {
     // Prefer the already-loaded userDoc; fall back to a fresh query only if missing
     const user = req.userDoc ?? await User.findById(req.user._id);
     if (!user || user.kycStatus !== KycStatus.Verified) {
-      return res.status(403).json({
-        success: false,
-        message: 'KYC verification required',
-        kycStatus: user?.kycStatus ?? KycStatus.Pending,
-        error: 'Complete your KYC verification to perform this action',
-      });
+      return next(new ApiError(403, 'KYC verification required', {
+        details: {
+          kycStatus: user?.kycStatus ?? KycStatus.Pending,
+          hint: 'Complete your KYC verification to perform this action',
+        },
+        code: 'KYC_REQUIRED',
+      }));
     }
     next();
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    res.status(500).json({ success: false, message: 'KYC check failed', error: message });
+    next(ApiError.fromUnknown(error, 'KYC check failed'));
   }
 };
 
 /** Check that the authenticated user owns the resource identified by a field. */
 export const ownershipCheck = (resourceField = 'userId'): RequestHandler => {
-  return async (req, res, next) => {
+  return async (req, _res, next) => {
     try {
       if (!req.user) {
-        return sendError(res, 'Not authenticated', 401);
+        return next(ApiError.unauthorized('Not authenticated'));
       }
       if (req.user.role === UserRole.Admin) {
         return next();
       }
       const resourceId = req.body[resourceField] || req.params[resourceField];
       if (!resourceId) {
-        return sendError(res, `Missing resource field: ${resourceField}`, 400);
+        return next(ApiError.badRequest(`Missing resource field: ${resourceField}`));
       }
       if (resourceId.toString() !== req.user._id.toString()) {
-        return sendError(res, 'Not authorized to access this resource', 403);
+        return next(ApiError.forbidden('Not authorized to access this resource'));
       }
       next();
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      res.status(500).json({ success: false, message: 'Ownership check failed', error: message });
+      next(ApiError.fromUnknown(error, 'Ownership check failed'));
     }
   };
 };

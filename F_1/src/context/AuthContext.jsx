@@ -95,23 +95,30 @@ export const AuthProvider = ({ children }) => {
         } else {
           // Token exists and is valid - use cached user data first
           if (storedUser) {
-            const userData = JSON.parse(storedUser);
-            setUser(userData);
-            setSessionActive(true);
-            
-            const verifyStatus = userData?.kycStatus || storedVerificationStatus || null;
-            setVerificationStatus(verifyStatus);
-            if (verifyStatus) {
-              localStorage.setItem('verificationStatus', verifyStatus);
-            }
+            try {
+              const userData = JSON.parse(storedUser);
+              setUser(userData);
+              setSessionActive(true);
+              
+              const verifyStatus = userData?.kycStatus || storedVerificationStatus || null;
+              setVerificationStatus(verifyStatus);
+              if (verifyStatus) {
+                localStorage.setItem('verificationStatus', verifyStatus);
+              }
 
-            // Load login history
-            const history = JSON.parse(localStorage.getItem('loginHistory') || '[]');
-            setLoginHistory(history);
+              // Load login history
+              try {
+                const history = JSON.parse(localStorage.getItem('loginHistory') || '[]');
+                setLoginHistory(history);
+              } catch { /* ignore */ }
 
-            // Set last activity time if not set
-            if (!localStorage.getItem('lastActivityTime')) {
-              localStorage.setItem('lastActivityTime', Date.now().toString());
+              // Set last activity time if not set
+              if (!localStorage.getItem('lastActivityTime')) {
+                localStorage.setItem('lastActivityTime', Date.now().toString());
+              }
+            } catch (parseErr) {
+              console.warn('Failed to parse stored user data:', parseErr);
+              localStorage.removeItem('userData');
             }
           }
 
@@ -211,6 +218,11 @@ export const AuthProvider = ({ children }) => {
         // Check for idle timeout (30 minutes)
         if (isSessionExpired(1800000)) {
           console.warn('Session expired due to inactivity');
+          // Let the user know before logging them out
+          try {
+            const event = new CustomEvent('farm-session-expired');
+            window.dispatchEvent(event);
+          } catch { /* ignore */ }
           if (logoutRef.current) logoutRef.current();
         }
       }, 2000); // 2 second debounce
@@ -250,22 +262,23 @@ export const AuthProvider = ({ children }) => {
       // unverified users directly to VerificationProgress instead of
       // showing the login page.
       
-      // Update stats
-      const currentStats = JSON.parse(
-        localStorage.getItem('farmStats') ||
-        '{"farmers": 5000, "customers": 50000, "varieties": 100, "deliveryDays": "3-5"}'
-      );
-      
-      if (userData.role === 'farmer') {
-        currentStats.farmers += 1;
-      } else {
-        currentStats.customers += 1;
-      }
-      
-      localStorage.setItem('farmStats', JSON.stringify(currentStats));
+      try {
+        const currentStats = JSON.parse(
+          localStorage.getItem('farmStats') ||
+          '{"farmers": 5000, "customers": 50000, "varieties": 100, "deliveryDays": "3-5"}'
+        );
+        
+        if (userData.role === 'farmer') {
+          currentStats.farmers += 1;
+        } else {
+          currentStats.customers += 1;
+        }
+        
+        localStorage.setItem('farmStats', JSON.stringify(currentStats));
+      } catch { /* ignore */ }
       return response;
     } catch (err) {
-      setError(err);
+      setError(err?.message || err || 'Registration failed');
       throw err;
     } finally {
       setLoading(false);
@@ -301,8 +314,10 @@ export const AuthProvider = ({ children }) => {
       
       // Record login history
       recordLoginHistory(response.user);
-      const history = JSON.parse(localStorage.getItem('loginHistory') || '[]');
-      setLoginHistory(history);
+      try {
+        const history = JSON.parse(localStorage.getItem('loginHistory') || '[]');
+        setLoginHistory(history);
+      } catch { /* ignore */ }
 
       // Store verification status
       const verifyStatus = response.user?.kycStatus || 'pending';
@@ -684,6 +699,7 @@ export const AuthProvider = ({ children }) => {
     setUser,
     setRedirectPath,
     clearRedirectPath: () => setRedirectPath(null),
+    clearError: () => setError(null),
 
     // NEW: Session Management
     sessionActive,
