@@ -15,6 +15,19 @@ export function sendSuccess<T>(
   });
 }
 
+/** Shorthand for HTTP 201 Created with a standard success body. */
+export function sendCreated<T>(res: Response, payload: ApiResponse<T>): Response {
+  return res.status(201).json({
+    success: true,
+    ...payload,
+  });
+}
+
+/** HTTP 204 No Content — no body. */
+export function sendNoContent(res: Response): void {
+  res.status(204).end();
+}
+
 export function sendError(
   res: Response,
   message: string,

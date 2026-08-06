@@ -7,6 +7,7 @@ export const WishlistContext = createContext();
 
 export function WishlistProvider({ children }) {
   const [wishlist, setWishlist] = useState([]);
+  const [error, setError] = useState(null);
   const loadFromLocalStorageRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const { user, isAuthenticated } = useAuth();
@@ -172,6 +173,8 @@ export function WishlistProvider({ children }) {
         await wishlistService.addToWishlist(productId);
       } catch (err) {
         console.error('Failed to sync wishlist add to backend:', err);
+        const msg = err?.message || 'Failed to add to wishlist';
+        setError(msg);
         // Revert on failure
         setWishlist(prev => prev.filter(item => (item._id || item.id) !== productId));
       }
@@ -188,6 +191,7 @@ export function WishlistProvider({ children }) {
         await wishlistService.removeFromWishlist(productId);
       } catch (err) {
         console.error('Failed to sync wishlist remove to backend:', err);
+        setError(err?.message || 'Failed to remove from wishlist');
         // Reload from API to get correct state
         try {
           const response = await wishlistService.getWishlist();
@@ -217,6 +221,8 @@ export function WishlistProvider({ children }) {
       value={{
         wishlist,
         loading,
+        error,
+        clearError: () => setError(null),
         addToWishlist,
         removeFromWishlist,
         isInWishlist,

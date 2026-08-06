@@ -21,6 +21,11 @@ export interface EmailTemplate {
   html: string;
 }
 
+/** Simple email format validation. */
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 let transporter: Transporter | null = null;
 
 if (env.smtpHost && env.smtpUser && env.smtpPass) {
@@ -34,10 +39,43 @@ if (env.smtpHost && env.smtpUser && env.smtpPass) {
   console.warn('Email Service: SMTP not configured. Logging emails to console instead.');
 }
 
+/**
+ * Attempt to send an email with one automatic retry on transient failures.
+ */
+async function attemptSend(mailOptions: nodemailer.SendMailOptions, attempt = 1): Promise<nodemailer.SentMessageInfo> {
+  try {
+    return await transporter!.sendMail(mailOptions);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const isTransient =
+      message.includes('ETIMEDOUT') ||
+      message.includes('ECONNRESET') ||
+      message.includes('ENOTFOUND') ||
+      message.includes('connection refused');
+
+    if (isTransient && attempt < 2) {
+      console.warn(`Email send failed (attempt ${attempt}), retrying in 2s...`);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return attemptSend(mailOptions, attempt + 1);
+    }
+    throw error;
+  }
+}
+
 export async function sendEmail(mailOptions: EmailOptions): Promise<EmailResult> {
   try {
+    // Validate recipient email before sending
+    if (!mailOptions.to || !isValidEmail(mailOptions.to)) {
+      throw new Error(`Invalid recipient email address: ${mailOptions.to}`);
+    }
+
     if (!mailOptions.from) {
       mailOptions.from = env.smtpFrom;
+    }
+
+    // Sanitize subject to prevent header injection
+    if (mailOptions.subject) {
+      mailOptions.subject = mailOptions.subject.replace(/[\r\n]/g, ' ');
     }
 
     if (!transporter) {
@@ -55,8 +93,7 @@ export async function sendEmail(mailOptions: EmailOptions): Promise<EmailResult>
       console.log(`  Subject: ${mailOptions.subject}`);
     }
 
-    const result = await transporter.sendMail(mailOptions as nodemailer.SendMailOptions);
-    // B16 FIX: Only log in development — avoid leaking email addresses to prod logs
+    const result = await attemptSend(mailOptions as nodemailer.SendMailOptions);
     if (env.isDev) console.log(`Email sent successfully to ${mailOptions.to}`);
     return { success: true, message: 'Email sent successfully', messageId: result.messageId };
   } catch (error) {

@@ -3,11 +3,13 @@ import cors from 'cors';
 import compression from 'compression';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import hpp from 'hpp';
 import { createServer, type Server as HttpServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
 import mongoSanitize from 'express-mongo-sanitize';
+import mongoose from 'mongoose';
 
 import { env } from './config/env.js';
 import { connectDB, disconnectDB } from './config/db.js';
@@ -16,6 +18,7 @@ import { requestId } from './middleware/requestId.js';
 import { resetServerStartTime, getServerStartTime } from './utils/serverTime.js';
 import { initSocket } from './socket/socketManager.js';
 import { uploadSingleFile } from './middleware/localUpload.js';
+import { trimStrings } from './middleware/sanitizer.js';
 
 import authRoutes from './routes/authRoutes.js';
 import cropRoutes from './routes/cropRoutes.js';
@@ -120,6 +123,8 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 app.use(mongoSanitize()); // Prevent NoSQL injection
+app.use(hpp()); // Prevent HTTP Parameter Pollution
+app.use(trimStrings); // Trim whitespace from all body string fields
 
 // 8. Response compression
 app.use(compression({ threshold: 1024 }));
@@ -143,6 +148,37 @@ app.get('/api/health', (_req: Request, res: Response) => {
     uptime: process.uptime(),
     serverStartTime: getServerStartTime(),
     environment: env.nodeEnv,
+  });
+});
+
+// Detailed health check with DB ping
+app.get('/api/health/detailed', async (_req: Request, res: Response) => {
+  const dbState = mongoose.connection.readyState;
+  const dbStateMap: Record<number, string> = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+  let dbPing = false;
+  let dbPingMs: number | null = null;
+  try {
+    const start = Date.now();
+    await mongoose.connection.db?.admin().ping();
+    dbPingMs = Date.now() - start;
+    dbPing = true;
+  } catch {
+    dbPing = false;
+  }
+  const healthy = dbState === 1 && dbPing;
+  res.status(healthy ? 200 : 503).json({
+    status: healthy ? 'ok' : 'degraded',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    serverStartTime: getServerStartTime(),
+    environment: env.nodeEnv,
+    services: {
+      database: {
+        status: dbStateMap[dbState] ?? 'unknown',
+        ping: dbPing,
+        latencyMs: dbPingMs,
+      },
+    },
   });
 });
 

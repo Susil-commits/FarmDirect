@@ -6,24 +6,33 @@ import {
 } from '../controllers/cropController.js';
 import { protect, authorize, requireKYC } from '../middleware/auth.js';
 import { uploadCropImages } from '../middleware/localUpload.js';
+import { validateObjectId } from '../middleware/validator.js';
 import { UserRole } from '../types/enums.js';
 
 const router = Router();
 
+// ── Public read routes ────────────────────────────────────────────────────────
 router.get('/', getCrops);
 router.get('/trending', getTrendingCrops);
+
+// ── Protected read routes ─────────────────────────────────────────────────────
 router.get('/buyer/recommended', protect, authorize(UserRole.Buyer), getRecommendedCrops);
 router.get('/my-listings', protect, authorize(UserRole.Farmer), getMyListings);
 router.get('/buyer/interested', protect, authorize(UserRole.Buyer), getMyInterestedCrops);
+
+// ── Dynamic routes (validated ObjectId) ──────────────────────────────────────
 router.get('/farmer/:farmerId', getCropsByFarmer);
-router.get('/:id', getCropById);
-router.get('/:id/similar', getSimilarCrops);
+router.get('/:id', validateObjectId(), getCropById);
+router.get('/:id/similar', validateObjectId(), getSimilarCrops);
+router.get('/:id/interested-buyers', validateObjectId(), protect, authorize(UserRole.Farmer, UserRole.Admin), getInterestedBuyers);
 
+// ── Mutation routes ───────────────────────────────────────────────────────────
+// Note: FormData from multipart/form-data bypasses Zod schema (fields arrive as strings).
+// Price/quantity are validated inside cropController via the schema-defined transforms.
 router.post('/', protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, uploadCropImages(), createCrop);
-router.put('/:id', protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, uploadCropImages(), updateCrop);
-router.delete('/:id', protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, deleteCrop);
+router.put('/:id', validateObjectId(), protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, uploadCropImages(), updateCrop);
+router.delete('/:id', validateObjectId(), protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, deleteCrop);
 
-router.post('/:id/interest', protect, authorize(UserRole.Buyer), requireKYC, toggleInterest);
-router.get('/:id/interested-buyers', protect, authorize(UserRole.Farmer, UserRole.Admin), getInterestedBuyers);
+router.post('/:id/interest', validateObjectId(), protect, authorize(UserRole.Buyer), requireKYC, toggleInterest);
 
 export default router;

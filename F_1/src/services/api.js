@@ -7,14 +7,13 @@ if (rawBase !== '/api' && !rawBase.endsWith('/api') && !rawBase.endsWith('/api/'
 }
 export const API_BASE_URL = rawBase;
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-  // NOTE: Do NOT set Content-Type here. Axios auto-detects:
-  // - For plain objects: sets application/json automatically
-  // - For FormData: lets browser set multipart/form-data with correct boundary
-  // Setting it manually breaks file uploads (multer can't parse without boundary)
-});
+/** Default request timeout (30 seconds). */
+const REQUEST_TIMEOUT_MS = 30_000;
+
+/** Retry budget: non-mutating requests only, 1 retry with exponential backoff. */
+const MAX_RETRIES = 1;
+const RETRY_DELAY_MS = 1000;
+const RETRY_METHODS = new Set(['get', 'head', 'options']);
 
 // Track if we're already refreshing to avoid multiple refresh requests
 let isRefreshing = false;
@@ -43,7 +42,6 @@ const refreshAuthToken = async () => {
   // Cooldown guard: don't hammer the refresh endpoint if it just failed
   const now = Date.now();
   if (now - lastRefreshAttempt < REFRESH_COOLDOWN_MS) {
-    // Still within cooldown — reject silently to avoid redirect loops
     throw new Error('Refresh cooldown active');
   }
   lastRefreshAttempt = now;
@@ -56,44 +54,51 @@ const refreshAuthToken = async () => {
 
   try {
     const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {}, {
-      withCredentials: true
+      withCredentials: true,
+      timeout: REQUEST_TIMEOUT_MS,
     });
 
     const { token: newToken } = response.data;
-    
+
     // Store new token
     localStorage.setItem('token', newToken);
 
     // Update timestamp for session activity
     localStorage.setItem('lastActivityTime', Date.now().toString());
 
-    // BUG 2 FIX: return newToken, not the old `token` variable
     return newToken;
   } catch (error) {
     // Refresh failed — clear auth data silently. Do NOT hard-redirect (window.location.href)
     // because that causes infinite reload loops when the backend is unreachable.
-    // Instead, clear tokens and let the app's AuthContext handle the logout + redirect.
     localStorage.removeItem('token');
     localStorage.removeItem('userData');
     throw error;
   }
 };
 
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true,
+  timeout: REQUEST_TIMEOUT_MS,
+  // NOTE: Do NOT set Content-Type here. Axios auto-detects:
+  // - For plain objects: sets application/json automatically
+  // - For FormData: lets browser set multipart/form-data with correct boundary
+  // Setting it manually breaks file uploads (multer can't parse without boundary)
+});
+
 // Request interceptor - Check token expiry and refresh if needed
 api.interceptors.request.use(
   async (config) => {
     let token = localStorage.getItem('token');
-    
+
     // DEBUG: Log FormData requests to trace multipart upload issues (dev only)
     if (import.meta.env.DEV && config.data instanceof FormData) {
       console.log('🔍 [api.js] FormData request to:', config.url);
-      console.log('🔍 [api.js] Content-Type:', config.headers['Content-Type']);
-      console.log('🔍 [api.js] FormData entries:');
       for (const [key, value] of config.data.entries()) {
         console.log(`  - ${key}: ${value instanceof File ? `File(${value.name}, ${value.size} bytes, ${value.type})` : value}`);
       }
     }
-    
+
     // Check if token exists and will expire soon (within 5 minutes)
     if (token && isTokenExpired(token, 300)) {
       try {
@@ -123,8 +128,8 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Update last activity time
-    if (!config.url.includes('/auth/refresh-token')) {
+    // Update last activity time (but not for refresh calls)
+    if (!config.url?.includes('/auth/refresh-token')) {
       localStorage.setItem('lastActivityTime', Date.now().toString());
     }
 
@@ -133,18 +138,27 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor - Handle auth errors
+// Response interceptor - Handle auth errors and retries
 api.interceptors.response.use(
   (response) => response.data,
   async (error) => {
     const originalRequest = error.config;
 
-    // Handle 401 Unauthorized
+    // ── Rate limit (429) — user-friendly message ─────────────────────────────
+    if (error.response?.status === 429) {
+      const payload = {
+        success: false,
+        message: 'Too many requests. Please wait a moment and try again.',
+        status: 429,
+        code: 'TOO_MANY_REQUESTS',
+      };
+      return Promise.reject(payload);
+    }
+
+    // ── Handle 401 Unauthorized ───────────────────────────────────────────────
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
       try {
-        // Try to refresh token
         const token = await refreshAuthToken();
         originalRequest.headers.Authorization = `Bearer ${token}`;
         return api(originalRequest);
@@ -153,22 +167,36 @@ api.interceptors.response.use(
         localStorage.removeItem('token');
         localStorage.removeItem('userData');
         localStorage.removeItem('verificationStatus');
-        // Don't redirect here - let the component handle it
         return Promise.reject(refreshError);
       }
     }
 
-    // Handle 403 Forbidden (permission denied)
+    // ── Handle 403 Forbidden ──────────────────────────────────────────────────
     if (error.response?.status === 403) {
-      console.warn('Access forbidden - insufficient permissions');
+      // Structured — let caller handle (don't suppress)
     }
 
-    // Handle network errors
-    if (!error.response) {
-      console.error('Network error or no response from server');
+    // ── Retry on network error (GET/HEAD/OPTIONS only) ────────────────────────
+    if (!error.response && !originalRequest._retried) {
+      const method = (originalRequest.method || '').toLowerCase();
+      if (RETRY_METHODS.has(method)) {
+        originalRequest._retried = true;
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+        return api(originalRequest);
+      }
     }
 
-    // BUG 3 FIX: Normalize error so all components get consistent shape.
+    // ── Handle timeout ────────────────────────────────────────────────────────
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      return Promise.reject({
+        success: false,
+        message: 'The request timed out. Please check your connection and try again.',
+        status: 408,
+        code: 'REQUEST_TIMEOUT',
+      });
+    }
+
+    // ── Normalize error payload ───────────────────────────────────────────────
     // Attach HTTP status to the rejection payload whether it's a structured
     // backend error object or a raw Error, so callers can always check err.status.
     const payload = error.response?.data || error;

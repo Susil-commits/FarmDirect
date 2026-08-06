@@ -7,18 +7,19 @@ export function ToastProvider({ children }) {
   const removeToastRef = useRef(null);
   const [toasts, setToasts] = useState([]);
 
-  const addToast = useCallback((message, type = 'info', duration = 4000) => {
-    const id = Date.now();
-    const toast = { id, message, type };
-    
+  const addToast = useCallback((message, type = 'info', duration = 5000) => {
+    if (!message) return null;
+    const id = Date.now() + Math.random(); // avoid collision on rapid calls
+    const toast = { id, message, type, duration };
+
     setToasts(prev => [...prev, toast]);
-    
+
     if (duration > 0) {
       setTimeout(() => {
         setToasts(prev => prev.filter(t => t.id !== id));
       }, duration);
     }
-    
+
     return id;
   }, []);
 
@@ -31,8 +32,52 @@ export function ToastProvider({ children }) {
     removeToastRef.current = removeToast;
   }, [removeToast]);
 
+  // ── Typed shorthand helpers ────────────────────────────────────────────────
+
+  const success = useCallback((msg, duration) => addToast(msg, 'success', duration), [addToast]);
+  const error = useCallback((msg, duration) => addToast(msg, 'error', duration ?? 6000), [addToast]);
+  const warning = useCallback((msg, duration) => addToast(msg, 'warning', duration ?? 6000), [addToast]);
+  const info = useCallback((msg, duration) => addToast(msg, 'info', duration), [addToast]);
+
+  /** Show a network-offline toast. */
+  const networkError = useCallback(() => {
+    addToast('You appear to be offline. Please check your connection.', 'error', 8000);
+  }, [addToast]);
+
+  /**
+   * Show field-level validation errors as a single toast.
+   * Accepts: object { field: message } or array of message strings.
+   */
+  const validationErrors = useCallback((errors) => {
+    if (!errors) return;
+    let messages;
+    if (Array.isArray(errors)) {
+      messages = errors.filter(Boolean);
+    } else if (typeof errors === 'object') {
+      messages = Object.values(errors).filter(Boolean);
+    } else {
+      messages = [String(errors)];
+    }
+    if (messages.length === 0) return;
+    const text = messages.slice(0, 3).join(' • ');
+    addToast(text, 'error', 7000);
+  }, [addToast]);
+
+  const value = {
+    addToast,
+    removeToast,
+    toasts,
+    // Typed helpers
+    success,
+    error,
+    warning,
+    info,
+    networkError,
+    validationErrors,
+  };
+
   return (
-    <ToastContext.Provider value={{ addToast, removeToast }}>
+    <ToastContext.Provider value={value}>
       {children}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ToastContext.Provider>
@@ -60,14 +105,10 @@ function ToastContainer({ toasts, onRemove }) {
 function Toast({ toast, onRemove }) {
   const getIcon = () => {
     switch (toast.type) {
-      case 'success':
-        return '✓';
-      case 'error':
-        return '✕';
-      case 'warning':
-        return '⚠';
-      default:
-        return 'ℹ';
+      case 'success': return '✓';
+      case 'error': return '✕';
+      case 'warning': return '⚠';
+      default: return 'ℹ';
     }
   };
 
@@ -79,7 +120,7 @@ function Toast({ toast, onRemove }) {
         </span>
         <span className="toast-message">{toast.message}</span>
       </div>
-      <button 
+      <button
         className="toast-close"
         onClick={() => onRemove(toast.id)}
         aria-label="Close notification"
