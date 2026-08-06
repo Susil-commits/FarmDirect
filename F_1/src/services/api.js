@@ -93,9 +93,7 @@ api.interceptors.request.use(
 
     // DEBUG: Log FormData requests to trace multipart upload issues (dev only)
     if (import.meta.env.DEV && config.data instanceof FormData) {
-      console.log('🔍 [api.js] FormData request to:', config.url);
       for (const [key, value] of config.data.entries()) {
-        console.log(`  - ${key}: ${value instanceof File ? `File(${value.name}, ${value.size} bytes, ${value.type})` : value}`);
       }
     }
 

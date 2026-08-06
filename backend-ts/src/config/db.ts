@@ -6,7 +6,6 @@ export async function connectDB(): Promise<typeof mongoose> {
   try {
     mongoose.set('strictQuery', true);
     const conn = await mongoose.connect(env.mongoUri);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
     return conn;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -19,7 +18,6 @@ export async function connectDB(): Promise<typeof mongoose> {
 export async function disconnectDB(): Promise<void> {
   try {
     await mongoose.disconnect();
-    console.log('MongoDB disconnected');
   } catch (error) {
     console.error('Error disconnecting MongoDB:', error);
   }

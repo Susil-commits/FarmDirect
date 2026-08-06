@@ -57,7 +57,6 @@ export function RouterProvider({ children }) {
   const navigate = (path) => {
     // Handle browser back navigation (navigate(-1))
     if (path === -1 || path === '-1') {
-      console.log('Navigate: browser back requested');
       window.history.back();
       return;
     }
@@ -66,13 +65,10 @@ export function RouterProvider({ children }) {
     const routePath = String(path);
 
     // Skip loading if already on same page
-    console.log('Navigate called:', { from: currentRoute, to: routePath });
     if (routePath === currentRoute) {
-      console.log('Same route, skipping navigation');
       return;
     }
     
-    console.log('Updating route to:', routePath);
     window.history.pushState({}, '', routePath);
     setCurrentRoute(routePath);
     window.scrollTo(0, 0);

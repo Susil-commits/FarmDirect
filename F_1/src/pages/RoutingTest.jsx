@@ -15,7 +15,6 @@ export default function RoutingTest() {
   ];
 
   const handleClick = (path) => {
-    console.log('Test button clicked:', path);
     navigate(path);
   };
 

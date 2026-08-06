@@ -359,7 +359,7 @@ export default function FarmerDashboardNew() {
                                       <div key={idx} className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                                         <div className="flex items-start gap-3 mb-3">
                                           {profilePic ? (
-                                            <img src={getImageUrl(profilePic)} alt={fullName} className="w-12 h-12 rounded-full object-cover border-2 border-green-200" />
+                                            <img loading="lazy" src={getImageUrl(profilePic)} alt={fullName} className="w-12 h-12 rounded-full object-cover border-2 border-green-200" />
                                           ) : (
                                             <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-lg border-2 border-green-200">
                                               {(buyerData.firstName || buyerData.name || '?').charAt(0).toUpperCase()}

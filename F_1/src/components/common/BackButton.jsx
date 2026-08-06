@@ -18,7 +18,6 @@ export default function BackButton({ label = 'Go Back', className = '' }) {
       }
     } catch {
       // Fallback to home if history access fails
-      console.log('History back failed, going to home');
       navigate('/');
     }
   };

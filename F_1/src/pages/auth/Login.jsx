@@ -59,7 +59,6 @@ export default function Login() {
     setErrors({});
     
     try {
-      console.log('🔐 Attempting login with email:', formData.email);
       const response = await login({
         email: formData.email,
         password: formData.password,
@@ -69,7 +68,6 @@ export default function Login() {
         throw new Error('Invalid response from server');
       }
 
-      console.log('✅ Login successful! User:', response.user);
       addToast('Login successful!', 'success');
 
       // Clear form immediately
@@ -85,26 +83,19 @@ export default function Login() {
       const isExistingKYCUser = !!(response.user?.kycSubmittedAt || (response.user?.kycDocuments && Object.keys(response.user.kycDocuments).length > 0));
       
       if (verificationStatus === 'not_submitted' && !isExistingKYCUser) {
-        console.log('📋 KYC not submitted, redirecting to pending verification (hello page)');
         navigate('/pending-verification');
       } else if (verificationStatus === 'not_submitted' && isExistingKYCUser) {
-        console.log('📋 Existing KYC user with not_submitted status, redirecting to document submission');
         navigate('/verification/progress');
       } else if (verificationStatus === 'pending' || verificationStatus === 'rejected') {
-        console.log('⏳ KYC pending/rejected, redirecting to document submission');
         navigate('/verification/progress');
       } else if (redirectPath) {
-        console.log('🔗 Redirecting to saved path:', redirectPath);
         clearRedirectPath();
         navigate(redirectPath);
       } else if (response.user?.role === 'farmer') {
-        console.log('🌾 Farmer user, redirecting to dashboard');
         navigate('/farmer/dashboard');
       } else if (response.user?.role === 'admin') {
-        console.log('⚙️ Admin user, redirecting to admin panel');
         navigate('/admin/dashboard');
       } else {
-        console.log('🛒 Buyer user, redirecting to marketplace');
         navigate('/marketplace');
       }
     } catch (error) {
@@ -134,7 +125,6 @@ export default function Login() {
         errorMessage = 'Your account is pending verification. Please check your email.';
       }
       
-      console.log('📢 Showing error to user:', errorMessage);
       addToast(errorMessage, 'error');
       setErrors({ submit: errorMessage });
     }

@@ -70,7 +70,6 @@ export default function AdminMessages() {
     } catch (err) {
       console.error(err);
       // Fallback - show demo data structure for now
-      console.log('Will need to implement admin messages endpoint');
       setConversations([]);
     } finally {
       setLoading(false);

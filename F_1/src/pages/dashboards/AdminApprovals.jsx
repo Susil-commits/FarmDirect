@@ -124,7 +124,6 @@ export default function AdminApprovals() {
       setLoading(true);
       setError(null);
       const data = await adminService.getPendingKYC({ role: roleTab });
-      console.log('✅ Pending KYC users:', data);
       setPendingUsers(data.data || []);
     } catch (error) {
       console.error('Error fetching pending KYC:', error);
@@ -135,7 +134,6 @@ export default function AdminApprovals() {
         console.warn('⚠️ 403 Forbidden — trying test endpoint fallback...');
         try {
           const testData = await adminService.getPendingKYCTest({ role: roleTab });
-          console.log('✅ Test endpoint fallback succeeded:', testData);
           setPendingUsers(testData.data || []);
           setError('Using debug mode — data shown via test endpoint. Create an admin account for production use.');
           return;
@@ -155,7 +153,6 @@ export default function AdminApprovals() {
       setLoading(true);
       setError(null);
       const data = await adminService.getRejectedKYC({ role: roleTab });
-      console.log('✅ Rejected KYC users:', data);
       setRejectedUsers(data.data || []);
     } catch (error) {
       console.error('Error fetching rejected KYC:', error);
@@ -166,7 +163,6 @@ export default function AdminApprovals() {
         console.warn('⚠️ 403 Forbidden on rejected — trying test endpoint fallback...');
         try {
           const testData = await adminService.getRejectedKYCTest({ role: roleTab });
-          console.log('✅ Test endpoint fallback for rejected succeeded:', testData);
           setRejectedUsers(testData.data || []);
           setError('Using debug mode — data shown via test endpoint.');
           return;
@@ -575,7 +571,6 @@ export default function AdminApprovals() {
                           onClick={async () => {
                             try {
                               const data = await adminService.debugKYCStatus();
-                              console.log('📊 All Users KYC Status:', data);
                               addToast('Check Console (F12) for detailed breakdown', 'info');
                             } catch {
                               addToast('Debug endpoint failed. Is the backend running?', 'error');
@@ -589,7 +584,6 @@ export default function AdminApprovals() {
                           onClick={async () => {
                             try {
                               const data = await adminService.getPendingKYCTest({ role: roleTab });
-                              console.log('📊 Test endpoint result:', data);
                               if (data.data && data.data.length > 0) {
                                 setPendingUsers(data.data);
                                 setError('✅ Data loaded via test endpoint (bypasses auth). Create an admin user for production.');

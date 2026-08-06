@@ -185,10 +185,6 @@ class SessionManager {
     const history = this.getLoginHistory();
 
     console.group('🔐 Session Information');
-    console.log('Status:', status);
-    console.log('Duration:', duration);
-    console.log('Login History:', history);
-    console.log('Previous Login:', this.getPreviousLogin());
     console.groupEnd();
   }
 }

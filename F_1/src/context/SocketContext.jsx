@@ -50,12 +50,10 @@ export const SocketProvider = ({ children }) => {
       socketRef.current = socket;
 
       socket.on('connect', () => {
-        console.log('⚡ Socket connected:', socket.id);
         setConnected(true);
       });
 
       socket.on('disconnect', (reason) => {
-        console.log('🔌 Socket disconnected:', reason);
         setConnected(false);
       });
 

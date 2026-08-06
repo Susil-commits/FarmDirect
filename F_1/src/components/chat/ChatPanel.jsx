@@ -219,7 +219,7 @@ export default function ChatPanel({
           )}
           {/* Avatar */}
           {photoUrl ? (
-            <img src={getImageUrl(photoUrl)} alt={displayName} className="chat-header-avatar" />
+            <img loading="lazy" src={getImageUrl(photoUrl)} alt={displayName} className="chat-header-avatar" />
           ) : (
             <div className={`chat-header-avatar-fallback ${getColorClass(displayName)}`}>
               {getInitial(receiverData?.firstName || receiverData?.name)}

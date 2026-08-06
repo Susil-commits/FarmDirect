@@ -217,7 +217,6 @@ export default function OnboardingFlow() {
   };
 
   const handleSkip = (formData) => {
-    console.log('Onboarding skipped with data:', formData);
     // Navigate to role-based dashboard
     if (formData.role === 'farmer') {
       navigate('/farmer/dashboard');

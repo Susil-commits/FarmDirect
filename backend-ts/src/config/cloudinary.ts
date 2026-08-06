@@ -8,9 +8,7 @@ if (isCloudinaryConfigured()) {
     api_secret: env.cloudinaryApiSecret,
     secure: true,
   });
-  console.log('Cloudinary configured — uploads will use Cloudinary');
 } else {
-  console.log('Cloudinary not configured — uploads will use local disk storage');
 }
 
 export { cloudinary, isCloudinaryConfigured };

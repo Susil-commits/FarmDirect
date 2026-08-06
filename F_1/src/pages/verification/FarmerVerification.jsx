@@ -192,19 +192,14 @@ export default function FarmerVerification() {
         }
       });
 
-      console.log('📤 [FarmerVerification] Uploading files:', Object.keys(fileMap));
-      console.log('📤 [FarmerVerification] File details:', Object.entries(fileMap).map(([k, v]) => `${k}: ${v.name} (${v.size} bytes)`));
 
       // Upload to backend
       const result = await uploadService.uploadKYCDocuments(fileMap, 'farmer_kyc');
 
-      console.log('✅ [FarmerVerification] KYC documents submitted:', result);
 
       // CRITICAL: Refresh user data to get kycDocuments from backend
       // This ensures the pre-populate useEffect can find the docs on next page load
-      console.log('🔄 [FarmerVerification] Refreshing user data...');
       const refreshedUser = await refreshUser();
-      console.log('🔄 [FarmerVerification] User refreshed, kycDocuments:', Object.keys(refreshedUser?.kycDocuments || {}));
 
       setSubmittedAt(new Date().toLocaleDateString());
       setAllSubmitted(true);
