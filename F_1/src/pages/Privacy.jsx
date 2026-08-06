@@ -31,7 +31,7 @@ export default function Privacy() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-slate-50 py-16 relative overflow-hidden">
+      <div className="min-h-screen bg-slate-50 pt-32 pb-16 relative overflow-hidden">
         {/* Decorative background elements */}
         <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-emerald-900 to-slate-50 pointer-events-none opacity-5" />
         

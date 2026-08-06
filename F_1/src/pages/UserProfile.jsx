@@ -201,7 +201,7 @@ export default function UserProfile() {
   if (!user) {
     return (
       <PageTransition>
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 pt-28 pb-12">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Please login to view your profile</h2>
             <Button onClick={() => navigate('/auth/login')} variant="primary">Go to Login</Button>
@@ -213,7 +213,7 @@ export default function UserProfile() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen premium-gradient relative overflow-hidden">
+      <div className="min-h-screen premium-gradient relative overflow-hidden pt-28 pb-12">
         <div className="pt-6 px-6 md:px-12 relative z-10">
           <BackButton label="Back" />
         </div>

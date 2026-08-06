@@ -210,7 +210,7 @@ export default function FarmerDashboardNew() {
   return (
     <ErrorBoundary>
     <PageTransition>
-      <div className="min-h-screen premium-gradient py-12 px-4 relative overflow-hidden">
+      <div className="min-h-screen premium-gradient px-4 relative overflow-hidden pt-28 pb-12">
         <div className="absolute top-[10%] right-[-10%] w-[50%] h-[50%] bg-green-400/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="max-w-6xl mx-auto relative z-10">

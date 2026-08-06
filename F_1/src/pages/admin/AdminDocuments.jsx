@@ -187,7 +187,7 @@ export default function AdminDocuments() {
   return (
     <ProtectedRoute roles="admin">
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white py-8 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white px-4 pt-28 pb-8">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <ScrollAnimation className="scroll-slide mb-8">

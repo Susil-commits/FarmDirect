@@ -206,7 +206,7 @@ export default function EditCrop() {
     return (
       <ProtectedRoute roles="farmer">
         <PageTransition>
-          <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white py-8 px-4 flex items-center justify-center">
+          <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white px-4 flex items-center justify-center pt-28 pb-8">
             <Card className="max-w-md w-full p-8 text-center">
               <AlertCircle size={48} className="mx-auto mb-4 text-red-500" />
               <h2 className="text-xl font-bold text-gray-900 mb-2">Crop Not Found</h2>
@@ -225,7 +225,7 @@ export default function EditCrop() {
     <ErrorBoundary>
     <ProtectedRoute roles="farmer">
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white py-8 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white px-4 pt-28 pb-8">
           <div className="max-w-2xl mx-auto">
             {/* Back Button */}
             <ScrollAnimation className="scroll-slide mb-6">

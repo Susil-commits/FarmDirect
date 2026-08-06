@@ -454,7 +454,7 @@ export default function VerificationProgress() {
       {/* Show congratulation modal if verification just got approved */}
       {showCongratulation && <CongratulationModal />}
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-cyan-50 py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-cyan-50 px-4 pt-28 pb-12">
         <div className="max-w-3xl mx-auto">
           {/* Back Button */}
           <div className="mb-6">

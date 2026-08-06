@@ -399,7 +399,7 @@ export default function ShoppingCart() {
                   </button>
 
                   {/* Trust Badges */}
-                  <div className="cart-trust-row flex justify-center gap-4 mt-6 pt-4 border-t border-gray-100 text-xs text-slate-500 font-medium">
+                  <div className="cart-trust-row flex justify-center gap-4 mt-6 pt-32 border-t border-gray-100 text-xs text-slate-500 font-medium">
                     <span className="flex items-center gap-1"><Lock size={14} className="text-emerald-500"/> SSL Secured</span>
                     <span className="flex items-center gap-1"><Check size={14} className="text-emerald-500"/> Quality Assured</span>
                   </div>

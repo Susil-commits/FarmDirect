@@ -59,7 +59,7 @@ export default function FarmerProfile() {
   if (error && !farmer) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-12 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4 pt-28 pb-12">
           <div className="max-w-4xl mx-auto">
             <Button variant="outline" onClick={() => navigate(-1)} className="mb-6">
               <ArrowLeft size={16} /> Go Back
@@ -81,7 +81,7 @@ export default function FarmerProfile() {
   return (
     <ErrorBoundary>
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-28 pb-12">
         {/* Premium Header Section */}
         <div className="relative min-h-64 bg-gradient-to-br from-emerald-600 via-green-600 to-teal-700 overflow-hidden">
           {/* Animated background elements */}

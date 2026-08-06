@@ -144,7 +144,7 @@ export default function SearchResults() {
   return (
     <ErrorBoundary>
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white px-4 pt-28 pb-12">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <ScrollAnimation className="scroll-slide mb-8">

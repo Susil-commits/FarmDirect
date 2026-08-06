@@ -95,9 +95,9 @@ export default function JoinAsFarmer() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white">
+      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white pt-28 pb-12">
         {/* Hero Section */}
-        <section className="py-20 px-4 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
+        <section className="pt-32 pb-20 px-4 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
           <div className="max-w-6xl mx-auto relative z-10">
             <ScrollAnimation className="scroll-slide mb-12">
               <div className="text-center">

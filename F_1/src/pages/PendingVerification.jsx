@@ -20,7 +20,7 @@ export default function PendingVerification() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center px-4 pt-28 pb-12">
         <div className="max-w-md w-full">
           <Card className="border-2 border-blue-200">
             <div className="p-6 sm:p-10 text-center">
