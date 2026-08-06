@@ -11,6 +11,7 @@ import {
 } from '../types/enums.js';
 import type { Request, Response, NextFunction } from 'express';
 import type { ICropSpecifications } from '../types/index.js';
+import { globalCache } from '../config/cache.js';
 
 export async function createCrop(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -80,6 +81,9 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
       availability: CropAvailability.Available,
     });
 
+    // Invalidate crop cache since a new crop was added
+    globalCache.clearPrefix('crops:');
+
     res.status(201).json({ message: 'Crop listing created successfully', crop });
   } catch (error) {
     next(error);
@@ -88,6 +92,13 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
 
 export async function getCrops(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    const cacheKey = `crops:${JSON.stringify(req.query)}`;
+    const cachedResponse = globalCache.get(cacheKey);
+    if (cachedResponse) {
+      res.status(200).json(cachedResponse);
+      return;
+    }
+
     const {
       category, cropType, minPrice, maxPrice, search, location, rating, certifications,
       page = '1', limit = '12', sortBy = 'createdAt', sortOrder = 'desc',
@@ -141,10 +152,14 @@ export async function getCrops(req: Request, res: Response, next: NextFunction):
       CropListing.countDocuments(query),
     ]);
 
-    res.status(200).json({
+    const responseData = {
       crops,
       pagination: { total, page: Number(page), limit: Number(limit), pages: Math.ceil(total / Number(limit)) },
-    });
+    };
+
+    globalCache.set(cacheKey, responseData, 60); // Cache for 60 seconds
+
+    res.status(200).json(responseData);
   } catch (error) {
     next(error);
   }
@@ -323,6 +338,10 @@ export async function updateCrop(req: Request, res: Response, next: NextFunction
     }
 
     crop = await CropListing.findByIdAndUpdate(req.params.id, updateFields, { new: true, runValidators: true });
+    
+    // Invalidate crop cache since a crop was updated
+    globalCache.clearPrefix('crops:');
+
     res.status(200).json({ message: 'Crop updated successfully', crop });
   } catch (error) {
     next(error);
@@ -380,6 +399,10 @@ export async function deleteCrop(req: Request, res: Response, next: NextFunction
     ]);
 
     await CropListing.findByIdAndDelete(req.params.id);
+
+    // Invalidate crop cache since a crop was deleted
+    globalCache.clearPrefix('crops:');
+
     res.status(200).json({ message: 'Crop deleted successfully. Active orders were cancelled and buyers notified.' });
   } catch (error) {
     next(error);

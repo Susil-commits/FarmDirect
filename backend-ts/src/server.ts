@@ -8,6 +8,8 @@ import { createServer, type Server as HttpServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
+import cluster from 'cluster';
+import os from 'os';
 import mongoSanitize from 'express-mongo-sanitize';
 import mongoose from 'mongoose';
 
@@ -251,21 +253,46 @@ process.on('uncaughtException', (error) => {
   gracefulShutdown('uncaughtException');
 });
 
-// B24 FIX: Wrap server startup in an async function so that connectDB() is
-// awaited before httpServer.listen() is called. Previously, connectDB was
-// invoked synchronously at module-load time, meaning the server could begin
-// accepting HTTP requests before the DB connection was established —
-// leading to "MongoNotConnectedError" on the first few requests after cold start.
+// B24 FIX: Wrap server startup in an async function
 async function start(): Promise<void> {
   await connectDB();
   const PORT = env.port;
   httpServer.listen(PORT, () => {
+    console.log(`Worker ${process.pid} listening on port ${PORT}`);
   });
 }
 
-start().catch((err) => {
-  console.error('Failed to start server:', err);
-  process.exit(1);
-});
+// Cluster logic to spawn workers per CPU core for max throughput and reliability
+if (cluster.isPrimary) {
+  const numCPUs = os.cpus().length;
+  console.log(`Primary cluster setting up ${numCPUs} workers...`);
+
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+
+  cluster.on('online', (worker) => {
+    console.log(`Worker ${worker.process.pid} is online`);
+  });
+
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`Worker ${worker.process.pid} died with code: ${code}, and signal: ${signal}`);
+    console.log('Starting a new worker to replace it...');
+    cluster.fork();
+  });
+
+  // Self-ping Cron to prevent PaaS instances (Render/Heroku) from sleeping
+  setInterval(() => {
+    fetch(`http://localhost:${env.port}/api/health`)
+      .then(() => console.log('Self-ping successful (Keeping instance warm)'))
+      .catch((err) => console.error('Self-ping failed:', err.message));
+  }, 10 * 60 * 1000); // Every 10 mins
+
+} else {
+  start().catch((err) => {
+    console.error(`Worker ${process.pid} failed to start:`, err);
+    process.exit(1);
+  });
+}
 
 export default app;
