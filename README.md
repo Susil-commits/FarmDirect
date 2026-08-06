@@ -12,6 +12,8 @@
   <img src="https://img.shields.io/badge/Express-4.x-000000?logo=express&logoColor=white" alt="Express">
   <img src="https://img.shields.io/badge/MongoDB-8.x-47A248?logo=mongodb&logoColor=white" alt="MongoDB">
   <img src="https://img.shields.io/badge/Vite-8.x-646CFF?logo=vite&logoColor=white" alt="Vite">
+  <img src="https://img.shields.io/badge/i18n-React--i18next-009688?logo=react&logoColor=white" alt="i18n">
+  <img src="https://img.shields.io/badge/Leaflet-Maps-199900?logo=leaflet&logoColor=white" alt="Maps">
   <img src="https://img.shields.io/badge/License-ISC-blue" alt="License">
 </p>
 
@@ -95,8 +97,8 @@ That's it. Open `http://localhost:5173`, register, submit KYC, and start trading
 ```
                     ┌─────────────────────────────────────────────────┐
                     │                   Frontend (F_1)                │
-                    │         React 19 · Vite · Tailwind · PWA        │
-                    │     TanStack Query · Socket.io Client · Lucide  │
+                    │      React 19 · Vite · Tailwind · PWA · i18n    │
+                    │   TanStack Query · Socket.io · Leaflet · Recharts │
                     └──────────────────────┬──────────────────────────┘
                                            │  HTTP + WebSocket
                     ┌──────────────────────▼──────────────────────────┐
@@ -266,7 +268,10 @@ GITHUB_CLIENT_SECRET=
 | **Live Activity Ticker** | Real-time global notifications showcasing community activity on the platform |
 | **Eco-Score Engine** | Dynamic freshness and sustainability index calculated for every crop |
 | **Real-time Engine** | WebSocket-based order tracking and instant messaging |
-| **PWA Ready** | Installable on mobile devices with offline capabilities |
+| **PWA Ready** | Fully installable Progressive Web App (PWA) with offline support |
+| **Multilingual (i18n)** | Integrated English and Hindi localization (Hero & Navbar) |
+| **Enterprise Analytics** | Advanced interactive Recharts dashboards for Admins |
+| **Live Order Tracking** | Geospatial route maps powered by React-Leaflet |
 
 ### For Buyers
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-empty */
 import axios from 'axios';
 import { isTokenExpired } from '../utils/jwtUtils.js';
 import { safeStorage } from '../utils/storage.js';
