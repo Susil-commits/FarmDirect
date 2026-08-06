@@ -111,7 +111,7 @@ function loadEnv(): EnvConfig {
     cloudinaryApiKey: CLOUDINARY_API_KEY,
     cloudinaryApiSecret: CLOUDINARY_API_SECRET,
     cloudinaryUrl: CLOUDINARY_URL,
-    maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '52428800', 10),
+    maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '5242880', 10), // Reduced default from 50MB to 5MB to prevent Payload DoS
     uploadDir: process.env.UPLOAD_DIR || './uploads',
     razorpayKeyId: process.env.RAZORPAY_KEY_ID,
     razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET,
