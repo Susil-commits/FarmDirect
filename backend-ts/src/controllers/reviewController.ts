@@ -9,13 +9,6 @@ import type { Request, Response } from 'express';
 import type { Types } from 'mongoose';
 
 // B22: Rating recomputation uses MongoDB aggregation ($avg) instead of
-// loading all reviews into memory and computing in JavaScript.
-// This is slightly more concurrency-safe (the computed value reflects
-// whichever documents are committed at aggregate-read time) and is
-// significantly more efficient at scale.
-// Full serialisation via MongoDB transactions would be needed for
-// perfect consistency under extreme concurrent load, but this is
-// sufficient for a marketplace with normal review rates.
 async function updateCropRating(cropId: Types.ObjectId | string): Promise<void> {
   const result = await Review.aggregate([
     { $match: { cropId: typeof cropId === 'string' ? { $oid: cropId } : cropId } },
@@ -117,7 +110,6 @@ export const deleteReview = asyncHandler(async (req: Request, res: Response) => 
   const crop = await CropListing.findById(cropId).select('farmerId');
   await Review.findByIdAndDelete(reviewId);
   await updateCropRating(cropId);
-  // Re-calculate the farmer's rating now that the review is gone
   if (crop) await updateFarmerRating(crop.farmerId);
   res.status(200).json({ success: true, message: 'Review deleted successfully' });
 });

@@ -15,7 +15,6 @@ import {
 
 const router = Router();
 
-// ── Public routes ────────────────────────────────────────────────────────────
 router.post('/register',
   trimStrings,
   normalizeEmail,
@@ -45,7 +44,6 @@ router.post('/reset-password',
   resetPassword,
 );
 
-// ── Protected routes ─────────────────────────────────────────────────────────
 router.get('/me', protect, getCurrentUser);
 router.put('/update-profile', protect, trimStrings, updateProfile);
 router.put('/update-password', protect, trimStrings, validateRequest({ body: updatePasswordSchema }), updatePassword);
@@ -53,7 +51,6 @@ router.post('/logout', protect, logout);
 router.post('/delete-account', protect, deleteAccount);
 router.post('/complete-onboarding', protect, trimStrings, completeOnboarding);
 
-// ── KYC routes ────────────────────────────────────────────────────────────────
 router.post('/kyc/submit', protect, uploadMultipleFiles('kyc_documents', 10), submitKYCDocuments);
 router.post('/submit-kyc', protect, uploadMultipleFiles('kyc_documents', 10), submitKYCDocuments);
 

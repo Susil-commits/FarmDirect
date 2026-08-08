@@ -12,7 +12,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom Icons for Farmer and Buyer
 const createCustomIcon = (color) => {
   return new L.Icon({
     iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
@@ -28,14 +27,12 @@ const farmerIcon = createCustomIcon('green');
 const buyerIcon = createCustomIcon('blue');
 
 export default function OrderMap({ order }) {
-  // If real coordinates aren't in the DB, we mock them for Epic 4 showcase
-  const defaultFarmerCoords = [28.6139, 77.2090]; // Delhi
-  const defaultBuyerCoords = [28.5355, 77.3910]; // Noida
+  const defaultFarmerCoords = [28.6139, 77.2090];
+  const defaultBuyerCoords = [28.5355, 77.3910];
   
   const farmerCoords = order?.farmerCoordinates || defaultFarmerCoords;
   const buyerCoords = order?.buyerCoordinates || defaultBuyerCoords;
 
-  // Calculate center between farmer and buyer
   const center = [
     (farmerCoords[0] + buyerCoords[0]) / 2,
     (farmerCoords[1] + buyerCoords[1]) / 2

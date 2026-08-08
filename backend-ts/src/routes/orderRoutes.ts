@@ -12,7 +12,6 @@ import { updateOrderStatusSchema, cancelOrderSchema, orderQuerySchema } from '..
 
 const router = Router();
 
-// ── Collection routes ─────────────────────────────────────────────────────────
 router.post('/start', protect, authorize(UserRole.Farmer), requireKYC, trimStrings, startOrder);
 router.post('/checkout-cart', protect, authorize(UserRole.Buyer), requireKYC, trimStrings, checkoutCart);
 router.post('/', protect, authorize(UserRole.Buyer), requireKYC, trimStrings, createOrder);
@@ -20,7 +19,6 @@ router.get('/', protect, validateRequest({ query: orderQuerySchema }), getOrders
 router.get('/stats/summary', protect, getOrderStats);
 router.get('/payment/pending-cod', protect, authorize(UserRole.Farmer), getPendingCODPayments);
 
-// ── Single-order routes (all require valid ObjectId) ──────────────────────────
 router.get('/:id', validateObjectId(), protect, getOrderById);
 
 router.put('/:id/payment/received',

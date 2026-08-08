@@ -21,7 +21,6 @@ export const protect: RequestHandler = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
-    // Guard against malformed Authorization header
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return next(ApiError.unauthorized('No authentication token provided'));
     }
@@ -48,7 +47,6 @@ export const protect: RequestHandler = async (req, res, next) => {
       email: user.email,
       status: user.status,
     };
-    // Attach full document for middleware reuse (avoids N duplicate DB lookups)
     req.userDoc = user;
 
     if (user.status === UserStatus.Banned || user.status === UserStatus.Suspended) {
@@ -94,7 +92,6 @@ export const requireKYC: RequestHandler = async (req, _res, next) => {
     if (req.user.role === UserRole.Admin) {
       return next();
     }
-    // Prefer the already-loaded userDoc; fall back to a fresh query only if missing
     const user = req.userDoc ?? await User.findById(req.user._id);
     if (!user || user.kycStatus !== KycStatus.Verified) {
       return next(new ApiError(403, 'KYC verification required', {

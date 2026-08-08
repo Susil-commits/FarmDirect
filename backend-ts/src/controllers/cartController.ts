@@ -25,7 +25,6 @@ export async function updateCart(req: Request, res: Response, next: NextFunction
       return;
     }
 
-    // Filter out invalid items
     const validItems = items.filter(item => Types.ObjectId.isValid(item.cropId) && item.quantity > 0);
 
     let cart = await Cart.findOne({ userId: req.user!._id });

@@ -22,8 +22,6 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
   const conversationId = (Message as unknown as MessageModel).generateConversationId(senderId.toString(), receiverId);
 
   // B23 FIX: Use Message.create() directly — Message is already a Mongoose Model.
-  // The previous pattern `(Message as unknown as MessageModel).create(...)` was an
-  // unsafe double-cast that would silently pass even if the MessageModel type diverged.
   const message = await Message.create({
     senderId, receiverId, content: content.trim(),
     cropId: cropId || null, orderId: orderId || null, type, attachments, conversationId,
@@ -68,7 +66,6 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
   const { page = '1', limit = '20' } = req.query as Record<string, string>;
   const skip = (Number(page) - 1) * Number(limit);
 
-  // Single aggregation: groups by conversationId, gets last message + unread count + other user info
   const { Types } = await import('mongoose');
   const pipeline = [
     { $match: { $or: [{ senderId: new Types.ObjectId(String(userId)) }, { receiverId: new Types.ObjectId(String(userId)) }], isDeleted: false } },
@@ -107,7 +104,6 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
 
   const conversations = await (Message as any).aggregate(pipeline);
 
-  // Count total distinct conversations for pagination
   const totalCountResult = await (Message as any).aggregate([
     { $match: { $or: [{ senderId: new Types.ObjectId(String(userId)) }, { receiverId: new Types.ObjectId(String(userId)) }], isDeleted: false } },
     { $group: { _id: '$conversationId' } },

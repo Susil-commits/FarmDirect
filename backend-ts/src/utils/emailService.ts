@@ -64,7 +64,6 @@ async function attemptSend(mailOptions: nodemailer.SendMailOptions, attempt = 1)
 
 export async function sendEmail(mailOptions: EmailOptions): Promise<EmailResult> {
   try {
-    // Validate recipient email before sending
     if (!mailOptions.to || !isValidEmail(mailOptions.to)) {
       throw new Error(`Invalid recipient email address: ${mailOptions.to}`);
     }
@@ -73,7 +72,6 @@ export async function sendEmail(mailOptions: EmailOptions): Promise<EmailResult>
       mailOptions.from = env.smtpFrom;
     }
 
-    // Sanitize subject to prevent header injection
     if (mailOptions.subject) {
       mailOptions.subject = mailOptions.subject.replace(/[\r\n]/g, ' ');
     }

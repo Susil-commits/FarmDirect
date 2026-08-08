@@ -8,19 +8,17 @@ export interface UploadResult {
   publicId?: string;
 }
 
-const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB hard cap (beyond multer limit)
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
 
 export async function uploadFile(
   fileBuffer: Buffer,
   fileName: string,
   folder = 'general',
 ): Promise<UploadResult> {
-  // Guard: empty buffer
   if (!fileBuffer || fileBuffer.length === 0) {
     throw new Error('Cannot upload an empty file buffer');
   }
 
-  // Guard: hard cap beyond multer's limit
   if (fileBuffer.length > MAX_FILE_SIZE_BYTES) {
     throw new Error(`File exceeds maximum allowed size (${MAX_FILE_SIZE_BYTES / 1024 / 1024} MB)`);
   }
@@ -50,7 +48,6 @@ export async function uploadFile(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
 
-    // Classify the error type for better debugging
     if (message.includes('Invalid API Key') || message.includes('Invalid API Secret')) {
       console.error('Cloudinary auth error — falling back to local storage:', message);
     } else if (message.includes('ENOTFOUND') || message.includes('ETIMEDOUT') || message.includes('ECONNREFUSED')) {

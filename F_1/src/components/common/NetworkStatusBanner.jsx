@@ -39,7 +39,6 @@ export default function NetworkStatusBanner() {
     };
   }, [handleOnline, handleOffline]);
 
-  // Don't render when online or banner was manually dismissed
   if (isOnline || dismissed) return null;
 
   return (

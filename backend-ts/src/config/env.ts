@@ -62,7 +62,6 @@ function loadEnv(): EnvConfig {
   const required: Array<[string, string | undefined]> = [];
 
   // In production, fail fast on missing critical vars.
-  // In development, fall back to sensible localhost defaults (matches JS backend).
   if (isProd) {
     required.push(['MONGODB_URI', process.env.MONGODB_URI]);
     required.push(['JWT_SECRET', process.env.JWT_SECRET]);
@@ -74,7 +73,6 @@ function loadEnv(): EnvConfig {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
 
-  // Parse Cloudinary URL if individual vars aren't provided
   let { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_URL } = process.env;
   if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
     if (CLOUDINARY_URL) {
@@ -112,7 +110,7 @@ function loadEnv(): EnvConfig {
     cloudinaryApiKey: CLOUDINARY_API_KEY,
     cloudinaryApiSecret: CLOUDINARY_API_SECRET,
     cloudinaryUrl: CLOUDINARY_URL,
-    maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '5242880', 10), // Reduced default from 50MB to 5MB to prevent Payload DoS
+    maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '5242880', 10),
     uploadDir: process.env.UPLOAD_DIR || './uploads',
     razorpayKeyId: process.env.RAZORPAY_KEY_ID,
     razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET,

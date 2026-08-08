@@ -13,13 +13,11 @@ export default function LiveActivityTicker() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Show a random event every 15 to 30 seconds
     const intervalId = setInterval(() => {
       const randomEvent = EVENTS[Math.floor(Math.random() * EVENTS.length)];
       setCurrentEvent(randomEvent);
       setIsVisible(true);
       
-      // Hide the event after 5 seconds
       setTimeout(() => {
         setIsVisible(false);
       }, 5000);

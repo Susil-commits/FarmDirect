@@ -1,25 +1,20 @@
-// ── Basic field validators ────────────────────────────────────────────────────
 
-// Email validation
 export const validateEmail = (email) => {
   if (!email || typeof email !== 'string') return false;
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return re.test(email.trim());
 };
 
-// Phone validation (Indian mobile: starts with 6-9, 10 digits)
 export const validatePhone = (phone) => {
   if (!phone) return false;
   const re = /^[6-9]\d{9}$/;
   return re.test(phone.replace(/\D/g, ''));
 };
 
-// Name validation
 export const validateName = (name) => {
   return name && name.trim().length >= 2 && name.trim().length <= 50;
 };
 
-// Password validation
 export const validatePassword = (password) => {
   if (!password) return { valid: false, message: 'Password is required' };
   if (password.length < 8) return { valid: false, message: 'Password must be at least 8 characters' };
@@ -32,12 +27,10 @@ export const validatePassword = (password) => {
 /** Simple boolean check (for backwards compatibility) */
 export const isValidPassword = (password) => validatePassword(password).valid;
 
-// Pin code validation (Indian format: 6 digits)
 export const validatePincode = (pincode) => {
   return /^\d{6}$/.test(String(pincode ?? ''));
 };
 
-// URL validation
 export const validateURL = (url) => {
   if (!url) return false;
   try {
@@ -48,25 +41,21 @@ export const validateURL = (url) => {
   }
 };
 
-// Amount validation
 export const validateAmount = (amount) => {
   const n = Number(amount);
   return !isNaN(n) && n > 0;
 };
 
-// Quantity validation
 export const validateQuantity = (quantity) => {
   const n = Number(quantity);
   return Number.isInteger(n) && n > 0;
 };
 
-// Rating validation
 export const validateRating = (rating) => {
   const n = Number(rating);
   return Number.isInteger(n) && n >= 1 && n <= 5;
 };
 
-// ── Indian-specific validators ────────────────────────────────────────────────
 
 /**
  * Aadhar number validation — 12 digits.
@@ -95,7 +84,6 @@ export const validateIFSC = (ifsc) => {
   return /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc.toUpperCase().trim());
 };
 
-// ── Crop-specific validators ──────────────────────────────────────────────────
 
 /**
  * Validate crop price: must be a positive number up to 1,000,000.
@@ -117,7 +105,6 @@ export const validateCropQuantity = (qty) => {
   return { valid: true };
 };
 
-// ── File validation ───────────────────────────────────────────────────────────
 
 export const validateFile = (file, maxSize = 5242880, allowedTypes = ['image/jpeg', 'image/png', 'image/webp']) => {
   if (!file) return { valid: false, error: 'File is required' };
@@ -134,7 +121,6 @@ export const validateFile = (file, maxSize = 5242880, allowedTypes = ['image/jpe
   return { valid: true };
 };
 
-// ── Form utilities ────────────────────────────────────────────────────────────
 
 export const validateForm = (values, rules) => {
   const errors = {};
@@ -148,7 +134,7 @@ export const validateForm = (values, rules) => {
       return;
     }
 
-    if (!value) return; // Skip further validation if empty and not required
+    if (!value) return;
 
     if (rule.type === 'email' && !validateEmail(value)) {
       errors[field] = 'Invalid email address';
@@ -185,7 +171,6 @@ export const hasErrors = (errors) => {
   return Object.keys(errors).length > 0;
 };
 
-// Sanitize input to prevent XSS (browser-only)
 export const sanitizeInput = (input) => {
   if (typeof input !== 'string') return '';
   const div = document.createElement('div');
@@ -193,7 +178,6 @@ export const sanitizeInput = (input) => {
   return div.innerHTML;
 };
 
-// ── Domain-specific form validators ──────────────────────────────────────────
 
 export const validateCropListing = (cropData) => {
   const errors = {};

@@ -28,7 +28,6 @@ const VALID_TRANSITIONS: OrderTransitionMap = {
   [OrderStatus.Cancelled]: [],
 };
 
-// Statuses a buyer is allowed to advance the order to (NOT cancel — use cancelOrder endpoint)
 const BUYER_ALLOWED_TARGET_STATUSES: OrderStatus[] = [OrderStatus.PickedUp];
 
 const STATUS_DESCRIPTIONS: Record<string, string> = {
@@ -44,7 +43,6 @@ async function recordCropCompletion(order: OrderLike): Promise<void> {
   today.setHours(0, 0, 0, 0);
 
   // B6 FIX: read the crop after the stat increment so quantity reflects the
-  // actual post-decrement value (avoids stale-read sold-out check).
   const todaySalesEntry = await CropListing.findOne(
     { _id: order.cropId, 'dailySales.date': { $gte: today, $lt: new Date(today.getTime() + 86400000) } },
   ).lean().select('quantity dailySales');
@@ -147,7 +145,6 @@ export async function startOrder(req: Request, res: Response, next: NextFunction
       timeline: [{ event: 'ORDER_STARTED', description: 'Farmer has started the order.', timestamp: new Date() }],
     });
 
-    // Atomic decrement: only succeeds if quantity is still sufficient (race-condition safe)
     const updatedCrop = await CropListing.findOneAndUpdate(
       { _id: cropId, quantity: { $gte: orderQty } },
       {
@@ -262,8 +259,6 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
     });
 
     // B2 FIX: Atomic decrement FIRST — only redeem coupon after stock is secured.
-    // Previously redeemCoupon was called before this check, consuming the coupon
-    // even when the order was immediately deleted due to out-of-stock.
     const updatedCrop = await CropListing.findOneAndUpdate(
       { _id: cropId, quantity: { $gte: orderQty } },
       {
@@ -377,10 +372,7 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
     const createdOrderIds: string[] = [];
 
     // B1 FIX: Wrap the entire multi-item checkout loop in a MongoDB session +
-    // transaction so that if any one crop's stock decrement fails, ALL order
-    // inserts and stock changes are atomically rolled back — no orphaned orders.
     await session.withTransaction(async () => {
-      // Reset in case of retry
       createdOrderIds.length = 0;
 
       for (const item of validatedItems) {
@@ -422,7 +414,6 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
         );
 
         if (!updatedCrop) {
-          // Throwing inside withTransaction triggers automatic abort + retry
           throw new Error(`Insufficient stock for ${item.crop.cropName}`);
         }
         if (updatedCrop.quantity <= 0) {
@@ -435,7 +426,6 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
 
         createdOrderIds.push(String(order._id));
 
-        // Notifications are fire-and-forget (outside transaction is fine)
         Notification.create({
           userId: item.crop.farmerId,
           title: 'New Order Received',
@@ -545,8 +535,6 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
     const isBuyer = order.buyerId.toString() === req.user!._id.toString();
     const isAdmin = req.user!.role === 'admin';
 
-    // Buyers can only mark an order as PickedUp (from ReadyForPickup).
-    // Cancellations must go through the dedicated cancelOrder endpoint.
     const isBuyerTransition = isBuyer
       && order.orderStatus === OrderStatus.ReadyForPickup
       && BUYER_ALLOWED_TARGET_STATUSES.includes(status);
@@ -645,8 +633,6 @@ export async function cancelOrder(req: Request, res: Response, next: NextFunctio
     order.timeline.push({ event: 'CANCELLED', description: `Order cancelled by ${cancelledBy}. Reason: ${cancellationReason.trim()}`, timestamp: new Date() });
     await order.save();
 
-    // Restore stock atomically; only reactivate listing if it was previously active
-    // (don't override a farmer's manual deactivation)
     const cropForCancel = await CropListing.findById(order.cropId).select('status availability').lean();
     const wasActive = cropForCancel?.status === CropStatus.Active || cropForCancel?.status === CropStatus.SoldOut;
     const restoreSet: Record<string, unknown> = {};
@@ -681,8 +667,6 @@ export async function cancelOrder(req: Request, res: Response, next: NextFunctio
 export async function getOrderStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     // B3 FIX: Fetch the full order (not lean-selected) so we can verify ownership
-    // before returning status/timeline. Previously any authenticated user could
-    // probe any order's timeline by ID.
     const order = await Order.findById(req.params.id).lean().select('orderStatus orderNumber timeline buyerId farmerId');
     if (!order) {
       sendError(res, 'Order not found', 404);
@@ -704,7 +688,6 @@ export async function getOrderStatus(req: Request, res: Response, next: NextFunc
 export async function trackOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     // B5 FIX: Load the raw order first to verify caller ownership before
-    // returning contact numbers and pickup location.
     const raw = await Order.findById(req.params.id).lean().select('buyerId farmerId');
     if (!raw) {
       sendError(res, 'Order not found', 404);
@@ -783,7 +766,6 @@ export async function denyOrder(req: Request, res: Response, next: NextFunction)
     order.timeline.push({ event: 'DENIED', description: `Order denied by farmer. Reason: ${denialReason.trim()}`, timestamp: new Date() });
     await order.save();
 
-    // Same smart restore: only reactivate if listing was active/soldOut before
     const cropForDeny = await CropListing.findById(order.cropId).select('status').lean();
     const wasActiveForDeny = cropForDeny?.status === CropStatus.Active || cropForDeny?.status === CropStatus.SoldOut;
     const denyRestoreSet: Record<string, unknown> = {};
@@ -854,7 +836,6 @@ export async function markOrderReceived(req: Request, res: Response, next: NextF
   }
 }
 
-// ---------------- COD Payment Endpoints (Task 1.4) ----------------
 
 export async function markCODPaymentReceived(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -864,7 +845,6 @@ export async function markCODPaymentReceived(req: Request, res: Response, next: 
 
     if (!order) { sendError(res, 'Order not found', 404); return; }
 
-    // Only farmer (or admin) who owns the order can mark COD as received
     if (req.user!.role !== UserRole.Admin && order.farmerId.toString() !== req.user!._id.toString()) {
       sendError(res, 'Not authorized', 403);
       return;
@@ -876,8 +856,6 @@ export async function markCODPaymentReceived(req: Request, res: Response, next: 
     }
 
     // B4 FIX: Payment can only be collected after the buyer has actually picked
-    // up the goods. Allowing COD receipt on a 'confirmed' order (before pickup)
-    // could let a farmer claim payment that was never delivered.
     const allowedStatuses: OrderStatus[] = [OrderStatus.PickedUp, OrderStatus.Completed];
     if (!allowedStatuses.includes(order.orderStatus)) {
       sendError(

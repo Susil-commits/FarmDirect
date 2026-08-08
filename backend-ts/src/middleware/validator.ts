@@ -33,7 +33,6 @@ export function validateRequest(schemas: ValidationSchemas): RequestHandler {
       next();
     } catch (error) {
       const zodError = error as ZodError;
-      // Build a field-keyed error map for easy frontend consumption
       const fieldErrors: Record<string, string> = {};
       const issues = zodError.errors ?? zodError.issues ?? [];
       for (const issue of issues) {

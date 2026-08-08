@@ -45,10 +45,8 @@ export default function Home() {
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
-  // Scroll parallax state
   const [scrollY, setScrollY] = useState(0);
 
-  // Reset scroll position to top on page load/refresh
   useEffect(() => {
     window.scrollTo(0, 0);
     
@@ -60,7 +58,6 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Fetch real stats from API
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -85,7 +82,6 @@ export default function Home() {
     fetchStats();
   }, []);
 
-  // Safe navigation with error handling
   const handleNavigation = (path) => {
     try {
       if (!path || typeof path !== 'string') {

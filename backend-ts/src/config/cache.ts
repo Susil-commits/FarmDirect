@@ -22,7 +22,6 @@ export class SimpleCache {
 
   set<T>(key: string, value: T, ttlSeconds?: number): void {
     if (this.cache.size >= this.maxSize) {
-      // Very crude LRU eviction: delete the first (oldest) key
       const firstKey = this.cache.keys().next().value;
       if (firstKey) this.cache.delete(firstKey);
     }
@@ -39,7 +38,6 @@ export class SimpleCache {
       return null;
     }
 
-    // Re-insert to mark as recently used
     this.cache.delete(key);
     this.cache.set(key, entry);
 
@@ -64,5 +62,4 @@ export class SimpleCache {
   }
 }
 
-// Global cache instance (Max 1000 keys, 2 minutes default TTL)
 export const globalCache = new SimpleCache(1000, 120);

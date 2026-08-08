@@ -17,7 +17,7 @@ const OptimizedImage = ({
   className = '',
   width,
   height,
-  priority = false, // Set to true for hero/LCP images
+  priority = false,
   objectFit = 'cover',
   onLoad,
   ...props

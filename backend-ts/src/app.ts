@@ -38,21 +38,15 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Trust proxy for rate limiting behind load balancers (e.g. Render/Heroku)
 app.set('trust proxy', 1);
 
-// Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
-// Reset server start time on app initialization
 resetServerStartTime();
 
-// ---- Security & Performance Middleware (order matters) ----
 
-// 1. Request ID (adds X-Request-Id header for log correlation)
 app.use(requestId);
 
-// 2. Helmet: secure HTTP headers with strict CSP
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
   contentSecurityPolicy: {
@@ -72,7 +66,6 @@ app.use(helmet({
   xFrameOptions: { action: 'deny' },
 }));
 
-// 3. CORS — supports comma-separated origins
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, ok?: boolean) => void) => {
     if (!origin) return callback(null, true);
@@ -87,7 +80,6 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// 4. Global rate limiter — 600 requests per 15 min per IP
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 600,
@@ -97,17 +89,15 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-// 5. Stricter rate limiter for auth routes
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 15, // Tightened from 30 to prevent brute force
+  max: 15,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many authentication attempts, please try again later.' },
 });
 app.use('/api/auth', authLimiter);
 
-// 6. Polling endpoints — generous per-minute burst window
 const pollingLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 120,
@@ -118,27 +108,22 @@ const pollingLimiter = rateLimit({
 app.use('/api/messages/unread', pollingLimiter);
 app.use('/api/notifications/unread', pollingLimiter);
 
-// 7. Body & Cookie parsing & Data Sanitization
-app.use(express.json({ limit: '10kb' })); // Restricted from 10mb to 10kb to prevent payload DoS
+app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ limit: '10kb', extended: true }));
 app.use(cookieParser());
-app.use(mongoSanitize()); // Prevent NoSQL injection
-app.use(hpp()); // Prevent HTTP Parameter Pollution
-app.use(trimStrings); // Trim whitespace from all body string fields
+app.use(mongoSanitize());
+app.use(hpp());
+app.use(trimStrings);
 
-// 8. Response compression
 app.use(compression({ threshold: 1024 }));
 
-// ---- End Security & Performance Middleware ----
 
-// Request logging (development only)
 if (env.isDev) {
   app.use((req: Request, _res: Response, next) => {
     next();
   });
 }
 
-// Enhanced health check
 app.get('/api/health', (_req: Request, res: Response) => {
   res.status(200).json({
     status: 'ok',
@@ -150,7 +135,6 @@ app.get('/api/health', (_req: Request, res: Response) => {
   });
 });
 
-// Detailed health check with DB ping
 app.get('/api/health/detailed', async (_req: Request, res: Response) => {
   const dbState = mongoose.connection.readyState;
   const dbStateMap: Record<number, string> = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
@@ -181,7 +165,6 @@ app.get('/api/health/detailed', async (_req: Request, res: Response) => {
   });
 });
 
-// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/crops', cropRoutes);
 app.use('/api/orders', orderRoutes);
@@ -198,7 +181,6 @@ app.use('/api/data', dataAccessRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/cart', cartRoutes);
 
-// File upload route
 app.post('/api/upload', uploadSingleFile('general'), (req: Request, res: Response): void => {
   if (!req.uploadedFile) {
     res.status(400).json({ success: false, message: 'No file uploaded' });
@@ -213,12 +195,10 @@ app.post('/api/upload', uploadSingleFile('general'), (req: Request, res: Respons
   });
 });
 
-// 404 handler
 app.use('*', (req: Request, res: Response) => {
   res.status(404).json({ success: false, message: `Route not found: ${req.method} ${req.originalUrl}` });
 });
 
-// Error handling middleware
 app.use(errorHandler);
 
 export default app;

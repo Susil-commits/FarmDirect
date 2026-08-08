@@ -23,7 +23,6 @@ export class ApiError extends Error {
     Error.captureStackTrace?.(this, this.constructor);
   }
 
-  // ── 4xx Factories ──────────────────────────────────────────────────────────
 
   static badRequest(message = 'Bad Request', details?: unknown): ApiError {
     return new ApiError(400, message, { details, code: 'BAD_REQUEST' });
@@ -53,7 +52,6 @@ export class ApiError extends Error {
     return new ApiError(429, message, { code: 'TOO_MANY_REQUESTS' });
   }
 
-  // ── 5xx Factories ──────────────────────────────────────────────────────────
 
   static internal(message = 'Internal Server Error'): ApiError {
     return new ApiError(500, message, { isOperational: false, code: 'INTERNAL_ERROR' });
@@ -63,7 +61,6 @@ export class ApiError extends Error {
     return new ApiError(503, message, { isOperational: true, code: 'SERVICE_UNAVAILABLE' });
   }
 
-  // ── Utility ────────────────────────────────────────────────────────────────
 
   /**
    * Safely convert any unknown thrown value into an ApiError.

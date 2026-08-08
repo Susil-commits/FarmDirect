@@ -6,7 +6,6 @@ export const useVoiceSearch = (onResult) => {
   const [recognition, setRecognition] = useState(null);
 
   // BUG 7 FIX: Store onResult in a ref so the recognition handler always calls
-  // the latest version without needing to recreate the recognition object.
   const onResultRef = useRef(onResult);
   useEffect(() => {
     onResultRef.current = onResult;
@@ -21,7 +20,7 @@ export const useVoiceSearch = (onResult) => {
         const recog = new SpeechRecognition();
         recog.continuous = false;
         recog.interimResults = false;
-        recog.lang = 'en-IN'; // Better support for Indian accents
+        recog.lang = 'en-IN';
 
         recog.onstart = () => {
           setIsListening(true);
@@ -29,7 +28,6 @@ export const useVoiceSearch = (onResult) => {
 
         recog.onresult = (event) => {
           const transcript = event.results[0][0].transcript;
-          // Always call the latest onResult via ref — avoids stale closure
           if (onResultRef.current) {
             onResultRef.current(transcript);
           }
@@ -48,7 +46,6 @@ export const useVoiceSearch = (onResult) => {
         setRecognition(recog);
       }
     }
-  // Recognition object is created once on mount; onResult updates go through the ref.
   }, []);
 
   const startListening = useCallback(() => {

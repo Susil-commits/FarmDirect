@@ -18,7 +18,7 @@ export const createCropSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters').max(2000, 'Description too long'),
   pickupLocation: z.string().min(5, 'Pickup location is required').max(500),
   contactNumber: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
-  specifications: z.string().optional(), // JSON string
+  specifications: z.string().optional(),
   availability: z.enum(AVAILABILITIES).optional(),
 });
 
@@ -46,7 +46,7 @@ export const cropQuerySchema = z.object({
   page: z.string().optional().transform((v) => (v ? Math.max(1, parseInt(v, 10)) : 1)),
   limit: z.string().optional().transform((v) => {
     const n = v ? parseInt(v, 10) : 20;
-    return Math.min(Math.max(1, n), 100); // clamp 1–100
+    return Math.min(Math.max(1, n), 100);
   }),
   q: z.string().max(200).optional(),
   category: z.string().optional(),
