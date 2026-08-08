@@ -3,8 +3,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const redisUrl = process.env.REDIS_URI || process.env.REDIS_URL;
+
 export const redisClient = createClient({
-  url: process.env.REDIS_URI
+  url: redisUrl
 });
 
 redisClient.on('error', (err) => {
@@ -16,13 +18,14 @@ redisClient.on('connect', () => {
 });
 
 export const connectRedis = async (): Promise<void> => {
-  if (process.env.REDIS_URI) {
+  const redisUrl = process.env.REDIS_URI || process.env.REDIS_URL;
+  if (redisUrl) {
     try {
       await redisClient.connect();
     } catch (error) {
       console.warn('Failed to connect to Redis, application will run without caching.', error);
     }
   } else {
-    console.warn('REDIS_URI not provided. Running without caching layer.');
+    console.warn('REDIS_URI or REDIS_URL not provided. Running without caching layer.');
   }
 };
