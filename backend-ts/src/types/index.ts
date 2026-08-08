@@ -228,6 +228,8 @@ export interface IOrder extends Timestamps, Document {
   cancellationReason?: string;
   cancelledBy?: Enums.CancelledBy;
   completedAt?: Date;
+  flaggedAsAnomaly?: boolean;
+  anomalyScore?: number | null;
 }
 
 

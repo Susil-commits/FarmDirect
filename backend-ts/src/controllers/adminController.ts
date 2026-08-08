@@ -617,3 +617,20 @@ export const proxyDocument = asyncHandler(async (req: Request, res: Response) =>
     }
   });
 });
+
+export const getFlaggedOrders = asyncHandler(async (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string, 10) || 1;
+  const limit = parseInt(req.query.limit as string, 10) || 20;
+
+  const query = { flaggedAsAnomaly: true };
+  const total = await Order.countDocuments(query);
+  const orders = await Order.find(query)
+    .sort({ anomalyScore: -1, createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .populate('buyerId', 'firstName lastName email phone')
+    .populate('farmerId', 'firstName lastName email farmName phone')
+    .lean();
+
+  paginated(res, orders, total, page, limit);
+});

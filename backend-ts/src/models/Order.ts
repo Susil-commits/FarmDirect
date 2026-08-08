@@ -34,6 +34,8 @@ const orderSchema = new Schema<IOrder>(
     cancellationReason: String,
     cancelledBy: { type: String, enum: Object.values(CancelledBy) },
     completedAt: Date,
+    flaggedAsAnomaly: { type: Boolean, default: false },
+    anomalyScore: { type: Number, default: null },
   },
   { timestamps: true },
 );
