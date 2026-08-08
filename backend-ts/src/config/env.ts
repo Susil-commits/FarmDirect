@@ -66,6 +66,7 @@ function loadEnv(): EnvConfig {
   if (isProd) {
     required.push(['MONGODB_URI', process.env.MONGODB_URI]);
     required.push(['JWT_SECRET', process.env.JWT_SECRET]);
+    required.push(['JWT_REFRESH_SECRET', process.env.JWT_REFRESH_SECRET]);
   }
 
   const missing = required.filter(([, v]) => !v).map(([k]) => k);
