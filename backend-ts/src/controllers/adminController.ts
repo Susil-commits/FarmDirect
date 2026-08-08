@@ -15,6 +15,7 @@ import { notifyKYCUpdate, notifyUserStatusChange } from '../socket/eventHandlers
 import { UserRole, UserStatus, KycStatus, OrderStatus, CancelledBy, PaymentStatus, CropStatus, CropAvailability } from '../types/enums.js';
 import type { Request, Response } from 'express';
 import type { Types, PipelineStage } from 'mongoose';
+import { AdminService } from '../services/adminService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -105,35 +106,8 @@ export const getPublicCommunityStats = asyncHandler(async (_req: Request, res: R
 });
 
 export const getDashboardStats = asyncHandler(async (_req: Request, res: Response) => {
-  const [totalUsers, totalBuyers, totalFarmers, totalAdmins, totalCrops, activeCrops, totalOrders, pendingOrders, completedOrders, totalReviews, pendingKYC] = await Promise.all([
-    User.countDocuments({}),                                                        // ALL users (fixed: was only KYC-verified)
-    User.countDocuments({ role: UserRole.Buyer }),
-    User.countDocuments({ role: UserRole.Farmer }),
-    User.countDocuments({ role: UserRole.Admin }),
-    CropListing.countDocuments(),
-    CropListing.countDocuments({ status: 'active' }),
-    Order.countDocuments(),
-    Order.countDocuments({ orderStatus: { $in: PENDING_STATUSES } }),
-    Order.countDocuments({ orderStatus: OrderStatus.Completed }),
-    Review.countDocuments(),
-    User.countDocuments({ kycStatus: KycStatus.Pending }),
-  ]);
-
-  const revenueResult = await Order.aggregate([
-    { $match: { orderStatus: OrderStatus.Completed } },
-    { $group: { _id: null, totalRevenue: { $sum: '$totalAmount' }, count: { $sum: 1 } } },
-  ]);
-  const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
-
-  res.status(200).json({
-    success: true,
-    data: {
-      users: { total: totalUsers, buyers: totalBuyers, farmers: totalFarmers, admins: totalAdmins },
-      crops: { total: totalCrops, active: activeCrops, inactive: totalCrops - activeCrops },
-      orders: { total: totalOrders, pending: pendingOrders, completed: completedOrders, totalRevenue },
-      reviews: totalReviews, pendingKYC,
-    },
-  });
+  const data = await AdminService.getDashboardStats();
+  res.status(200).json({ success: true, data });
 });
 
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
@@ -152,48 +126,19 @@ export const toggleUserStatus = asyncHandler(async (req: Request, res: Response)
   const { status, reason } = req.body as { status: UserStatus; reason?: string };
   const adminUser = req.user as AdminUser;
 
-  if (![UserStatus.Active, UserStatus.Suspended, UserStatus.Banned].includes(status)) {
-    return sendError(res, 'Invalid status', 400);
-  }
-
-  const previousUser = await User.findById(userId).select('-password');
-  if (!previousUser) return sendError(res, 'User not found', 404);
-
-  const user = await User.findByIdAndUpdate(
-    userId,
-    { status, suspensionReason: status !== UserStatus.Active ? reason : '', updatedAt: new Date() },
-    { new: true },
-  ).select('-password');
-
-  let notifTitle: string, notifMessage: string, auditAction: string;
-  if (status === UserStatus.Suspended) {
-    notifTitle = 'Account Suspended'; notifMessage = `Your account has been suspended. Reason: ${reason || 'Violation of platform terms'}.`;
-    auditAction = 'USER_SUSPENDED';
-  } else if (status === UserStatus.Banned) {
-    notifTitle = 'Account Banned'; notifMessage = `Your account has been permanently banned. Reason: ${reason || 'Severe violation of platform terms'}.`;
-    auditAction = 'USER_BANNED';
-  } else {
-    notifTitle = 'Account Reactivated'; notifMessage = 'Your account has been reactivated. Welcome back!';
-    auditAction = 'USER_UPDATED';
-  }
-
   try {
-    await Notification.create({ userId, title: notifTitle, message: notifMessage, type: 'general', priority: 'high' });
-  } catch (err) { console.error('Notification creation error:', err); }
-
-  notifyUserStatusChange(userId, status, reason);
-
-  try {
-    await AuditLog.create({
-      adminId: adminUser._id, adminEmail: adminUser.email, action: auditAction, resourceType: 'User',
-      resourceId: userId, resourceDetails: `${previousUser.firstName} ${previousUser.lastName} (${previousUser.email})`,
-      changes: { before: { status: previousUser.status }, after: { status: user!.status } },
-      reason: status !== UserStatus.Active ? reason : 'Account reactivated by admin',
-      ipAddress: req.ip, userAgent: req.get('user-agent') || 'Unknown', status: 'success',
-    });
-  } catch (auditErr) { console.error('Audit log creation error:', auditErr); }
-
-  res.status(200).json({ success: true, message: `User ${status === UserStatus.Active ? 'reactivated' : status} successfully`, data: user });
+    const user = await AdminService.toggleUserStatus(
+      userId, status, reason, adminUser._id, adminUser.email, 
+      req.ip || 'Unknown', req.get('user-agent') || 'Unknown'
+    );
+    res.status(200).json({ success: true, message: `User ${status === UserStatus.Active ? 'reactivated' : status} successfully`, data: user });
+  } catch (err: any) {
+    if (err.message === 'Invalid status' || err.message === 'User not found') {
+      sendError(res, err.message, err.message === 'User not found' ? 404 : 400);
+    } else {
+      throw err;
+    }
+  }
 });
 
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
@@ -201,42 +146,19 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
   const { reason } = req.body as { reason?: string };
   const adminUser = req.user as AdminUser;
 
-  const user = await User.findById(userId);
-  if (!user) return sendError(res, 'User not found', 404);
-
-  const userName = `${user.firstName} ${user.lastName}`;
-  const userEmail = user.email;
-  const userRole = user.role;
-
   try {
-    await Notification.create({
-      userId, title: 'Account Deleted', message: `Your account has been permanently deleted. Reason: ${reason || 'Violation of platform terms'}.`,
-      type: 'general', priority: 'high',
-    });
-  } catch (notifErr) { console.error('Deletion notification error:', notifErr); }
-
-  if (userRole === UserRole.Farmer) {
-    // B3 FIX: Delete all crops + reviews received on those crops
-    const farmerCropIds = await CropListing.find({ farmerId: userId }).distinct('_id');
-    await CropListing.deleteMany({ farmerId: userId });
-    await Review.deleteMany({ cropId: { $in: farmerCropIds } });
+    const userName = await AdminService.deleteUser(
+      userId, reason, adminUser._id, adminUser.email,
+      req.ip || 'Unknown', req.get('user-agent') || 'Unknown'
+    );
+    res.status(200).json({ success: true, message: `User ${userName} and all associated data have been deleted successfully` });
+  } catch (err: any) {
+    if (err.message === 'User not found') {
+      sendError(res, err.message, 404);
+    } else {
+      throw err;
+    }
   }
-  // B3 FIX: Delete reviews written by this user (correct field is `userId`, not `reviewerId`)
-  await Review.deleteMany({ userId });
-  await Order.deleteMany({ $or: [{ buyerId: userId }, { farmerId: userId }] });
-  await Wishlist.deleteMany({ userId });
-  await Notification.deleteMany({ userId });
-  await User.findByIdAndDelete(userId);
-
-  try {
-    await AuditLog.create({
-      adminId: adminUser._id, adminEmail: adminUser.email, action: 'USER_DELETED', resourceType: 'User',
-      resourceId: userId, resourceDetails: `${userName} (${userEmail})`, reason: reason || 'Deleted by admin',
-      ipAddress: req.ip, userAgent: req.get('user-agent') || 'Unknown', status: 'success',
-    });
-  } catch (auditErr) { console.error('Audit log error:', auditErr); }
-
-  res.status(200).json({ success: true, message: `User ${userName} and all associated data have been deleted successfully` });
 });
 
 export const approveUserKYC = asyncHandler(async (req: Request, res: Response) => {
@@ -544,21 +466,8 @@ export const getUsersWithCrops = asyncHandler(async (req: Request, res: Response
 });
 
 export const getDashboardAnalytics = asyncHandler(async (_req: Request, res: Response) => {
-  const [totalUsers, totalFarmers, totalBuyers, pendingKYC, totalCrops, approvedCrops, pendingCrops, totalOrders, completedOrders, pendingOrders] = await Promise.all([
-    User.countDocuments({}),
-    User.countDocuments({ role: UserRole.Farmer }),
-    User.countDocuments({ role: UserRole.Buyer }),
-    User.countDocuments({ kycStatus: KycStatus.Pending, role: UserRole.Farmer }),
-    CropListing.countDocuments(), CropListing.countDocuments({ listingApprovalStatus: 'approved' }), CropListing.countDocuments({ listingApprovalStatus: 'pending' }),
-    Order.countDocuments(), Order.countDocuments({ orderStatus: OrderStatus.Completed }), Order.countDocuments({ orderStatus: { $in: PENDING_STATUSES } }),
-  ]);
-  // Use aggregate instead of find().select('totalAmount') to avoid OOM on large datasets
-  const [revenueResult] = await Order.aggregate([
-    { $match: { orderStatus: OrderStatus.Completed } },
-    { $group: { _id: null, total: { $sum: '$totalAmount' } } }
-  ]);
-  const totalRevenue = revenueResult?.total || 0;
-  res.status(200).json({ success: true, analytics: { users: { total: totalUsers, farmers: totalFarmers, buyers: totalBuyers, pendingKYC }, crops: { total: totalCrops, approved: approvedCrops, pending: pendingCrops }, orders: { total: totalOrders, completed: completedOrders, pending: pendingOrders }, revenue: totalRevenue } });
+  const analytics = await AdminService.getDashboardAnalytics();
+  res.status(200).json({ success: true, analytics });
 });
 
 export const getFarmerAnalytics = asyncHandler(async (req: Request, res: Response) => {
