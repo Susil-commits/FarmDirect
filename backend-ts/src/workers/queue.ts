@@ -1,11 +1,12 @@
 import { Queue } from 'bullmq';
 import IORedis from 'ioredis';
 
+const redisUrl = process.env.REDIS_URI || process.env.REDIS_URL;
 // BullMQ requires IORedis specifically
-export const connection = process.env.REDIS_URI ? new IORedis(process.env.REDIS_URI, { maxRetriesPerRequest: null }) : undefined;
+export const connection = redisUrl ? new IORedis(redisUrl, { maxRetriesPerRequest: null }) : undefined;
 
 if (!connection) {
-  console.warn('REDIS_URI not provided. Background queues will be disabled.');
+  console.warn('REDIS_URI or REDIS_URL not provided. Background queues will be disabled.');
 }
 
 export const anomalyQueue = connection ? new Queue('anomalyDetection', { connection }) : null;
