@@ -71,10 +71,10 @@ async function start(): Promise<void> {
 }
 
 if (cluster.isPrimary) {
-  const numCPUs = os.cpus().length;
-  console.log(`Primary cluster setting up ${numCPUs} workers...`);
+  const numWorkers = process.env.WEB_CONCURRENCY ? parseInt(process.env.WEB_CONCURRENCY, 10) : os.cpus().length;
+  console.log(`Primary cluster setting up ${numWorkers} workers...`);
 
-  for (let i = 0; i < numCPUs; i++) {
+  for (let i = 0; i < numWorkers; i++) {
     cluster.fork();
   }
 
