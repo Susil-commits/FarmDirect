@@ -1,4 +1,5 @@
 import mongoose, { Schema, type Model } from 'mongoose';
+import { updateIfCurrentPlugin } from 'mongoose-update-if-current';
 import type { ICropListing } from '../types/index.js';
 import {
   CropType,
@@ -107,5 +108,7 @@ cropListingSchema.index({ farmerId: 1, status: 1 });
 cropListingSchema.index({ quantity: 1 });
 cropListingSchema.index({ 'interestedBuyers.buyerId': 1 });
 
-const CropListing: Model<ICropListing> = mongoose.model<ICropListing>('CropListing', cropListingSchema);
+cropListingSchema.plugin(updateIfCurrentPlugin);
+
+const CropListing: Model<ICropListing> = mongoose.models.CropListing || mongoose.model<ICropListing>('CropListing', cropListingSchema);
 export default CropListing;

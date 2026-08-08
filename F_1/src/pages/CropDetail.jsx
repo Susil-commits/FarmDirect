@@ -11,6 +11,7 @@ import ScrollAnimation from '../components/common/ScrollAnimation';
 import SkeletonLoader from '../components/common/SkeletonLoader';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import LoginPrompt from '../components/modals/LoginPrompt';
+import MakeOfferModal from '../components/modals/MakeOfferModal';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
 import { useRecentlyViewed } from '../context/RecentlyViewedContext';
@@ -35,6 +36,7 @@ export default function CropDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showOfferModal, setShowOfferModal] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState([]);
 
@@ -751,16 +753,34 @@ export default function CropDetail() {
 
                   {/* Add to Cart Button */}
                   {isAvailable && (
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      className="w-full flex items-center gap-2 justify-center animate-slide-in-down bg-green-600 hover:bg-green-700"
-                      style={{ animationDelay: '0.35s' }}
-                      onClick={handleAddToCart}
-                    >
-                      <ShoppingCart size={20} />
-                      Add to Cart
-                    </Button>
+                    <div className="flex gap-3 mb-3 animate-slide-in-down" style={{ animationDelay: '0.35s' }}>
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700"
+                        onClick={handleAddToCart}
+                      >
+                        <ShoppingCart size={20} />
+                        Add to Cart
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="flex-1 flex items-center justify-center gap-2 border-green-600 text-green-700 hover:bg-green-50"
+                        onClick={() => {
+                          if (!isAuthenticated) {
+                            setRedirectPath(`/crop/${cropId}`);
+                            setShowLoginPrompt(true);
+                          } else if (user?.role !== 'buyer') {
+                            addToast('Only buyers can make offers.', 'warning');
+                          } else {
+                            setShowOfferModal(true);
+                          }
+                        }}
+                      >
+                        Make Offer
+                      </Button>
+                    </div>
                   )}
 
                   {contactNumber && (
@@ -795,6 +815,16 @@ export default function CropDetail() {
         onLogin={handleLoginClick}
         onRegister={handleRegisterClick}
         message="Please login to mark interest in this crop and connect with the farmer"
+      />
+
+      {/* Make Offer Modal */}
+      <MakeOfferModal
+        isOpen={showOfferModal}
+        onClose={() => setShowOfferModal(false)}
+        crop={crop}
+        onSuccess={() => {
+          // Additional logic on success if needed, e.g., reloading state
+        }}
       />
     </PageTransition>
     </ErrorBoundary>

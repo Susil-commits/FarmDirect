@@ -233,6 +233,25 @@ export interface IOrder extends Timestamps, Document {
 }
 
 
+export interface INegotiationTimelineEntry {
+  status: Enums.NegotiationStatus;
+  offeredPrice?: number;
+  message?: string;
+  timestamp: Date;
+}
+
+export interface INegotiation extends Timestamps, Document {
+  cropId: Types.ObjectId;
+  buyerId: Types.ObjectId;
+  farmerId: Types.ObjectId;
+  originalPrice: number;
+  offeredPrice: number;
+  quantity: number;
+  status: Enums.NegotiationStatus;
+  timeline: INegotiationTimelineEntry[];
+  orderId?: Types.ObjectId | null;
+}
+
 export interface IReviewReport {
   reportedBy?: Types.ObjectId;
   reason?: Enums.ReportReason;
@@ -446,6 +465,19 @@ export interface SubmitContactDto {
   phone?: string;
   inquiryType: Enums.InquiryType;
   message: string;
+}
+
+export interface MakeOfferDto {
+  cropId: string;
+  offeredPrice: number;
+  quantity: number;
+  message?: string;
+}
+
+export interface RespondOfferDto {
+  action: 'accept' | 'reject' | 'counter';
+  offeredPrice?: number;
+  message?: string;
 }
 
 

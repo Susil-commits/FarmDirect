@@ -8,7 +8,15 @@ import { env } from '../config/env.js';
 import { PaymentMethod, PaymentStatus, OrderStatus } from '../types/enums.js';
 import type { Request, Response, NextFunction } from 'express';
 
+import { createCircuitBreaker } from '../utils/circuitBreaker.js';
+
 export const VALID_PAYMENT_METHODS = [PaymentMethod.Cod, PaymentMethod.Razorpay];
+
+// Wrap the Razorpay API call in a Circuit Breaker
+const razorpayCreateOrder = (razorpayInstance: any, options: any) => {
+  return razorpayInstance.orders.create(options);
+};
+const razorpayBreaker = createCircuitBreaker(razorpayCreateOrder);
 
 export async function createRazorpayOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -36,12 +44,13 @@ export async function createRazorpayOrder(req: Request, res: Response, next: Nex
     const targetIds = unpaidOrders.map((o) => o._id);
     const receipt = `rcpt_${String(targetIds[0]).slice(-12)}`;
 
-    const razorpayOrder = await razorpay.orders.create({
+    // Use Circuit Breaker to prevent hanging threads if Razorpay is down
+    const razorpayOrder = await razorpayBreaker.fire(razorpay, {
       amount: Math.round(totalAmount * 100),
       currency: 'INR',
       receipt,
       notes: { orderIds: targetIds.map((id) => String(id)).join(','), buyerId: String(req.user!._id) },
-    });
+    }) as any;
 
     await Order.updateMany(
       { _id: { $in: targetIds } },

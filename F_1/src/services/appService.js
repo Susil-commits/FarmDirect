@@ -69,8 +69,12 @@ export const orderService = {
   getOrders: (params) => api.get('/orders', { params }),
   getOrderById: (id) => api.get(`/orders/${id}`),
   getOrderDetails: (id) => api.get(`/orders/${id}`),
-  createOrder: (data) => api.post('/orders', data),
-  checkoutCart: (data) => api.post('/orders/checkout-cart', data),
+  createOrder: (data, idempotencyKey) => api.post('/orders', data, {
+    headers: { 'Idempotency-Key': idempotencyKey }
+  }),
+  checkoutCart: (data, idempotencyKey) => api.post('/orders/checkout-cart', data, {
+    headers: { 'Idempotency-Key': idempotencyKey }
+  }),
   updateOrderStatus: (id, status) => api.put(`/orders/${id}/status`, { status }),
   cancelOrder: (id, cancellationReason) => api.patch(`/orders/${id}/cancel`, { cancellationReason }),
   denyOrder: (id, denialReason) => api.post(`/orders/${id}/deny`, { denialReason }),

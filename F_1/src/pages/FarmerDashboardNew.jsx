@@ -3,6 +3,7 @@ import { useRouter } from '../hooks/useRouter';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import { cropService, orderService } from '../services/appService';
+import { negotiationService } from '../services/negotiationService';
 import PageTransition from '../components/common/PageTransition';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -10,11 +11,12 @@ import ScrollAnimation from '../components/common/ScrollAnimation';
 import SkeletonLoader from '../components/common/SkeletonLoader';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import CancelWithReason from '../components/modals/CancelWithReason';
+import NegotiationWidget from '../components/NegotiationWidget';
 import {
   Package, TrendingUp, ShoppingCart, AlertCircle, Eye, Edit2, Trash2,
   IndianRupee, BarChart3, PieChart, TrendingDown, CheckCircle, Clock,
   Users, Phone, MapPin, Truck, XCircle, Play, Ban, Loader, Plus,
-  Mail, Shield, FileText, Star, Calendar, UserCheck, Image, Award, Hash, BadgeCheck
+  Mail, Shield, FileText, Star, Calendar, UserCheck, Image, Award, Hash, BadgeCheck, MessageCircle
 } from 'lucide-react';
 import '../styles/FarmerDashboard.css';
 import { getImageUrl } from '../utils/formatters';
@@ -47,6 +49,7 @@ export default function FarmerDashboardNew() {
   const [activeTab, setActiveTab] = useState('inventory');
   const [crops, setCrops] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [negotiations, setNegotiations] = useState([]);
   const [analytics, setAnalytics] = useState({
     totalRevenue: 0,
     totalSales: 0,
@@ -69,9 +72,10 @@ export default function FarmerDashboardNew() {
   const fetchFarmerData = async () => {
     try {
       setLoading(true);
-      const [cropsData, ordersData] = await Promise.all([
+      const [cropsData, ordersData, negotiationsData] = await Promise.all([
         cropService.getMyListings(),
-        orderService.getOrders()
+        orderService.getOrders(),
+        negotiationService.getNegotiations()
       ]);
 
       const cropsArray = cropsData.crops || cropsData.data?.crops || [];
@@ -80,6 +84,9 @@ export default function FarmerDashboardNew() {
 
       const ordersArray = ordersData.orders || ordersData.data?.orders || [];
       setOrders(ordersArray);
+      
+      const negsArray = negotiationsData.negotiations || negotiationsData.data?.negotiations || [];
+      setNegotiations(negsArray);
 
       const totalRevenue = ordersArray
         .filter(o => o.orderStatus === 'completed')
@@ -268,9 +275,9 @@ export default function FarmerDashboardNew() {
 
           <ScrollAnimation className="scroll-slide mb-8">
             <div className="flex gap-2 border-b border-gray-200/50 overflow-x-auto pb-1 no-scrollbar">
-              {['inventory', 'orders', 'analytics'].map(tab => (
+              {['inventory', 'orders', 'negotiations', 'analytics'].map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-3 font-semibold whitespace-nowrap transition-all border-b-2 ${activeTab === tab ? 'border-green-600 text-green-600' : 'border-transparent text-gray-600'}`}>
-                  {tab === 'inventory' && '📦 Inventory'}{tab === 'orders' && '📋 Orders'}{tab === 'analytics' && '📊 Analytics'}
+                  {tab === 'inventory' && '📦 Inventory'}{tab === 'orders' && '📋 Orders'}{tab === 'negotiations' && '💬 Negotiations'}{tab === 'analytics' && '📊 Analytics'}
                 </button>
               ))}
             </div>
@@ -495,6 +502,31 @@ export default function FarmerDashboardNew() {
                       </Card>
                     );
                   })}
+                </div>
+              )}
+            </ScrollAnimation>
+          )}
+
+          {activeTab === 'negotiations' && (
+            <ScrollAnimation className="scroll-slide space-y-6">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <MessageCircle className="w-6 h-6" />Negotiations ({negotiations.length})
+              </h2>
+              {negotiations.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No active negotiations</p>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {negotiations.map((neg) => (
+                    <NegotiationWidget 
+                      key={neg._id} 
+                      negotiation={neg} 
+                      userRole="farmer" 
+                      onUpdate={fetchFarmerData}
+                    />
+                  ))}
                 </div>
               )}
             </ScrollAnimation>

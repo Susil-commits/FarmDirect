@@ -9,7 +9,8 @@ import IdempotencyKey from '../models/IdempotencyKey.js';
 import { notifyOrderUpdate } from '../socket/eventHandlers.js';
 import { computeDiscount, redeemCoupon } from './couponController.js';
 import { sendError } from '../utils/apiResponse.js';
-import { flagAnomalyAsync } from '../services/anomalyService.js';
+import { createOutboxEvent } from '../workers/outboxPublisher.js';
+import { enqueueAnomalyDetection } from '../workers/queue.js';
 import {
   OrderStatus, PaymentMethod, PaymentStatus, CropAvailability, CropStatus, CancelledBy, UserRole,
 } from '../types/enums.js';
@@ -183,60 +184,10 @@ export async function startOrder(req: Request, res: Response, next: NextFunction
 
 export async function createOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const idempotencyKeyHeader = req.headers['idempotency-key'] as string;
-    if (!idempotencyKeyHeader) {
-      sendError(res, 'Idempotency-Key header required', 400);
-      return;
-    }
 
-    const sortedBody = Object.keys(req.body).sort().reduce((acc, key) => {
-      acc[key] = req.body[key as keyof typeof req.body];
-      return acc;
-    }, {} as any);
-    const requestHash = createHash('sha256').update(JSON.stringify(sortedBody)).digest('hex');
-
-    try {
-      await IdempotencyKey.create({
-        key: idempotencyKeyHeader,
-        status: 'pending',
-        requestHash,
-        createdAt: new Date(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      });
-    } catch (err: any) {
-      if (err.code === 11000) {
-        const existingKey = await IdempotencyKey.findOne({ key: idempotencyKeyHeader });
-        if (existingKey) {
-          if (existingKey.requestHash !== requestHash) {
-            sendError(res, 'Idempotency-Key reused with different request body', 422);
-            return;
-          }
-          if (existingKey.status === 'completed') {
-            res.setHeader('X-Idempotent-Replay', 'true');
-            res.status(existingKey.responseStatus || 200).json(existingKey.responseBody);
-            return;
-          }
-          if (existingKey.status === 'pending') {
-            if (Date.now() - existingKey.createdAt.getTime() > 30000) {
-              await IdempotencyKey.updateOne(
-                { key: idempotencyKeyHeader },
-                { $set: { createdAt: new Date(), expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) } }
-              );
-            } else {
-              sendError(res, 'Request already in progress', 409);
-              return;
-            }
-          }
-        }
-      } else {
-        throw err;
-      }
-    }
 
     const session = await mongoose.startSession();
-    let responseBody: any;
-    let responseStatus = 201;
-    let orderId: mongoose.Types.ObjectId | undefined;
+    let order: any;
     let finalAmount = 0;
     let appliedCouponCode: string | null = null;
 
@@ -280,7 +231,7 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
           appliedCouponCode = coupon.code;
         }
 
-        const [order] = await Order.create([{
+        const [createdOrder] = await Order.create([{
           orderNumber: 'ORD-' + randomUUID().replace(/-/g, '').substring(0, 12).toUpperCase(),
           buyerId: req.user!._id,
           farmerId: crop.farmerId,
@@ -300,8 +251,8 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
           orderStatus: OrderStatus.Confirmed,
           timeline: [{ event: 'ORDER_CONFIRMED', description: 'Order confirmed. Farmer will prepare your order.', timestamp: new Date() }],
         }], { session });
-
-        orderId = order._id as mongoose.Types.ObjectId;
+        
+        order = createdOrder;
         finalAmount = totalAmount;
 
         const updatedCrop = await CropListing.findOneAndUpdate(
@@ -317,26 +268,18 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
         if (updatedCrop.quantity <= 0) {
           await CropListing.findByIdAndUpdate(cropId, { availability: CropAvailability.NotAvailable }, { session });
         }
+        
+        await createOutboxEvent('ORDER_CREATED', {
+          orderId: order._id,
+          farmerId: crop.farmerId,
+          buyerName: (req.user as any).name || 'Buyer',
+          totalAmount: finalAmount,
+          cropName: crop.cropName,
+          orderNumber: order.orderNumber
+        }, session);
 
-        try {
-          await Notification.create([{
-            userId: crop.farmerId,
-            title: 'New Order Received',
-            message: `You have a new order for ${orderQty} ${crop.unit} of ${crop.cropName}.`,
-            type: 'order',
-            relatedId: String(order._id),
-            priority: 'high',
-            actionUrl: `/farmer/orders/${order._id}`,
-            data: { orderId: order._id, cropId: crop._id, orderNumber: order.orderNumber, buyerId: req.user!._id },
-          }], { session });
-        } catch (notifErr) {
-          console.error('Failed to create order notification:', notifErr);
-        }
-
-        responseBody = { message: 'Order placed successfully! Farmer will start preparing your order.', order };
       });
     } catch (err: any) {
-      await IdempotencyKey.updateOne({ key: idempotencyKeyHeader }, { $set: { status: 'failed' } });
       if (err.status) {
         sendError(res, err.message, err.status);
       } else {
@@ -351,19 +294,12 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
       await redeemCoupon(appliedCouponCode, req.user!._id);
     }
 
-    await IdempotencyKey.updateOne(
-      { key: idempotencyKeyHeader },
-      { $set: { status: 'completed', responseBody, responseStatus, orderId } }
-    );
-
-    if (orderId) {
-       flagAnomalyAsync(orderId.toString(), finalAmount, req.user!._id.toString());
-       Order.findById(orderId).then(o => {
-         if (o) notifyOrderUpdate(o, 'order:created');
-       });
+    if (order) {
+       enqueueAnomalyDetection({ orderId: order._id.toString(), amount: finalAmount, userId: req.user!._id.toString() });
+       notifyOrderUpdate(order, 'order:created');
     }
 
-    res.status(responseStatus).json(responseBody);
+    res.status(201).json({ message: 'Order placed successfully! Farmer will start preparing your order.', order });
   } catch (error) {
     next(error);
   }

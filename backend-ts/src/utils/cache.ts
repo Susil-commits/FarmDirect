@@ -1,40 +1,4 @@
-interface CacheEntry<T> {
-  value: T;
-  expiresAt: number;
-}
-
-const cacheStore = new Map<string, CacheEntry<unknown>>();
-
-export function generateCacheKey(prefix: string, ...args: unknown[]): string {
-  return `${prefix}:${args.join(':')}`;
-}
-
-export function setCache<T>(key: string, value: T, ttlSeconds = 300): void {
-  cacheStore.set(key, {
-    value,
-    expiresAt: Date.now() + ttlSeconds * 1000,
-  });
-}
-
-export function getCache<T = unknown>(key: string): T | null {
-  const cached = cacheStore.get(key);
-  if (!cached) return null;
-  if (Date.now() > cached.expiresAt) {
-    cacheStore.delete(key);
-    return null;
-  }
-  return cached.value as T;
-}
-
-export function invalidateCache(pattern: string): void {
-  for (const key of cacheStore.keys()) {
-    if (key.includes(pattern)) cacheStore.delete(key);
-  }
-}
-
-export function clearAllCache(): void {
-  cacheStore.clear();
-}
+import { redisClient } from '../config/redis.js';
 
 export const CACHE_KEYS = {
   FARMER_CROPS: (farmerId: string) => `farmer:crops:${farmerId}`,
@@ -50,32 +14,86 @@ export const CACHE_KEYS = {
   ADMIN_ANALYTICS: 'admin:analytics',
 } as const;
 
+export async function setCache<T>(key: string, value: T, ttlSeconds = 120): Promise<void> {
+  if (!redisClient.isReady) return;
+  try {
+    await redisClient.setEx(key, ttlSeconds, JSON.stringify(value));
+  } catch (error) {
+    console.error(`Failed to set cache for key ${key}`, error);
+  }
+}
+
+export async function getCache<T = unknown>(key: string): Promise<T | null> {
+  if (!redisClient.isReady) return null;
+  try {
+    const cached = await redisClient.get(key);
+    if (!cached) return null;
+    return JSON.parse(cached) as T;
+  } catch (error) {
+    console.error(`Failed to get cache for key ${key}`, error);
+    return null;
+  }
+}
+
+export async function invalidateCache(pattern: string): Promise<void> {
+  if (!redisClient.isReady) return;
+  try {
+    const keys = await redisClient.keys(`*${pattern}*`);
+    if (keys.length > 0) {
+      await redisClient.del(keys);
+    }
+  } catch (error) {
+    console.error(`Failed to invalidate cache for pattern ${pattern}`, error);
+  }
+}
+
+export async function clearPrefix(prefix: string): Promise<void> {
+  if (!redisClient.isReady) return;
+  try {
+    const keys = await redisClient.keys(`${prefix}*`);
+    if (keys.length > 0) {
+      await redisClient.del(keys);
+    }
+  } catch (error) {
+    console.error(`Failed to clear prefix ${prefix}`, error);
+  }
+}
+
+export async function clearAllCache(): Promise<void> {
+  if (!redisClient.isReady) return;
+  try {
+    await redisClient.flushDb();
+  } catch (error) {
+    console.error('Failed to clear all cache', error);
+  }
+}
+
 export const invalidationStrategies = {
-  cropCreated(farmerId: string): void {
-    invalidateCache(CACHE_KEYS.FARMER_CROPS(farmerId));
-    invalidateCache(CACHE_KEYS.ALL_CROPS);
-    invalidateCache(CACHE_KEYS.ADMIN_CROPS);
+  async cropCreated(farmerId: string): Promise<void> {
+    await invalidateCache(CACHE_KEYS.FARMER_CROPS(farmerId));
+    await invalidateCache(CACHE_KEYS.ALL_CROPS);
+    await invalidateCache(CACHE_KEYS.ADMIN_CROPS);
   },
-  cropApproved(farmerId: string, cropId: string): void {
-    invalidateCache(CACHE_KEYS.FARMER_CROPS(farmerId));
-    invalidateCache(CACHE_KEYS.CROP_DETAIL(cropId));
-    invalidateCache(CACHE_KEYS.ALL_CROPS);
-    invalidateCache(CACHE_KEYS.ADMIN_CROPS);
+  async cropApproved(farmerId: string, cropId: string): Promise<void> {
+    await invalidateCache(CACHE_KEYS.FARMER_CROPS(farmerId));
+    await invalidateCache(CACHE_KEYS.CROP_DETAIL(cropId));
+    await invalidateCache(CACHE_KEYS.ALL_CROPS);
+    await invalidateCache(CACHE_KEYS.ADMIN_CROPS);
   },
-  orderCreated(buyerId: string, farmerId: string): void {
-    invalidateCache(CACHE_KEYS.BUYER_ORDERS(buyerId));
-    invalidateCache(CACHE_KEYS.FARMER_ORDERS(farmerId));
-    invalidateCache(CACHE_KEYS.ADMIN_ORDERS);
-    invalidateCache(CACHE_KEYS.FARMER_ANALYTICS(farmerId));
+  async orderCreated(buyerId: string, farmerId: string): Promise<void> {
+    await invalidateCache(CACHE_KEYS.BUYER_ORDERS(buyerId));
+    await invalidateCache(CACHE_KEYS.FARMER_ORDERS(farmerId));
+    await invalidateCache(CACHE_KEYS.ADMIN_ORDERS);
+    await invalidateCache(CACHE_KEYS.FARMER_ANALYTICS(farmerId));
   },
-  userChanged(userId: string): void {
-    invalidateCache(CACHE_KEYS.USER_PROFILE(userId));
-    invalidateCache(CACHE_KEYS.ADMIN_USERS);
+  async userChanged(userId: string): Promise<void> {
+    await invalidateCache(CACHE_KEYS.USER_PROFILE(userId));
+    await invalidateCache(CACHE_KEYS.ADMIN_USERS);
   },
-  adminAction(): void {
-    invalidateCache(CACHE_KEYS.ADMIN_USERS);
-    invalidateCache(CACHE_KEYS.ADMIN_CROPS);
-    invalidateCache(CACHE_KEYS.ADMIN_ORDERS);
-    invalidateCache(CACHE_KEYS.ADMIN_ANALYTICS);
+  async adminAction(): Promise<void> {
+    await invalidateCache(CACHE_KEYS.ADMIN_USERS);
+    await invalidateCache(CACHE_KEYS.ADMIN_CROPS);
+    await invalidateCache(CACHE_KEYS.ADMIN_ORDERS);
+    await invalidateCache(CACHE_KEYS.ADMIN_ANALYTICS);
   },
 };

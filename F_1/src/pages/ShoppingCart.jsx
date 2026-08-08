@@ -137,7 +137,10 @@ export default function ShoppingCart() {
         couponCode: appliedCoupon?.code || undefined,
       };
 
-      const result = await orderService.checkoutCart(payload);
+      // Generate a unique idempotency key for this checkout attempt
+      const idempotencyKey = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+      const result = await orderService.checkoutCart(payload, idempotencyKey);
       const createdOrderIds = result.orderIds || [];
       const successCount = createdOrderIds.length;
 

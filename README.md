@@ -101,7 +101,14 @@ We recently completed a major **Enterprise-Grade Master Plan** comprising 4 majo
 3. **Epic 2 (Multi-Language i18n):** Integrated **react-i18next** to break language barriers, featuring full English and Hindi translations with a dynamic Navbar language toggle.
 4. **Epic 3 (Admin Analytics):** Supercharged the Admin Dashboard with **Recharts**, delivering beautiful interactive visualization charts for *Revenue Growth* and *Order Distribution*.
 5. **Epic 4 (Live Tracking):** Integrated **React-Leaflet** maps into the Order Tracking dashboard, allowing users to view dynamic geospatial routes between the Farmer and Buyer.
-6. **Epic 5 (Enterprise Checkout):** Implemented **Idempotency Keys** using a robust MongoDB transaction-based approach to prevent duplicate orders during network flakes, and **Anomaly Flagging** utilizing Welford's online algorithm (z-score) to instantly catch and flag suspiciously high-value orders.
+6. **Epic 5 (Enterprise System Design):** Upgraded the backend to a true distributed architecture featuring:
+   - **Idempotency Keys**: Complete transaction-based protection against duplicate requests and network flakes.
+   - **Distributed Rate Limiting**: Redis-backed DDoS and rate limiting across the entire cluster.
+   - **API Response Caching**: Distributed Redis middleware for sub-5ms TTFB on high-traffic public endpoints.
+   - **Circuit Breaker Pattern**: Handled Razorpay outages smoothly using `opossum`, failing fast instead of crashing the server.
+   - **The Outbox Pattern**: BullMQ background workers dispatch Socket.IO and Push Notifications natively, preventing event loss on server crash.
+   - **Optimistic Concurrency Control (OCC)**: Zero "Dirty Reads" or "Lost Updates" for crop inventory using strictly enforced MongoDB Versioning (`__v`).
+   - **Liveness & Readiness Probes**: Built-in Kubernetes-standard health checks actively pinging Mongo and Redis.
 
 ---
 

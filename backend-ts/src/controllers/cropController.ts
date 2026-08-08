@@ -11,7 +11,7 @@ import {
 } from '../types/enums.js';
 import type { Request, Response, NextFunction } from 'express';
 import type { ICropSpecifications } from '../types/index.js';
-import { globalCache } from '../config/cache.js';
+import { getCache, setCache, clearPrefix } from '../utils/cache.js';
 
 export async function createCrop(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -78,8 +78,7 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
       listingApprovalStatus: 'approved',
       availability: CropAvailability.Available,
     });
-
-    globalCache.clearPrefix('crops:');
+    await clearPrefix('crops:');
 
     res.status(201).json({ message: 'Crop listing created successfully', crop });
   } catch (error) {
@@ -90,7 +89,7 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
 export async function getCrops(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const cacheKey = `crops:${JSON.stringify(req.query)}`;
-    const cachedResponse = globalCache.get(cacheKey);
+    const cachedResponse = await getCache(cacheKey);
     if (cachedResponse) {
       res.status(200).json(cachedResponse);
       return;
@@ -153,7 +152,7 @@ export async function getCrops(req: Request, res: Response, next: NextFunction):
       pagination: { total, page: Number(page), limit: Number(limit), pages: Math.ceil(total / Number(limit)) },
     };
 
-    globalCache.set(cacheKey, responseData, 60);
+    await setCache(cacheKey, responseData, 60);
 
     res.status(200).json(responseData);
   } catch (error) {
@@ -333,8 +332,7 @@ export async function updateCrop(req: Request, res: Response, next: NextFunction
     }
 
     crop = await CropListing.findByIdAndUpdate(req.params.id, updateFields, { new: true, runValidators: true });
-    
-    globalCache.clearPrefix('crops:');
+        await clearPrefix('crops:');
 
     res.status(200).json({ message: 'Crop updated successfully', crop });
   } catch (error) {
@@ -390,9 +388,7 @@ export async function deleteCrop(req: Request, res: Response, next: NextFunction
     ]);
 
     await CropListing.findByIdAndDelete(req.params.id);
-
-    globalCache.clearPrefix('crops:');
-
+    await clearPrefix('crops:');
     res.status(200).json({ message: 'Crop deleted successfully. Active orders were cancelled and buyers notified.' });
   } catch (error) {
     next(error);

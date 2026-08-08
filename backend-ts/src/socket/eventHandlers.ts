@@ -161,3 +161,14 @@ export function notifyTyping(
   const event = isTyping ? 'typing:start' : 'typing:stop';
   emitToUser(receiverId, event, { conversationId, userId: senderId });
 }
+
+export function notifyNegotiationUpdate(
+  negotiationId: string,
+  farmerId: string,
+  buyerId: string,
+  event: 'negotiation:new' | 'negotiation:updated',
+  data: Record<string, unknown>
+): void {
+  emitToUser(farmerId, event, { negotiationId, ...data });
+  emitToUser(buyerId, event, { negotiationId, ...data });
+}

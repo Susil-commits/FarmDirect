@@ -136,6 +136,9 @@ export default function CheckoutNew() {
     try {
       const total = calculateTotal();
 
+      // Generate a unique idempotency key for this checkout attempt
+      const idempotencyKey = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
       // api.js interceptor unwraps to response.data, so result = { message, order }
       const result = await orderService.createOrder({
         cropId: crop._id,
@@ -144,7 +147,7 @@ export default function CheckoutNew() {
         totalAmount: total,
         paymentMethod: formData.paymentMethod,
         couponCode: appliedCoupon?.code || undefined,
-      });
+      }, idempotencyKey);
 
       const createdOrder = result.order;
       setOrderData(createdOrder);
