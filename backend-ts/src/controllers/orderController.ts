@@ -1,13 +1,15 @@
-import { randomUUID } from 'crypto';
+import { randomUUID, createHash } from 'crypto';
 import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import CropListing from '../models/CropListing.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import Coupon from '../models/Coupon.js';
+import IdempotencyKey from '../models/IdempotencyKey.js';
 import { notifyOrderUpdate } from '../socket/eventHandlers.js';
 import { computeDiscount, redeemCoupon } from './couponController.js';
 import { sendError } from '../utils/apiResponse.js';
+import { flagAnomalyAsync } from '../services/anomalyService.js';
 import {
   OrderStatus, PaymentMethod, PaymentStatus, CropAvailability, CropStatus, CancelledBy, UserRole,
 } from '../types/enums.js';
@@ -181,121 +183,187 @@ export async function startOrder(req: Request, res: Response, next: NextFunction
 
 export async function createOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { cropId, quantity, couponCode, paymentMethod: requestedMethod } = req.body as {
-      cropId: string; quantity?: number; couponCode?: string; paymentMethod?: PaymentMethod;
-    };
-
-    const paymentMethod = requestedMethod === PaymentMethod.Razorpay ? PaymentMethod.Razorpay : PaymentMethod.Cod;
-    if (!cropId) {
-      sendError(res, 'Crop ID is required', 400);
+    const idempotencyKeyHeader = req.headers['idempotency-key'] as string;
+    if (!idempotencyKeyHeader) {
+      sendError(res, 'Idempotency-Key header required', 400);
       return;
     }
 
-    const crop = await CropListing.findById(cropId);
-    if (!crop) {
-      sendError(res, 'Crop not found', 404);
-      return;
-    }
-    if (crop.availability !== CropAvailability.Available) {
-      sendError(res, 'This crop is no longer available', 400);
-      return;
-    }
-    if (crop.quantity < (quantity || 1)) {
-      sendError(res, `Insufficient quantity. Available: ${crop.quantity} ${crop.unit}`, 400);
-      return;
-    }
-
-    const interestEntry = crop.interestedBuyers.find((ib) => ib.buyerId.toString() === req.user!._id.toString());
-    if (!interestEntry) {
-      sendError(res, 'You must mark interest in this crop before placing an order', 400);
-      return;
-    }
-
-    const orderQty = quantity || 1;
-    const baseAmount = crop.price * orderQty;
-    let discountAmount = 0;
-    let totalAmount = baseAmount;
-    let appliedCouponCode: string | null = null;
-
-    if (couponCode && couponCode.trim()) {
-      const coupon = await Coupon.findOne({ code: couponCode.trim().toUpperCase(), isActive: true });
-      if (!coupon) {
-        sendError(res, 'Invalid or expired coupon code', 400);
-        return;
-      }
-      const now = new Date();
-      if (coupon.validFrom && now < coupon.validFrom) { sendError(res, 'This coupon is not active yet', 400); return; }
-      if (coupon.validUntil && now > coupon.validUntil) { sendError(res, 'This coupon has expired', 400); return; }
-      if (coupon.usageLimit !== null && coupon.usageLimit !== undefined && coupon.usedCount >= coupon.usageLimit) { sendError(res, 'This coupon has reached its usage limit', 400); return; }
-      const userUses = coupon.usedBy.filter((id) => id.toString() === req.user!._id.toString()).length;
-      if (userUses >= coupon.perUserLimit) { sendError(res, 'You have already used this coupon', 400); return; }
-
-      const result = computeDiscount(coupon, baseAmount);
-      if (!result) { sendError(res, `Minimum order amount of ₹${coupon.minOrderAmount} required for this coupon`, 400); return; }
-      discountAmount = result.discountAmount;
-      totalAmount = result.finalAmount;
-      appliedCouponCode = coupon.code;
-    }
-
-    const order = await Order.create({
-      orderNumber: 'ORD-' + randomUUID().replace(/-/g, '').substring(0, 12).toUpperCase(),
-      buyerId: req.user!._id,
-      farmerId: crop.farmerId,
-      cropId: crop._id,
-      cropName: crop.cropName,
-      quantity: orderQty,
-      unitPrice: crop.price,
-      originalAmount: baseAmount,
-      discountAmount,
-      couponCode: appliedCouponCode,
-      totalAmount,
-      pickupLocation: crop.pickupLocation,
-      farmerContact: crop.contactNumber,
-      buyerContact: '',
-      paymentMethod,
-      paymentStatus: PaymentStatus.Pending,
-      orderStatus: OrderStatus.Confirmed,
-      timeline: [{ event: 'ORDER_CONFIRMED', description: 'Order confirmed. Farmer will prepare your order.', timestamp: new Date() }],
-    });
-
-    // B2 FIX: Atomic decrement FIRST — only redeem coupon after stock is secured.
-    const updatedCrop = await CropListing.findOneAndUpdate(
-      { _id: cropId, quantity: { $gte: orderQty } },
-      {
-        $inc: { quantity: -orderQty, sold: orderQty },
-        $set: { 'interestedBuyers.$[elem].status': 'ordered', 'interestedBuyers.$[elem].orderId': order._id },
-      },
-      { arrayFilters: [{ 'elem.buyerId': req.user!._id }], new: true },
-    );
-    if (!updatedCrop) {
-      await Order.findByIdAndDelete(order._id);
-      sendError(res, 'Insufficient stock — this crop sold out before your order was confirmed', 400);
-      return;
-    }
-    if (updatedCrop.quantity <= 0) {
-      await CropListing.findByIdAndUpdate(cropId, { availability: CropAvailability.NotAvailable });
-    }
-
-    // Redeem coupon only after stock has been successfully secured (B2 FIX)
-    if (appliedCouponCode) await redeemCoupon(appliedCouponCode, req.user!._id);
+    const sortedBody = Object.keys(req.body).sort().reduce((acc, key) => {
+      acc[key] = req.body[key as keyof typeof req.body];
+      return acc;
+    }, {} as any);
+    const requestHash = createHash('sha256').update(JSON.stringify(sortedBody)).digest('hex');
 
     try {
-      await Notification.create({
-        userId: crop.farmerId,
-        title: 'New Order Received',
-        message: `You have a new order for ${orderQty} ${crop.unit} of ${crop.cropName}.`,
-        type: 'order',
-        relatedId: String(order._id),
-        priority: 'high',
-        actionUrl: `/farmer/orders/${order._id}`,
-        data: { orderId: order._id, cropId: crop._id, orderNumber: order.orderNumber, buyerId: req.user!._id },
+      await IdempotencyKey.create({
+        key: idempotencyKeyHeader,
+        status: 'pending',
+        requestHash,
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
       });
-    } catch (notifErr) {
-      console.error('Failed to create order notification:', notifErr);
+    } catch (err: any) {
+      if (err.code === 11000) {
+        const existingKey = await IdempotencyKey.findOne({ key: idempotencyKeyHeader });
+        if (existingKey) {
+          if (existingKey.requestHash !== requestHash) {
+            sendError(res, 'Idempotency-Key reused with different request body', 422);
+            return;
+          }
+          if (existingKey.status === 'completed') {
+            res.setHeader('X-Idempotent-Replay', 'true');
+            res.status(existingKey.responseStatus || 200).json(existingKey.responseBody);
+            return;
+          }
+          if (existingKey.status === 'pending') {
+            if (Date.now() - existingKey.createdAt.getTime() > 30000) {
+              await IdempotencyKey.updateOne(
+                { key: idempotencyKeyHeader },
+                { $set: { createdAt: new Date(), expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) } }
+              );
+            } else {
+              sendError(res, 'Request already in progress', 409);
+              return;
+            }
+          }
+        }
+      } else {
+        throw err;
+      }
     }
 
-    notifyOrderUpdate(order, 'order:created');
-    res.status(201).json({ message: 'Order placed successfully! Farmer will start preparing your order.', order });
+    const session = await mongoose.startSession();
+    let responseBody: any;
+    let responseStatus = 201;
+    let orderId: mongoose.Types.ObjectId | undefined;
+    let finalAmount = 0;
+    let appliedCouponCode: string | null = null;
+
+    try {
+      await session.withTransaction(async () => {
+        const { cropId, quantity, couponCode, paymentMethod: requestedMethod } = req.body as {
+          cropId: string; quantity?: number; couponCode?: string; paymentMethod?: PaymentMethod;
+        };
+
+        const paymentMethod = requestedMethod === PaymentMethod.Razorpay ? PaymentMethod.Razorpay : PaymentMethod.Cod;
+        if (!cropId) throw { status: 400, message: 'Crop ID is required' };
+
+        const crop = await CropListing.findById(cropId).session(session);
+        if (!crop) throw { status: 404, message: 'Crop not found' };
+        if (crop.availability !== CropAvailability.Available) throw { status: 400, message: 'This crop is no longer available' };
+        
+        const orderQty = quantity || 1;
+        if (crop.quantity < orderQty) throw { status: 400, message: `Insufficient quantity. Available: ${crop.quantity} ${crop.unit}` };
+
+        const interestEntry = crop.interestedBuyers.find((ib) => ib.buyerId.toString() === req.user!._id.toString());
+        if (!interestEntry) throw { status: 400, message: 'You must mark interest in this crop before placing an order' };
+
+        const baseAmount = crop.price * orderQty;
+        let discountAmount = 0;
+        let totalAmount = baseAmount;
+
+        if (couponCode && couponCode.trim()) {
+          const coupon = await Coupon.findOne({ code: couponCode.trim().toUpperCase(), isActive: true }).session(session);
+          if (!coupon) throw { status: 400, message: 'Invalid or expired coupon code' };
+          const now = new Date();
+          if (coupon.validFrom && now < coupon.validFrom) throw { status: 400, message: 'This coupon is not active yet' };
+          if (coupon.validUntil && now > coupon.validUntil) throw { status: 400, message: 'This coupon has expired' };
+          if (coupon.usageLimit !== null && coupon.usageLimit !== undefined && coupon.usedCount >= coupon.usageLimit) throw { status: 400, message: 'This coupon has reached its usage limit' };
+          const userUses = coupon.usedBy.filter((id) => id.toString() === req.user!._id.toString()).length;
+          if (userUses >= coupon.perUserLimit) throw { status: 400, message: 'You have already used this coupon' };
+
+          const result = computeDiscount(coupon, baseAmount);
+          if (!result) throw { status: 400, message: `Minimum order amount of ₹${coupon.minOrderAmount} required for this coupon` };
+          discountAmount = result.discountAmount;
+          totalAmount = result.finalAmount;
+          appliedCouponCode = coupon.code;
+        }
+
+        const [order] = await Order.create([{
+          orderNumber: 'ORD-' + randomUUID().replace(/-/g, '').substring(0, 12).toUpperCase(),
+          buyerId: req.user!._id,
+          farmerId: crop.farmerId,
+          cropId: crop._id,
+          cropName: crop.cropName,
+          quantity: orderQty,
+          unitPrice: crop.price,
+          originalAmount: baseAmount,
+          discountAmount,
+          couponCode: appliedCouponCode,
+          totalAmount,
+          pickupLocation: crop.pickupLocation,
+          farmerContact: crop.contactNumber,
+          buyerContact: '',
+          paymentMethod,
+          paymentStatus: PaymentStatus.Pending,
+          orderStatus: OrderStatus.Confirmed,
+          timeline: [{ event: 'ORDER_CONFIRMED', description: 'Order confirmed. Farmer will prepare your order.', timestamp: new Date() }],
+        }], { session });
+
+        orderId = order._id as mongoose.Types.ObjectId;
+        finalAmount = totalAmount;
+
+        const updatedCrop = await CropListing.findOneAndUpdate(
+          { _id: cropId, quantity: { $gte: orderQty } },
+          {
+            $inc: { quantity: -orderQty, sold: orderQty },
+            $set: { 'interestedBuyers.$[elem].status': 'ordered', 'interestedBuyers.$[elem].orderId': order._id },
+          },
+          { arrayFilters: [{ 'elem.buyerId': req.user!._id }], new: true, session },
+        );
+        if (!updatedCrop) throw { status: 400, message: 'Insufficient stock — this crop sold out before your order was confirmed' };
+        
+        if (updatedCrop.quantity <= 0) {
+          await CropListing.findByIdAndUpdate(cropId, { availability: CropAvailability.NotAvailable }, { session });
+        }
+
+        try {
+          await Notification.create([{
+            userId: crop.farmerId,
+            title: 'New Order Received',
+            message: `You have a new order for ${orderQty} ${crop.unit} of ${crop.cropName}.`,
+            type: 'order',
+            relatedId: String(order._id),
+            priority: 'high',
+            actionUrl: `/farmer/orders/${order._id}`,
+            data: { orderId: order._id, cropId: crop._id, orderNumber: order.orderNumber, buyerId: req.user!._id },
+          }], { session });
+        } catch (notifErr) {
+          console.error('Failed to create order notification:', notifErr);
+        }
+
+        responseBody = { message: 'Order placed successfully! Farmer will start preparing your order.', order };
+      });
+    } catch (err: any) {
+      await IdempotencyKey.updateOne({ key: idempotencyKeyHeader }, { $set: { status: 'failed' } });
+      if (err.status) {
+        sendError(res, err.message, err.status);
+      } else {
+        next(err);
+      }
+      return;
+    } finally {
+      await session.endSession();
+    }
+    
+    if (appliedCouponCode) {
+      await redeemCoupon(appliedCouponCode, req.user!._id);
+    }
+
+    await IdempotencyKey.updateOne(
+      { key: idempotencyKeyHeader },
+      { $set: { status: 'completed', responseBody, responseStatus, orderId } }
+    );
+
+    if (orderId) {
+       flagAnomalyAsync(orderId.toString(), finalAmount, req.user!._id.toString());
+       Order.findById(orderId).then(o => {
+         if (o) notifyOrderUpdate(o, 'order:created');
+       });
+    }
+
+    res.status(responseStatus).json(responseBody);
   } catch (error) {
     next(error);
   }

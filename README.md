@@ -101,6 +101,7 @@ We recently completed a major **Enterprise-Grade Master Plan** comprising 4 majo
 3. **Epic 2 (Multi-Language i18n):** Integrated **react-i18next** to break language barriers, featuring full English and Hindi translations with a dynamic Navbar language toggle.
 4. **Epic 3 (Admin Analytics):** Supercharged the Admin Dashboard with **Recharts**, delivering beautiful interactive visualization charts for *Revenue Growth* and *Order Distribution*.
 5. **Epic 4 (Live Tracking):** Integrated **React-Leaflet** maps into the Order Tracking dashboard, allowing users to view dynamic geospatial routes between the Farmer and Buyer.
+6. **Epic 5 (Enterprise Checkout):** Implemented **Idempotency Keys** using a robust MongoDB transaction-based approach to prevent duplicate orders during network flakes, and **Anomaly Flagging** utilizing Welford's online algorithm (z-score) to instantly catch and flag suspiciously high-value orders.
 
 ---
 
@@ -119,7 +120,7 @@ We recently completed a major **Enterprise-Grade Master Plan** comprising 4 majo
                     │                                                │
                     │  ┌─────────┐ ┌──────────┐ ┌──────────────────┐  │
                     │  │ Routes  │→│Controlers│→│   Mongoose Models │  │
-                    │  │  (14)   │ │  (14)    │ │     (11 typed)    │  │
+                    │  │  (14)   │ │  (14)    │ │     (13 typed)    │  │
                     │  └─────────┘ └──────────┘ └────────┬─────────┘  │
                     │  ┌──────────────┐ ┌──────────────┐ │            │
                     │  │  Middleware  │ │   Utilities   │ │            │
@@ -284,6 +285,7 @@ GITHUB_CLIENT_SECRET=
 | **Multilingual (i18n)** | Integrated English and Hindi localization (Hero & Navbar) |
 | **Enterprise Analytics** | Advanced interactive Recharts dashboards for Admins |
 | **Live Order Tracking** | Geospatial route maps powered by React-Leaflet |
+| **Enterprise Checkout** | Transactional idempotency keys and real-time Welford z-score anomaly flagging |
 
 ### For Buyers
 
@@ -294,6 +296,7 @@ GITHUB_CLIENT_SECRET=
 | Eco-Score | View dynamic sustainability & freshness scores for crops before buying |
 | Express interest | Mark interest in a crop → farmer gets notified in real-time |
 | Place orders | Cash-on-Delivery or Razorpay online payment |
+| Robust checkout | Duplicate protection against network flakes and double-clicks (Idempotency) |
 | Order tracking | Real-time WebSocket status updates + timeline |
 | Wishlist | Save crops for later |
 | Reviews | Rate and review purchased crops |
@@ -320,6 +323,7 @@ GITHUB_CLIENT_SECRET=
 | KYC approval | Review and approve/reject farmer & buyer KYC submissions |
 | Crop moderation | Approve/reject/freeze/delete crop listings |
 | Order management | Update any order status, restore inventory on cancel |
+| Anomaly Review | Dedicated `/flagged` dashboard to review suspicious high-value orders |
 | Coupon system | Create percentage/fixed coupons with usage limits |
 | Analytics dashboard | Platform-wide stats (users, crops, orders, revenue) |
 | Audit logs | Every admin action logged with before/after state |
@@ -367,7 +371,7 @@ All routes are prefixed with `/api`. Authentication uses `Authorization: Bearer 
 | Coupons | `/coupons/validate` (buyer), admin CRUD via `/admin/coupons` | Mixed |
 | Payments | `/payments/razorpay/init`, `/payments/razorpay/verify`, `/payments/razorpay/failed` | Buyer |
 | Farmer | `/farmer/dashboard/stats`, `/farmer/analytics/*`, `/farmer/inventory/*`, `/farmer/crops/bulk-upload` | Farmer |
-| Admin | `/admin/dashboard/stats`, `/admin/users`, `/admin/kyc/*`, `/admin/crops/*`, `/admin/orders/*`, `/admin/audit-logs` | Admin |
+| Admin | `/admin/dashboard/stats`, `/admin/users`, `/admin/kyc/*`, `/admin/crops/*`, `/admin/orders/*`, `/admin/orders/flagged`, `/admin/audit-logs` | Admin |
 | Data Access | `/data/crops` (public), `/data/farmer/*`, `/data/buyer/*`, `/data/admin/*` | Role-specific |
 | Upload | `/api/upload` (single file), crop/KYC/profile/upload middleware | Private |
 | Health | `/api/health` | Public |
@@ -387,8 +391,9 @@ backend-ts/src/
 │                              wishlist, coupon, contact, farmer, dataAccess,
 │                              payment, user, admin
 ├── middleware/    5 files    auth, errorHandler, validator (Zod), localUpload, requestId
-├── models/       11 files    User, CropListing, Order, Review, Notification,
-│                              Message, Wishlist, Coupon, Contact, ContactQuery, AuditLog
+├── models/       13 files    User, CropListing, Order, Review, Notification,
+│                              Message, Wishlist, Coupon, Contact, ContactQuery, AuditLog,
+│                              IdempotencyKey, UserOrderStats
 ├── routes/       14 files    one per controller
 ├── socket/        2 files    socketManager, eventHandlers
 ├── types/         3 files    enums, interfaces/DTOs, Express augmentation
