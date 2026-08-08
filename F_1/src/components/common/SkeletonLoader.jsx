@@ -110,7 +110,6 @@ export default function SkeletonLoader({ variant = 'page', count = 1 }) {
     );
   }
 
-  // Default 'page' variant
   return (
     <div className="min-h-screen bg-gray-50 p-6 w-full">
       <div className="max-w-6xl mx-auto space-y-6">

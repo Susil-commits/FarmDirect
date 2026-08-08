@@ -2,7 +2,6 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
@@ -58,17 +57,12 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Precache JS/CSS/HTML/SVG — exclude large media (handled by runtime caching)
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MiB
-        // Don't cache API responses or uploads by default (they change often);
-        // the navigation fallback serves the cached app shell when offline.
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/, /^\/uploads/],
         runtimeCaching: [
           {
-            // Cache backend uploads (product images, avatars) so previously
-            // viewed pages work offline. stale-while-revalidate keeps them fresh.
             urlPattern: ({ url }) => url.pathname.startsWith('/uploads/'),
             handler: 'StaleWhileRevalidate',
             options: {
@@ -78,7 +72,6 @@ export default defineConfig({
             },
           },
           {
-            // Google Fonts (if any) - cache stylesheets & fonts
             urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com',
             handler: 'StaleWhileRevalidate',
             options: { cacheName: 'google-fonts-stylesheets' },

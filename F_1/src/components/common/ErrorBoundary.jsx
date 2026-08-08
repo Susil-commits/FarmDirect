@@ -20,7 +20,6 @@ export default class ErrorBoundary extends Component {
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo });
 
-    // Structured error report
     const report = {
       errorId: this.state.errorId,
       message: error?.message,
@@ -32,7 +31,6 @@ export default class ErrorBoundary extends Component {
 
     console.error('[ErrorBoundary] Caught error:', report);
 
-    // Call optional onError prop for external reporting (e.g., Sentry)
     if (typeof this.props.onError === 'function') {
       try {
         this.props.onError(error, errorInfo, report);

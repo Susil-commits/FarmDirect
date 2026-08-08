@@ -6,7 +6,6 @@ export const RecentlyViewedContext = createContext();
 export function RecentlyViewedProvider({ children }) {
   const [recentlyViewed, setRecentlyViewed] = useState([]);
 
-  // Load from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('farm-recently-viewed');
     if (saved) {
@@ -19,23 +18,19 @@ export function RecentlyViewedProvider({ children }) {
     }
   }, []);
 
-  // Save to localStorage
   useEffect(() => {
     localStorage.setItem('farm-recently-viewed', JSON.stringify(recentlyViewed));
   }, [recentlyViewed]);
 
   const addToRecentlyViewed = (product) => {
     setRecentlyViewed(prev => {
-      // Remove if already exists
       const filtered = prev.filter(item => item.id !== product.id);
       
-      // Add to top with timestamp
       const updatedProduct = {
         ...product,
         viewedAt: new Date().toISOString()
       };
       
-      // Keep only last 10 items
       return [updatedProduct, ...filtered].slice(0, 10);
     });
   };

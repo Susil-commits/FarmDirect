@@ -13,7 +13,6 @@ describe('Auth Endpoints', () => {
   };
 
   beforeEach(async () => {
-    // Pre-register user before each test, except for the first one which tests registration explicitly with a new email.
     const { hashPassword } = await import('../utils/password.js');
     const hashedPassword = await hashPassword(testUser.password);
     await User.create({
@@ -38,7 +37,6 @@ describe('Auth Endpoints', () => {
   });
 
   it('should not register user with existing email', async () => {
-    // we already registered testUser in beforeEach
     const res = await request(app)
       .post('/api/auth/register')
       .send(testUser);

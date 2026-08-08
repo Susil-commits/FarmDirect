@@ -26,7 +26,6 @@ export const requestNotificationPermission = async () => {
   if (Notification.permission === 'granted') return 'granted';
   if (Notification.permission === 'denied') return 'denied';
 
-  // Avoid re-prompting repeatedly within the same session
   if (permissionRequestedThisSession) return Notification.permission;
   permissionRequestedThisSession = true;
 
@@ -51,27 +50,23 @@ export const showBrowserNotification = (title, options = {}) => {
     const notification = new Notification(title, {
       body: options.body || '',
       icon: options.icon || '/favicon.ico',
-      tag: options.tag, // dedupes notifications with the same tag
+      tag: options.tag,
       data: options.data || {},
     });
 
-    // Focus the window & close the notification when clicked
     notification.onclick = () => {
       window.focus();
       notification.close();
       if (typeof options.onClick === 'function') options.onClick();
     };
 
-    // Auto-close after 8s to avoid堆积
     setTimeout(() => {
       try {
         notification.close();
       } catch {
-        /* already closed */
       }
     }, 8000);
   } catch {
-    /* Notification construction can throw on some mobile browsers; ignore */
   }
 };
 

@@ -21,7 +21,6 @@ export function useErrorHandler() {
   const formatApiError = useCallback((error, context = '') => {
     if (!error) return 'An unexpected error occurred';
 
-    // Backend API error shape: { message, errors, code }
     const message = error?.message || error?.data?.message || error?.response?.data?.message;
     const statusCode = error?.status || error?.statusCode || error?.response?.status;
 
@@ -38,7 +37,6 @@ export function useErrorHandler() {
     if (statusCode === 429) return 'Too many requests. Please wait a moment and try again.';
     if (statusCode >= 500) return 'A server error occurred. Our team has been notified. Please try again later.';
 
-    // Network / connection errors
     if (!error.response && (error.code === 'ECONNREFUSED' || message?.includes('Network Error') || message?.includes('Failed to fetch'))) {
       return 'Unable to connect to the server. Please check your internet connection.';
     }
@@ -46,7 +44,7 @@ export function useErrorHandler() {
       return 'The request timed out. Please try again.';
     }
     if (message?.includes('Refresh cooldown')) {
-      return null; // Silent — user doesn't need to see this
+      return null;
     }
 
     return message || 'An unexpected error occurred. Please try again.';
@@ -57,16 +55,13 @@ export function useErrorHandler() {
    * Returns the formatted message string for inline use.
    */
   const handleError = useCallback((error, context = '') => {
-    // Silent errors
     if (error?.message === 'Refresh cooldown active') return null;
 
     const statusCode = error?.status || error?.statusCode || error?.response?.status;
 
-    // For validation errors with field-level details, show each error
     if ((statusCode === 400 || statusCode === 422) && error?.errors && typeof error.errors === 'object') {
       const fieldErrors = Object.values(error.errors).filter(Boolean);
       if (fieldErrors.length > 0) {
-        // Show first 3 errors max to avoid overwhelming the user
         const messages = fieldErrors.slice(0, 3).join(' • ');
         toast?.error?.(messages);
         return messages;

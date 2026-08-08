@@ -19,7 +19,6 @@ async function fixDb() {
   
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
-    // Assign roughly half as farmers, half as buyers
     const newRole = (i % 2 === 0) ? 'farmer' : 'buyer';
     
     await db.collection('users').updateOne(

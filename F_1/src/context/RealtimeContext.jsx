@@ -32,35 +32,24 @@ export const RealtimeProvider = ({ children }) => {
   const { addToast } = useToast();
   const { user } = useAuth();
 
-  // Latest event signals held as state. Each is replaced with a fresh object
-  // on every event so consumers' useEffect deps change and they react instantly.
   const [orderEvent, setOrderEvent] = React.useState(null);
   const [cropInterestEvent, setCropInterestEvent] = React.useState(null);
   const [kycEvent, setKycEvent] = React.useState(null);
   const [userStatusEvent, setUserStatusEvent] = React.useState(null);
 
-  // Request browser-notification permission once, after the user authenticates.
-  // We don't prompt on public pages or before login.
   useEffect(() => {
     if (!user) return;
     requestNotificationPermission();
   }, [user]);
 
-  // ---- Toast + browser-push helper ----
   const announce = useCallback(
     (toastType, message, browserTitle, browserBody, browserTag) => {
-      // Foreground: in-app toast
       addToast(message, toastType);
-      // Background: OS notification (no-op when tab is visible)
       notifyIfBackground(browserTitle, browserBody, { tag: browserTag });
     },
     [addToast]
   );
 
-  // ---- Order events ----
-  // Backend `notifyOrderUpdate` emits per-user as `order:updated` (covers
-  // created / statusUpdated / cancelled). data: { orderId, orderNumber,
-  // orderStatus, cropName, totalAmount, role, updatedAt }
   useEffect(() => {
     if (!connected) return;
 
@@ -85,7 +74,6 @@ export const RealtimeProvider = ({ children }) => {
     return () => unsub();
   }, [connected, subscribe, announce]);
 
-  // ---- Crop interest events (farmer notified when a buyer marks interest) ----
   useEffect(() => {
     if (!connected) return;
     const unsub = subscribe('crop:interest', (data) => {
@@ -102,7 +90,6 @@ export const RealtimeProvider = ({ children }) => {
     return () => unsub();
   }, [connected, subscribe, announce]);
 
-  // ---- KYC status updates (verified / rejected) ----
   useEffect(() => {
     if (!connected) return;
     const unsub = subscribe('kyc:updated', (data) => {
@@ -122,7 +109,6 @@ export const RealtimeProvider = ({ children }) => {
     return () => unsub();
   }, [connected, subscribe, announce]);
 
-  // ---- User status changes (frozen/suspended by admin) ----
   useEffect(() => {
     if (!connected) return;
     const unsub = subscribe('user:statusChanged', (data) => {

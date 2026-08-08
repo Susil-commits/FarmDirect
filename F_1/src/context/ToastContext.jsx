@@ -9,7 +9,7 @@ export function ToastProvider({ children }) {
 
   const addToast = useCallback((message, type = 'info', duration = 5000) => {
     if (!message) return null;
-    const id = Date.now() + Math.random(); // avoid collision on rapid calls
+    const id = Date.now() + Math.random();
     const toast = { id, message, type, duration };
 
     setToasts(prev => [...prev, toast]);
@@ -27,12 +27,10 @@ export function ToastProvider({ children }) {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  // Keep ref updated so it can be called from other contexts without closure issues
   useEffect(() => {
     removeToastRef.current = removeToast;
   }, [removeToast]);
 
-  // ── Typed shorthand helpers ────────────────────────────────────────────────
 
   const success = useCallback((msg, duration) => addToast(msg, 'success', duration), [addToast]);
   const error = useCallback((msg, duration) => addToast(msg, 'error', duration ?? 6000), [addToast]);
@@ -67,7 +65,6 @@ export function ToastProvider({ children }) {
     addToast,
     removeToast,
     toasts,
-    // Typed helpers
     success,
     error,
     warning,

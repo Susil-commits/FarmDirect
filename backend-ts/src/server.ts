@@ -7,20 +7,16 @@ import { env } from './config/env.js';
 import { connectDB, disconnectDB } from './config/db.js';
 import { initSocket } from './socket/socketManager.js';
 
-// Create HTTP server for Socket.io
 const httpServer: HttpServer = createServer(app);
 
-// Initialize Socket.io
 initSocket(httpServer, { origin: env.corsOrigins });
 
-// ---- Graceful shutdown ----
 function gracefulShutdown(signal: string): void {
   httpServer.close(async () => {
     await disconnectDB();
     process.exit(0);
   });
 
-  // Force-close after 10 seconds
   setTimeout(() => {
     console.error('Forcing shutdown after timeout.');
     process.exit(1);
@@ -46,7 +42,6 @@ async function start(): Promise<void> {
   });
 }
 
-// Cluster logic to spawn workers per CPU core for max throughput and reliability
 if (cluster.isPrimary) {
   const numCPUs = os.cpus().length;
   console.log(`Primary cluster setting up ${numCPUs} workers...`);
@@ -65,12 +60,11 @@ if (cluster.isPrimary) {
     cluster.fork();
   });
 
-  // Self-ping Cron to prevent PaaS instances (Render/Heroku) from sleeping
   setInterval(() => {
     fetch(`http://localhost:${env.port}/api/health`)
       .then(() => console.log('Self-ping successful (Keeping instance warm)'))
       .catch((err) => console.error('Self-ping failed:', err.message));
-  }, 10 * 60 * 1000); // Every 10 mins
+  }, 10 * 60 * 1000);
 
 } else {
   start().catch((err) => {

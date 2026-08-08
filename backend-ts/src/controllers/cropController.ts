@@ -16,8 +16,6 @@ import { globalCache } from '../config/cache.js';
 export async function createCrop(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     // B11 FIX: Guard upload error FIRST. Previously this check appeared after KYC
-    // and field validation, so upload errors were reported only after passing
-    // other checks unnecessarily. Move it to the top of the handler.
     if (req.uploadError) {
       sendError(res, req.uploadError || 'Image upload failed', 400);
       return;
@@ -81,7 +79,6 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
       availability: CropAvailability.Available,
     });
 
-    // Invalidate crop cache since a new crop was added
     globalCache.clearPrefix('crops:');
 
     res.status(201).json({ message: 'Crop listing created successfully', crop });
@@ -135,7 +132,6 @@ export async function getCrops(req: Request, res: Response, next: NextFunction):
     }
 
     // B13 FIX: Whitelist sort fields to prevent arbitrary MongoDB field injection.
-    // A malicious client passing sortBy=password or sortBy=__proto__ is now blocked.
     const ALLOWED_SORT_FIELDS = new Set(['createdAt', 'price', 'rating', 'sold', 'views', 'quantity']);
     const safeSortBy = ALLOWED_SORT_FIELDS.has(sortBy) ? sortBy : 'createdAt';
 
@@ -157,7 +153,7 @@ export async function getCrops(req: Request, res: Response, next: NextFunction):
       pagination: { total, page: Number(page), limit: Number(limit), pages: Math.ceil(total / Number(limit)) },
     };
 
-    globalCache.set(cacheKey, responseData, 60); // Cache for 60 seconds
+    globalCache.set(cacheKey, responseData, 60);
 
     res.status(200).json(responseData);
   } catch (error) {
@@ -314,7 +310,6 @@ export async function updateCrop(req: Request, res: Response, next: NextFunction
         updateFields.specifications = {};
       }
     }
-    // Both the listing's farmer AND admin may change status (Task 1.5)
     if (status !== undefined && (req.user!.role === UserRole.Admin || crop.farmerId.toString() === req.user!._id.toString())) {
       updateFields.status = status;
     }
@@ -339,7 +334,6 @@ export async function updateCrop(req: Request, res: Response, next: NextFunction
 
     crop = await CropListing.findByIdAndUpdate(req.params.id, updateFields, { new: true, runValidators: true });
     
-    // Invalidate crop cache since a crop was updated
     globalCache.clearPrefix('crops:');
 
     res.status(200).json({ message: 'Crop updated successfully', crop });
@@ -361,9 +355,6 @@ export async function deleteCrop(req: Request, res: Response, next: NextFunction
     }
 
     // B12 FIX: Don't hard-delete active orders when a crop is deleted.
-    // Silently wiping in-progress orders loses buyer data and leaves buyers
-    // with no record. Instead, cancel all non-terminal orders with a clear
-    // reason, then restore inventory for each, and fire buyer notifications.
     const activeOrders = await Order.find({
       cropId: req.params.id,
       orderStatus: { $nin: [OrderStatus.Completed, OrderStatus.Cancelled] },
@@ -400,7 +391,6 @@ export async function deleteCrop(req: Request, res: Response, next: NextFunction
 
     await CropListing.findByIdAndDelete(req.params.id);
 
-    // Invalidate crop cache since a crop was deleted
     globalCache.clearPrefix('crops:');
 
     res.status(200).json({ message: 'Crop deleted successfully. Active orders were cancelled and buyers notified.' });
@@ -426,9 +416,6 @@ export async function getCropsByFarmer(req: Request, res: Response, next: NextFu
 export async function getMyListings(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     // B14 FIX: Only populate the fields a farmer legitimately needs to see for
-    // their interested buyers. The previous list exposed highly sensitive KYC
-    // data (kycDocuments, kycDetails, aadharNumber, etc.) which should never
-    // be visible outside the admin panel.
     const crops = await CropListing.find({ farmerId: req.user!._id })
       .lean()
       .populate(
@@ -443,7 +430,6 @@ export async function getMyListings(req: Request, res: Response, next: NextFunct
   }
 }
 
-// ===================== INTEREST WORKFLOW =====================
 
 export async function toggleInterest(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {

@@ -16,9 +16,6 @@
 
 import api from './api';
 
-// ---------------------------------------------------------------------------
-// Razorpay checkout script loader (idempotent)
-// ---------------------------------------------------------------------------
 const RAZORPAY_SCRIPT_ID = 'razorpay-checkout-script';
 
 export const loadRazorpayScript = () =>
@@ -48,9 +45,6 @@ export const loadRazorpayScript = () =>
   });
 
 const paymentService = {
-  // ============================================
-  // COD PAYMENT
-  // ============================================
 
   createCODOrder: async (orderData) => {
     const payload = {
@@ -76,9 +70,6 @@ const paymentService = {
     return api.get('/orders/payment/pending-cod');
   },
 
-  // ============================================
-  // RAZORPAY (ONLINE) PAYMENT
-  // ============================================
 
   /**
    * Create a Razorpay order for one or more existing buyer orders.
@@ -141,7 +132,7 @@ const paymentService = {
 
     const options = {
       key: keyId,
-      amount, // paise
+      amount,
       currency: 'INR',
       name,
       description,

@@ -48,7 +48,6 @@ export const submitContactQuery = asyncHandler(async (req: Request, res: Respons
     console.error('Error sending admin notification:', emailError);
   }
 
-  // Create in-app notification for authenticated users
   if (userId) {
     try {
       await Notification.create({
@@ -140,7 +139,6 @@ export const updateContactQuery = asyncHandler(async (req: Request, res: Respons
       console.error('Error sending response email:', emailError);
     }
 
-    // Create in-app notification for the user if they have a userId linked
     if (query.userId) {
       try {
         await Notification.create({

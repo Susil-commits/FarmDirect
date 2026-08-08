@@ -9,11 +9,10 @@ export async function connectDB(retries = MAX_RETRIES): Promise<typeof mongoose>
   try {
     mongoose.set('strictQuery', true);
     
-    // Enterprise configuration for DB Resilience
     const conn = await mongoose.connect(env.mongoUri, {
-      maxPoolSize: 50, // Maintain up to 50 socket connections
-      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      maxPoolSize: 50,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
     });
     
     return conn;

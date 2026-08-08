@@ -58,7 +58,7 @@ interface CommunityStatsData {
 
 // B15 FIX: Type the cache entry properly instead of using `any`
 let cachedCommunityStats: { data: CommunityStatsData; timestamp: number } | null = null;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 5 * 60 * 1000;
 
 export const getPublicCommunityStats = asyncHandler(async (_req: Request, res: Response) => {
   try {
@@ -92,7 +92,6 @@ export const getPublicCommunityStats = asyncHandler(async (_req: Request, res: R
     });
   } catch (error) {
     console.error('Error fetching community stats:', error);
-    // Serve stale cache if available when DB fails
     if (cachedCommunityStats) {
       res.status(200).json({
         success: true,
@@ -101,7 +100,7 @@ export const getPublicCommunityStats = asyncHandler(async (_req: Request, res: R
       });
       return;
     }
-    throw error; // Let asyncHandler handle it
+    throw error;
   }
 });
 
@@ -349,8 +348,6 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
     if (cancellationReason) order.cancellationReason = cancellationReason;
 
     // B9 FIX: Only restore availability/status if the crop was previously
-    // active or sold-out. Unconditionally setting 'active' would override
-    // a farmer's intentional manual deactivation.
     const cropForRestore = await CropListing.findById(order.cropId).select('status').lean();
     const wasListingActive = cropForRestore?.status === CropStatus.Active || cropForRestore?.status === CropStatus.SoldOut;
     const restoreSet: Record<string, unknown> = { $inc: { quantity: order.quantity, sold: -order.quantity } };
@@ -399,7 +396,6 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
   await order.populate('farmerId', 'firstName lastName name phone farmName city state');
   await order.populate('cropId', 'cropName images price unit');
 
-  // Notify both buyer and farmer
   try {
     const notifyUsers: Types.ObjectId[] = [];
     if (order.buyerId) notifyUsers.push(order.buyerId as Types.ObjectId);
@@ -436,8 +432,6 @@ export const getUsersWithCrops = asyncHandler(async (req: Request, res: Response
   const skip = (Number(page) - 1) * Number(limit);
 
   // B10 FIX: Replace the N+1 per-user CropListing.find inside Promise.all with
-  // a single aggregation $lookup. Previously each user caused a separate DB
-  // round-trip; this collapses them all into one pipeline call.
   const pipeline: PipelineStage[] = [
     { $match: { ...query } } as PipelineStage,
     { $sort: { createdAt: -1 } } as PipelineStage,
@@ -596,11 +590,8 @@ export const proxyDocument = asyncHandler(async (req: Request, res: Response) =>
   if (!url) return sendError(res, 'URL parameter is required', 400);
   if (!url.startsWith('/uploads/')) return sendError(res, 'Only local upload URLs are supported', 400);
 
-  // Resolve both paths to prevent path traversal attacks (e.g. /uploads/../../../etc/passwd)
   const uploadsDir = path.resolve(__dirname, '..', 'uploads');
   const filePath = path.resolve(uploadsDir, url.replace(/^\/uploads\//, ''));
-
-  // After resolution, the filePath MUST still sit inside uploadsDir
   if (!filePath.startsWith(uploadsDir + path.sep) && filePath !== uploadsDir) {
     return sendError(res, 'Access denied', 403);
   }
@@ -614,9 +605,6 @@ export const proxyDocument = asyncHandler(async (req: Request, res: Response) =>
   const contentType = mimeTypes[ext] || 'application/octet-stream';
 
   // B8 FIX: Use res.sendFile (streaming) instead of readFileSync + res.send.
-  // readFileSync loads the entire file into Node.js heap memory before sending,
-  // which can cause memory spikes for large PDFs viewed by admins.
-  // res.sendFile streams the file directly from disk with proper range/cache support.
   res.set({
     'Content-Type': contentType,
     'Content-Disposition': 'inline',

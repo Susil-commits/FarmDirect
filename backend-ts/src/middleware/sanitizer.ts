@@ -46,7 +46,6 @@ export function sanitizeField(...fields: string[]): RequestHandler {
   return (req: Request, _res: Response, next: NextFunction) => {
     for (const field of fields) {
       if (req.body?.[field] && typeof req.body[field] === 'string') {
-        // Strip HTML tags — simple regex is sufficient for backend sanitization
         req.body[field] = req.body[field].replace(/<[^>]*>/g, '').trim();
       }
     }

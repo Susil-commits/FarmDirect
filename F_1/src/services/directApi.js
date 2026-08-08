@@ -16,10 +16,8 @@ const BACKEND_URL = import.meta.env.VITE_API_DIRECT_URL || 'http://localhost:100
 const directApi = axios.create({
   baseURL: BACKEND_URL,
   withCredentials: true,
-  // Do NOT set Content-Type — browser auto-detects multipart/form-data with boundary
 });
 
-// Copy auth token from localStorage for direct requests
 directApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {

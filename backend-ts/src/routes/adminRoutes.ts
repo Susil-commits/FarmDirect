@@ -6,13 +6,10 @@ import { UserRole } from '../types/enums.js';
 
 const router = Router();
 
-// Document proxy (no auth — iframes can't send JWT)
 router.get('/documents/proxy', adminController.proxyDocument);
 
-// KYC result-seen (must be before admin-only middleware)
 router.patch('/kyc/result-seen', protect, adminController.markKYCResultSeen);
 
-// All admin routes require admin authorization
 router.use(protect, authorize(UserRole.Admin));
 
 router.get('/dashboard/stats', adminController.getDashboardStats);

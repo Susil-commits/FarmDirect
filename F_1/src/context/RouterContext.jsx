@@ -3,7 +3,6 @@ import { createContext, useState, useContext, useMemo, useEffect } from 'react';
 
 export const RouterContext = createContext();
 
-// Route pattern definitions for parameter extraction
 const ROUTE_PATTERNS = [
   { pattern: '/crop/', paramName: 'cropId' },
   { pattern: '/edit-crop/', paramName: 'cropId' },
@@ -14,7 +13,6 @@ const ROUTE_PATTERNS = [
 function extractParams(routePath) {
   const params = {};
 
-  // Extract path parameters from known route patterns
   for (const { pattern, paramName } of ROUTE_PATTERNS) {
     if (routePath.startsWith(pattern)) {
       const value = routePath.slice(pattern.length).split('?')[0].split('#')[0];
@@ -25,7 +23,6 @@ function extractParams(routePath) {
     }
   }
 
-  // Extract query parameters (e.g., /search?q=apple)
   const queryIndex = routePath.indexOf('?');
   if (queryIndex !== -1) {
     const queryString = routePath.slice(queryIndex + 1);
@@ -39,12 +36,10 @@ function extractParams(routePath) {
 }
 
 export function RouterProvider({ children }) {
-  // Initialize to the current URL path + search params
   const [currentRoute, setCurrentRoute] = useState(
     window.location.pathname + window.location.search || '/'
   );
 
-  // Handle browser's popstate (back/forward buttons)
   useEffect(() => {
     const handlePopState = () => {
       setCurrentRoute(window.location.pathname + window.location.search);
@@ -55,16 +50,13 @@ export function RouterProvider({ children }) {
   }, []);
 
   const navigate = (path) => {
-    // Handle browser back navigation (navigate(-1))
     if (path === -1 || path === '-1') {
       window.history.back();
       return;
     }
 
-    // Ensure path is a string
     const routePath = String(path);
 
-    // Skip loading if already on same page
     if (routePath === currentRoute) {
       return;
     }
@@ -74,7 +66,6 @@ export function RouterProvider({ children }) {
     window.scrollTo(0, 0);
   };
 
-  // Compute params from currentRoute whenever it changes
   const params = useMemo(() => extractParams(currentRoute), [currentRoute]);
 
   return (

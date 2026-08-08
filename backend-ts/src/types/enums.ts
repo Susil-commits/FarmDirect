@@ -30,7 +30,6 @@ export enum SocialAuthProvider {
   Facebook = 'facebook',
 }
 
-// ---- Crop listing ----
 export enum CropType {
   Vegetables = 'vegetables',
   Crops = 'crops',
@@ -81,7 +80,6 @@ export enum InterestedBuyerStatus {
   Ordered = 'ordered',
 }
 
-// ---- Order ----
 export enum OrderStatus {
   Confirmed = 'confirmed',
   Preparing = 'preparing',
@@ -108,7 +106,6 @@ export enum CancelledBy {
   Admin = 'admin',
 }
 
-// ---- Notifications & messages ----
 export enum NotificationType {
   Order = 'order',
   Interest = 'interest',
@@ -132,13 +129,11 @@ export enum MessageType {
   Notification = 'notification',
 }
 
-// ---- Coupon ----
 export enum CouponType {
   Percentage = 'percentage',
   Fixed = 'fixed',
 }
 
-// ---- Contact query ----
 export enum InquiryType {
   General = 'General',
   Support = 'Support',
@@ -162,7 +157,6 @@ export enum ContactQueryPriority {
   Urgent = 'Urgent',
 }
 
-// ---- Review abuse reporting ----
 export enum ReportReason {
   Spam = 'spam',
   Inappropriate = 'inappropriate',
@@ -170,7 +164,6 @@ export enum ReportReason {
   Other = 'other',
 }
 
-// ---- Audit log ----
 export enum AuditAction {
   UserCreated = 'USER_CREATED',
   UserUpdated = 'USER_UPDATED',

@@ -13,10 +13,8 @@ interface MongooseDuplicateKeyError extends Error {
 }
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, _next): void => {
-  // ── Typed ApiError ─────────────────────────────────────────────────────────
   if (err instanceof ApiError) {
     if (!err.isOperational) {
-      // Programming error — always log with stack
       console.error(`[${req.headers['x-request-id'] ?? 'no-id'}] Non-operational ApiError:`, err);
     }
     res.status(err.statusCode).json({
@@ -29,13 +27,11 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next): void =>
     return;
   }
 
-  // ── Mongoose CastError (invalid ObjectId) ─────────────────────────────────
   if (err instanceof mongoose.Error.CastError) {
     res.status(400).json({ success: false, message: `Invalid value for field: ${err.path}`, code: 'INVALID_ID' });
     return;
   }
 
-  // ── Mongoose Validation error ─────────────────────────────────────────────
   if (err instanceof mongoose.Error.ValidationError) {
     const e = err as MongooseValidationError;
     const messages = Object.values(e.errors).map((error) => error.message);
@@ -43,7 +39,6 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next): void =>
     return;
   }
 
-  // ── Mongoose Duplicate key error ──────────────────────────────────────────
   const dupErr = err as MongooseDuplicateKeyError;
   if (dupErr.code === 11000) {
     const field = Object.keys(dupErr.keyPattern ?? {})[0] ?? 'field';
@@ -51,13 +46,11 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next): void =>
     return;
   }
 
-  // ── SyntaxError (malformed JSON body) ─────────────────────────────────────
   if (err instanceof SyntaxError && 'body' in err) {
     res.status(400).json({ success: false, message: 'Malformed JSON in request body', code: 'INVALID_JSON' });
     return;
   }
 
-  // ── JWT errors ────────────────────────────────────────────────────────────
   if (err.name === 'JsonWebTokenError') {
     res.status(401).json({ success: false, message: 'Invalid token', code: 'INVALID_TOKEN' });
     return;
@@ -71,7 +64,6 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next): void =>
     return;
   }
 
-  // ── Multer errors ─────────────────────────────────────────────────────────
   if (err.name === 'MulterError') {
     const message = err.code === 'LIMIT_FILE_SIZE'
       ? 'File is too large. Please upload a smaller file.'
@@ -82,21 +74,17 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next): void =>
     return;
   }
 
-  // ── CORS errors ───────────────────────────────────────────────────────────
   if (err.message?.includes('Not allowed by CORS')) {
     res.status(403).json({ success: false, message: 'Cross-origin request blocked', code: 'CORS_ERROR' });
     return;
   }
 
-  // ── Default / unknown error ───────────────────────────────────────────────
-  // Always log the full error in all environments for server errors
   const reqId = req.headers['x-request-id'] ?? 'no-id';
   console.error(`[${reqId}] Unhandled Error: ${err.message ?? err}`);
   if (err.stack) {
     console.error(err.stack);
   }
 
-  // In production: never leak stack traces or internal details
   const statusCode = typeof err.status === 'number' ? err.status :
     typeof err.statusCode === 'number' ? err.statusCode : 500;
 

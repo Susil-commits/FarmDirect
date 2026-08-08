@@ -32,8 +32,6 @@ export async function getDashboardStats(req: Request, res: Response, next: NextF
     const farmerId = req.user!._id;
 
     // B15 FIX: Replace load-all-into-memory find() with aggregate queries that
-    // return only computed scalars. Previously this endpoint loaded every crop
-    // document and every order document for a farmer — O(n) memory per request.
     const [cropStats, orderStats] = await Promise.all([
       CropListing.aggregate([
         { $match: { farmerId } },
@@ -194,7 +192,6 @@ export async function updateLowStockThreshold(req: Request, res: Response, next:
     if (!cropId || threshold === undefined) { sendError(res, 'cropId and threshold are required', 400); return; }
     if (threshold < 0) { sendError(res, 'Threshold cannot be negative', 400); return; }
 
-    // Include farmerId in filter so a farmer cannot edit another farmer's crop (Task 3.7)
     const crop = await CropListing.findOneAndUpdate(
       { _id: cropId, farmerId },
       { lowStockThreshold: threshold },
@@ -215,9 +212,6 @@ export async function getCategoryBreakdown(req: Request, res: Response, next: Ne
     const now = new Date();
 
     // B17 FIX: Use Order aggregation grouped by crop category instead of
-    // CropListing's price*sold proxy. The old method conflated all-time 'sold'
-    // counts with listings created in the period, producing wrong revenue figures.
-    // This pipeline joins Orders (created in period) to their CropListing category.
     const breakdown = await Order.aggregate([
       { $match: { farmerId, createdAt: { $gte: startDate, $lte: now }, orderStatus: OrderStatus.Completed } },
       {
@@ -337,7 +331,6 @@ export async function bulkUploadCrops(req: Request, res: Response, next: NextFun
       crops.push({
         farmerId,
         cropName: rowData.cropname,
-        // Default to Vegetables if cropType not in CSV (schema requires it via enum)
         cropType: rowData.croptype || 'vegetables',
         category: rowData.category,
         price: parseFloat(rowData.price),
@@ -345,7 +338,6 @@ export async function bulkUploadCrops(req: Request, res: Response, next: NextFun
         description: rowData.description || 'No description provided',
         unit: rowData.unit || 'kg',
         discount: parseFloat(rowData.discount) || 0,
-        // Fallback to user profile if missing from CSV (schema strictly requires these)
         pickupLocation: rowData.pickuplocation || user.address || 'Location not provided',
         contactNumber: rowData.contactnumber || user.phone || 'Phone not provided',
         status: 'active',

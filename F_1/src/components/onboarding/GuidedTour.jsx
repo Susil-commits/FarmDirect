@@ -78,7 +78,6 @@ export function GuidedTour({ steps, onComplete, onSkip, startOnMount = false }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStepIndex, isActive, steps]);
 
-  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (!isActive) return;

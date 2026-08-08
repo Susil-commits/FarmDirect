@@ -11,9 +11,8 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 let publicCropsCache: CacheEntry<any> | null = null;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 5 * 60 * 1000;
 
-// ============ FARMER ENDPOINTS ============
 export const getFarmerCrops = asyncHandler(async (req: Request, res: Response) => {
   const crops = await CropListing.find({ farmerId: req.user!._id }).lean()
     .populate('farmerId', 'name email kycStatus').sort({ createdAt: -1 });
@@ -45,7 +44,6 @@ export const getFarmerEarnings = asyncHandler(async (req: Request, res: Response
   });
 });
 
-// ============ BUYER ENDPOINTS ============
 export const getBuyerApprovedCrops = asyncHandler(async (_req: Request, res: Response) => {
   const crops = await CropListing.find({ listingApprovalStatus: 'approved' }).lean()
     .populate({ path: 'farmerId', match: { kycStatus: 'verified' }, select: 'name email phone address rating' })
@@ -73,14 +71,12 @@ export const getBuyerWishlist = asyncHandler(async (req: Request, res: Response)
   res.status(200).json({ success: true, count: wishlist.length, data: wishlist });
 });
 
-// ============ GUEST / PUBLIC ENDPOINTS ============
 export const getPublicApprovedCrops = asyncHandler(async (req: Request, res: Response) => {
   const { page = '1', limit = '20', search = '', category = '' } = req.query as Record<string, string>;
   const query: Record<string, unknown> = { listingApprovalStatus: 'approved' };
   if (search) query.$or = [{ cropName: { $regex: search, $options: 'i' } }, { description: { $regex: search, $options: 'i' } }];
   if (category) query.category = category;
 
-  // Use cache if no search or category filters are applied and requesting page 1
   const isCacheable = !search && !category && page === '1';
   if (isCacheable && publicCropsCache && (Date.now() - publicCropsCache.timestamp < CACHE_TTL)) {
     return res.status(200).json(publicCropsCache.data);
@@ -101,7 +97,6 @@ export const getPublicApprovedCrops = asyncHandler(async (req: Request, res: Res
     
     return res.status(200).json(responseData);
   } catch (error) {
-    // Fallback to cache if DB fails and cache exists
     if (isCacheable && publicCropsCache) {
       console.warn('Database error fetching crops, serving stale cache', error);
       return res.status(200).json(publicCropsCache.data);
@@ -131,7 +126,6 @@ export const searchCrops = asyncHandler(async (req: Request, res: Response) => {
   res.status(200).json({ success: true, count: validCrops.length, data: validCrops });
 });
 
-// ============ ADMIN OVERVIEW ENDPOINTS ============
 export const getAdminAllCrops = asyncHandler(async (req: Request, res: Response) => {
   const { status = 'all' } = req.query as Record<string, string>;
   const query: Record<string, unknown> = {};

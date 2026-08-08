@@ -65,7 +65,6 @@ function publicUser(user: PublicUserDoc) {
   };
 }
 
-// ===================== REGISTER =====================
 
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -116,7 +115,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
       httpOnly: true,
       secure: env.nodeEnv === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
     res.status(201).json({
@@ -130,7 +129,6 @@ export async function register(req: Request, res: Response, next: NextFunction):
   }
 }
 
-// ===================== LOGIN =====================
 
 export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -142,7 +140,6 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
 
     const user = (await User.findOne({ email }).select('+password')) as unknown as PublicUserDoc | null;
     if (!user) {
-      // Generic message to prevent email enumeration (Task 2.1)
       sendError(res, 'Invalid credentials', 401);
       return;
     }
@@ -163,7 +160,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
       httpOnly: true,
       secure: env.nodeEnv === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
     res.status(200).json({
@@ -177,7 +174,6 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
   }
 }
 
-// ===================== GET CURRENT USER =====================
 
 export async function getCurrentUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -196,7 +192,6 @@ export async function getCurrentUser(req: Request, res: Response, next: NextFunc
   }
 }
 
-// ===================== UPDATE PROFILE =====================
 
 export async function updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -206,9 +201,6 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
     } = req.body as Record<string, unknown>;
 
     // BUG 4 FIX: Only include profilePicture in the update when at least one
-    // photo-related field is explicitly provided. Without this guard, sending
-    // an update with only `phone` would set profilePicture to `undefined` in
-    // MongoDB, silently wiping the user's saved photo.
     const updateDoc: Record<string, unknown> = {
       name, phone, location, bio, avatar,
       address, city, state, pincode,
@@ -239,7 +231,6 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
   }
 }
 
-// ===================== LOGOUT =====================
 
 export function logout(_req: Request, res: Response): void {
   res.clearCookie('refreshToken', {
@@ -250,14 +241,12 @@ export function logout(_req: Request, res: Response): void {
   res.status(200).json({ message: 'Logged out successfully' });
 }
 
-// ===================== PASSWORD MANAGEMENT =====================
 
 export async function forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { email } = req.body as { email?: string };
     if (!email) { sendError(res, 'Please provide an email', 400); return; }
 
-    // Always return the same message to prevent email enumeration
     const user = await User.findOne({ email });
     if (!user) {
       res.status(200).json({ success: true, message: 'If that email is registered, a reset link has been sent.' });
@@ -267,7 +256,7 @@ export async function forgotPassword(req: Request, res: Response, next: NextFunc
     const crypto = await import('crypto');
     const resetToken = crypto.randomBytes(32).toString('hex');
     const passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    const passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     await User.findByIdAndUpdate(user._id, { passwordResetToken, passwordResetExpires });
 
@@ -307,7 +296,6 @@ export async function forgotPassword(req: Request, res: Response, next: NextFunc
       });
     } catch (emailErr) {
       console.error('Failed to send password reset email:', emailErr);
-      // Don't expose the error — still return success so we don't reveal anything
     }
 
     res.status(200).json({ success: true, message: 'If that email is registered, a reset link has been sent.' });
@@ -364,7 +352,6 @@ export async function updatePassword(req: Request, res: Response, next: NextFunc
   }
 }
 
-// ===================== REFRESH TOKEN =====================
 
 export async function refreshTokenHandler(req: Request, res: Response): Promise<void> {
   try {
@@ -385,7 +372,7 @@ export async function refreshTokenHandler(req: Request, res: Response): Promise<
       httpOnly: true,
       secure: env.nodeEnv === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
     res.status(200).json({ message: 'Token refreshed successfully', token: newToken });
@@ -395,7 +382,6 @@ export async function refreshTokenHandler(req: Request, res: Response): Promise<
   }
 }
 
-// ===================== KYC SUBMIT =====================
 
 interface KycDocEntry {
   fileName?: string;
@@ -540,7 +526,6 @@ export async function submitKYCDocuments(req: Request, res: Response, next: Next
   }
 }
 
-// ===================== DELETE ACCOUNT =====================
 
 export async function deleteAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -578,7 +563,6 @@ export async function deleteAccount(req: Request, res: Response, next: NextFunct
   }
 }
 
-// ===================== COMPLETE ONBOARDING =====================
 
 /**
  * POST /auth/complete-onboarding

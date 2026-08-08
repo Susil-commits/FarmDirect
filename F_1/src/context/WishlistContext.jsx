@@ -24,12 +24,10 @@ export function WishlistProvider({ children }) {
     }
   }, []);
 
-  // Keep ref updated so it can be called from async callbacks
   useEffect(() => {
     loadFromLocalStorageRef.current = loadFromLocalStorage;
   }, [loadFromLocalStorage]);
 
-  // Load wishlist: from API if authenticated, from localStorage if guest
   useEffect(() => {
     const loadWishlist = async () => {
       if (isAuthenticated && user) {
@@ -37,7 +35,6 @@ export function WishlistProvider({ children }) {
           setLoading(true);
           const response = await wishlistService.getWishlist();
           const items = response.wishlist || response.data?.wishlist || response.data || [];
-          // Normalize to array of crop objects
           const normalized = Array.isArray(items) ? items.map(item => {
             const crop = item.cropId || item;
             return {
@@ -63,7 +60,6 @@ export function WishlistProvider({ children }) {
             };
           }) : [];
           setWishlist(normalized);
-          // Also sync to localStorage as cache
           localStorage.setItem('farm-wishlist', JSON.stringify(normalized));
         } catch (err) {
           console.error('Failed to load wishlist from API, falling back to localStorage:', err);
@@ -79,15 +75,12 @@ export function WishlistProvider({ children }) {
     loadWishlist();
   }, [isAuthenticated, user]);
 
-  // Save to localStorage whenever wishlist changes
   useEffect(() => {
     if (wishlist.length > 0 || localStorage.getItem('farm-wishlist')) {
       localStorage.setItem('farm-wishlist', JSON.stringify(wishlist));
     }
   }, [wishlist]);
 
-  // ─── Global event listeners for crop deletion / update ────────────────
-  // When a crop is deleted, remove it from wishlist state + localStorage
   useEffect(() => {
     const handleCropDeleted = (e) => {
       const deletedId = e.detail?.cropId;
@@ -99,7 +92,6 @@ export function WishlistProvider({ children }) {
       });
     };
 
-    // When a crop is updated, refresh cached crop data in wishlist items
     const handleCropUpdated = (e) => {
       const updated = e.detail?.crop;
       if (!updated?._id) return;
@@ -160,14 +152,12 @@ export function WishlistProvider({ children }) {
       farmer_verified: product.farmer_verified || false,
     };
 
-    // Optimistic UI update
     setWishlist(prev => {
       const exists = prev.some(item => (item._id || item.id) === productId);
       if (exists) return prev;
       return [...prev, normalizedProduct];
     });
 
-    // Sync to backend if authenticated
     if (isAuthenticated) {
       try {
         await wishlistService.addToWishlist(productId);
@@ -175,24 +165,20 @@ export function WishlistProvider({ children }) {
         console.error('Failed to sync wishlist add to backend:', err);
         const msg = err?.message || 'Failed to add to wishlist';
         setError(msg);
-        // Revert on failure
         setWishlist(prev => prev.filter(item => (item._id || item.id) !== productId));
       }
     }
   }, [isAuthenticated]);
 
   const removeFromWishlist = useCallback(async (productId) => {
-    // Optimistic UI update
     setWishlist(prev => prev.filter(item => (item._id || item.id) !== productId));
 
-    // Sync to backend if authenticated
     if (isAuthenticated) {
       try {
         await wishlistService.removeFromWishlist(productId);
       } catch (err) {
         console.error('Failed to sync wishlist remove to backend:', err);
         setError(err?.message || 'Failed to remove from wishlist');
-        // Reload from API to get correct state
         try {
           const response = await wishlistService.getWishlist();
           const items = response.wishlist || response.data?.wishlist || response.data || [];
@@ -201,7 +187,6 @@ export function WishlistProvider({ children }) {
             return { ...crop, _id: crop._id, id: crop._id || crop.id };
           }));
         } catch {
-          // Keep optimistic state
         }
       }
     }

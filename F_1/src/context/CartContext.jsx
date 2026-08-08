@@ -7,13 +7,11 @@ export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
 
-  // Load cart from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('farm-cart');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Normalize: ensure items have _id
         const normalized = parsed.map(item => ({
           ...item,
           _id: item._id || item.id,
@@ -29,15 +27,12 @@ export function CartProvider({ children }) {
     }
   }, []);
 
-  // Save cart to localStorage on change
   useEffect(() => {
     if (cart.length > 0 || localStorage.getItem('farm-cart')) {
       localStorage.setItem('farm-cart', JSON.stringify(cart));
     }
   }, [cart]);
 
-  // ─── Global event listeners for crop deletion / update ────────────────
-  // When a crop is deleted by the farmer, remove it from all carts
   useEffect(() => {
     const handleCropDeleted = (e) => {
       const deletedId = e.detail?.cropId;
@@ -45,7 +40,6 @@ export function CartProvider({ children }) {
       setCart(prev => prev.filter(item => (item._id || item.id) !== deletedId));
     };
 
-    // When a crop is updated by the farmer, refresh cached data in cart items
     const handleCropUpdated = (e) => {
       const updated = e.detail?.crop;
       if (!updated?._id) return;
@@ -58,7 +52,7 @@ export function CartProvider({ children }) {
             price: updated.price ?? item.price,
             images: updated.images || item.images,
             image: updated.images?.[0] || item.image,
-            quantity: item.quantity, // keep user's cart quantity, not the stock quantity
+            quantity: item.quantity,
             unit: updated.unit || item.unit,
             pickupLocation: updated.pickupLocation || item.pickupLocation,
             description: updated.description || item.description,
@@ -81,10 +75,6 @@ export function CartProvider({ children }) {
       const productId = product._id || product.id;
       const existing = prev.find(item => (item._id || item.id) === productId);
       // B25 FIX: Cap at available stock (product.quantity) so the buyer can
-      // never add more units than the farmer has. Without this cap the checkout
-      // endpoint silently rejects the order with "Insufficient stock" and the
-      // user has no idea why. Fall back to a sane maximum of 1000 when no stock
-      // quantity is known (e.g. cart items loaded from localStorage).
       const maxQty = product.quantity ?? 1000;
       if (existing) {
         const newQty = Math.min(existing.quantity + quantity, maxQty);
@@ -128,9 +118,6 @@ export function CartProvider({ children }) {
     localStorage.removeItem('farm-cart');
   }, []);
 
-  // ---- Coupon handling ----
-  // appliedCoupon shape: { code, type, value, description, discountAmount }
-  // (discountAmount is computed against the current subtotal at apply time)
   const applyCoupon = useCallback((coupon) => {
     setAppliedCoupon(coupon);
   }, []);
@@ -143,7 +130,6 @@ export function CartProvider({ children }) {
     return cart.reduce((total, item) => total + ((item.price || 0) * (item.quantity || 0)), 0);
   }, [cart]);
 
-  // Subtotal after coupon discount (clamped to >= 0)
   const getDiscountedTotal = useCallback(() => {
     const subtotal = getTotalPrice();
     if (!appliedCoupon) return subtotal;

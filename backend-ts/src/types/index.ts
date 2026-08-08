@@ -6,9 +6,6 @@
 import type { Types, Document } from 'mongoose';
 import type * as Enums from './enums.js';
 
-// ---------------------------------------------------------------------------
-// Base document helpers
-// ---------------------------------------------------------------------------
 
 /** Fields added to every document by `{ timestamps: true }` on Mongoose. */
 export interface Timestamps {
@@ -24,9 +21,6 @@ export interface AuthUser {
   status: Enums.UserStatus;
 }
 
-// ---------------------------------------------------------------------------
-// User
-// ---------------------------------------------------------------------------
 
 export interface IUserAddress {
   _id?: Types.ObjectId;
@@ -123,9 +117,6 @@ export interface IUser extends Timestamps, Document {
   blockedUsers?: Types.ObjectId[];
 }
 
-// ---------------------------------------------------------------------------
-// CropListing
-// ---------------------------------------------------------------------------
 
 export interface ICropSpecifications {
   size?: string;
@@ -195,9 +186,6 @@ export interface ICropListing extends Timestamps, Document {
   monthlyStats?: IMonthlyStats;
 }
 
-// ---------------------------------------------------------------------------
-// Order
-// ---------------------------------------------------------------------------
 
 export interface IOrderTimelineEntry {
   event: string;
@@ -242,9 +230,6 @@ export interface IOrder extends Timestamps, Document {
   completedAt?: Date;
 }
 
-// ---------------------------------------------------------------------------
-// Review
-// ---------------------------------------------------------------------------
 
 export interface IReviewReport {
   reportedBy?: Types.ObjectId;
@@ -266,9 +251,6 @@ export interface IReview extends Timestamps, Document {
   isFlagged?: boolean;
 }
 
-// ---------------------------------------------------------------------------
-// Notification
-// ---------------------------------------------------------------------------
 
 export interface INotification extends Timestamps, Document {
   userId: Types.ObjectId;
@@ -283,9 +265,6 @@ export interface INotification extends Timestamps, Document {
   priority: Enums.NotificationPriority;
 }
 
-// ---------------------------------------------------------------------------
-// Message
-// ---------------------------------------------------------------------------
 
 export interface IMessageAttachment {
   url: string;
@@ -316,9 +295,6 @@ export interface IMessage extends Timestamps, Document {
   metadata?: IMessageMetadata;
 }
 
-// ---------------------------------------------------------------------------
-// Wishlist / Coupon / Contact / ContactQuery / AuditLog
-// ---------------------------------------------------------------------------
 
 export interface IWishlist extends Timestamps, Document {
   userId: Types.ObjectId;
@@ -391,9 +367,6 @@ export interface IAuditLog extends Timestamps, Document {
   timestamp: Date;
 }
 
-// ---------------------------------------------------------------------------
-// DTOs — request payloads (validated with Zod in middleware/validator.ts)
-// ---------------------------------------------------------------------------
 
 export interface RegisterDto {
   firstName: string;
@@ -473,9 +446,6 @@ export interface SubmitContactDto {
   message: string;
 }
 
-// ---------------------------------------------------------------------------
-// Generic API response shapes
-// ---------------------------------------------------------------------------
 
 export interface Pagination {
   total: number;
