@@ -68,7 +68,7 @@ app.use(helmet({
   xFrameOptions: { action: 'deny' },
 }));
 
-import { redisRateLimitStore } from './config/rateLimiter.js';
+import { createRateLimitStore } from './config/rateLimiter.js';
 
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, ok?: boolean) => void) => {
@@ -87,7 +87,7 @@ app.use(cors(corsOptions));
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 600,
-  store: redisRateLimitStore,
+  store: createRateLimitStore('rl:global:'),
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please try again later.' },
@@ -97,7 +97,7 @@ app.use(globalLimiter);
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 15,
-  store: redisRateLimitStore,
+  store: createRateLimitStore('rl:auth:'),
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many authentication attempts, please try again later.' },
@@ -107,7 +107,7 @@ app.use('/api/auth', authLimiter);
 const pollingLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 120,
-  store: redisRateLimitStore,
+  store: createRateLimitStore('rl:polling:'),
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please slow down.' },
