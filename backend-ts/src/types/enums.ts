@@ -195,3 +195,10 @@ export enum AuditStatus {
   Success = 'success',
   Failed = 'failed',
 }
+
+export enum NegotiationStatus {
+  Pending = 'pending',
+  Accepted = 'accepted',
+  Rejected = 'rejected',
+  CounterOffered = 'counter_offered',
+}

@@ -32,6 +32,8 @@ import couponRoutes from './routes/couponRoutes.js';
 import dataAccessRoutes from './routes/dataAccessRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
+import negotiationRoutes from './routes/negotiationRoutes.js';
+import healthRoutes from './routes/healthRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -66,6 +68,8 @@ app.use(helmet({
   xFrameOptions: { action: 'deny' },
 }));
 
+import { redisRateLimitStore } from './config/rateLimiter.js';
+
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, ok?: boolean) => void) => {
     if (!origin) return callback(null, true);
@@ -83,6 +87,7 @@ app.use(cors(corsOptions));
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 600,
+  store: redisRateLimitStore,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please try again later.' },
@@ -92,6 +97,7 @@ app.use(globalLimiter);
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 15,
+  store: redisRateLimitStore,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many authentication attempts, please try again later.' },
@@ -101,6 +107,7 @@ app.use('/api/auth', authLimiter);
 const pollingLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 120,
+  store: redisRateLimitStore,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please slow down.' },
@@ -165,6 +172,7 @@ app.get('/api/health/detailed', async (_req: Request, res: Response) => {
   });
 });
 
+app.use('/health', healthRoutes); // K8s Liveness & Readiness Probes
 app.use('/api/auth', authRoutes);
 app.use('/api/crops', cropRoutes);
 app.use('/api/orders', orderRoutes);
@@ -180,6 +188,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/data', dataAccessRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/negotiations', negotiationRoutes);
 
 app.post('/api/upload', uploadSingleFile('general'), (req: Request, res: Response): void => {
   if (!req.uploadedFile) {

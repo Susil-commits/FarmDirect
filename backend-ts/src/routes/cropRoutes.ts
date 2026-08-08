@@ -9,10 +9,13 @@ import { uploadCropImages } from '../middleware/localUpload.js';
 import { validateObjectId } from '../middleware/validator.js';
 import { UserRole } from '../types/enums.js';
 
+import { cacheRoute } from '../middleware/cacheRoute.js';
+
 const router = Router();
 
-router.get('/', getCrops);
-router.get('/trending', getTrendingCrops);
+// Cache public GET requests for 60 seconds
+router.get('/', cacheRoute(60), getCrops);
+router.get('/trending', cacheRoute(300), getTrendingCrops);
 
 router.get('/buyer/recommended', protect, authorize(UserRole.Buyer), getRecommendedCrops);
 router.get('/my-listings', protect, authorize(UserRole.Farmer), getMyListings);

@@ -12,8 +12,10 @@ import ErrorBoundary from '../components/common/ErrorBoundary';
 import CancelWithReason from '../components/modals/CancelWithReason';
 import {
   ShoppingCart, Heart, Truck, CheckCircle, IndianRupee, Star,
-  Clock, ArrowRight, XCircle, Leaf, MapPin, Phone, Package, Loader, ThumbsUp
+  Clock, ArrowRight, XCircle, Leaf, MapPin, Phone, Package, Loader, ThumbsUp, MessageCircle
 } from 'lucide-react';
+import { negotiationService } from '../services/negotiationService';
+import NegotiationWidget from '../components/NegotiationWidget';
 import '../styles/BuyerDashboard.css';
 import { getImageUrl } from '../utils/formatters';
 
@@ -44,6 +46,7 @@ export default function BuyerDashboardNew() {
 
   const [activeTab, setActiveTab] = useState('overview');
   const [orders, setOrders] = useState([]);
+  const [negotiations, setNegotiations] = useState([]);
   const [interestedCrops, setInterestedCrops] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [recommendedCrops, setRecommendedCrops] = useState([]);
@@ -66,15 +69,19 @@ export default function BuyerDashboardNew() {
   const fetchBuyerData = useCallback(async () => {
     try {
       setLoading(true);
-      const [ordersData, interestedData, wishlistData, recommendedData] = await Promise.all([
+      const [ordersData, interestedData, wishlistData, recommendedData, negotiationsData] = await Promise.all([
         orderService.getOrders(),
         cropService.getMyInterestedCrops(),
         wishlistService.getWishlist(),
         cropService.getRecommendedCrops(8).catch(() => ({ crops: [] })),
+        negotiationService.getNegotiations().catch(() => ({ negotiations: [] }))
       ]);
 
       const allOrders = ordersData.orders || ordersData.data || [];
       setOrders(allOrders);
+      
+      const negsArray = negotiationsData.negotiations || negotiationsData.data?.negotiations || [];
+      setNegotiations(negsArray);
 
       const interestedItems = interestedData.crops || interestedData.data || [];
       setInterestedCrops(interestedItems);
@@ -270,6 +277,9 @@ export default function BuyerDashboardNew() {
                 <Button onClick={() => setActiveTab('orders')} variant="outline">
                   📦 My Orders
                 </Button>
+                <Button onClick={() => setActiveTab('negotiations')} variant="outline">
+                  💬 Negotiations
+                </Button>
                 <Button onClick={() => setActiveTab('interested')} variant="outline">
                   🌿 Interested Crops
                 </Button>
@@ -283,7 +293,7 @@ export default function BuyerDashboardNew() {
           {/* Tabs */}
           <ScrollAnimation className="scroll-slide mb-8">
             <div className="flex gap-2 border-b border-gray-200/50 overflow-x-auto pb-1 no-scrollbar">
-              {['overview', 'orders', 'interested', 'history', 'wishlist'].map(tab => (
+              {['overview', 'orders', 'negotiations', 'interested', 'history', 'wishlist'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -295,6 +305,7 @@ export default function BuyerDashboardNew() {
                 >
                   {tab === 'overview' && '📊 Overview'}
                   {tab === 'orders' && '📦 Active Orders'}
+                  {tab === 'negotiations' && '💬 Negotiations'}
                   {tab === 'interested' && '🌿 Interested'}
                   {tab === 'history' && '✓ History'}
                   {tab === 'wishlist' && '❤️ Wishlist'}
@@ -622,6 +633,31 @@ export default function BuyerDashboardNew() {
                         </div>
                       </div>
                     </Card>
+                  ))}
+                </div>
+              )}
+            </ScrollAnimation>
+          )}
+          
+          {activeTab === 'negotiations' && (
+            <ScrollAnimation className="scroll-slide space-y-6">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <MessageCircle className="w-6 h-6" />Negotiations ({negotiations.length})
+              </h2>
+              {negotiations.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No active negotiations</p>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {negotiations.map((neg) => (
+                    <NegotiationWidget 
+                      key={neg._id} 
+                      negotiation={neg} 
+                      userRole="buyer" 
+                      onUpdate={fetchBuyerData}
+                    />
                   ))}
                 </div>
               )}

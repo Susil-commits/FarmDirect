@@ -484,7 +484,7 @@ export async function logAdminAction(adminId: Types.ObjectId, action: string, re
   try {
     const admin = await User.findById(adminId);
     await AuditLog.create({ adminId, adminEmail: admin?.email || 'unknown', action, resourceType, resourceId, changes, reason, status: 'success', timestamp: new Date() });
-    invalidationStrategies.adminAction();
+    await invalidationStrategies.adminAction();
   } catch (err) { console.error('Audit log error:', err); }
 }
 
@@ -510,7 +510,7 @@ export const changeUserRole = asyncHandler(async (req: Request, res: Response) =
   user.role = newRole;
   await user.save();
   await logAdminAction((req.user as AdminUser)._id, 'USER_ROLE_CHANGED', 'User', user._id, { before: { role: oldRole }, after: { role: newRole } });
-  invalidationStrategies.userChanged(String(user._id));
+  await invalidationStrategies.userChanged(String(user._id));
   res.status(200).json({ success: true, message: 'User role updated successfully', user });
 });
 

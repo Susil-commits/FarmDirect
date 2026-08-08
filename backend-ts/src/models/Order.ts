@@ -1,4 +1,5 @@
 import mongoose, { Schema, type Model } from 'mongoose';
+import { updateIfCurrentPlugin } from 'mongoose-update-if-current';
 import type { IOrder } from '../types/index.js';
 import { OrderStatus, PaymentMethod, PaymentStatus, CancelledBy } from '../types/enums.js';
 
@@ -48,5 +49,7 @@ orderSchema.index({ createdAt: -1 });
 orderSchema.index({ buyerId: 1, createdAt: -1 });
 orderSchema.index({ farmerId: 1, createdAt: -1 });
 
-const Order: Model<IOrder> = mongoose.model<IOrder>('Order', orderSchema);
+orderSchema.plugin(updateIfCurrentPlugin);
+
+const Order: Model<IOrder> = mongoose.models.Order || mongoose.model<IOrder>('Order', orderSchema);
 export default Order;

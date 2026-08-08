@@ -6,13 +6,36 @@ import app from './app.js';
 import { env } from './config/env.js';
 import { connectDB, disconnectDB } from './config/db.js';
 import { initSocket } from './socket/socketManager.js';
+import { connectRedis, redisClient } from './config/redis.js';
+import { startAnomalyWorker } from './workers/anomalyWorker.js';
+import { startOutboxWorker } from './workers/outboxWorker.js';
 
 const httpServer: HttpServer = createServer(app);
 
 initSocket(httpServer, { origin: env.corsOrigins });
 
+let workerInstance: any = null;
+let outboxWorkerInstance: any = null;
+
 function gracefulShutdown(signal: string): void {
+  console.log(`Received ${signal}, shutting down gracefully...`);
+  
+  if (workerInstance) {
+    workerInstance.close().then(() => {
+      console.log('BullMQ worker closed');
+    }).catch((err: any) => console.error('Error closing BullMQ worker', err));
+  }
+
+  if (outboxWorkerInstance) {
+    outboxWorkerInstance.close().then(() => {
+      console.log('BullMQ outbox worker closed');
+    }).catch((err: any) => console.error('Error closing BullMQ outbox worker', err));
+  }
+
   httpServer.close(async () => {
+    if (redisClient.isReady) {
+      await redisClient.disconnect();
+    }
     await disconnectDB();
     process.exit(0);
   });
@@ -35,7 +58,12 @@ process.on('uncaughtException', (error) => {
 
 // B24 FIX: Wrap server startup in an async function
 async function start(): Promise<void> {
+  await connectRedis();
   await connectDB();
+  
+  workerInstance = startAnomalyWorker();
+  outboxWorkerInstance = startOutboxWorker();
+  
   const PORT = env.port;
   httpServer.listen(PORT, () => {
     console.log(`Worker ${process.pid} listening on port ${PORT}`);
