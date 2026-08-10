@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { isTokenExpired } from '../utils/jwtUtils.js';
 import { safeStorage } from '../utils/storage.js';
+import { getAccessToken, setAccessToken, clearAccessToken } from '../utils/tokenStore.js';
 
 let rawBase = import.meta.env.VITE_API_BASE_URL || '/api';
 if (rawBase !== '/api' && !rawBase.endsWith('/api') && !rawBase.endsWith('/api/')) {
@@ -40,19 +41,13 @@ const processQueue = (error, token = null) => {
  * Attempt to refresh the authentication token
  * Requires backend endpoint: POST /auth/refresh-token
  */
-const refreshAuthToken = async () => {
+export const refreshAuthToken = async () => {
   // Cooldown guard: don't hammer the refresh endpoint if it just failed
   const now = Date.now();
   if (now - lastRefreshAttempt < REFRESH_COOLDOWN_MS) {
     throw new Error('Refresh cooldown active');
   }
   lastRefreshAttempt = now;
-
-  // Guard: If there is no access token, don't bother refreshing (user is likely logged out)
-  const token = safeStorage.getItem('token');
-  if (!token) {
-    throw new Error('No authentication token available');
-  }
 
   try {
     const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {}, {
@@ -62,8 +57,8 @@ const refreshAuthToken = async () => {
 
     const { token: newToken } = response.data;
 
-    // Store new token
-    safeStorage.setItem('token', newToken);
+    // Store new token in memory
+    setAccessToken(newToken);
 
     // Update timestamp for session activity
     safeStorage.setItem('lastActivityTime', Date.now().toString());
@@ -72,8 +67,9 @@ const refreshAuthToken = async () => {
   } catch (error) {
     // Refresh failed — clear auth data silently. Do NOT hard-redirect (window.location.href)
     // because that causes infinite reload loops when the backend is unreachable.
-    safeStorage.removeItem('token');
+    clearAccessToken();
     safeStorage.removeItem('userData');
+    safeStorage.removeItem('verificationStatus');
     throw error;
   }
 };
@@ -91,7 +87,7 @@ const api = axios.create({
 // Request interceptor - Check token expiry and refresh if needed
 api.interceptors.request.use(
   async (config) => {
-    let token = safeStorage.getItem('token');
+    let token = getAccessToken();
 
     // DEBUG: Log FormData requests to trace multipart upload issues (dev only)
     if (import.meta.env.DEV && config.data instanceof FormData) {
@@ -164,7 +160,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         // Refresh failed - clear auth data and let app redirect naturally
-        safeStorage.removeItem('token');
+        clearAccessToken();
         safeStorage.removeItem('userData');
         safeStorage.removeItem('verificationStatus');
         return Promise.reject(refreshError);

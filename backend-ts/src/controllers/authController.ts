@@ -3,6 +3,7 @@ import { generateToken, generateRefreshToken, verifyRefreshToken } from '../util
 import { hashPassword, comparePassword } from '../utils/password.js';
 import { getServerStartTime } from '../utils/serverTime.js';
 import { sendError } from '../utils/apiResponse.js';
+import { isTokenRevoked, revokeToken } from '../services/tokenService.js';
 import { UserRole, KycStatus } from '../types/enums.js';
 import { env } from '../config/env.js';
 import sendEmail from '../utils/emailService.js';
@@ -232,7 +233,14 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
 }
 
 
-export function logout(_req: Request, res: Response): void {
+export async function logout(req: Request, res: Response): Promise<void> {
+  const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+  if (refreshToken) {
+    const decoded = verifyRefreshToken(refreshToken);
+    if (decoded?.jti) {
+      await revokeToken(decoded.jti);
+    }
+  }
   res.clearCookie('refreshToken', {
     httpOnly: true,
     secure: env.nodeEnv === 'production',
@@ -365,6 +373,22 @@ export async function refreshTokenHandler(req: Request, res: Response): Promise<
       sendError(res, 'Invalid or expired refresh token', 401);
       return;
     }
+
+    if (decoded.jti && await isTokenRevoked(decoded.jti)) {
+      console.warn(`🔒 Refresh token reuse attempt detected for jti: ${decoded.jti}, user: ${decoded.id}`);
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: env.nodeEnv === 'production',
+        sameSite: 'strict'
+      });
+      sendError(res, 'Refresh token reuse detected. Please log in again.', 401);
+      return;
+    }
+
+    if (decoded.jti) {
+      await revokeToken(decoded.jti);
+    }
+
     const newToken = generateToken(decoded.id);
     const newRefreshToken = generateRefreshToken(decoded.id);
     

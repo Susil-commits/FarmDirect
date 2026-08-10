@@ -2,6 +2,7 @@
 /* eslint-disable no-unused-vars */
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext';
+import { getAccessToken } from '../utils/tokenStore.js';
 
 export const SocketContext = createContext(null);
 
@@ -33,7 +34,7 @@ export const SocketProvider = ({ children }) => {
     let socket = null;
 
     const initSocket = async () => {
-      const token = localStorage.getItem('token');
+      const token = getAccessToken();
       if (!token) return;
 
       const { io } = await import('socket.io-client');

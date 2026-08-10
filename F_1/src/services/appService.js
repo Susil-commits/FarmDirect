@@ -1,5 +1,6 @@
 import api from './api.js';
 import directApi from './directApi.js';
+import { clearAccessToken } from '../utils/tokenStore.js';
 
 export const authService = {
   register: (userData) => api.post('/auth/register', userData),
@@ -11,7 +12,7 @@ export const authService = {
     } catch {
       // Ignore errors — even if the backend is unreachable, clear local state
     } finally {
-      localStorage.removeItem('token');
+      clearAccessToken();
     }
   },
   getCurrentUser: () => api.get('/auth/me'),

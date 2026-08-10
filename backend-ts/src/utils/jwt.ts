@@ -1,9 +1,11 @@
 import jwt, { type JwtPayload, type SignOptions } from 'jsonwebtoken';
+import crypto from 'crypto';
 import { env } from '../config/env.js';
 import type { Types } from 'mongoose';
 
 export interface TokenPayload extends JwtPayload {
   id: string;
+  jti?: string;
 }
 
 export function generateToken(id: Types.ObjectId | string): string {
@@ -12,8 +14,9 @@ export function generateToken(id: Types.ObjectId | string): string {
   } as SignOptions);
 }
 
-export function generateRefreshToken(id: Types.ObjectId | string): string {
-  return jwt.sign({ id: String(id) }, env.jwtRefreshSecret, {
+export function generateRefreshToken(id: Types.ObjectId | string, jti?: string): string {
+  const tokenId = jti || crypto.randomUUID();
+  return jwt.sign({ id: String(id), jti: tokenId }, env.jwtRefreshSecret, {
     expiresIn: env.jwtRefreshExpire,
   } as SignOptions);
 }

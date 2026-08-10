@@ -3,6 +3,7 @@
  * Handles comparing crops/products side-by-side
  */
 import { API_BASE_URL } from './api.js';
+import { getAccessToken } from '../utils/tokenStore.js';
 
 export const productComparisonService = {
   /**
@@ -46,7 +47,7 @@ export const productComparisonService = {
    */
   saveComparison: async (data) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getAccessToken();
       const response = await fetch(`${API_BASE_URL}/comparisons`, {
         method: 'POST',
         headers: {
@@ -69,7 +70,7 @@ export const productComparisonService = {
    */
   getSavedComparisons: async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getAccessToken();
       const response = await fetch(`${API_BASE_URL}/comparisons`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -90,7 +91,7 @@ export const productComparisonService = {
    */
   deleteComparison: async (comparisonId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getAccessToken();
       const response = await fetch(`${API_BASE_URL}/comparisons/${comparisonId}`, {
         method: 'DELETE',
         headers: {
@@ -112,7 +113,7 @@ export const productComparisonService = {
    */
   exportComparison: async (comparisonId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getAccessToken();
       const response = await fetch(`${API_BASE_URL}/comparisons/${comparisonId}/export`, {
         headers: {
           'Authorization': `Bearer ${token}`,

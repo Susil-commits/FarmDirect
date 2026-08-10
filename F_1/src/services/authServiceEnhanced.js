@@ -1,5 +1,6 @@
-import api from './api.js';
+import api, { refreshAuthToken } from './api.js';
 import { isTokenExpired } from '../utils/jwtUtils.js';
+import { getAccessToken, clearAccessToken } from '../utils/tokenStore.js';
 
 /**
  * Enhanced Authentication Service
@@ -9,37 +10,14 @@ class AuthServiceEnhanced {
   /**
    * Refresh authentication token
    * Endpoint: POST /auth/refresh-token
-   * Backend should accept: { refreshToken }
-   * Backend should return: { token, refreshToken? }
    */
   async refreshToken() {
     try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      const response = await api.post('/auth/refresh-token', {
-        refreshToken,
-      });
-
-      // Store new tokens
-      if (response.token) {
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('lastActivityTime', Date.now().toString());
-      }
-
-      if (response.refreshToken) {
-        localStorage.setItem('refreshToken', response.refreshToken);
-      }
-
-      return response;
+      const newToken = await refreshAuthToken();
+      return { token: newToken };
     } catch (error) {
       console.error('Token refresh failed:', error);
-      // Clear auth data on refresh failure
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
+      clearAccessToken();
       throw error;
     }
   }
@@ -51,7 +29,7 @@ class AuthServiceEnhanced {
    */
   async validateSession() {
     try {
-      const token = localStorage.getItem('token');
+      const token = getAccessToken();
       
       if (!token) {
         return { valid: false, reason: 'No token' };
@@ -142,8 +120,7 @@ class AuthServiceEnhanced {
   async logoutAllDevices() {
     try {
       const response = await api.post('/auth/logout-all');
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
+      clearAccessToken();
       localStorage.removeItem('userData');
       return response;
     } catch (error) {
