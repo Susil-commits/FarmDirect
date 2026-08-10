@@ -1,44 +1,55 @@
 import ScrollAnimation from '../../components/common/ScrollAnimation';
-import Card from '../../components/common/Card';
+import { ShoppingBag, Sprout, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 export default function HowItWorksSection() {
   return (
-    <section className="py-24 px-4 relative z-10 bg-white/40 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto relative z-10">
-        <ScrollAnimation className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-4">
-            How It Works
+    <section className="py-24 px-4 md:px-8 relative z-10 bg-[#FBF8F3]/90 backdrop-blur-xl border-y border-[#132E20]/10 my-8">
+      <div className="max-w-6xl mx-auto relative z-10">
+        <ScrollAnimation className="text-center mb-16">
+          <span className="font-sans-body text-xs font-bold uppercase tracking-widest text-[#D97736] bg-[#D97736]/10 px-3.5 py-1.5 rounded-full border border-[#D97736]/20 inline-block mb-3">
+            TRANSPARENT DIRECT PROCESS
+          </span>
+          <h2 className="font-serif-display text-4xl md:text-5xl font-bold text-[#132E20] tracking-tight mb-4">
+            How FarmDirect Works
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto font-medium">
-            A seamless process whether you are buying fresh produce or selling your harvest.
+          <p className="font-sans-body text-base md:text-lg text-[#132E20]/75 max-w-2xl mx-auto">
+            Connecting local growers directly with buyers for 100% fresh, fair, and field-traceable harvests.
           </p>
         </ScrollAnimation>
 
         {/* For Buyers */}
-        <div className="mb-24">
-          <ScrollAnimation className="mb-12">
-            <h3 className="text-2xl md:text-3xl font-black text-emerald-600 text-center flex items-center justify-center gap-3">
-              <span>👥</span> For Buyers
+        <div className="mb-20">
+          <ScrollAnimation className="mb-8">
+            <h3 className="font-serif-display text-2xl md:text-3xl font-bold text-[#132E20] flex items-center justify-center gap-3">
+              <span className="w-8 h-8 rounded-full bg-[#D97736]/15 text-[#D97736] flex items-center justify-center text-sm font-bold">🛒</span>
+              <span>For Buyers</span>
             </h3>
           </ScrollAnimation>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Step 1 */}
             <ScrollAnimation className="h-full">
-              <div className="h-full bg-white/80 backdrop-blur-xl border border-white/60 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-300 group hover:-translate-y-2 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100/50 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-400 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mb-6 shadow-md relative z-10 transform group-hover:rotate-6 transition-transform duration-300">
-                  1
-                </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-4 relative z-10">Sign Up Instantly</h4>
-                <div className="space-y-3 text-gray-600 font-medium relative z-10">
-                  <div className="flex gap-3">
-                    <span className="text-blue-500 font-bold">•</span>
-                    <span>Create a buyer account</span>
+              <div className="h-full bg-white/90 border border-[#132E20]/12 rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <span className="font-serif-display text-3xl font-extrabold text-[#D97736]">01</span>
+                    <div className="w-12 h-12 rounded-2xl bg-[#132E20] text-[#FBF8F3] flex items-center justify-center font-bold shadow-md group-hover:scale-105 transition-transform">
+                      <ShoppingBag className="w-5 h-5 text-[#D97736]" />
+                    </div>
                   </div>
-                  <div className="flex gap-3">
-                    <span className="text-blue-500 font-bold">•</span>
-                    <span>No technical knowledge needed</span>
+                  <h4 className="font-serif-display text-2xl font-bold text-[#132E20] mb-3">Sign Up & Explore</h4>
+                  <p className="font-sans-body text-xs text-[#132E20]/75 leading-relaxed mb-4">
+                    Create a buyer account in seconds. Access 100+ fresh organic veggies, fruits & grains directly from verified local farms.
+                  </p>
+                </div>
+                <div className="space-y-2 pt-4 border-t border-[#132E20]/10 text-xs font-semibold text-[#132E20]/80">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#D97736]" />
+                    <span>Instant buyer account setup</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#D97736]" />
+                    <span>No hidden broker markups</span>
                   </div>
                 </div>
               </div>
@@ -46,24 +57,27 @@ export default function HowItWorksSection() {
 
             {/* Step 2 */}
             <ScrollAnimation className="h-full" style={{ animationDelay: '0.1s' }}>
-              <div className="h-full bg-white/80 backdrop-blur-xl border border-white/60 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-300 group hover:-translate-y-2 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100/50 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
-                <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-400 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mb-6 shadow-md relative z-10 transform group-hover:rotate-6 transition-transform duration-300">
-                  2
+              <div className="h-full bg-white/90 border border-[#132E20]/12 rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <span className="font-serif-display text-3xl font-extrabold text-[#D97736]">02</span>
+                    <div className="w-12 h-12 rounded-2xl bg-[#132E20] text-[#FBF8F3] flex items-center justify-center font-bold shadow-md group-hover:scale-105 transition-transform">
+                      <Sprout className="w-5 h-5 text-[#84A98C]" />
+                    </div>
+                  </div>
+                  <h4 className="font-serif-display text-2xl font-bold text-[#132E20] mb-3">Select & Order Direct</h4>
+                  <p className="font-sans-body text-xs text-[#132E20]/75 leading-relaxed mb-4">
+                    Choose your harvest batch, check farmer ratings & QR soil reports, or submit custom bulk contract offers directly to growers.
+                  </p>
                 </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-4 relative z-10">Browse & Select</h4>
-                <div className="space-y-3 text-gray-600 font-medium relative z-10">
-                  <div className="flex gap-3">
-                    <span className="text-emerald-500 font-bold">•</span>
-                    <span>View fresh, local produce</span>
+                <div className="space-y-2 pt-4 border-t border-[#132E20]/10 text-xs font-semibold text-[#132E20]/80">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#84A98C]" />
+                    <span>Fair farm-gate pricing</span>
                   </div>
-                  <div className="flex gap-3">
-                    <span className="text-emerald-500 font-bold">•</span>
-                    <span>Check farmer ratings</span>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="text-emerald-500 font-bold">•</span>
-                    <span>Add to your digital cart</span>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#84A98C]" />
+                    <span>QR batch traceability</span>
                   </div>
                 </div>
               </div>
@@ -71,24 +85,27 @@ export default function HowItWorksSection() {
 
             {/* Step 3 */}
             <ScrollAnimation className="h-full" style={{ animationDelay: '0.2s' }}>
-              <div className="h-full bg-white/80 backdrop-blur-xl border border-white/60 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-300 group hover:-translate-y-2 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-100/50 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
-                <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-400 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mb-6 shadow-md relative z-10 transform group-hover:rotate-6 transition-transform duration-300">
-                  3
+              <div className="h-full bg-white/90 border border-[#132E20]/12 rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <span className="font-serif-display text-3xl font-extrabold text-[#D97736]">03</span>
+                    <div className="w-12 h-12 rounded-2xl bg-[#132E20] text-[#FBF8F3] flex items-center justify-center font-bold shadow-md group-hover:scale-105 transition-transform">
+                      <ShieldCheck className="w-5 h-5 text-[#E29578]" />
+                    </div>
+                  </div>
+                  <h4 className="font-serif-display text-2xl font-bold text-[#132E20] mb-3">Field-Fresh Delivery</h4>
+                  <p className="font-sans-body text-xs text-[#132E20]/75 leading-relaxed mb-4">
+                    Harvested fresh at dawn and dispatched straight to your doorstep in 4 to 12 hours with 256-bit secure payment protection.
+                  </p>
                 </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-4 relative z-10">Checkout & Delivery</h4>
-                <div className="space-y-3 text-gray-600 font-medium relative z-10">
-                  <div className="flex gap-3">
-                    <span className="text-orange-500 font-bold">•</span>
-                    <span>Secure your payment</span>
+                <div className="space-y-2 pt-4 border-t border-[#132E20]/10 text-xs font-semibold text-[#132E20]/80">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#E29578]" />
+                    <span>Same-day dawn dispatch</span>
                   </div>
-                  <div className="flex gap-3">
-                    <span className="text-orange-500 font-bold">•</span>
-                    <span>Track your fresh order</span>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="text-orange-500 font-bold">•</span>
-                    <span>Delivered in 48 hours</span>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#E29578]" />
+                    <span>Escrow buyer guarantee</span>
                   </div>
                 </div>
               </div>
@@ -98,33 +115,37 @@ export default function HowItWorksSection() {
 
         {/* For Farmers */}
         <div>
-          <ScrollAnimation className="mb-12">
-            <h3 className="text-2xl md:text-3xl font-black text-emerald-600 text-center flex items-center justify-center gap-3">
-              <span>🌾</span> For Farmers
+          <ScrollAnimation className="mb-8">
+            <h3 className="font-serif-display text-2xl md:text-3xl font-bold text-[#132E20] flex items-center justify-center gap-3">
+              <span className="w-8 h-8 rounded-full bg-[#132E20]/10 text-[#132E20] flex items-center justify-center text-sm font-bold">🌾</span>
+              <span>For Farmers</span>
             </h3>
           </ScrollAnimation>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Farmer Step 1 */}
             <ScrollAnimation className="h-full">
-              <div className="h-full bg-white/80 backdrop-blur-xl border border-white/60 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-300 group hover:-translate-y-2 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-100/50 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-400 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mb-6 shadow-md relative z-10 transform group-hover:rotate-6 transition-transform duration-300">
-                  1
+              <div className="h-full bg-[#132E20] text-[#FBF8F3] border border-white/10 rounded-3xl p-8 shadow-md hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <span className="font-serif-display text-3xl font-extrabold text-[#D97736]">01</span>
+                    <div className="w-12 h-12 rounded-2xl bg-[#1B3B2B] text-white flex items-center justify-center font-bold border border-white/15">
+                      <Sprout className="w-5 h-5 text-[#D97736]" />
+                    </div>
+                  </div>
+                  <h4 className="font-serif-display text-2xl font-bold text-[#FBF8F3] mb-3">Register & Verify KYC</h4>
+                  <p className="font-sans-body text-xs text-[#FBF8F3]/75 leading-relaxed mb-4">
+                    Set up your farm profile with land records & Government ID. Fast 24-hour verification unlocks direct trade access.
+                  </p>
                 </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-4 relative z-10">Register Farm</h4>
-                <div className="space-y-3 text-gray-600 font-medium relative z-10">
-                  <div className="flex gap-3">
-                    <span className="text-purple-500 font-bold">•</span>
-                    <span>Create a farmer profile</span>
+                <div className="space-y-2 pt-4 border-t border-white/10 text-xs font-semibold text-[#FBF8F3]/80">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#D97736]" />
+                    <span>Free farmer profile creation</span>
                   </div>
-                  <div className="flex gap-3">
-                    <span className="text-purple-500 font-bold">•</span>
-                    <span>Add location details</span>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="text-purple-500 font-bold">•</span>
-                    <span>Quick 24h verification</span>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#D97736]" />
+                    <span>Government ID verification</span>
                   </div>
                 </div>
               </div>
@@ -132,24 +153,27 @@ export default function HowItWorksSection() {
 
             {/* Farmer Step 2 */}
             <ScrollAnimation className="h-full" style={{ animationDelay: '0.1s' }}>
-              <div className="h-full bg-white/80 backdrop-blur-xl border border-white/60 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-300 group hover:-translate-y-2 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-pink-100/50 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
-                <div className="w-14 h-14 bg-gradient-to-br from-pink-500 to-rose-400 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mb-6 shadow-md relative z-10 transform group-hover:rotate-6 transition-transform duration-300">
-                  2
+              <div className="h-full bg-[#132E20] text-[#FBF8F3] border border-white/10 rounded-3xl p-8 shadow-md hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <span className="font-serif-display text-3xl font-extrabold text-[#D97736]">02</span>
+                    <div className="w-12 h-12 rounded-2xl bg-[#1B3B2B] text-white flex items-center justify-center font-bold border border-white/15">
+                      <ShoppingBag className="w-5 h-5 text-[#84A98C]" />
+                    </div>
+                  </div>
+                  <h4 className="font-serif-display text-2xl font-bold text-[#FBF8F3] mb-3">List Crop via Voice or Form</h4>
+                  <p className="font-sans-body text-xs text-[#FBF8F3]/75 leading-relaxed mb-4">
+                    Dictate crop details in your regional language or fill out a simple form. Set your own prices without commission cuts.
+                  </p>
                 </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-4 relative z-10">List Products</h4>
-                <div className="space-y-3 text-gray-600 font-medium relative z-10">
-                  <div className="flex gap-3">
-                    <span className="text-pink-500 font-bold">•</span>
-                    <span>Set your own price</span>
+                <div className="space-y-2 pt-4 border-t border-white/10 text-xs font-semibold text-[#FBF8F3]/80">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#84A98C]" />
+                    <span>Voice dictation support</span>
                   </div>
-                  <div className="flex gap-3">
-                    <span className="text-pink-500 font-bold">•</span>
-                    <span>Add crop quantities</span>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="text-pink-500 font-bold">•</span>
-                    <span>Upload farm photos</span>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#84A98C]" />
+                    <span>Set 100% of your prices</span>
                   </div>
                 </div>
               </div>
@@ -157,24 +181,27 @@ export default function HowItWorksSection() {
 
             {/* Farmer Step 3 */}
             <ScrollAnimation className="h-full" style={{ animationDelay: '0.2s' }}>
-              <div className="h-full bg-white/80 backdrop-blur-xl border border-white/60 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-300 group hover:-translate-y-2 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-100/50 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
-                <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-amber-400 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mb-6 shadow-md relative z-10 transform group-hover:rotate-6 transition-transform duration-300">
-                  3
+              <div className="h-full bg-[#132E20] text-[#FBF8F3] border border-white/10 rounded-3xl p-8 shadow-md hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <span className="font-serif-display text-3xl font-extrabold text-[#D97736]">03</span>
+                    <div className="w-12 h-12 rounded-2xl bg-[#1B3B2B] text-white flex items-center justify-center font-bold border border-white/15">
+                      <ShieldCheck className="w-5 h-5 text-[#E29578]" />
+                    </div>
+                  </div>
+                  <h4 className="font-serif-display text-2xl font-bold text-[#FBF8F3] mb-3">Earn Direct to Bank</h4>
+                  <p className="font-sans-body text-xs text-[#FBF8F3]/75 leading-relaxed mb-4">
+                    Receive direct orders from buyers and institutions. Enjoy instant 24-hour bank payout upon batch dispatch.
+                  </p>
                 </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-4 relative z-10">Earn Directly</h4>
-                <div className="space-y-3 text-gray-600 font-medium relative z-10">
-                  <div className="flex gap-3">
-                    <span className="text-amber-500 font-bold">•</span>
-                    <span>Receive direct orders</span>
+                <div className="space-y-2 pt-4 border-t border-white/10 text-xs font-semibold text-[#FBF8F3]/80">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#E29578]" />
+                    <span>24-hour instant payout</span>
                   </div>
-                  <div className="flex gap-3">
-                    <span className="text-amber-500 font-bold">•</span>
-                    <span>Arrange simple logistics</span>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="text-amber-500 font-bold">•</span>
-                    <span>Keep 100% of profit</span>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#E29578]" />
+                    <span>Zero middleman commission</span>
                   </div>
                 </div>
               </div>
