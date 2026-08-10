@@ -17,6 +17,8 @@ import { resetServerStartTime, getServerStartTime } from './utils/serverTime.js'
 import { uploadSingleFile } from './middleware/localUpload.js';
 import { trimStrings } from './middleware/sanitizer.js';
 
+import { getUploadsRoot } from './config/localStorage.js';
+
 import authRoutes from './routes/authRoutes.js';
 import cropRoutes from './routes/cropRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
@@ -42,7 +44,7 @@ const app = express();
 
 app.set('trust proxy', 1);
 
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+app.use('/uploads', express.static(getUploadsRoot()));
 
 resetServerStartTime();
 

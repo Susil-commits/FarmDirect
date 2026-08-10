@@ -48,7 +48,7 @@ export function uploadSingleFile(folder = 'general') {
         return next();
       }
       try {
-        const result = await uploadFile(req.file.buffer, req.file.originalname, folder);
+        const result = await uploadFile(req.file.buffer, req.file.originalname, folder, req.file.mimetype);
         const meta: UploadedFileMeta = {
           url: result.url,
           fileName: req.file.originalname,
@@ -82,7 +82,7 @@ export function uploadMultipleFiles(folder = 'general', maxFiles = 5) {
 
       try {
         const results = await Promise.all(
-          files.map((file) => uploadFile(file.buffer, file.originalname, folder)),
+          files.map((file) => uploadFile(file.buffer, file.originalname, folder, file.mimetype)),
         );
         const metas: UploadedFileMetaWithField[] = results.map((result, index) => ({
           url: result.url,

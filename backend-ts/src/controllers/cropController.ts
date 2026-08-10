@@ -35,7 +35,16 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
       }
     }
 
-    const imageUrls = req.uploadedFiles ? req.uploadedFiles.map((f) => f.url) : [];
+    let bodyImages: string[] = [];
+    if (req.body.images) {
+      try {
+        bodyImages = typeof req.body.images === 'string' ? JSON.parse(req.body.images) : (Array.isArray(req.body.images) ? req.body.images : []);
+      } catch {
+        bodyImages = Array.isArray(req.body.images) ? req.body.images : [];
+      }
+    }
+    const uploadedUrls = req.uploadedFiles ? req.uploadedFiles.map((f) => f.url) : [];
+    const imageUrls = Array.from(new Set([...bodyImages, ...uploadedUrls]));
 
     const user = await User.findById(req.user!._id);
     if (!user) {
@@ -532,3 +541,18 @@ export async function getMyInterestedCrops(req: Request, res: Response, next: Ne
     next(error);
   }
 }
+
+export async function uploadImagesHandler(req: Request, res: Response): Promise<void> {
+  if (req.uploadError) {
+    sendError(res, req.uploadError || 'Image upload failed', 400);
+    return;
+  }
+  const imageUrls = req.uploadedFiles ? req.uploadedFiles.map((f) => f.url) : [];
+  res.status(200).json({
+    success: true,
+    message: 'Images uploaded successfully',
+    data: { images: imageUrls },
+    images: imageUrls,
+  });
+}
+
