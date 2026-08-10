@@ -9,6 +9,24 @@ import { RouterProvider } from './context/RouterContext'
 import { LoadingProvider } from './context/LoadingContext'
 import { SocketProvider } from './context/SocketContext'
 
+// Vite Dynamic Preload Error Listener (catches stale chunk hashes after deployments)
+window.addEventListener('vite:preload-error', (event) => {
+  console.warn('[Vite] Preload error detected for dynamic asset. Auto-refreshing page...', event);
+  event.preventDefault();
+  const pageHasAlreadyBeenReloaded = sessionStorage.getItem('vite_preload_reloaded') === 'true';
+  if (!pageHasAlreadyBeenReloaded) {
+    sessionStorage.setItem('vite_preload_reloaded', 'true');
+    window.location.reload();
+  }
+});
+
+// Clear reload flag on successful application load
+try {
+  sessionStorage.removeItem('vite_preload_reloaded');
+} catch {
+  // Ignore storage restrictions
+}
+
 // Global Error Boundaries to prevent total app crashes from unhandled rejections
 window.addEventListener('unhandledrejection', (event) => {
   console.warn('Unhandled Promise Rejection caught globally:', event.reason);

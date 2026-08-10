@@ -14,7 +14,8 @@ import PageLoader from './components/common/PageLoader';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import NetworkStatusBanner from './components/common/NetworkStatusBanner';
 import PwaBadge from './components/common/PwaBadge';
-import { lazy, Suspense, useEffect, useRef } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
+import { lazyWithRetry as lazy } from './utils/lazyWithRetry';
 
 const Home = lazy(() => import('./pages/Home'));
 const Marketplace = lazy(() => import('./pages/Marketplace'));

@@ -14,12 +14,14 @@ import OptimizedImage from '../components/common/OptimizedImage';
 import LiveActivityTicker from '../components/common/LiveActivityTicker';
 import FarmHeroLanding from '../components/landing/FarmHeroLanding';
 
-const FeaturesSection = lazy(() => import('./home/FeaturesSection'));
-const RawFactsSection = lazy(() => import('./home/RawFactsSection'));
-const HowItWorksSection = lazy(() => import('./home/HowItWorksSection'));
-const FaqsSection = lazy(() => import('./home/FaqsSection'));
-const CommunitySection = lazy(() => import('./home/CommunitySection'));
-const TestimonialsSection = lazy(() => import('./home/TestimonialsSection'));
+import { lazyWithRetry } from '../utils/lazyWithRetry';
+
+const FeaturesSection = lazyWithRetry(() => import('./home/FeaturesSection'));
+const RawFactsSection = lazyWithRetry(() => import('./home/RawFactsSection'));
+const HowItWorksSection = lazyWithRetry(() => import('./home/HowItWorksSection'));
+const FaqsSection = lazyWithRetry(() => import('./home/FaqsSection'));
+const CommunitySection = lazyWithRetry(() => import('./home/CommunitySection'));
+const TestimonialsSection = lazyWithRetry(() => import('./home/TestimonialsSection'));
 
 export default function Home() {
   const { t: _t } = useTranslation();

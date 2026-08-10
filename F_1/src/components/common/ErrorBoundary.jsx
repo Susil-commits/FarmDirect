@@ -60,6 +60,40 @@ export default class ErrorBoundary extends Component {
       }
 
       const isDev = import.meta.env?.DEV;
+      const errorMessage = this.state.error?.message || '';
+      const isChunkError =
+        this.state.error?.name === 'ChunkLoadError' ||
+        errorMessage.includes('Failed to fetch dynamically imported module') ||
+        errorMessage.includes('Expected a JavaScript-or-Wasm module script') ||
+        errorMessage.includes('MIME type') ||
+        errorMessage.includes('Loading chunk');
+
+      if (isChunkError) {
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+            <div className="max-w-lg w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center border border-green-200 dark:border-green-800">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                <RefreshCw size={32} className="text-green-600 dark:text-green-400 animate-spin-slow" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                New Version Available
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                FarmDirect was updated on the server. Please refresh to load the latest application files.
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={this.handleHardReload}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-lg transition"
+                >
+                  <RefreshCw size={18} />
+                  Refresh Application
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
 
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
