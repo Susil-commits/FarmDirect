@@ -81,22 +81,29 @@ export const AuthProvider = ({ children }) => {
       const storedVerificationStatus = localStorage.getItem('verificationStatus');
       const storedServerStartTime = localStorage.getItem('serverStartTime');
       
+      if (!storedUser) {
+        // Guest user — no stored session data, skip background refresh
+        clearAccessToken();
+        setUser(null);
+        setSessionActive(false);
+        setLoading(false);
+        return;
+      }
+
       try {
         // Attempt silent token refresh via HttpOnly cookie
         const newToken = await refreshAuthToken();
         if (newToken) {
           setSessionActive(true);
           
-          if (storedUser) {
-            try {
-              const userData = JSON.parse(storedUser);
-              setUser(userData);
-              const verifyStatus = userData?.kycStatus || storedVerificationStatus || null;
-              setVerificationStatus(verifyStatus);
-            } catch (parseErr) {
-              console.warn('Failed to parse stored user data:', parseErr);
-              localStorage.removeItem('userData');
-            }
+          try {
+            const userData = JSON.parse(storedUser);
+            setUser(userData);
+            const verifyStatus = userData?.kycStatus || storedVerificationStatus || null;
+            setVerificationStatus(verifyStatus);
+          } catch (parseErr) {
+            console.warn('Failed to parse stored user data:', parseErr);
+            localStorage.removeItem('userData');
           }
 
           try {
@@ -152,16 +159,6 @@ export const AuthProvider = ({ children }) => {
               setError('Your account has been deleted. Please contact support if this was not intentional.');
               setLoading(false);
               return;
-            }
-            if (!storedUser && (err.message === 'Network Error' || err.code === 'ECONNREFUSED')) {
-              console.error('Server unreachable on app load, logging out');
-              clearAccessToken();
-              localStorage.removeItem('userData');
-              localStorage.removeItem('serverStartTime');
-              localStorage.removeItem('currentRoute');
-              setUser(null);
-              setSessionActive(false);
-              setRedirectPath('/');
             }
           }
         }
