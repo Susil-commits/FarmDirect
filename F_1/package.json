@@ -10,6 +10,9 @@
     "preview": "vite preview",
     "vercel-build": "npx vite build"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
     "@tanstack/react-query": "^5.96.1",
