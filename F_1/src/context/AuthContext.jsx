@@ -3,6 +3,8 @@ import React, { createContext, useState, useCallback, useEffect, useContext, use
 import { authService, userService } from '../services/appService.js';
 import { socialAuthService } from '../services/socialAuthService.js';
 import { isTokenExpired } from '../utils/jwtUtils.js';
+import { getAccessToken, setAccessToken, clearAccessToken } from '../utils/tokenStore.js';
+import { refreshAuthToken } from '../services/api.js';
 
 export const AuthContext = createContext();
 
@@ -75,65 +77,46 @@ export const AuthProvider = ({ children }) => {
   // Initialize authentication on mount
   useEffect(() => {
     const initializeAuth = async () => {
-      const token = localStorage.getItem('token');
       const storedUser = localStorage.getItem('userData');
       const storedVerificationStatus = localStorage.getItem('verificationStatus');
       const storedServerStartTime = localStorage.getItem('serverStartTime');
       
-      if (token) {
-        // Check if token is expired
-        if (isTokenExpired(token)) {
-          console.warn('Token expired on app load');
-          localStorage.removeItem('token');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('userData');
-          localStorage.removeItem('serverStartTime');
-          localStorage.removeItem('currentRoute');
-          setUser(null);
-          setSessionActive(false);
-          setRedirectPath('/');
-        } else {
-          // Token exists and is valid - use cached user data first
+      try {
+        // Attempt silent token refresh via HttpOnly cookie
+        const newToken = await refreshAuthToken();
+        if (newToken) {
+          setSessionActive(true);
+          
           if (storedUser) {
             try {
               const userData = JSON.parse(storedUser);
               setUser(userData);
-              setSessionActive(true);
-              
               const verifyStatus = userData?.kycStatus || storedVerificationStatus || null;
               setVerificationStatus(verifyStatus);
-              if (verifyStatus) {
-                localStorage.setItem('verificationStatus', verifyStatus);
-              }
-
-              // Load login history
-              try {
-                const history = JSON.parse(localStorage.getItem('loginHistory') || '[]');
-                setLoginHistory(history);
-              } catch { /* ignore */ }
-
-              // Set last activity time if not set
-              if (!localStorage.getItem('lastActivityTime')) {
-                localStorage.setItem('lastActivityTime', Date.now().toString());
-              }
             } catch (parseErr) {
               console.warn('Failed to parse stored user data:', parseErr);
               localStorage.removeItem('userData');
             }
           }
 
-          // Try to validate token structure with backend (non-blocking)
+          try {
+            const history = JSON.parse(localStorage.getItem('loginHistory') || '[]');
+            setLoginHistory(history);
+          } catch { /* ignore */ }
+
+          if (!localStorage.getItem('lastActivityTime')) {
+            localStorage.setItem('lastActivityTime', Date.now().toString());
+          }
+
+          // Fetch latest user info from backend
           try {
             const response = await authService.getCurrentUser();
             const userData = response.user || response.data?.user || response;
             
-            // Check for server restart by comparing serverStartTime
             const currentServerStartTime = response.serverStartTime;
             if (storedServerStartTime && currentServerStartTime && storedServerStartTime !== currentServerStartTime.toString()) {
               console.warn('⚠️ Server was restarted! Logging out user.');
-              // Server has restarted - force logout and redirect to home
-              localStorage.removeItem('token');
-              localStorage.removeItem('refreshToken');
+              clearAccessToken();
               localStorage.removeItem('userData');
               localStorage.removeItem('serverStartTime');
               localStorage.removeItem('verificationStatus');
@@ -146,7 +129,6 @@ export const AuthProvider = ({ children }) => {
               return;
             }
             
-            // Update with fresh data from server
             setUser(userData);
             localStorage.setItem('userData', JSON.stringify(userData));
 
@@ -155,14 +137,10 @@ export const AuthProvider = ({ children }) => {
             if (verifyStatus) {
               localStorage.setItem('verificationStatus', verifyStatus);
             }
-
           } catch (err) {
-            // Check if user was deleted (404 Not Found)
             if (err.status === 404 || err.message === 'User not found') {
               console.warn('⚠️ User account has been deleted');
-              // Clear auth data
-              localStorage.removeItem('token');
-              localStorage.removeItem('refreshToken');
+              clearAccessToken();
               localStorage.removeItem('userData');
               localStorage.removeItem('serverStartTime');
               localStorage.removeItem('verificationStatus');
@@ -170,17 +148,14 @@ export const AuthProvider = ({ children }) => {
               localStorage.removeItem('lastActivityTime');
               setUser(null);
               setSessionActive(false);
-              // BUG 8 FIX: correct path is /auth/login, not /login
               setRedirectPath('/auth/login?deleted=true');
               setError('Your account has been deleted. Please contact support if this was not intentional.');
               setLoading(false);
               return;
             }
-            // If server is unreachable AND we have no cached user, then logout
             if (!storedUser && (err.message === 'Network Error' || err.code === 'ECONNREFUSED')) {
               console.error('Server unreachable on app load, logging out');
-              localStorage.removeItem('token');
-              localStorage.removeItem('refreshToken');
+              clearAccessToken();
               localStorage.removeItem('userData');
               localStorage.removeItem('serverStartTime');
               localStorage.removeItem('currentRoute');
@@ -188,12 +163,17 @@ export const AuthProvider = ({ children }) => {
               setSessionActive(false);
               setRedirectPath('/');
             }
-            // Otherwise, keep the user logged in with cached data
           }
         }
+      } catch (err) {
+        // Silent refresh failed (no valid refresh cookie) -> clear user session
+        clearAccessToken();
+        localStorage.removeItem('userData');
+        setUser(null);
+        setSessionActive(false);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     initializeAuth();
@@ -291,11 +271,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authService.login(credentials);
       
-      // Store tokens
-      localStorage.setItem('token', response.token);
-      if (response.refreshToken) {
-        localStorage.setItem('refreshToken', response.refreshToken);
-      }
+      // Store token in memory
+      setAccessToken(response.token);
       
       // Store server start time for detecting server restart
       if (response.serverStartTime) {
@@ -341,9 +318,8 @@ export const AuthProvider = ({ children }) => {
       
       await authService.logout();
       
-      // Clear all auth data
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
+      // Clear in-memory token & user storage
+      clearAccessToken();
       localStorage.removeItem('verificationStatus');
       localStorage.removeItem('serverStartTime');
       // Clear user-specific submission state
@@ -420,10 +396,7 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const response = await socialAuthService.handleGoogleCallback(code);
-      localStorage.setItem('token', response.token);
-      if (response.refreshToken) {
-        localStorage.setItem('refreshToken', response.refreshToken);
-      }
+      setAccessToken(response.token);
       if (response.serverStartTime) {
         localStorage.setItem('serverStartTime', response.serverStartTime.toString());
       }
@@ -450,10 +423,7 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const response = await socialAuthService.handleGitHubCallback(code);
-      localStorage.setItem('token', response.token);
-      if (response.refreshToken) {
-        localStorage.setItem('refreshToken', response.refreshToken);
-      }
+      setAccessToken(response.token);
       if (response.serverStartTime) {
         localStorage.setItem('serverStartTime', response.serverStartTime.toString());
       }
@@ -643,7 +613,7 @@ export const AuthProvider = ({ children }) => {
 
   // NEW: Force session check
   const checkSession = useCallback(async () => {
-    const token = localStorage.getItem('token');
+    const token = getAccessToken();
     
     if (!token) {
       return { active: false, reason: 'No token' };

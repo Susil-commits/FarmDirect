@@ -1,4 +1,5 @@
 import express, { type Request, type Response } from 'express';
+import crypto from 'crypto';
 import cors from 'cors';
 import compression from 'compression';
 import helmet from 'helmet';
@@ -51,12 +52,18 @@ resetServerStartTime();
 
 app.use(requestId);
 
+// Generate random nonce per request for Content Security Policy
+app.use((_req: Request, res: Response, next) => {
+  res.locals.nonce = crypto.randomBytes(16).toString('base64');
+  next();
+});
+
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", (_req: any, res: any) => `'nonce-${res.locals.nonce}'`],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://images.unsplash.com"],
       connectSrc: ["'self'", "https://api.razorpay.com"],

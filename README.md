@@ -102,51 +102,70 @@ FaRm employs a decoupled, micro-service ready architecture split into a high-per
 
 ### Authentication & Token Lifecycle
 
-FaRm implements stateless JWT authentication paired with an automated token refresh cycle and role-based route protection.
+FaRm implements an enterprise-grade security model featuring **in-memory access tokens**, **HttpOnly cookie-based silent refreshes**, and **Redis-backed refresh token rotation with reuse detection**.
 
 ```text
- Client (Browser)                       Backend API                     MongoDB / Storage
-      │                                      │                                  │
-      ├─── 1. POST /auth/login ─────────────►│                                  │
-      │    (email & password)                ├── Validate user credentials ────►│
-      │                                      │◄── Return user record & hash ────┤
-      │                                      ├── Verify password with bcrypt    │
-      │◄── 2. Return Access + Refresh JWT ───┤                                  │
-      │    (Store in memory & localStorage)  │                                  │
-      │                                      │                                  │
-      ├─── 3. Request with Bearer Token ────►│                                  │
-      │    Header: Authorization: Bearer <T> ├── Verify Access Token Signature │
-      │                                      ├── Check RBAC (Buyer/Farmer/Admin)│
-      │◄── 4. Return Authorized Data ────────┤                                  │
-      │                                      │                                  │
-      ├─── 5. Access Token Expires (401) ───►│                                  │
-      ├─── 6. POST /auth/refresh-token ─────►│                                  │
-      │    (Header: Bearer <RefreshToken>)   ├── Validate Refresh Secret       │
-      │◄── 7. Return New Access Token ───────┤                                  │
+ Client (Browser)                      Backend API (Express TS)               Redis / Storage
+      │                                       │                                      │
+      ├─── 1. POST /api/auth/login ──────────►│                                      │
+      │    (email & password)                 ├── Validate credentials & hash ──────►│
+      │                                       ├── Issue short-lived Access Token     │
+      │                                       ├── Issue Refresh Token + unique `jti` │
+      │◄── 2. Return Access Token in body ────┤                                      │
+      │    + Set HttpOnly Cookie (RefreshToken)│                                     │
+      │    (Stored strictly in-memory)        │                                      │
+      │                                       │                                      │
+      ├─── 3. Request with Bearer Token ─────►│                                      │
+      │    Header: Authorization: Bearer <T>  ├── Verify Access Token Signature      │
+      │                                       ├── Check RBAC (Buyer/Farmer/Admin)    │
+      │◄── 4. Return Authorized Data ─────────┤                                      │
+      │                                       │                                      │
+      ├─── 5. App Load / Token Expiry ───────►│                                      │
+      ├─── 6. Silent POST /auth/refresh-token►│                                      │
+      │    (Sent automatically via Cookie)    ├── Check if `jti` marked revoked? ───►│
+      │                                       │◄── Return status ────────────────────┤
+      │                                       │    (If revoked: REUSE DETECTED!       │
+      │                                       │     Clear cookie & force re-login)   │
+      │                                       ├── Revoke incoming `jti` in Redis ───►│
+      │                                       ├── Generate fresh Access + Refresh JWT│
+      │◄── 7. Return New Access Token ────────┤                                      │
+      │    + Set New HttpOnly Cookie          │                                      │
 ```
 
 ### Security Safeguards
 
-1. **Role-Based Access Control (RBAC):**
+1. **In-Memory Access Tokens & Zero XSS Storage Exposure:**
+   - Access tokens live strictly in module-level RAM (`tokenStore.js`), completely isolating secrets from `localStorage` and XSS key harvesting.
+   - User profile data (`userData`) is stored for fast UI bootstrap, but secrets never touch client disk storage.
+
+2. **Silent Refresh via HttpOnly Cookies:**
+   - Refresh tokens are transmitted exclusively inside `HttpOnly`, `SameSite=Strict`, `Secure` cookies.
+   - On application load, `AuthContext` executes a silent `POST /api/auth/refresh-token` handshake to re-hydrate the access token seamlessly.
+
+3. **Refresh Token Rotation & Reuse Detection (Redis):**
+   - Every refresh token contains a cryptographically random `jti` claim (`crypto.randomUUID()`).
+   - Upon token exchange, the incoming `jti` is invalidated in Redis (`tokenService.ts`).
+   - If a previously consumed or stolen `jti` is presented again (replay attack), the backend revokes the session family, clears the HTTP cookie, and forces authentication.
+
+4. **Per-Request Content Security Policy (CSP) Nonces:**
+   - Middleware generates a fresh random base64 nonce per request (`crypto.randomBytes(16).toString('base64')`).
+   - Helmet injects dynamic nonces into `scriptSrc` (`scriptSrc: ["'self'", nonce]`), stripping `'unsafe-inline'` from script execution policies.
+
+5. **Role-Based Access Control (RBAC):**
    - User roles (`buyer`, `farmer`, `admin`) are strictly enforced via middleware (`protect`, `authorize(...)`).
    - Critical operations (e.g. crop creation, order placement, document review) enforce KYC status checks (`requireKYC`).
 
-2. **Input Validation & Sanitization:**
+6. **Input Validation & Sanitization:**
    - Mongo Sanitize strips malicious operators (`$`, `.`) from request payloads to prevent NoSQL injection.
    - Zod schemas validate data types before business logic execution.
 
-3. **Content Security Policy & CORS:**
-   - Helmet headers configure Strict CSP directives, restricting image sources to `'self'`, `data:`, `https://res.cloudinary.com`, and `https://images.unsplash.com`.
-   - Cross-Origin Resource Policy (CORP) permits cross-origin media rendering while preventing unauthorized cross-site framing.
+7. **File Upload Security & Memory Safety:**
+   - Multer uses `memoryStorage()` to handle uploads in RAM with strict MIME whitelisting (`image/*`, `application/pdf`).
+   - Media streams directly to Cloudinary via `upload_stream` to eliminate server disk contamination.
 
-4. **File Upload Security & Memory Safety:**
-   - Multer uses `memoryStorage()` to handle uploads in RAM.
-   - Files are validated against an allowed MIME whitelist (`image/*`, `application/pdf`, etc.).
-   - Images are piped via Cloudinary `upload_stream` to eliminate server disk contamination. If Cloudinary is unconfigured or unreachable, files gracefully fall back to an isolated `./uploads` storage directory.
-
-5. **Audit Logging & Rate Limiting:**
-   - Administrative actions (status changes, approvals, deletions) are recorded in `AuditLog` documents with admin ID, email, action type, resource ID, IP address, and User-Agent.
-   - Route-level rate limiters protect sensitive endpoints from brute-force attempts.
+8. **Audit Logging & Rate Limiting:**
+   - Administrative actions are recorded in `AuditLog` documents with admin ID, email, action type, resource ID, IP address, and User-Agent.
+   - Tiered rate limiters (`express-rate-limit` + Redis store) protect global routes, auth endpoints, and polling paths against brute-force attacks.
 
 ---
 

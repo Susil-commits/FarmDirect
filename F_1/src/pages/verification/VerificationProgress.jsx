@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Upload, CheckCircle, Clock, AlertCircle, FileText, Camera, ChevronDown, ChevronUp, Eye } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { clearAccessToken } from '../../utils/tokenStore';
 import { useRouter } from '../../hooks/useRouter';
 import { useToast } from '../../hooks/useToast';
 import { authServiceExtended } from '../../services/appService';
@@ -384,8 +385,7 @@ export default function VerificationProgress() {
       setIsDeleting(true);
       await authServiceExtended.deleteAccount();
       addToast('Your account has been permanently deleted.', 'success');
-      // Clear auth data
-      localStorage.removeItem('token');
+      clearAccessToken();
       localStorage.removeItem('user');
       localStorage.removeItem(`verificationDocuments_${user?.id}`);
       localStorage.removeItem(`verificationSubmittedAt_${user?.id}`);

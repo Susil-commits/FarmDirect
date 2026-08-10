@@ -1,4 +1,5 @@
 import { API_BASE_URL } from './api.js';
+import { getAccessToken } from '../utils/tokenStore.js';
 
 // Social auth service for Google and GitHub OAuth
 export const socialAuthService = {
@@ -79,7 +80,7 @@ export const socialAuthService = {
    */
   logout: async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getAccessToken();
       if (!token) return;
 
       await fetch(`${API_BASE_URL}/auth/logout`, {

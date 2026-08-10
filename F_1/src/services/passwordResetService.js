@@ -3,6 +3,7 @@
  * Handles password reset and recovery flow
  */
 import { API_BASE_URL } from './api.js';
+import { getAccessToken } from '../utils/tokenStore.js';
 
 export const passwordResetService = {
   /**
@@ -52,7 +53,7 @@ export const passwordResetService = {
    */
   updatePassword: async (data) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getAccessToken();
       const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
         method: 'POST',
         headers: {

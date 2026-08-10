@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { isSessionExpired, getTokenExpiryTime } from './jwtUtils.js';
+import { getAccessToken, clearAccessToken } from './tokenStore.js';
 
 /**
  * Session Manager
@@ -16,7 +17,7 @@ class SessionManager {
    * Get current session status
    */
   getSessionStatus() {
-    const token = localStorage.getItem('token');
+    const token = getAccessToken();
     const lastActivity = localStorage.getItem('lastActivityTime');
     const user = localStorage.getItem('userData');
 
@@ -48,7 +49,7 @@ class SessionManager {
    * Check if session will expire soon and needs warning
    */
   shouldShowExpiryWarning() {
-    const token = localStorage.getItem('token');
+    const token = getAccessToken();
     if (!token) return false;
 
     const expirySeconds = getTokenExpiryTime(token);
@@ -59,7 +60,7 @@ class SessionManager {
    * Get formatted session expiry time
    */
   getFormattedExpiryTime() {
-    const token = localStorage.getItem('token');
+    const token = getAccessToken();
     if (!token) return 'Expired';
 
     const expirySeconds = getTokenExpiryTime(token);
@@ -84,8 +85,7 @@ class SessionManager {
    * Clear session completely
    */
   clearSession() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
+    clearAccessToken();
     localStorage.removeItem('userData');
     localStorage.removeItem('verificationStatus');
     localStorage.removeItem('lastActivityTime');
@@ -130,7 +130,7 @@ class SessionManager {
    * Validate session token
    */
   isSessionValid() {
-    const token = localStorage.getItem('token');
+    const token = getAccessToken();
     const user = localStorage.getItem('userData');
 
     if (!token || !user) return false;
