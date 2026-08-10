@@ -1,114 +1,132 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MessageSquare, Clock, MapPin } from 'lucide-react';
 import { useRouter } from '../hooks/useRouter';
-import PageTransition from '../components/common/PageTransition';
+import PageTransition from '../components/common/PageTransition.jsx';
+import DynamicFloatingNavbar from '../components/landing/DynamicFloatingNavbar';
+import GiantBrandFooter from '../components/common/GiantBrandFooter';
+import { HelpCircle, ShieldCheck, Truck, RefreshCw, MessageSquare } from 'lucide-react';
 
 export default function Support() {
   const { navigate } = useRouter();
-  const [activeCategory, setActiveCategory] = useState('general');
+  const [selectedFaqIndex, setSelectedFaqIndex] = useState(0);
 
-  const faqs = {
-    general: [
-      { q: 'How do I create an account?', a: 'Visit our registration page and fill in your details. Verify your email and complete KYC for full access.' },
-      { q: 'Is it safe to trade on FarmDirect?', a: 'Yes, we use encryption and secure payment gateways. All transactions are protected.' },
-      { q: 'How do I contact a seller?', a: 'You can message directly through the crop listing page.' }
-    ],
-    farmers: [
-      { q: 'What documents do I need for verification?', a: 'Land ownership proof, ID proof, and bank details are required for farmer verification.' },
-      { q: 'How do I list my crops?', a: 'Go to your dashboard, click "Add Crop", fill details, upload photos, and publish.' },
-      { q: 'What are the commission rates?', a: 'FarmDirect charges 5-10% commission per sale depending on crop type.' }
-    ],
-    buyers: [
-      { q: 'How do I place an order?', a: 'Browse the marketplace, select a product, choose quantity, and complete payment.' },
-      { q: 'What is the delivery time?', a: 'Delivery typically takes 1-3 days depending on your location and farmer availability.' },
-      { q: 'Can I cancel my order?', a: 'Yes, orders can be cancelled within 1 hour of placement if not confirmed by the seller.' }
-    ]
-  };
+  const topics = [
+    { title: 'Order & Harvest Tracking', icon: Truck, desc: 'Track your live harvest dispatch timestamp and express transport route.' },
+    { title: 'Farmer Payments & Escrow', icon: ShieldCheck, desc: 'Learn how smart contract escrow ensures 85%+ farm-gate payout to growers.' },
+    { title: 'Refunds & Returns', icon: RefreshCw, desc: 'Report any damaged items within 24 hours for instant 100% replacement or refund.' },
+    { title: 'Direct Communications', icon: MessageSquare, desc: 'Contact your assigned farmer or regional agronomist through voice logs.' },
+  ];
+
+  const faqs = [
+    {
+      q: 'How does direct farmer pricing work on FarmDirect?',
+      a: 'Farmers set their prices directly based on crop variety, harvest effort, and market conditions. Zero middleman commissions are added. FarmDirect charges a minimal platform logistics fee (5%), allowing buyers to save 20-40% while farmers earn 85%+ invoice value.'
+    },
+    {
+      q: 'What is the harvest-to-delivery timeframe?',
+      a: 'Produce is harvested at peak maturity early in the morning upon order confirmation. Express regional dispatch delivers field-to-door within 4 to 12 hours depending on your distance from the farm.'
+    },
+    {
+      q: 'How are organic certifications & soil purity verified?',
+      a: 'Every farm on FarmDirect undergoes strict KYC verification. Chemical-free and certified organic batches include a scannable QR code on delivery with soil composition and lab quality test reports.'
+    },
+    {
+      q: 'What happens if items arrive damaged or sub-standard?',
+      a: 'We offer a 100% Quality Guarantee. If produce arrives damaged or unsatisfactory, simply upload a photo within 24 hours via the Support portal for an immediate refund or replacement dispatch.'
+    },
+    {
+      q: 'Can restaurants & hotels set up bulk recurring contracts?',
+      a: 'Yes! Commercial buyers can negotiate custom bulk contracts directly with farming cooperatives, complete with dedicated cold-chain delivery schedules and monthly invoicing.'
+    }
+  ];
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gray-50 pt-32 pb-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">How Can We Help?</h1>
-            <p className="text-xl text-gray-600">Get support from our dedicated team</p>
+      <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body">
+        <DynamicFloatingNavbar activeSection="cream" onNavigate={navigate} />
+
+        <section className="pt-32 pb-16 px-4 md:px-8 max-w-6xl mx-auto">
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <span className="font-sans-body text-xs font-bold uppercase tracking-widest text-[#132E20]/60 bg-[#F4EFE6] px-3.5 py-1.5 rounded-full border border-[#132E20]/10">
+              SUPPORT CENTER
+            </span>
+            <h1 className="font-serif-display text-5xl sm:text-6xl md:text-7xl font-normal mt-4 leading-tight">
+              How can we <span className="italic text-[#D97736]">help you today?</span>
+            </h1>
           </div>
 
-          {/* Contact Methods */}
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-            <div className="bg-white rounded-lg shadow-lg p-8 text-center hover:shadow-xl transition">
-              <Mail size={48} className="text-green-500 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Email Support</h3>
-              <p className="text-gray-600 mb-4">Response time: 24 hours</p>
-              <p className="text-green-600 font-semibold">support@farmdirect.com</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-lg p-8 text-center hover:shadow-xl transition">
-              <Phone size={48} className="text-blue-500 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Phone Support</h3>
-              <p className="text-gray-600 mb-4">Mon-Sat: 9 AM - 6 PM</p>
-              <p className="text-blue-600 font-semibold">+91-98765-43210</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-lg p-8 text-center hover:shadow-xl transition">
-              <MessageSquare size={48} className="text-purple-500 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Live Chat</h3>
-              <p className="text-gray-600 mb-4">Response time: 30 minutes</p>
-              <p className="text-purple-600 font-semibold">Available 24/7</p>
-            </div>
-          </div>
-
-          {/* FAQ Section */}
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">Frequently Asked Questions</h2>
-
-            {/* Category Tabs */}
-            <div className="flex flex-wrap gap-2 sm:gap-4 mb-8 border-b">
-              {Object.keys(faqs).map(category => (
-                <button
-                  key={category}
-                  onClick={() => setActiveCategory(category)}
-                  className={`px-4 py-3 font-semibold capitalize border-b-2 transition ${
-                    activeCategory === category
-                      ? 'border-green-500 text-green-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900'
-                  }`}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+            {topics.map((t) => {
+              const Icon = t.icon;
+              return (
+                <div
+                  key={t.title}
+                  className="bg-white/90 border border-[#132E20]/12 rounded-3xl p-6 shadow-md hover:shadow-xl transition-all cursor-pointer group"
+                  onClick={() => navigate('/contact')}
                 >
-                  {category === 'general' ? 'General' : category === 'farmers' ? 'For Farmers' : 'For Buyers'}
-                </button>
-              ))}
-            </div>
-
-            {/* FAQ Items */}
-            <div className="space-y-6">
-              {faqs[activeCategory].map((faq, idx) => (
-                <div key={idx} className="border-b pb-6 last:border-b-0">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{faq.q}</h3>
-                  <p className="text-gray-700">{faq.a}</p>
+                  <div className="w-12 h-12 rounded-2xl bg-[#132E20] text-[#FBF8F3] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Icon className="w-6 h-6 text-[#D97736]" />
+                  </div>
+                  <h3 className="font-serif-display text-xl font-bold text-[#132E20] mb-2">
+                    {t.title}
+                  </h3>
+                  <p className="font-sans-body text-xs text-[#132E20]/75 leading-relaxed">
+                    {t.desc}
+                  </p>
                 </div>
-              ))}
+              );
+            })}
+          </div>
+
+          {/* Interactive 2-Column FAQ Section (Wispr Flow style at video 1:06) */}
+          <div className="bg-[#132E20] text-[#FBF8F3] rounded-[40px] p-8 sm:p-12 shadow-2xl border border-white/10 mb-16">
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <span className="font-sans-body text-xs font-bold uppercase tracking-widest text-[#D97736] bg-[#D97736]/15 px-3.5 py-1.5 rounded-full border border-[#D97736]/30">
+                FAQS
+              </span>
+              <h2 className="font-serif-display text-4xl sm:text-5xl font-normal mt-3">
+                Good <span className="italic text-[#E29578]">questions.</span>
+              </h2>
             </div>
 
-          {/* Footer */}
-          <div className="mt-16 pt-8 border-t border-gray-200">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-              <button
-                onClick={() => navigate('/')}
-                className="flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold transition-colors cursor-pointer"
-              >
-                ← Back to Home
-              </button>
-              <div className="flex gap-6 text-sm">
-                <button onClick={() => navigate('/privacy')} className="text-gray-600 hover:text-gray-900 transition">Privacy</button>
-                <button onClick={() => navigate('/terms')} className="text-gray-600 hover:text-gray-900 transition">Terms</button>
-                <button onClick={() => navigate('/contact')} className="text-gray-600 hover:text-gray-900 transition">Contact</button>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Questions List - Left Column */}
+              <div className="lg:col-span-5 space-y-3">
+                <p className="font-sans-body text-xs font-bold uppercase tracking-wider text-[#84A98C] mb-2">Questions</p>
+                {faqs.map((faq, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedFaqIndex(idx)}
+                    className={`w-full text-left p-4 rounded-2xl transition-all font-sans-body text-xs font-bold flex items-center justify-between cursor-pointer border ${
+                      selectedFaqIndex === idx
+                        ? 'bg-[#1B3B2B] border-[#D97736] text-[#FBF8F3] shadow-md'
+                        : 'bg-[#132E20] border-white/10 text-[#FBF8F3]/70 hover:text-[#FBF8F3] hover:bg-white/5'
+                    }`}
+                  >
+                    <span className="line-clamp-2">{faq.q}</span>
+                    <span className={`text-lg font-serif-display ml-2 ${selectedFaqIndex === idx ? 'text-[#D97736]' : 'text-white/40'}`}>
+                      →
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Answer Box - Right Column */}
+              <div className="lg:col-span-7 bg-[#1B3B2B] border border-white/15 rounded-3xl p-8 shadow-xl">
+                <p className="font-sans-body text-xs font-bold uppercase tracking-wider text-[#D97736] mb-3">Answer</p>
+                <h3 className="font-serif-display text-2xl font-bold text-[#FBF8F3] mb-4">
+                  {faqs[selectedFaqIndex].q}
+                </h3>
+                <p className="font-sans-body text-sm text-[#FBF8F3]/85 leading-relaxed">
+                  {faqs[selectedFaqIndex].a}
+                </p>
               </div>
             </div>
           </div>
-          </div>
-        </div>
+        </section>
+
+        <GiantBrandFooter onNavigate={navigate} />
       </div>
     </PageTransition>
   );
 }
+

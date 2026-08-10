@@ -217,67 +217,80 @@ export default function FarmerDashboardNew() {
   return (
     <ErrorBoundary>
     <PageTransition>
-      <div className="min-h-screen premium-gradient px-4 relative overflow-hidden pt-28 pb-12">
-        <div className="absolute top-[10%] right-[-10%] w-[50%] h-[50%] bg-green-400/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="max-w-6xl mx-auto relative z-10">
+      <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body pt-28 pb-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
           <ScrollAnimation className="scroll-slide mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Farmer Dashboard</h1>
-            <p className="text-gray-600">Manage inventory, view interested buyers & track orders</p>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#D97736] bg-[#D97736]/10 px-3.5 py-1 rounded-full border border-[#D97736]/20 inline-block mb-2">
+              FARMER DASHBOARD
+            </span>
+            <h1 className="font-serif-display text-4xl sm:text-5xl font-normal text-[#132E20]">
+              Manage Harvest & <span className="italic text-[#D97736]">direct sales.</span>
+            </h1>
+            <p className="text-stone-600 text-sm mt-1">Track live crop listings, direct buyer offers, and payout analytics.</p>
           </ScrollAnimation>
 
+          {/* 3D Glass Stats Grid */}
           <ScrollAnimation className="scroll-slide mb-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-              <Card className="p-6 glass-deep border border-white/50 lg:col-span-2 shadow-lg premium-hover">
+              <div className="bg-gradient-to-tr from-[#132E20] to-[#1B3B2B] text-white p-6 rounded-3xl lg:col-span-2 shadow-xl border border-white/10">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-600">Total Revenue</p>
-                  <IndianRupee className="w-5 h-5 text-green-600" />
+                  <p className="text-xs font-bold uppercase tracking-wider text-white/70">Total Revenue</p>
+                  <IndianRupee className="w-5 h-5 text-[#D97736]" />
                 </div>
-                <p className="text-3xl font-bold text-gray-900">₹{analytics.totalRevenue.toLocaleString()}</p>
-              </Card>
-              <Card className="p-6 glass-light border border-white/50 shadow-md premium-hover">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-600">Orders</p>
-                  <ShoppingCart className="w-5 h-5 text-emerald-600" />
+                <p className="font-serif-display text-4xl font-extrabold text-[#FBF8F3]">₹{analytics.totalRevenue.toLocaleString()}</p>
+              </div>
+
+              <div className="bg-white/90 border border-stone-200/90 p-5 rounded-3xl shadow-md">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-bold uppercase tracking-wider text-stone-500">Orders</p>
+                  <ShoppingCart className="w-4 h-4 text-emerald-600" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{analytics.totalSales}</p>
-              </Card>
-              <Card className="p-6 glass-light border border-white/50 shadow-md premium-hover">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-600">Pending</p>
-                  <Clock className="w-5 h-5 text-orange-600" />
+                <p className="font-serif-display text-2xl font-bold text-[#132E20]">{analytics.totalSales}</p>
+              </div>
+
+              <div className="bg-white/90 border border-stone-200/90 p-5 rounded-3xl shadow-md">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-bold uppercase tracking-wider text-stone-500">Pending</p>
+                  <Clock className="w-4 h-4 text-amber-600" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{analytics.pendingOrders}</p>
-              </Card>
-              <Card className="p-6 glass-light border border-white/50 shadow-md premium-hover">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-600">Completed</p>
-                  <CheckCircle className="w-5 h-5 text-green-600" />
+                <p className="font-serif-display text-2xl font-bold text-[#132E20]">{analytics.pendingOrders}</p>
+              </div>
+
+              <div className="bg-white/90 border border-stone-200/90 p-5 rounded-3xl shadow-md">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-bold uppercase tracking-wider text-stone-500">Completed</p>
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{analytics.completedOrders}</p>
-              </Card>
-              <Card className="p-6 glass-light border border-white/50 shadow-md premium-hover">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-600">Interested</p>
-                  <Package className="w-5 h-5 text-purple-600" />
+                <p className="font-serif-display text-2xl font-bold text-[#132E20]">{analytics.completedOrders}</p>
+              </div>
+
+              <div className="bg-white/90 border border-stone-200/90 p-5 rounded-3xl shadow-md">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-bold uppercase tracking-wider text-stone-500">Inventory</p>
+                  <Package className="w-4 h-4 text-purple-600" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{analytics.totalInventory}</p>
-              </Card>
-              <Card className="p-6 glass-light border border-white/50 shadow-md premium-hover">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-600">Avg Order</p>
-                  <TrendingUp className="w-5 h-5 text-indigo-600" />
-                </div>
-                <p className="text-2xl font-bold text-gray-900">₹{analytics.averageOrderValue.toLocaleString()}</p>
-              </Card>
+                <p className="font-serif-display text-2xl font-bold text-[#132E20]">{analytics.totalInventory} kg</p>
+              </div>
             </div>
           </ScrollAnimation>
 
+          {/* Tab Navigation */}
           <ScrollAnimation className="scroll-slide mb-8">
-            <div className="flex gap-2 border-b border-gray-200/50 overflow-x-auto pb-1 no-scrollbar">
+            <div className="flex gap-2 border-b border-stone-200/80 overflow-x-auto pb-1 scrollbar-none">
               {['inventory', 'orders', 'negotiations', 'analytics'].map(tab => (
-                <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-3 font-semibold whitespace-nowrap transition-all border-b-2 ${activeTab === tab ? 'border-green-600 text-green-600' : 'border-transparent text-gray-600'}`}>
-                  {tab === 'inventory' && '📦 Inventory'}{tab === 'orders' && '📋 Orders'}{tab === 'negotiations' && '💬 Negotiations'}{tab === 'analytics' && '📊 Analytics'}
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer ${
+                    activeTab === tab
+                      ? 'border-[#D97736] text-[#D97736] bg-[#D97736]/10 rounded-t-2xl'
+                      : 'border-transparent text-stone-600 hover:text-[#132E20]'
+                  }`}
+                >
+                  {tab === 'inventory' && '📦 Crop Listings'}
+                  {tab === 'orders' && '📋 Buyer Orders'}
+                  {tab === 'negotiations' && '💬 Direct Offers'}
+                  {tab === 'analytics' && '📊 Payout Analytics'}
                 </button>
               ))}
             </div>

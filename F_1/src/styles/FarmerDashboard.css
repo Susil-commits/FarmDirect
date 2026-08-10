@@ -29,8 +29,8 @@
 }
 
 .dashboard-tab.active {
-  border-bottom-color: var(--primary-main);
-  color: var(--primary-main);
+  border-bottom-color: #132E20;
+  color: #132E20;
 }
 
 .dashboard-tab:hover:not(.active) {
@@ -122,14 +122,14 @@
 .performance-card:hover {
   box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
-  border-color: var(--primary-200);
+  border-color: rgba(19, 46, 32, 0.2);
 }
 
 .performance-metric {
   font-size: 2rem;
   font-weight: var(--font-weight-bold);
   margin: 0.5rem 0;
-  color: var(--primary-main);
+  color: #132E20;
 }
 
 .performance-label {
@@ -155,7 +155,7 @@
 .crop-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-xl);
-  border-color: var(--primary-200);
+  border-color: rgba(19, 46, 32, 0.2);
 }
 
 .crop-status-badge {
@@ -190,7 +190,7 @@
 
 .revenue-bar {
   flex: 1;
-  background: linear-gradient(to top, var(--primary-main), var(--primary-200));
+  background: linear-gradient(to top, #132E20, #D97736);
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   transition: all var(--transition-smooth);
   cursor: pointer;
@@ -199,8 +199,8 @@
 }
 
 .revenue-bar:hover {
-  background: linear-gradient(to top, var(--primary-dark), var(--primary-400));
-  box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+  background: linear-gradient(to top, #1B3B2B, #C86428);
+  box-shadow: 0 0 15px rgba(19, 46, 32, 0.3);
 }
 
 .order-breakdown {

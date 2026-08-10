@@ -149,3 +149,17 @@ export const usePagination = (items, itemsPerPage = 10) => {
     goToPreviousPage: () => goToPage(currentPage - 1)
   };
 };
+
+// Re-export all 12 React Context hooks for unified access
+export { useAuth } from './useAuth';
+export { useCart } from './useCart';
+export { useChat } from '../context/ChatContext';
+export { useData } from './useData';
+export { useLoading } from './useLoading';
+export { useNotifications } from './useNotifications';
+export { useRealtime } from './useRealtime';
+export { useRecentlyViewed } from './useRecentlyViewed';
+export { useRouter } from './useRouter';
+export { useSocket } from './useSocket';
+export { useToast } from './useToast';
+export { useWishlist } from './useWishlist';

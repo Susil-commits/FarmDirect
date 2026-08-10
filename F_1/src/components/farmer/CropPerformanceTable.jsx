@@ -65,19 +65,19 @@ export default function CropPerformanceTable({ data }) {
   };
 
   return (
-    <Card>
-      <div className="p-6">
-        <div className="mb-6">
-          <h3 className="text-lg font-bold">Crop Performance Analysis</h3>
-          <p className="text-gray-600 text-sm mt-2">
-            Click column headers to sort. {sortedData.length} crops total.
-          </p>
-        </div>
+    <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] p-6 shadow-xl font-sans-body text-[#132E20]">
+      <div className="mb-6">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736]">HARVEST METRICS</span>
+        <h3 className="font-serif-display text-2xl sm:text-3xl font-normal text-[#132E20]">Crop Performance Analysis</h3>
+        <p className="text-stone-500 text-xs mt-1">
+          Click column headers to sort & analyze live sales performance across {sortedData.length} crop listings.
+        </p>
+      </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
+      <div className="overflow-x-auto scrollbar-none">
+        <table className="w-full text-xs text-left">
+          <thead className="bg-[#FBF8F3] border-b border-stone-200 text-stone-600 font-bold uppercase tracking-wider">
+            <tr>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Crop</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Category</th>
                 <th 
@@ -205,8 +205,7 @@ export default function CropPerformanceTable({ data }) {
           </div>
         </div>
       </div>
-    </Card>
-  );
+    );
 }
 
 function PerformanceScore({ score }) {

@@ -1,39 +1,73 @@
-import { Leaf, TrendingUp, Users, MapPin } from 'lucide-react';
-import ScrollAnimation from '../../components/common/ScrollAnimation';
+import React from 'react';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
+import { Zap, ShieldCheck, Clock, MapPin, ArrowRight, HeartHandshake } from 'lucide-react';
 
 export default function FeaturesSection() {
-  const features = [
-    { icon: Leaf, title: 'Fresh Produce', desc: 'Direct from farms to your doorstep, ensuring peak ripeness and flavor.', color: 'from-green-400 to-emerald-600' },
-    { icon: TrendingUp, title: 'Better Prices', desc: 'By eliminating middlemen, farmers get paid more and you pay less.', color: 'from-emerald-400 to-teal-600' },
-    { icon: Users, title: 'Community', desc: 'Support local agriculture and build lasting relationships with growers.', color: 'from-teal-400 to-cyan-600' },
-    { icon: MapPin, title: 'Local Supply', desc: 'Track your food\'s journey and know exactly where it was grown.', color: 'from-cyan-400 to-blue-600' },
+  const featureCards = [
+    {
+      speed: '4x Faster',
+      title: 'Field-to-door direct dispatch',
+      desc: 'Crops are harvested upon your order confirmation and delivered in under 6 hours — vs traditional 4-day wholesale supply chains.',
+      stat: '4h Avg Dispatch',
+      badge: 'Zero Storage Decay',
+    },
+    {
+      speed: '85%+ Payout',
+      title: 'Direct farm-gate pricing',
+      desc: 'Local growers receive 85%+ of invoice value compared to only 25% through multi-tier mandi agents.',
+      stat: 'Fair Payout Guaranteed',
+      badge: 'Transparent Invoice',
+    },
   ];
 
   return (
-    <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 relative z-10 bg-gradient-to-b from-transparent to-green-50/30">
-      <div className="max-w-7xl mx-auto">
-        <ScrollAnimation className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-4">
-            Why Choose FarmDirect?
+    <section className="relative bg-[#132E20] text-[#FBF8F3] py-20 px-4 md:px-8 rounded-3xl my-8 mx-2 md:mx-6 shadow-2xl border border-white/10 overflow-hidden">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center max-w-3xl mx-auto mb-14">
+          <span className="font-sans-body text-xs font-bold uppercase tracking-widest text-[#D97736] bg-[#D97736]/15 px-3 py-1 rounded-full border border-[#D97736]/30">
+            WISPR FARADIRECT SPEED & Purity PROTOCOL
+          </span>
+          <h2 className="font-serif-display text-4xl sm:text-5xl md:text-6xl font-normal mt-4 leading-tight">
+            4x faster than <span className="italic text-[#E29578] font-normal">traditional supply chains</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto font-medium">
-            Experience the difference of transparent, direct-to-consumer agriculture.
+          <p className="font-sans-body text-base text-[#FBF8F3]/75 mt-3">
+            Fresh harvest that finally works for you and the farmer. FarmDirect connects you at the speed of thought.
           </p>
-        </ScrollAnimation>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feat, i) => (
-            <ScrollAnimation 
-              key={i} 
-              className="bg-white/80 backdrop-blur-xl border border-white/60 rounded-3xl p-8 shadow-sm hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-300 group hover:-translate-y-2 flex flex-col items-center text-center"
-              style={{ animationDelay: `${i * 0.15}s` }}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {featureCards.map((card, idx) => (
+            <motion.div
+              key={card.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: idx * 0.15 }}
+              className="bg-[#1B3B2B]/80 border border-white/15 rounded-3xl p-8 shadow-xl flex flex-col justify-between hover:border-[#D97736]/50 transition-colors group"
             >
-              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feat.color} flex items-center justify-center text-white mb-6 shadow-md transform group-hover:rotate-[10deg] group-hover:scale-110 transition-all duration-300`}>
-                <feat.icon className="w-8 h-8" />
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-serif-display text-3xl font-extrabold text-[#D97736]">
+                    {card.speed}
+                  </span>
+                  <span className="text-[10px] font-sans-body font-bold bg-[#132E20] text-[#84A98C] px-3 py-1 rounded-full border border-white/10">
+                    {card.badge}
+                  </span>
+                </div>
+                <h3 className="font-serif-display text-2xl font-bold text-[#FBF8F3] mb-2">
+                  {card.title}
+                </h3>
+                <p className="font-sans-body text-sm text-[#FBF8F3]/75 leading-relaxed">
+                  {card.desc}
+                </p>
               </div>
-              <h3 className="font-bold text-xl text-gray-900 mb-3 tracking-tight">{feat.title}</h3>
-              <p className="text-gray-600 text-sm leading-relaxed font-medium">{feat.desc}</p>
-            </ScrollAnimation>
+
+              <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-bold text-[#84A98C]">
+                <span>{card.stat}</span>
+                <ArrowRight className="w-4 h-4 text-[#D97736] group-hover:translate-x-1 transition-transform" />
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>

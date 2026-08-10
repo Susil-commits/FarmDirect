@@ -1,59 +1,96 @@
-import { useState } from 'react';
-import ScrollAnimation from '../../components/common/ScrollAnimation';
-import { ChevronDown, HelpCircle } from 'lucide-react';
+import React, { useState } from 'react';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
+import { ChevronRight, HelpCircle } from 'lucide-react';
 
 export default function FaqsSection() {
-  const [openIndex, setOpenIndex] = useState(null);
+  const [activeFaq, setActiveFaq] = useState(0);
 
   const faqs = [
-    { q: "Is it really fresh?", a: "Yes! Products ship directly from farmers to you within 3-5 days. No storage, no middlemen - just farm fresh." },
-    { q: "What if I don't know how to use online shopping?", a: "No problem! Our simple interface is designed for everyone. Just fill basic info, browse, click add to cart, and checkout - that's it!" },
-    { q: "What if the product arrives in bad condition?", a: "We have a quality guarantee. If products arrive damaged, we'll replace them or refund your money." },
-    { q: "Is payment safe?", a: "Absolutely. We use secure payment gateways. Your card information is encrypted and never stored on our servers." },
-    { q: "How do I know the farmer is trustworthy?", a: "All farmers are verified. You can see their ratings, reviews, and years of experience before ordering." },
+    {
+      q: 'How does FarmDirect eliminate middleman markups?',
+      a: 'FarmDirect acts as a 1-to-1 direct marketplace protocol. Buyers order straight from verified regional growers. Payouts go directly to the farmer’s account, eliminating multi-tier mandi distributor cuts.',
+    },
+    {
+      q: 'How fresh is the produce upon delivery?',
+      a: 'Crops are picked at peak maturity after your order is confirmed and dispatched directly from the farm gate. Delivery occurs within 4 to 12 hours of harvest depending on your location.',
+    },
+    {
+      q: 'Can I track soil health and organic certification?',
+      a: 'Yes! Every basket comes with a QR code linking directly to soil test reports, harvest timestamps, and audio updates from the grower.',
+    },
+    {
+      q: 'What is the refund policy if produce arrives damaged?',
+      a: 'We stand by 100% field purity. If any item fails quality standards, click "Report Issue" in your order dashboard for an instant 100% refund or replacement.',
+    },
   ];
 
-  const toggleFaq = (index) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
-
   return (
-    <section className="py-24 px-4 sm:px-6 lg:px-8 relative z-10 bg-white/40 backdrop-blur-md">
-      <div className="max-w-4xl mx-auto">
-        <ScrollAnimation className="text-center mb-16">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <HelpCircle className="w-8 h-8 text-green-500" />
-            <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
-              Common Questions
-            </h2>
-          </div>
-          <p className="text-xl text-gray-600 font-medium">Everything you need to know about FarmDirect</p>
-        </ScrollAnimation>
-        
-        <div className="space-y-4">
-          {faqs.map((faq, i) => (
-            <ScrollAnimation key={i} style={{ animationDelay: `${i * 0.05}s` }}>
-              <div 
-                className={`bg-white/80 backdrop-blur-xl border ${openIndex === i ? 'border-green-300 shadow-[0_10px_30px_rgb(0,0,0,0.06)]' : 'border-white/60 shadow-sm'} rounded-3xl overflow-hidden transition-all duration-300`}
+    <section className="relative bg-[#FBF8F3] text-[#132E20] py-20 px-4 md:px-8 border-t border-[#132E20]/10">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center max-w-3xl mx-auto mb-14">
+          <span className="font-sans-body text-xs font-bold uppercase tracking-widest text-[#132E20]/60 bg-[#F4EFE6] px-3.5 py-1.5 rounded-full border border-[#132E20]/10">
+            FAQS
+          </span>
+          <h2 className="font-serif-display text-4xl sm:text-5xl md:text-6xl font-normal mt-4 leading-tight">
+            Good <span className="italic text-[#D97736] font-normal">questions.</span>
+          </h2>
+        </div>
+
+        {/* Side-by-side FAQ Layout (Wispr Flow style at video 0:26) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Questions Buttons */}
+          <div className="lg:col-span-5 space-y-3">
+            <span className="font-sans-body text-xs font-bold uppercase tracking-wider text-[#132E20]/50 block mb-2 px-2">
+              Questions
+            </span>
+            {faqs.map((faq, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveFaq(idx)}
+                className={`w-full text-left p-4 rounded-2xl font-sans-body text-sm font-semibold transition-all flex items-center justify-between cursor-pointer ${
+                  activeFaq === idx
+                    ? 'bg-[#132E20] text-[#FBF8F3] shadow-lg ring-1 ring-[#132E20]'
+                    : 'bg-white/80 text-[#132E20] border border-[#132E20]/10 hover:bg-white'
+                }`}
               >
-                <button 
-                  onClick={() => toggleFaq(i)}
-                  className="w-full text-left px-8 py-6 flex items-center justify-between focus:outline-none"
-                >
-                  <h3 className={`font-bold text-lg transition-colors duration-300 ${openIndex === i ? 'text-green-700' : 'text-gray-900'}`}>
-                    {faq.q}
-                  </h3>
-                  <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${openIndex === i ? 'rotate-180 text-green-500' : ''}`} />
-                </button>
-                
-                <div 
-                  className={`px-8 overflow-hidden transition-all duration-300 ease-in-out ${openIndex === i ? 'max-h-40 pb-6 opacity-100' : 'max-h-0 opacity-0'}`}
-                >
-                  <p className="text-gray-600 font-medium leading-relaxed">{faq.a}</p>
-                </div>
+                <span>{faq.q}</span>
+                <ChevronRight
+                  className={`w-4 h-4 transition-transform ${
+                    activeFaq === idx ? 'rotate-90 text-[#D97736]' : 'text-[#132E20]/40'
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
+
+          {/* Right Column: Active Answer Card */}
+          <div className="lg:col-span-7">
+            <span className="font-sans-body text-xs font-bold uppercase tracking-wider text-[#132E20]/50 block mb-2 px-2">
+              Answer
+            </span>
+            <motion.div
+              key={activeFaq}
+              initial={{ opacity: 0, x: 15 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-[#1B3B2B] text-[#FBF8F3] rounded-3xl p-8 shadow-2xl border border-white/10 min-h-[220px] flex flex-col justify-between"
+            >
+              <div>
+                <h3 className="font-serif-display text-2xl font-bold mb-4 text-[#FBF8F3]">
+                  {faqs[activeFaq].q}
+                </h3>
+                <p className="font-sans-body text-base text-[#FBF8F3]/85 leading-relaxed">
+                  {faqs[activeFaq].a}
+                </p>
               </div>
-            </ScrollAnimation>
-          ))}
+
+              <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-[#84A98C]">
+                <span>Wispr FarmDirect FAQ Guarantee</span>
+                <span className="font-bold text-[#D97736]">100% Direct Purity</span>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </div>
     </section>

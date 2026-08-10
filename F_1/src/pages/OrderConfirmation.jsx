@@ -187,7 +187,7 @@ export default function OrderConfirmation() {
   return (
     <ErrorBoundary>
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 px-4 relative pt-28 pb-12">
+      <div className="min-h-screen bg-gradient-to-br from-[#FBF8F3] via-[#F4EFE6] to-[#FBF8F3] px-4 relative pt-28 pb-12">
         <div className="max-w-4xl mx-auto relative z-10">
           
           {/* Success Message */}
@@ -195,8 +195,8 @@ export default function OrderConfirmation() {
             <div className="text-center">
               <div className="mb-6 flex justify-center">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
-                  <div className="relative bg-green-600 text-white w-24 h-24 rounded-full flex items-center justify-center">
+                  <div className="absolute inset-0 bg-[#132E20]/20 rounded-full animate-ping opacity-75"></div>
+                  <div className="relative bg-[#132E20] text-white w-24 h-24 rounded-full flex items-center justify-center shadow-xl">
                     <CheckCircle size={56} />
                   </div>
                 </div>
@@ -240,7 +240,7 @@ export default function OrderConfirmation() {
                 </div>
                 <div className="text-center">
                   <p className="text-gray-600 text-sm mb-2">Total Amount</p>
-                  <p className="text-xl font-bold text-green-600">
+                  <p className="text-xl font-bold text-[#132E20]">
                     ₹{(order.totalAmount || 0).toLocaleString('en-IN')}
                   </p>
                 </div>
@@ -258,13 +258,13 @@ export default function OrderConfirmation() {
                   <div key={idx} className="flex gap-6 relative stagger-item" style={{ animationDelay: `${idx * 0.1}s` }}>
                     {idx < steps.length - 1 && (
                       <div className={`absolute left-10 sm:left-12 top-16 sm:top-20 w-1 h-16 ${
-                        step.completed ? 'bg-green-600' : 'bg-gray-300'
+                        step.completed ? 'bg-[#132E20]' : 'bg-gray-300'
                       }`} />
                     )}
 
                     <div className={`relative z-10 shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex flex-col items-center justify-center text-xl sm:text-3xl ${
                       step.completed
-                        ? 'bg-green-600 text-white'
+                        ? 'bg-[#132E20] text-white shadow-md'
                         : 'bg-gray-200 text-gray-600'
                     } transition-smooth`}>
                       <span>{step.icon}</span>
@@ -274,7 +274,7 @@ export default function OrderConfirmation() {
                       <h3 className="text-xl font-bold text-gray-900 mb-1">{step.title}</h3>
                       <p className="text-gray-600 mb-3">{step.description}</p>
                       <p className={`text-sm font-semibold ${
-                        step.completed ? 'text-green-600' : 'text-gray-500'
+                        step.completed ? 'text-[#132E20]' : 'text-gray-500'
                       }`}>
                         ⏱️ {step.time}
                       </p>

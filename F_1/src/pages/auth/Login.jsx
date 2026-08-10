@@ -136,130 +136,122 @@ export default function Login() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center px-4 relative pt-28 pb-12">
-        <Card variant="deep" animated={false} className="w-full max-w-md animate-scale-in relative z-10 bg-white/20 backdrop-blur-lg border border-white/10 shadow-2xl">
-          <div className="p-6 sm:p-10">
-            {/* Back Button */}
-            <div className="mb-6">
-              <BackButton label="Go Back" />
-            </div>
+      <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Ambient Glow */}
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#D97736]/10 rounded-full blur-3xl pointer-events-none"></div>
 
-            {/* Logo */}
-            {!showForgotPassword && (
-              <div className="flex justify-center mb-8">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">🌾</span>
-                </div>
+        <div className="w-full max-w-md bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[36px] shadow-2xl p-6 sm:p-8 relative z-10 my-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={() => navigate('/')}
+              className="text-xs font-bold text-stone-600 hover:text-stone-900 transition flex items-center gap-1 cursor-pointer"
+            >
+              ← Back to Home
+            </button>
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#D97736] bg-[#D97736]/10 px-3 py-1 rounded-full border border-[#D97736]/20">
+              SECURE PORTAL
+            </span>
+          </div>
+
+          {!showForgotPassword && (
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#132E20] to-[#1B3B2B] text-white flex items-center justify-center shadow-lg text-2xl">
+                🌾
               </div>
-            )}
+            </div>
+          )}
 
-            {showForgotPassword ? (
-              <>
-                <ForgotPassword onBack={() => setShowForgotPassword(false)} />
-              </>
-            ) : (
-              <>
-                <h1 className="text-3xl font-bold text-gray-900 mb-3 text-center">Welcome Back</h1>
-                <p className="text-gray-600 text-center mb-8 text-sm">Sign in to your FarmDirect account</p>
+          {showForgotPassword ? (
+            <ForgotPassword onBack={() => setShowForgotPassword(false)} />
+          ) : (
+            <>
+              <div className="text-center mb-6">
+                <h1 className="font-serif-display text-3xl sm:text-4xl font-normal text-[#132E20]">
+                  Welcome <span className="italic text-[#D97736]">back.</span>
+                </h1>
+                <p className="text-stone-500 text-xs mt-1">Sign in to your FarmDirect account</p>
+              </div>
 
-                <form ref={formRef} onSubmit={handleSubmit} autoComplete="off" className="space-y-5">
-                  <Input
-                    label="Email Address"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    error={errors.email}
-                    glass={true}
-                    autoComplete="off"
-                  />
+              <form ref={formRef} onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
+                <Input
+                  label="Email Address"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="john@example.com"
+                  required
+                  error={errors.email}
+                  autoComplete="off"
+                />
 
-                  <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                    <div className="relative">
-                      <input
-                        id="password"
-                        type={showPassword ? 'text' : 'password'}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        autoComplete="current-password"
-                        className={`w-full px-4 py-3 backdrop-blur focus:outline-none focus:ring-2 pr-10 transition rounded-xl ${
-                          errors.password
-                            ? 'border-red-400 focus:ring-red-400'
-                            : 'glass-input border-white/30 focus:ring-green-400'
-                        }`}
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition"
-                      >
-                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                      </button>
-                    </div>
-                    {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-                  </div>
-
-                  <div className="flex justify-between items-center mt-5">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" className="rounded cursor-pointer" />
-                      <span className="text-sm text-gray-600">Remember me</span>
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-stone-600">
+                      Password
                     </label>
                     <button
                       type="button"
                       onClick={() => setShowForgotPassword(true)}
-                      className="text-sm text-green-600 hover:underline font-semibold cursor-pointer"
+                      className="text-xs text-[#D97736] hover:underline font-bold cursor-pointer"
                     >
-                      Forgot password?
+                      Forgot?
                     </button>
                   </div>
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                      autoComplete="current-password"
+                      className={`w-full px-4 py-2.5 bg-stone-50 border rounded-xl text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 pr-10 transition ${
+                        errors.password ? 'border-red-400 focus:ring-red-400' : 'border-stone-200'
+                      }`}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 transition cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+                </div>
 
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="md"
-                    className="w-full mt-8"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Signing in...' : 'Sign In'}
-                  </Button>
-                </form>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-3.5 bg-[#132E20] hover:bg-[#1B3B2B] text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-2 cursor-pointer mt-4 min-h-[48px]"
+                >
+                  {isLoading ? 'Signing in...' : 'Sign In to Marketplace'}
+                </Button>
+              </form>
 
-
-
-                {/* Register Link */}
-                <p className="text-center text-gray-600 text-sm mt-6">
+              {/* Register Link */}
+              <div className="text-center mt-6 pt-4 border-t border-stone-100">
+                <p className="text-xs text-stone-600">
                   Don't have an account?{' '}
                   <button
                     type="button"
                     onClick={handleRegisterClick}
-                    className="text-green-600 font-semibold hover:underline cursor-pointer"
+                    className="font-bold text-[#D97736] hover:underline cursor-pointer ml-1"
                   >
-                    Sign up here
+                    Sign up wizard →
                   </button>
                 </p>
-
-                {/* Trust Badges */}
-                <div className="flex justify-center items-center gap-6 mt-8 pt-6 border-t border-gray-200/50">
-                  <div className="flex flex-col items-center">
-                    <Lock size={18} className="text-slate-400 mb-1" />
-                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">256-bit Secure</span>
-                  </div>
-                  <div className="w-px h-8 bg-gray-200/80"></div>
-                  <div className="flex flex-col items-center">
-                    <User size={18} className="text-slate-400 mb-1" />
-                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Data Privacy</span>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </Card>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </PageTransition>
   );
 }
+
 

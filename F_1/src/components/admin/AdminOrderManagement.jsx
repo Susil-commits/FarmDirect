@@ -22,9 +22,9 @@ const STATUS_COLORS = {
 export default function AdminOrderManagement({ order }) {
   if (!order) {
     return (
-      <div className="bg-white rounded-xl border-2 border-gray-200 p-8 text-center">
-        <Package size={48} className="text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-600">No order selected</p>
+      <div className="bg-white/95 backdrop-blur-xl border border-stone-200 rounded-[28px] p-8 text-center shadow-lg">
+        <Package size={44} className="text-stone-400 mx-auto mb-3" />
+        <p className="text-stone-600 font-medium text-sm">No order selected for management preview</p>
       </div>
     );
   }
@@ -34,36 +34,39 @@ export default function AdminOrderManagement({ order }) {
   const isCompleted = order.orderStatus === 'completed';
 
   return (
-    <div className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden">
+    <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] overflow-hidden shadow-xl">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-        <h3 className="text-white font-bold text-lg">
-          Order #{order.orderNumber || (order._id || '').slice(-8).toUpperCase()}
-        </h3>
-        <div className="flex items-center gap-2 mt-1">
-          <span className={`px-3 py-1 rounded-full text-xs font-bold ${STATUS_COLORS[order.orderStatus] || 'bg-gray-100 text-gray-800'}`}>
+      <div className="bg-gradient-to-r from-[#132E20] to-[#1B3B2B] px-6 py-5 flex items-center justify-between">
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736]">ORDER MANAGEMENT</span>
+          <h3 className="font-serif-display text-2xl font-normal text-[#FBF8F3]">
+            Order #{order.orderNumber || (order._id || '').slice(-8).toUpperCase()}
+          </h3>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`px-3 py-1 rounded-full text-xs font-bold ${STATUS_COLORS[order.orderStatus] || 'bg-stone-100 text-stone-800'}`}>
             {STATUS_LABELS[order.orderStatus] || order.orderStatus}
           </span>
-          {isCancelled && <XCircle size={16} className="text-red-600" />}
-          {isCompleted && <CheckCircle size={16} className="text-emerald-600" />}
+          {isCancelled && <XCircle size={18} className="text-red-400" />}
+          {isCompleted && <CheckCircle size={18} className="text-emerald-400" />}
         </div>
       </div>
 
       {/* Content */}
       <div className="p-6 space-y-6">
-        {/* Order Item */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
-            <Package size={16} /> Order Item
+        {/* Order Item Card */}
+        <div className="bg-stone-50 border border-stone-200/80 rounded-2xl p-4">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-2 flex items-center gap-2">
+            <Package size={14} className="text-[#D97736]" /> Crop Order Details
           </h4>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-bold text-gray-900 text-lg">{order.cropName || 'Crop Item'}</p>
-              <p className="text-sm text-gray-600">
+              <p className="font-serif-display text-2xl font-normal text-[#132E20]">{order.cropName || 'Crop Item'}</p>
+              <p className="text-xs text-stone-600 mt-0.5">
                 {order.quantity} kg × ₹{(order.unitPrice || 0).toLocaleString('en-IN')}/kg
               </p>
             </div>
-            <p className="text-xl font-bold text-green-600">
+            <p className="font-serif-display text-3xl font-extrabold text-[#132E20]">
               ₹{(order.totalAmount || 0).toLocaleString('en-IN')}
             </p>
           </div>

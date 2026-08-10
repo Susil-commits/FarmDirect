@@ -81,37 +81,39 @@ export default function FarmerAnalytics() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body py-8 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-4xl font-bold text-gray-900">Farmer Analytics Dashboard</h1>
-            <Button 
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736]">PERFORMANCE INTELLIGENCE</span>
+              <h1 className="font-serif-display text-3xl sm:text-5xl font-normal text-[#132E20]">Farmer Analytics Console</h1>
+            </div>
+            <button 
               onClick={handleRefresh}
               disabled={refreshing}
-              className="flex items-center gap-2"
-              variant="secondary"
+              className="py-2.5 px-5 bg-white/90 border border-stone-200 text-[#132E20] hover:bg-stone-100 font-bold text-xs uppercase tracking-wider rounded-xl shadow-sm flex items-center gap-2 transition cursor-pointer self-start sm:self-auto"
             >
-              <RefreshCw size={18} className={refreshing ? 'animate-spin' : ''} />
-              {refreshing ? 'Refreshing...' : 'Refresh'}
-            </Button>
+              <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+              <span>{refreshing ? 'Refreshing...' : 'Refresh Data'}</span>
+            </button>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-3">
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-              <p className="text-red-700">{error}</p>
+              <p className="text-red-700 text-xs font-semibold">{error}</p>
             </div>
           )}
 
           {/* Alert for low stock items */}
           {lowStockItems.length > 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-yellow-900">Low Stock Alert</p>
-                <p className="text-yellow-700 text-sm">{lowStockItems.length} items have inventory below threshold</p>
+                <p className="font-bold text-amber-900 text-xs uppercase tracking-wider">Low Stock Inventory Alert</p>
+                <p className="text-amber-800 text-xs">{lowStockItems.length} crop items are below your minimum harvest threshold.</p>
               </div>
             </div>
           )}
@@ -119,14 +121,15 @@ export default function FarmerAnalytics() {
           {/* Period selector */}
           <div className="flex gap-2">
             {['week', 'month', 'year'].map(p => (
-              <Button
+              <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                variant={period === p ? 'primary' : 'secondary'}
-                size="sm"
+                className={`py-2 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer ${
+                  period === p ? 'bg-[#132E20] text-white shadow-md' : 'bg-white/80 border border-stone-200 text-stone-600 hover:text-[#132E20]'
+                }`}
               >
                 {p.charAt(0).toUpperCase() + p.slice(1)}
-              </Button>
+              </button>
             ))}
           </div>
         </div>

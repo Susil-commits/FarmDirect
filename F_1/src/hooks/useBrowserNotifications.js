@@ -63,10 +63,12 @@ export const showBrowserNotification = (title, options = {}) => {
     setTimeout(() => {
       try {
         notification.close();
-      } catch {
+      } catch (err) {
+        console.debug('Notification auto-close ignored error:', err);
       }
     }, 8000);
-  } catch {
+  } catch (err) {
+    console.debug('Send notification failed:', err);
   }
 };
 

@@ -29,15 +29,15 @@
 }
 
 .badge-green {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  color: #15803d;
-  border: 1px solid #86efac;
+  background: linear-gradient(135deg, #FBF8F3 0%, #F4EFE6 100%);
+  color: #132E20;
+  border: 1px solid rgba(19, 46, 32, 0.25);
 }
 
 .badge-orange {
-  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
-  color: #92400e;
-  border: 1px solid #fbbf24;
+  background: linear-gradient(135deg, #FBF8F3 0%, #F4EFE6 100%);
+  color: #D97736;
+  border: 1px solid rgba(217, 119, 54, 0.3);
 }
 
 .badge-purple {

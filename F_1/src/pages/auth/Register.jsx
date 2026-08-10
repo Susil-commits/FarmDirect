@@ -1,19 +1,19 @@
 import { useState, useRef } from 'react';
-import { Mail, Lock, User, Phone, MapPin, Home, Building2, MapPinned, Hash } from 'lucide-react';
+import { Mail, Lock, User, Phone, MapPin, Home, Building2, MapPinned, Hash, ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import { useRouter } from '../../hooks/useRouter';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks/useToast';
-import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import PageTransition from '../../components/common/PageTransition.jsx';
-import BackButton from '../../components/common/BackButton';
 
 export default function Register() {
   const { navigate } = useRouter();
   const { register } = useAuth();
   const { addToast } = useToast();
   const formRef = useRef(null);
+
+  const [step, setStep] = useState(1); // 1: Role, 2: Personal Details & Password, 3: Address & Location
   const [role, setRole] = useState('buyer'); // buyer or farmer
   const [formData, setFormData] = useState({
     firstName: '',
@@ -28,7 +28,7 @@ export default function Register() {
     state: '',
     pincode: '',
   });
-  const [addressNA, setAddressNA] = useState(false); // For farmers who mark address as NA
+  const [addressNA, setAddressNA] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
@@ -48,108 +48,90 @@ export default function Register() {
     setPasswordStrength(calculatePasswordStrength(e.target.value));
   };
 
-  const validateForm = () => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
+  };
+
+  const validateStep2 = () => {
     const newErrors = {};
-    
-    // First name validation
-    if (!formData.firstName || !formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
-    }
-    
-    // Last name validation
-    if (!formData.lastName || !formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-    }
-    
-    // Email validation
+    if (!formData.firstName || !formData.firstName.trim()) newErrors.firstName = 'First name required';
+    if (!formData.lastName || !formData.lastName.trim()) newErrors.lastName = 'Last name required';
     if (!formData.email || !formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!formData.email.includes('@')) {
-      newErrors.email = 'Valid email format required (example@domain.com)';
+      newErrors.email = 'Valid email required';
     }
-    
-    // Password validation
-    if (!formData.password || !formData.password.trim()) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-    
-    // Confirm password validation
-    if (!formData.confirmPassword || !formData.confirmPassword.trim()) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-    
-    // Phone validation
     if (!formData.phone || !formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
     } else if (formData.phone.trim().length < 10) {
-      newErrors.phone = 'Phone number must be at least 10 digits';
+      newErrors.phone = 'Minimum 10 digits required';
     }
-    
-    // Location validation for farmer
-    if (role === 'farmer' && (!formData.location || !formData.location.trim())) {
-      newErrors.location = 'Farm location is required for farmers';
+    if (!formData.password || !formData.password.trim()) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Min 6 characters';
     }
-
-    // Address validation - required unless NA is checked
-    if (!addressNA) {
-      if (!formData.address || !formData.address.trim()) {
-        newErrors.address = 'Address is required';
-      }
-      if (!formData.city || !formData.city.trim()) {
-        newErrors.city = 'City is required';
-      }
-      if (!formData.state || !formData.state.trim()) {
-        newErrors.state = 'State is required';
-      }
-      if (!formData.pincode || !formData.pincode.trim()) {
-        newErrors.pincode = 'Pincode is required';
-      } else if (!/^\d{6}$/.test(formData.pincode.trim())) {
-        newErrors.pincode = 'Pincode must be 6 digits';
-      }
+    if (!formData.confirmPassword || !formData.confirmPassword.trim()) {
+      newErrors.confirmPassword = 'Confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    // Clear error for this field
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: '' });
+  const validateStep3 = () => {
+    const newErrors = {};
+    if (role === 'farmer' && (!formData.location || !formData.location.trim())) {
+      newErrors.location = 'Farm location is required';
+    }
+    if (!addressNA) {
+      if (!formData.address || !formData.address.trim()) newErrors.address = 'Address required';
+      if (!formData.city || !formData.city.trim()) newErrors.city = 'City required';
+      if (!formData.state || !formData.state.trim()) newErrors.state = 'State required';
+      if (!formData.pincode || !formData.pincode.trim()) {
+        newErrors.pincode = 'Pincode required';
+      } else if (!/^\d{6}$/.test(formData.pincode.trim())) {
+        newErrors.pincode = 'Must be 6 digits';
+      }
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNext = () => {
+    if (step === 1) {
+      setStep(2);
+    } else if (step === 2) {
+      if (validateStep2()) {
+        setStep(3);
+      } else {
+        addToast('Please complete step 2 fields correctly', 'error');
+      }
     }
   };
 
-  const handleAddressNAToggle = () => {
-    const newNA = !addressNA;
-    setAddressNA(newNA);
-    if (newNA) {
-      // Clear address errors when marking NA
-      setErrors(prev => {
-        const { _address, _city, _state, _pincode, ...rest } = prev;
-        return rest;
-      });
-    }
+  const handlePrev = () => {
+    setStep((prev) => Math.max(1, prev - 1));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      addToast('Please fix the errors in the form', 'error');
+    if (!validateStep3()) {
+      addToast('Please complete location fields correctly', 'error');
       return;
     }
 
     setIsLoading(true);
     setErrors({});
-    
+
     try {
-      const _response = await register({
+      await register({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -157,362 +139,352 @@ export default function Register() {
         phone: formData.phone,
         role: role,
         ...(role === 'farmer' && { location: formData.location }),
-        // Send address fields - if NA, send "NA" as value so backend knows
         address: addressNA ? 'NA' : formData.address,
         city: addressNA ? 'NA' : formData.city,
         state: addressNA ? 'NA' : formData.state,
         pincode: addressNA ? 'NA' : formData.pincode,
       });
 
-      addToast('Account created successfully! Redirecting to login...', 'success');
-      
-      // Clear form data after successful registration
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        phone: '',
-        location: '',
-        address: '',
-        city: '',
-        state: '',
-        pincode: '',
-      });
-      setAddressNA(false);
-      
-      // Clear the form ref to remove data from DOM
-      if (formRef.current) {
-        formRef.current.reset();
-      }
-      
-      // Navigate to login page immediately
+      addToast('Account created successfully! Redirecting...', 'success');
       navigate('/auth/login');
     } catch (error) {
       console.error('❌ Registration error:', error);
       setIsLoading(false);
-      
       let errorMessage = 'Registration failed';
       const errorData = error?.response?.data || error;
-      
-      if (typeof errorData === 'string') {
-        errorMessage = errorData;
-      } else if (errorData?.message) {
-        errorMessage = errorData.message;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
+      if (typeof errorData === 'string') errorMessage = errorData;
+      else if (errorData?.message) errorMessage = errorData.message;
+      else if (error?.message) errorMessage = error.message;
 
-      // Parse specific errors
-      if (errorMessage.toLowerCase().includes('already') || errorMessage.toLowerCase().includes('exist') || errorMessage.toLowerCase().includes('email already')) {
-        errorMessage = 'Email already exists. Try a different email.';
-        setErrors({ ...errors, email: 'Email already registered' });
-      } else if (errorMessage.toLowerCase().includes('validation')) {
-        errorMessage = 'Please check all fields and try again.';
-      } else if (errorMessage.toLowerCase().includes('network') || errorMessage.toLowerCase().includes('connection')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
+      if (errorMessage.toLowerCase().includes('already') || errorMessage.toLowerCase().includes('exist')) {
+        errorMessage = 'Email already registered. Try logging in.';
+        setStep(2);
+        setErrors({ email: 'Email already registered' });
       }
-      
       addToast(errorMessage, 'error');
     }
   };
 
-  const handleLoginClick = () => {
-    navigate('/auth/login');
-  };
-
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center px-4 relative pt-28 pb-12">
-        <div className="absolute inset-0 premium-gradient"></div>
-        <Card variant="deep" animated={false} className="w-full max-w-md animate-scale-in relative z-10 bg-white/20 backdrop-blur-lg border border-white/10 shadow-2xl">
-          <div className="p-6 sm:p-10">
-            {/* Back Button */}
-            <div className="mb-6">
-              <BackButton label="Go Back" />
+      <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#D97736]/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="w-full max-w-lg bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[36px] shadow-2xl p-6 sm:p-8 relative z-10 my-auto">
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={step === 1 ? () => navigate('/') : handlePrev}
+              className="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+            >
+              <ArrowLeft size={14} /> {step === 1 ? 'Home' : 'Back'}
+            </button>
+
+            <div className="flex items-center gap-1.5">
+              {[1, 2, 3].map((s) => (
+                <div
+                  key={s}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    s === step
+                      ? 'w-8 bg-[#D97736]'
+                      : s < step
+                      ? 'w-4 bg-[#132E20]'
+                      : 'w-4 bg-stone-200'
+                  }`}
+                ></div>
+              ))}
             </div>
 
-            <div className="flex justify-center mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">🌾</span>
-              </div>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-3 text-center">Create Account</h1>
-            <p className="text-gray-600 text-center mb-8 text-sm">Join FarmDirect and start fresh</p>
+            <button
+              onClick={() => navigate('/auth/login')}
+              className="text-xs font-bold text-[#132E20] hover:text-[#D97736] transition cursor-pointer"
+            >
+              Log in →
+            </button>
+          </div>
 
-            {/* Role Selection */}
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <button
-                onClick={() => setRole('buyer')}
-                className={`py-3 px-4 rounded-lg font-semibold transition-all duration-200 cursor-pointer ${
-                  role === 'buyer'
-                    ? 'bg-green-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Buyer
-              </button>
-              <button
-                onClick={() => setRole('farmer')}
-                className={`py-3 px-4 rounded-lg font-semibold transition-all duration-200 cursor-pointer ${
-                  role === 'farmer'
-                    ? 'bg-green-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Farmer
-              </button>
-            </div>
+          <div className="text-center mb-6">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#D97736] bg-[#D97736]/10 px-3 py-1 rounded-full border border-[#D97736]/20 inline-block mb-2">
+              STEP {step} OF 3
+            </span>
+            <h1 className="font-serif-display text-3xl sm:text-4xl font-normal text-[#132E20]">
+              {step === 1 && <>Choose <span className="italic text-[#D97736]">account type.</span></>}
+              {step === 2 && <>Personal <span className="italic text-[#D97736]">details.</span></>}
+              {step === 3 && <>Location & <span className="italic text-[#D97736]">address.</span></>}
+            </h1>
+          </div>
 
-            {/* Buyer Verification Notice */}
-            {role === 'buyer' && (
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex gap-3">
-                  <span className="text-blue-600 font-bold text-lg">ℹ️</span>
-                  <div>
-                    <p className="text-sm font-semibold text-blue-900 mb-1">Verification Required</p>
-                    <p className="text-xs text-blue-800">
-                      Buyers need admin verification for platform security. You'll have full access within 24-48 hours after registration.
-                    </p>
+          <form ref={formRef} onSubmit={step === 3 ? handleSubmit : (e) => { e.preventDefault(); handleNext(); }}>
+            {step === 1 && (
+              <div className="space-y-4 animate-fade-in">
+                <div
+                  onClick={() => setRole('buyer')}
+                  className={`p-4 rounded-3xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                    role === 'buyer'
+                      ? 'bg-[#132E20] text-white border-[#132E20] shadow-xl scale-[1.02]'
+                      : 'bg-stone-50 text-[#132E20] border-stone-200 hover:border-emerald-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-md ${
+                      role === 'buyer' ? 'bg-[#D97736] text-white' : 'bg-emerald-100'
+                    }`}>
+                      🛒
+                    </div>
+                    <div>
+                      <h3 className="font-serif-display font-bold text-lg">Buyer / Household</h3>
+                      <p className={`text-xs ${role === 'buyer' ? 'text-white/80' : 'text-stone-500'}`}>Order fresh organic crops direct from local farms</p>
+                    </div>
+                  </div>
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                    role === 'buyer' ? 'bg-[#D97736] border-[#D97736] text-white' : 'border-stone-300'
+                  }`}>
+                    {role === 'buyer' && <Check size={14} strokeWidth={3} />}
                   </div>
                 </div>
+
+                <div
+                  onClick={() => setRole('farmer')}
+                  className={`p-4 rounded-3xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                    role === 'farmer'
+                      ? 'bg-[#132E20] text-white border-[#132E20] shadow-xl scale-[1.02]'
+                      : 'bg-stone-50 text-[#132E20] border-stone-200 hover:border-emerald-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-md ${
+                      role === 'farmer' ? 'bg-[#D97736] text-white' : 'bg-emerald-100'
+                    }`}>
+                      🌱
+                    </div>
+                    <div>
+                      <h3 className="font-serif-display font-bold text-lg">Farmer / Grower</h3>
+                      <p className={`text-xs ${role === 'farmer' ? 'text-white/80' : 'text-stone-500'}`}>Sell your harvest with 85%+ margin and zero middlemen</p>
+                    </div>
+                  </div>
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                    role === 'farmer' ? 'bg-[#D97736] border-[#D97736] text-white' : 'border-stone-300'
+                  }`}>
+                    {role === 'farmer' && <Check size={14} strokeWidth={3} />}
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  className="w-full py-3.5 bg-[#132E20] hover:bg-[#1B3B2B] text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2 cursor-pointer mt-6 min-h-[48px]"
+                >
+                  <span>Continue to Details</span>
+                  <ArrowRight size={16} />
+                </Button>
               </div>
             )}
 
-            {/* Form */}
-            <form ref={formRef} onSubmit={handleSubmit} autoComplete="off" className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="First Name"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  required
-                  error={errors.firstName}
-                  glass={true}
-                  autoComplete="off"
-                />
-                <Input
-                  label="Last Name"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  required
-                  error={errors.lastName}
-                  glass={true}
-                  autoComplete="off"
-                />
-              </div>
-
-              <Input
-                label="Email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                error={errors.email}
-                glass={true}
-                autoComplete="off"
-              />
-
-              <Input
-                label="Phone Number"
-                name="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-                error={errors.phone}
-                glass={true}
-                autoComplete="off"
-              />
-
-              {role === 'farmer' && (
-                <Input
-                  label="Farm Location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  required
-                  error={errors.location}
-                  glass={true}
-                  autoComplete="off"
-                />
-              )}
-
-              {/* Address Section */}
-              <div className="border-t border-gray-200 pt-4 mt-2">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                    <Home size={16} className="text-green-600" />
-                    Address Details
-                  </h3>
-                  {role === 'farmer' && (
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={addressNA}
-                        onChange={handleAddressNAToggle}
-                        className="rounded cursor-pointer w-4 h-4 text-green-600"
-                      />
-                      <span className="text-xs text-gray-500">Mark as N/A</span>
-                    </label>
-                  )}
+            {step === 2 && (
+              <div className="space-y-3 animate-fade-in">
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    label="First Name"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    placeholder="John"
+                    error={errors.firstName}
+                    icon={User}
+                    required
+                  />
+                  <Input
+                    label="Last Name"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    placeholder="Doe"
+                    error={errors.lastName}
+                    icon={User}
+                    required
+                  />
                 </div>
 
+                <Input
+                  label="Email Address"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="john@example.com"
+                  error={errors.email}
+                  icon={Mail}
+                  required
+                />
+
+                <Input
+                  label="Phone Number"
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="9876543210"
+                  error={errors.phone}
+                  icon={Phone}
+                  required
+                />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    label="Password"
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handlePasswordChange}
+                    placeholder="••••••••"
+                    error={errors.password}
+                    icon={Lock}
+                    required
+                  />
+                  <Input
+                    label="Confirm Password"
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    error={errors.confirmPassword}
+                    icon={Lock}
+                    required
+                  />
+                </div>
+
+                {formData.password && (
+                  <div className="pt-1">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[10px] font-bold text-stone-500 uppercase">Password Strength</span>
+                      <span className="text-[10px] font-bold text-[#D97736]">{passwordStrength}%</span>
+                    </div>
+                    <div className="w-full bg-stone-100 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-[#D97736] to-emerald-600 h-full transition-all duration-300"
+                        style={{ width: `${passwordStrength}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  className="w-full py-3.5 bg-[#132E20] hover:bg-[#1B3B2B] text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2 cursor-pointer mt-4 min-h-[48px]"
+                >
+                  <span>Continue to Location</span>
+                  <ArrowRight size={16} />
+                </Button>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-3 animate-fade-in">
+                {role === 'farmer' && (
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1">
+                      Farm Region / Location <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-3 text-emerald-600" size={18} />
+                      <select
+                        name="location"
+                        value={formData.location}
+                        onChange={handleChange}
+                        className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-800 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                      >
+                        <option value="">Select your farm region...</option>
+                        {['Maharashtra', 'Punjab', 'Himachal Pradesh', 'Haryana', 'Karnataka', 'Uttar Pradesh', 'West Bengal', 'Delhi NCR'].map((loc) => (
+                          <option key={loc} value={loc}>{loc}</option>
+                        ))}
+                      </select>
+                    </div>
+                    {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
+                  </div>
+                )}
+
+                {role === 'farmer' && (
+                  <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs font-bold text-amber-900 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={addressNA}
+                      onChange={() => setAddressNA(!addressNA)}
+                      className="w-4 h-4 text-emerald-600 accent-emerald-600 rounded cursor-pointer"
+                    />
+                    <span>Farm address not applicable / use GPS location only</span>
+                  </label>
+                )}
+
                 {!addressNA && (
-                  <div className="space-y-4">
+                  <>
                     <Input
                       label="Street Address"
                       name="address"
                       value={formData.address}
                       onChange={handleChange}
-                      required={!addressNA}
+                      placeholder="Plot No. 12, Farm Gate Road"
                       error={errors.address}
-                      glass={true}
-                      autoComplete="street-address"
-                      placeholder="House/Flat No., Street, Area"
+                      icon={Home}
+                      required
                     />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    <div className="grid grid-cols-3 gap-2">
                       <Input
                         label="City"
                         name="city"
                         value={formData.city}
                         onChange={handleChange}
-                        required={!addressNA}
+                        placeholder="Nashik"
                         error={errors.city}
-                        glass={true}
-                        autoComplete="address-level2"
-                        placeholder="Enter city"
+                        icon={Building2}
+                        required
                       />
                       <Input
                         label="State"
                         name="state"
                         value={formData.state}
                         onChange={handleChange}
-                        required={!addressNA}
+                        placeholder="MH"
                         error={errors.state}
-                        glass={true}
-                        autoComplete="address-level1"
-                        placeholder="Enter state"
+                        icon={MapPinned}
+                        required
+                      />
+                      <Input
+                        label="Pincode"
+                        name="pincode"
+                        value={formData.pincode}
+                        onChange={handleChange}
+                        placeholder="422001"
+                        error={errors.pincode}
+                        icon={Hash}
+                        required
                       />
                     </div>
-                    <Input
-                      label="Pincode"
-                      name="pincode"
-                      value={formData.pincode}
-                      onChange={handleChange}
-                      required={!addressNA}
-                      error={errors.pincode}
-                      glass={true}
-                      autoComplete="postal-code"
-                      placeholder="6-digit pincode"
-                      maxLength={6}
-                    />
-                  </div>
+                  </>
                 )}
 
-                {addressNA && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-xs text-amber-800">
-                      ⚠️ You've marked address as N/A. You'll be asked to provide these details during verification.
-                    </p>
-                  </div>
-                )}
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-3.5 bg-[#D97736] hover:bg-[#c06528] text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-2 cursor-pointer mt-4 min-h-[48px]"
+                >
+                  {isLoading ? (
+                    <span>Creating Account...</span>
+                  ) : (
+                    <>
+                      <span>Complete Registration</span>
+                      <Check size={18} strokeWidth={3} />
+                    </>
+                  )}
+                </Button>
               </div>
-
-              <div className="relative">
-                <Input
-                  label="Password"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handlePasswordChange}
-                  required
-                  error={errors.password}
-                  glass={true}
-                  autoComplete="new-password"
-                />
-                {formData.password && (
-                  <div className="mt-2">
-                    <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full transition-all duration-300 ${
-                          passwordStrength < 40 ? 'bg-red-500' : 
-                          passwordStrength < 80 ? 'bg-yellow-500' : 'bg-green-500'
-                        }`}
-                        style={{ width: `${Math.max(10, passwordStrength)}%` }}
-                      ></div>
-                    </div>
-                    <p className={`text-xs mt-1 text-right font-medium ${
-                      passwordStrength < 40 ? 'text-red-600' : 
-                      passwordStrength < 80 ? 'text-yellow-600' : 'text-green-600'
-                    }`}>
-                      {passwordStrength < 40 ? 'Weak' : passwordStrength < 80 ? 'Medium' : 'Strong'}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <Input
-                label="Confirm Password"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-                error={errors.confirmPassword}
-                glass={true}
-                autoComplete="new-password"
-              />
-
-              <div className="flex items-start gap-2 pt-4">
-                <input type="checkbox" id="terms" className="mt-1 cursor-pointer" required />
-                <label htmlFor="terms" className="text-xs text-gray-600">
-                  I agree to the Terms & Conditions
-                </label>
-              </div>
-
-              <Button 
-                type="submit"
-                variant="primary" 
-                size="md" 
-                disabled={isLoading}
-                className="w-full mt-8"
-              >
-                {isLoading ? 'Creating Account...' : 'Create Account'}
-              </Button>
-            </form>
-
-            {/* Login Link */}
-            <p className="text-center text-gray-600 text-sm mt-8">
-              Already have an account?{' '}
-              <button 
-                onClick={handleLoginClick}
-                className="text-green-600 font-semibold hover:underline cursor-pointer"
-              >
-                Login
-              </button>
-            </p>
-
-            {/* Trust Badges */}
-            <div className="flex justify-center items-center gap-6 mt-8 pt-6 border-t border-gray-200/50">
-              <div className="flex flex-col items-center">
-                <Lock size={18} className="text-slate-400 mb-1" />
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">256-bit Secure</span>
-              </div>
-              <div className="w-px h-8 bg-gray-200/80"></div>
-              <div className="flex flex-col items-center">
-                <User size={18} className="text-slate-400 mb-1" />
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Data Privacy</span>
-              </div>
-            </div>
-          </div>
-        </Card>
+            )}
+          </form>
+        </div>
       </div>
     </PageTransition>
   );
 }
+
 

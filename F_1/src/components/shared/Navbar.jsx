@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, X, ShoppingCart, Heart, User, LogOut, Search, Bell, Home, Grid, Settings, Compass, CheckCircle, MessageCircle, Lock, ShieldCheck } from 'lucide-react';
+import { Menu, X, ShoppingCart, Heart, User, LogOut, Search, Bell, Home, Grid, Settings, Compass, CheckCircle, MessageCircle, Lock, ShieldCheck, Sprout, ArrowRight } from 'lucide-react';
 import { useRouter } from '../../hooks/useRouter';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../hooks/useCart';
@@ -46,7 +46,6 @@ export default function Navbar() {
   };
 
   const handleLogout = async () => {
-    // Show confirmation modal instead of logging out directly
     setShowLogoutConfirm(true);
   };
 
@@ -61,37 +60,31 @@ export default function Navbar() {
     setShowLogoutConfirm(false);
   };
 
-  // Special handler for marketplace access with verification check
   const handleMarketplaceAccess = () => {
     if (!user) {
-      // Not logged in - redirect to login with return path
       navigate('/auth/login?next=/marketplace');
       setIsOpen(false);
       setIsUserMenuOpen(false);
       return;
     }
 
-    // Logged in - check role and verification status
     if (user.role === 'buyer' && user.kycStatus === 'verified') {
       handleNavigate('/marketplace');
     } else if (user.role === 'buyer') {
-      // Buyer but not verified - redirect to verification page
       console.warn('Please complete KYC verification to access marketplace');
-      handleNavigate('/verification/progress'); // Redirect to proper verification page
+      handleNavigate('/verification/progress');
     } else {
-      // Other roles cannot access marketplace as buyers
       console.warn('Only verified buyers can access the marketplace');
     }
   };
 
   const cartTotal = getCartTotal();
 
-  // Navigation items based on user role
   const getNavItems = () => {
     if (!user) {
-      // Public navigation - NO marketplace for unauthenticated users
       return [
         { id: 'about', label: 'About', path: '/about' },
+        { id: 'pricing', label: 'Pricing', path: '/pricing' },
         { id: 'contact', label: 'Contact', path: '/contact' },
       ];
     }
@@ -99,13 +92,11 @@ export default function Navbar() {
     if (user.role === 'farmer') {
       return [
         { id: 'dashboard', label: 'Dashboard', path: '/farmer/dashboard' },
-        { id: 'crops', label: 'My Crops', path: '/farmer/dashboard' },
-        { id: 'orders', label: 'Orders Received', path: '/farmer/dashboard' },
+        { id: 'add-crop', label: 'List Crop', path: '/create-crop' },
       ];
     }
 
     if (user.role === 'buyer') {
-      // Hide marketplace link on verification pages
       const isVerificationPage = currentRoute && (
         currentRoute.includes('/verification') || currentRoute.startsWith('/verify')
       );
@@ -130,11 +121,11 @@ export default function Navbar() {
 
   return (
     <div className="fixed top-0 left-0 w-full z-50 pt-4 px-4 pointer-events-none transition-all duration-300">
-      <nav className="max-w-6xl mx-auto bg-white/95 backdrop-blur-2xl border-2 border-slate-100 shadow-md rounded-full pointer-events-auto transition-all duration-300 hover:shadow-lg">
+      <nav className="max-w-6xl mx-auto bg-[#FBF8F3]/90 backdrop-blur-2xl border border-[#132E20]/15 shadow-lg rounded-full pointer-events-auto transition-all duration-300 hover:shadow-xl text-[#132E20]">
         <div className="flex justify-between items-center h-16 px-6 sm:px-8">
           {/* Logo & Brand */}
           <div 
-            className="flex items-center gap-2 cursor-pointer shrink-0 group" 
+            className="flex items-center gap-2.5 cursor-pointer shrink-0 group" 
             onClick={() => {
               navigate('/');
               setIsOpen(false);
@@ -142,10 +133,17 @@ export default function Navbar() {
               setIsMiniCartOpen(false);
             }}
           >
-            <div className="bg-gradient-to-br from-green-500 to-emerald-600 w-8 h-8 rounded-full flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-300">
-              <span className="text-white font-bold text-sm tracking-tighter">FD</span>
+            <div className="bg-[#D97736] w-9 h-9 rounded-full flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-300">
+              <Sprout className="w-5 h-5 text-white stroke-[2.2]" />
             </div>
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight hidden sm:block">Farm<span className="text-green-600">Direct</span></h1>
+            <div className="flex flex-col">
+              <span className="font-serif-display text-2xl font-bold tracking-tight leading-none text-[#132E20]">
+                FarmDirect
+              </span>
+              <span className="font-sans-body text-[9px] tracking-widest uppercase font-semibold text-[#132E20]/60 -mt-0.5">
+                Direct origin
+              </span>
+            </div>
           </div>
 
           {/* Desktop Menu */}
@@ -154,17 +152,16 @@ export default function Navbar() {
               <button
                 key={item.id}
                 onClick={() => {
-                  // Use special handler for marketplace
                   if (item.id === 'marketplace') {
                     handleMarketplaceAccess();
                   } else {
                     handleNavigate(item.path);
                   }
                 }}
-                className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                className={`text-sm font-semibold transition-colors duration-200 cursor-pointer ${
                   currentRoute === item.path
-                    ? 'text-green-600 border-b-2 border-green-600'
-                    : 'text-gray-700 hover:text-green-600'
+                    ? 'text-[#D97736] font-bold'
+                    : 'text-[#132E20] hover:text-[#D97736]'
                 }`}
               >
                 {item.label}

@@ -1,17 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-brand-primary: #0f172a; /* Slate 900 */
-  --color-brand-secondary: #1e293b; /* Slate 800 */
-  --color-brand-accent: #059669; /* Emerald 600 - strong green */
-  --color-brand-accent-hover: #047857; /* Emerald 700 */
+  --font-serif-display: "Instrument Serif", Georgia, serif;
+  --font-sans-body: "Plus Jakarta Sans", sans-serif;
+
+  --color-farm-cream: #FBF8F3;
+  --color-farm-cream-dark: #F4EFE6;
+  --color-farm-forest: #132E20;
+  --color-farm-forest-light: #1B3B2B;
+  --color-farm-terracotta: #D97736;
+  --color-farm-terracotta-hover: #C86428;
+  --color-farm-dark: #0E1712;
+
+  --color-brand-primary: #0f172a;
+  --color-brand-secondary: #1e293b;
+  --color-brand-accent: #059669;
+  --color-brand-accent-hover: #047857;
   --color-brand-surface: #ffffff;
-  --color-brand-surface-alt: #f8fafc; /* Slate 50 */
+  --color-brand-surface-alt: #f8fafc;
   --color-brand-text: #0f172a;
-  --color-brand-text-muted: #64748b; /* Slate 500 */
-  --color-brand-border: #e2e8f0; /* Slate 200 */
-  --color-brand-border-strong: #cbd5e1; /* Slate 300 */
+  --color-brand-text-muted: #64748b;
+  --color-brand-border: #e2e8f0;
+  --color-brand-border-strong: #cbd5e1;
 }
+
+.font-serif-display {
+  font-family: 'Instrument Serif', Georgia, serif;
+}
+
+.font-sans-body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 35s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes soundwave {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+.animate-soundwave {
+  animation: soundwave 1.2s ease-in-out infinite;
+}
+
 
 /* ================================
    HIDE SCROLLBARS GLOBALLY

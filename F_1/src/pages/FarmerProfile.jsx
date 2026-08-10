@@ -81,44 +81,43 @@ export default function FarmerProfile() {
   return (
     <ErrorBoundary>
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-28 pb-12">
+      <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body pt-28 pb-16">
         {/* Premium Header Section */}
-        <div className="relative min-h-64 bg-gradient-to-br from-emerald-600 via-green-600 to-teal-700 overflow-hidden">
-          {/* Animated background elements */}
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute top-0 right-1/4 w-96 h-96 bg-white rounded-full filter blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-0 left-1/3 w-72 h-72 bg-emerald-400 rounded-full filter blur-3xl animate-pulse"></div>
-          </div>
+        <div className="relative min-h-64 bg-gradient-to-tr from-[#132E20] via-[#1B3B2B] to-[#254D38] overflow-hidden rounded-[36px] max-w-7xl mx-auto shadow-2xl border border-white/10">
+          {/* Ambient Glow */}
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#D97736]/20 rounded-full blur-3xl pointer-events-none"></div>
 
           {/* Header Content */}
           <div className="relative h-full flex items-center py-10 px-6 md:px-12">
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 w-full">
               {/* Avatar */}
               <div className="relative">
-                <div className="w-24 h-24 sm:w-40 sm:h-40 rounded-3xl bg-white shadow-2xl p-3 ring-4 ring-white transform hover:scale-105 transition duration-300">
+                <div className="w-24 h-24 sm:w-36 sm:h-36 rounded-3xl bg-white shadow-2xl p-2.5 ring-4 ring-white/20">
                   <Avatar user={farmer} size="xl" className="w-full h-full" />
                 </div>
               </div>
 
               {/* Info */}
               <div className="text-white flex-1 min-w-0 text-center sm:text-left">
-                <h1 className="text-3xl sm:text-5xl font-black mb-2 break-words">{farmer?.name || 'Farmer'}</h1>
-                <div className="flex items-center gap-3 flex-wrap mb-4">
-                  <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition">
-                    <Shield size={16} /> Verified Farmer
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736] bg-[#D97736]/20 px-3 py-1 rounded-full border border-[#D97736]/30 inline-block mb-2">
+                  VERIFIED GROWER
+                </span>
+                <h1 className="font-serif-display text-3xl sm:text-5xl font-normal text-[#FBF8F3] mb-2 break-words">
+                  {farmer?.name || 'Farmer'}
+                </h1>
+                <div className="flex items-center gap-2 flex-wrap mb-4 justify-center sm:justify-start">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold bg-white/15 backdrop-blur-sm border border-white/20 text-white">
+                    <Shield size={14} className="text-[#D97736]" /> Direct Farmer
                   </span>
                   {farmer?.verified && (
-                    <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold bg-green-400/20 backdrop-blur-sm border border-green-400/30 text-green-100">
-                      <CheckCircle size={16} /> KYC Verified
+                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 backdrop-blur-sm border border-emerald-400/30 text-emerald-200">
+                      <CheckCircle size={14} /> KYC Verified
                     </span>
                   )}
-                  <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold bg-emerald-400/20 backdrop-blur-sm border border-emerald-400/30 text-emerald-100">
-                    <Zap size={16} /> Active Farmer
-                  </span>
                 </div>
-                <div className="flex items-center gap-4 text-emerald-100 text-sm flex-wrap">
+                <div className="flex items-center gap-4 text-stone-300 text-xs flex-wrap justify-center sm:justify-start">
                   {farmer?.location && (
-                    <span className="flex items-center gap-1"><MapPin size={14} /> {farmer.location}</span>
+                    <span className="flex items-center gap-1"><MapPin size={14} className="text-[#D97736]" /> {farmer.location}</span>
                   )}
                   {farmer?.email && (
                     <span className="flex items-center gap-1"><Mail size={14} /> {farmer.email}</span>
@@ -130,14 +129,14 @@ export default function FarmerProfile() {
               </div>
 
               {/* Quick Stats */}
-              <div className="hidden lg:grid grid-cols-2 gap-4">
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                  <p className="text-emerald-100 text-xs font-semibold uppercase tracking-wide">Rating</p>
-                  <p className="text-3xl font-bold text-white mt-1">⭐ {farmer?.stats?.rating || '4.8'}</p>
+              <div className="hidden lg:grid grid-cols-2 gap-3">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/15 text-center">
+                  <p className="text-stone-300 text-[10px] font-bold uppercase tracking-wider">Rating</p>
+                  <p className="font-serif-display text-3xl font-bold text-amber-300 mt-0.5">⭐ {farmer?.stats?.rating || '4.8'}</p>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                  <p className="text-emerald-100 text-xs font-semibold uppercase tracking-wide">Listings</p>
-                  <p className="text-3xl font-bold text-white mt-1">{farmer?.stats?.activeListings || crops.length}</p>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/15 text-center">
+                  <p className="text-stone-300 text-[10px] font-bold uppercase tracking-wider">Listings</p>
+                  <p className="font-serif-display text-3xl font-bold text-white mt-0.5">{farmer?.stats?.activeListings || crops.length}</p>
                 </div>
               </div>
             </div>
@@ -145,25 +144,25 @@ export default function FarmerProfile() {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 md:px-6 -mt-8 pb-12 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 pt-8 pb-12 relative z-10">
           {/* Tab Navigation */}
-          <div className="bg-gradient-to-r from-slate-700 to-slate-800 rounded-2xl shadow-2xl p-2 mb-8 flex gap-2 overflow-x-auto border border-slate-600">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg p-1.5 mb-8 flex gap-2 overflow-x-auto border border-stone-200 scrollbar-none">
             {[
               { id: 'products', label: '🌾 Products', icon: Package },
-              { id: 'about', label: '📖 About', icon: Shield },
-              { id: 'stats', label: '📊 Stats', icon: Activity },
-              { id: 'certifications', label: '🏆 Certs', icon: Award }
+              { id: 'about', label: '📖 About Farm', icon: Shield },
+              { id: 'stats', label: '📊 Performance', icon: Activity },
+              { id: 'certifications', label: '🏆 Certifications', icon: Award }
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-4 rounded-xl font-bold transition duration-300 whitespace-nowrap transform hover:scale-105 ${
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg scale-105'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-600/50'
+                    ? 'bg-[#132E20] text-white shadow-md'
+                    : 'text-stone-600 hover:text-[#132E20] hover:bg-stone-100'
                 }`}
               >
-                {tab.icon && <tab.icon size={18} />}
+                {tab.icon && <tab.icon size={16} />}
                 {tab.label}
               </button>
             ))}

@@ -129,29 +129,28 @@ export default function CreateCrop() {
   return (
     <ProtectedRoute roles="farmer">
       <PageTransition>
-        <div className="min-h-screen premium-gradient px-4 relative overflow-hidden pt-28 pb-12">
-          {/* Decorative elements */}
-          <div className="absolute top-[10%] left-[-10%] w-[30%] h-[30%] bg-green-400/10 rounded-full blur-3xl pointer-events-none"></div>
-          <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
-
+        <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body px-4 pt-28 pb-16 relative overflow-hidden">
           <div className="max-w-2xl mx-auto relative z-10">
             {/* Back Button */}
             <ScrollAnimation className="scroll-slide mb-6">
               <button
                 onClick={() => navigate('/farmer/dashboard')}
-                className="flex items-center gap-2 text-gray-800 hover:text-green-700 font-bold transition-colors bg-white/50 px-4 py-2 rounded-full backdrop-blur-sm border border-white/40 shadow-sm"
+                className="flex items-center gap-2 text-stone-700 hover:text-[#132E20] font-bold text-xs uppercase tracking-wider transition-colors bg-white/90 px-4 py-2 rounded-full border border-stone-200 shadow-sm cursor-pointer"
               >
-                <ArrowLeft size={20} /> Back to Dashboard
+                <ArrowLeft size={16} /> Back to Dashboard
               </button>
             </ScrollAnimation>
 
             {/* Hero Section */}
             <ScrollAnimation className="scroll-slide mb-8">
-              <div className="glass-deep border-b border-white/40 text-gray-900 rounded-2xl p-8 flex items-center gap-4 shadow-xl">
-                <Leaf size={40} className="text-green-600" />
+              <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[32px] p-6 sm:p-8 flex items-center gap-4 shadow-xl">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#132E20] to-[#1B3B2B] text-white flex items-center justify-center shadow-lg text-2xl">
+                  🌾
+                </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">List Your Crop</h1>
-                  <p className="text-gray-600 mt-1">Share your harvest with the marketplace</p>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736]">NEW LISTING</span>
+                  <h1 className="font-serif-display text-3xl sm:text-4xl font-normal text-[#132E20]">List Your Harvest</h1>
+                  <p className="text-stone-500 text-xs mt-0.5">Share your crop details with direct marketplace buyers</p>
                 </div>
               </div>
             </ScrollAnimation>

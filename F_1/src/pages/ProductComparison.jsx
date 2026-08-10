@@ -1,24 +1,21 @@
 import { useState, useEffect } from 'react';
-import { X, Download, Share2, Star } from 'lucide-react';
+import { X, Download, Share2, Star, Sparkles, Check, ShoppingCart } from 'lucide-react';
 import PageTransition from '../components/common/PageTransition';
+import DynamicFloatingNavbar from '../components/landing/DynamicFloatingNavbar';
+import GiantBrandFooter from '../components/common/GiantBrandFooter';
 import { useToast } from '../hooks/useToast';
 import { useCart } from '../hooks/useCart';
+import { useRouter } from '../hooks/useRouter';
 import { cropService } from '../services/appService';
 
 export default function ProductComparison() {
+  const { navigate } = useRouter();
   const [comparisonData, setComparisonData] = useState(null);
   const [selectedCrops, setSelectedCrops] = useState([]);
   const [loading, setLoading] = useState(false);
   const [allCrops, setAllCrops] = useState([]);
   const { addToast } = useToast();
   const { addToCart } = useCart();
-
-  useEffect(() => {
-    // Load available crops for selection from API
-       
-      // eslint-disable-next-line react-hooks/immutability
-    fetchAvailableCrops();
-  }, []);
 
   const fetchAvailableCrops = async () => {
     try {
@@ -30,6 +27,11 @@ export default function ProductComparison() {
       setAllCrops([]);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchAvailableCrops();
+  }, []);
 
   const handleSelectCrop = (cropId) => {
     if (selectedCrops.includes(cropId)) {
@@ -66,7 +68,6 @@ export default function ProductComparison() {
   const handleExport = async () => {
     try {
       addToast('Generating PDF...', 'info');
-      // In a real app, this would export the comparison as PDF
       addToast('Comparison exported successfully!', 'success');
     } catch {
       addToast('Failed to export', 'error');
@@ -75,33 +76,47 @@ export default function ProductComparison() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gray-50 px-4 pt-28 pb-12">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Compare Products</h1>
+      <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body">
+        <DynamicFloatingNavbar activeSection="cream" onNavigate={navigate} />
+
+        <div className="pt-32 pb-20 px-4 md:px-8 max-w-6xl mx-auto">
+          <div className="mb-8">
+            <span className="font-sans-body text-xs font-bold uppercase tracking-widest text-[#132E20]/60 bg-[#F4EFE6] px-3.5 py-1.5 rounded-full border border-[#132E20]/10">
+              SIDE-BY-SIDE ANALYTICS
+            </span>
+            <h1 className="font-serif-display text-4xl sm:text-5xl md:text-6xl font-normal mt-3 leading-tight">
+              Compare Harvest <span className="italic text-[#D97736]">Produce.</span>
+            </h1>
+            <p className="text-stone-600 text-sm mt-2">Select up to 4 crops to compare pricing, purity, region, and ratings.</p>
+          </div>
           <p className="text-gray-600 mb-8">Select and compare crops side-by-side to make informed decisions</p>
 
           {/* Crop Selection */}
           <div className="bg-white rounded-lg shadow p-6 mb-8">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Select Products to Compare</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
-              {allCrops.map((crop) => (
-                <div
-                  key={crop.id}
-                  onClick={() => handleSelectCrop(crop.id)}
-                  className={`p-3 border-2 rounded-lg cursor-pointer transition ${
-                    selectedCrops.includes(crop.id)
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 text-center">{crop.name}</p>
-                  <p className="text-sm text-gray-600 text-center">₹{crop.price}/kg</p>
-                  <div className="flex items-center justify-center gap-1 mt-2">
-                    <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                    <span className="text-xs text-gray-600">{crop.rating}</span>
+              {allCrops.map((crop) => {
+                const cId = crop._id || crop.id;
+                const isSelected = selectedCrops.includes(cId);
+                return (
+                  <div
+                    key={cId}
+                    onClick={() => handleSelectCrop(cId)}
+                    className={`p-3 border-2 rounded-xl cursor-pointer transition ${
+                      isSelected
+                        ? 'border-emerald-600 bg-emerald-50/80 shadow-xs'
+                        : 'border-stone-200 hover:border-stone-300 bg-white'
+                    }`}
+                  >
+                    <p className="font-bold text-[#132E20] text-center text-sm truncate">{crop.cropName || crop.name}</p>
+                    <p className="text-xs text-stone-600 text-center mt-1">₹{crop.price}/{crop.unit || 'kg'}</p>
+                    <div className="flex items-center justify-center gap-1 mt-2">
+                      <Star size={14} className="text-amber-400 fill-amber-400" />
+                      <span className="text-xs font-semibold text-stone-600">{crop.rating || 4.5}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="flex gap-3">
@@ -236,7 +251,10 @@ export default function ProductComparison() {
             </div>
           )}
         </div>
+
+        <GiantBrandFooter onNavigate={navigate} />
       </div>
     </PageTransition>
   );
 }
+
