@@ -304,16 +304,16 @@ export default function Navbar() {
 
             {/* Desktop Auth Buttons - Show when NOT logged in */}
             {!user && (
-              <div className="hidden md:flex items-center gap-3">
+              <div className="hidden md:flex items-center gap-2">
                 <button
                   onClick={() => handleNavigate('/auth/login')}
-                  className="px-4 py-2 text-green-600 font-medium hover:text-green-700 transition cursor-pointer"
+                  className="px-5 py-2 text-[#132E20] font-sans-body text-xs md:text-sm font-semibold hover:text-[#D97736] transition duration-200 cursor-pointer"
                 >
                   Login
                 </button>
                 <button
                   onClick={() => handleNavigate('/auth/register')}
-                  className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition cursor-pointer"
+                  className="px-5 py-2 bg-[#D97736] hover:bg-[#c4682e] text-[#FBF8F3] font-sans-body text-xs md:text-sm font-bold rounded-full shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer"
                 >
                   Sign Up
                 </button>
@@ -555,14 +555,14 @@ export default function Navbar() {
                     </button>
                     <button
                       onClick={() => handleNavigate('/auth/login')}
-                      className="w-full px-6 py-3 flex items-center gap-4 text-green-600 hover:text-green-700 hover:bg-white/10 transition-all duration-200 text-sm font-medium cursor-pointer"
+                      className="w-full px-6 py-3 flex items-center gap-4 text-[#132E20] hover:text-[#D97736] hover:bg-[#132E20]/5 transition-all duration-200 text-sm font-semibold cursor-pointer rounded-xl"
                     >
-                      <User size={20} />
+                      <User size={20} className="text-[#D97736]" />
                       <span>Login</span>
                     </button>
                     <button
                       onClick={() => handleNavigate('/auth/register')}
-                      className="w-full px-6 py-3 flex items-center gap-4 text-green-600 hover:text-green-700 hover:bg-white/10 transition-all duration-200 text-sm font-medium cursor-pointer"
+                      className="w-full px-6 py-3 flex items-center justify-center gap-2 bg-[#D97736] text-[#FBF8F3] hover:bg-[#c4682e] transition-all duration-200 text-sm font-bold cursor-pointer rounded-full shadow-md mt-2"
                     >
                       <User size={20} />
                       <span>Sign Up</span>

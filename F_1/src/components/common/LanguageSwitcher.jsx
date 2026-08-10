@@ -13,10 +13,10 @@ export default function LanguageSwitcher() {
   return (
     <button
       onClick={toggleLanguage}
-      className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer"
+      className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#132E20]/15 bg-[#FBF8F3] hover:bg-white text-xs font-bold text-[#132E20] shadow-sm hover:shadow transition-all duration-200 cursor-pointer"
       title="Toggle Language (English / Hindi)"
     >
-      <Globe size={16} className="text-green-600" />
+      <Globe size={15} className="text-[#D97736]" />
       <span>{i18n.language === 'hi' ? 'हिंदी' : 'EN'}</span>
     </button>
   );
