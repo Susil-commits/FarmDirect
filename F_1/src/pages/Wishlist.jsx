@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, MapPin, Star, ShoppingCart, Eye, Check, Trash2 } from 'lucide-react';
-import { getImageUrl } from '../utils/formatters';
+import { getImageUrl, getCropFallbackImage } from '../utils/formatters';
 import { useWishlist } from '../hooks/useWishlist';
 import { useRouter } from '../hooks/useRouter';
 import { useCart } from '../hooks/useCart';
@@ -163,25 +163,16 @@ function WishlistCard({ product, index, onRemove, onAddToCart, onViewCrop }) {
         className="wishlist-card-image"
         onClick={() => onViewCrop(product.id || product._id)}
       >
-        {!showFallback && rawProductImage ? (
-          <img
-            src={getImageUrl(rawProductImage)}
-            alt={product.name}
-            className="wishlist-card-img"
-            loading="lazy"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <div className="wishlist-card-img-fallback">
-            <span className="wishlist-card-emoji">
-              {product.cropType === 'vegetables' ? '🥬' :
-               product.cropType === 'fruits' ? '🍎' :
-               product.cropType === 'grains' ? '🌾' :
-               product.cropType === 'herbs' ? '🌿' : '🌾'}
-            </span>
-          </div>
-        )}
-
+        <img
+          src={getImageUrl(rawProductImage, product.category || product.name)}
+          alt={product.name}
+          className="wishlist-card-img"
+          loading="lazy"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = getCropFallbackImage(product.category || product.name);
+          }}
+        />
         {/* Badges Overlay */}
         <div className="wishlist-card-badges">
           {product.farmer_verified && (
