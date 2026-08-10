@@ -16,6 +16,7 @@ import { UserRole, UserStatus, KycStatus, OrderStatus, CancelledBy, PaymentStatu
 import type { Request, Response } from 'express';
 import type { Types, PipelineStage } from 'mongoose';
 import { AdminService } from '../services/adminService.js';
+import { getUploadsRoot } from '../config/localStorage.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -227,23 +228,39 @@ export const debugGetAllUsersKYCStatus = asyncHandler(async (_req: Request, res:
 });
 
 export const getPendingKYC = asyncHandler(async (req: Request, res: Response) => {
-  const { page = '1', limit = '20', role = 'farmer' } = req.query as Record<string, string>;
-  const queryRole = (role.toLowerCase().replace(/s$/, '') as UserRole) || UserRole.Farmer;
+  const { page = '1', limit = '20', role } = req.query as Record<string, string>;
   const skip = (Number(page) - 1) * Number(limit);
+  const query: Record<string, unknown> = { kycStatus: KycStatus.Pending };
+
+  if (role && role.toLowerCase() !== 'all' && role.toLowerCase() !== 'all_roles') {
+    const queryRole = role.toLowerCase().replace(/s$/, '');
+    if (Object.values(UserRole).includes(queryRole as UserRole)) {
+      query.role = queryRole;
+    }
+  }
+
   const [users, total] = await Promise.all([
-    User.find({ role: queryRole, kycStatus: KycStatus.Pending }).select('-password').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }).lean(),
-    User.countDocuments({ role: queryRole, kycStatus: KycStatus.Pending }),
+    User.find(query).select('-password').skip(skip).limit(Number(limit)).sort({ kycSubmittedAt: -1, createdAt: -1 }).lean(),
+    User.countDocuments(query),
   ]);
   paginated(res, users, total, Number(page), Number(limit));
 });
 
 export const getRejectedKYC = asyncHandler(async (req: Request, res: Response) => {
-  const { page = '1', limit = '20', role = 'buyer' } = req.query as Record<string, string>;
-  const queryRole = (role.toLowerCase().replace(/s$/, '') as UserRole) || UserRole.Buyer;
+  const { page = '1', limit = '20', role } = req.query as Record<string, string>;
   const skip = (Number(page) - 1) * Number(limit);
+  const query: Record<string, unknown> = { kycStatus: KycStatus.Rejected };
+
+  if (role && role.toLowerCase() !== 'all' && role.toLowerCase() !== 'all_roles') {
+    const queryRole = role.toLowerCase().replace(/s$/, '');
+    if (Object.values(UserRole).includes(queryRole as UserRole)) {
+      query.role = queryRole;
+    }
+  }
+
   const [users, total] = await Promise.all([
-    User.find({ role: queryRole, kycStatus: KycStatus.Rejected }).select('-password').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }).lean(),
-    User.countDocuments({ role: queryRole, kycStatus: KycStatus.Rejected }),
+    User.find(query).select('-password').skip(skip).limit(Number(limit)).sort({ updatedAt: -1, createdAt: -1 }).lean(),
+    User.countDocuments(query),
   ]);
   paginated(res, users, total, Number(page), Number(limit));
 });
@@ -590,7 +607,7 @@ export const proxyDocument = asyncHandler(async (req: Request, res: Response) =>
   if (!url) return sendError(res, 'URL parameter is required', 400);
   if (!url.startsWith('/uploads/')) return sendError(res, 'Only local upload URLs are supported', 400);
 
-  const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+  const uploadsDir = getUploadsRoot();
   const filePath = path.resolve(uploadsDir, url.replace(/^\/uploads\//, ''));
   if (!filePath.startsWith(uploadsDir + path.sep) && filePath !== uploadsDir) {
     return sendError(res, 'Access denied', 403);

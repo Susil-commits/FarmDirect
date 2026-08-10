@@ -320,7 +320,7 @@ export const AuthProvider = ({ children }) => {
       } catch { /* ignore */ }
 
       // Store verification status
-      const verifyStatus = response.user?.kycStatus || 'pending';
+      const verifyStatus = response.user?.kycStatus || 'not_submitted';
       setVerificationStatus(verifyStatus);
       localStorage.setItem('verificationStatus', verifyStatus);
 
@@ -430,7 +430,7 @@ export const AuthProvider = ({ children }) => {
       if (response.user) {
         localStorage.setItem('userData', JSON.stringify(response.user));
       }
-      const verifyStatus = response.user?.kycStatus || 'pending';
+      const verifyStatus = response.user?.kycStatus || 'not_submitted';
       setVerificationStatus(verifyStatus);
       localStorage.setItem('verificationStatus', verifyStatus);
       setUser(response.user);
@@ -460,7 +460,7 @@ export const AuthProvider = ({ children }) => {
       if (response.user) {
         localStorage.setItem('userData', JSON.stringify(response.user));
       }
-      const verifyStatus = response.user?.kycStatus || 'pending';
+      const verifyStatus = response.user?.kycStatus || 'not_submitted';
       setVerificationStatus(verifyStatus);
       localStorage.setItem('verificationStatus', verifyStatus);
       setUser(response.user);
