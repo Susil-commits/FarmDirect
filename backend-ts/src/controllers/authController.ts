@@ -66,6 +66,16 @@ function publicUser(user: PublicUserDoc) {
   };
 }
 
+export function getRefreshTokenCookieOptions() {
+  const isProd = env.nodeEnv === 'production';
+  return {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
+}
+
 
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -112,12 +122,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
     const token = generateToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: env.nodeEnv === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    });
+    res.cookie('refreshToken', refreshToken, getRefreshTokenCookieOptions());
 
     res.status(201).json({
       message: 'User registered successfully',
@@ -157,12 +162,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
     const token = generateToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: env.nodeEnv === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    });
+    res.cookie('refreshToken', refreshToken, getRefreshTokenCookieOptions());
 
     res.status(200).json({
       message: 'Login successful',
@@ -241,11 +241,7 @@ export async function logout(req: Request, res: Response): Promise<void> {
       await revokeToken(decoded.jti);
     }
   }
-  res.clearCookie('refreshToken', {
-    httpOnly: true,
-    secure: env.nodeEnv === 'production',
-    sameSite: 'strict'
-  });
+  res.clearCookie('refreshToken', getRefreshTokenCookieOptions());
   res.status(200).json({ message: 'Logged out successfully' });
 }
 
@@ -365,7 +361,7 @@ export async function refreshTokenHandler(req: Request, res: Response): Promise<
   try {
     const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
     if (!refreshToken) {
-      sendError(res, 'Refresh token is required', 400);
+      sendError(res, 'Refresh token is required', 401);
       return;
     }
     const decoded = verifyRefreshToken(refreshToken);
@@ -376,11 +372,7 @@ export async function refreshTokenHandler(req: Request, res: Response): Promise<
 
     if (decoded.jti && await isTokenRevoked(decoded.jti)) {
       console.warn(`🔒 Refresh token reuse attempt detected for jti: ${decoded.jti}, user: ${decoded.id}`);
-      res.clearCookie('refreshToken', {
-        httpOnly: true,
-        secure: env.nodeEnv === 'production',
-        sameSite: 'strict'
-      });
+      res.clearCookie('refreshToken', getRefreshTokenCookieOptions());
       sendError(res, 'Refresh token reuse detected. Please log in again.', 401);
       return;
     }
@@ -392,12 +384,7 @@ export async function refreshTokenHandler(req: Request, res: Response): Promise<
     const newToken = generateToken(decoded.id);
     const newRefreshToken = generateRefreshToken(decoded.id);
     
-    res.cookie('refreshToken', newRefreshToken, {
-      httpOnly: true,
-      secure: env.nodeEnv === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    });
+    res.cookie('refreshToken', newRefreshToken, getRefreshTokenCookieOptions());
 
     res.status(200).json({ message: 'Token refreshed successfully', token: newToken });
   } catch (error) {
