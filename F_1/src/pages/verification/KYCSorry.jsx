@@ -49,7 +49,7 @@ export default function KYCSorry() {
   };
 
   const handleResubmit = () => {
-    navigate('/verification/progress');
+    navigate(user?.role === 'farmer' ? '/verification/progress' : '/buyer/verification');
   };
 
   const handleGoHome = () => {

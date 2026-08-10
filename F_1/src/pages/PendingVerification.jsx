@@ -129,7 +129,7 @@ export default function PendingVerification() {
                   variant="primary"
                   size="md"
                   className="w-full flex items-center justify-center gap-2"
-                  onClick={() => navigate('/verification/progress')}
+                  onClick={() => navigate(isFarmer ? '/verification/progress' : '/buyer/verification')}
                 >
                   <Upload size={18} />
                   Submit Documents for Verification

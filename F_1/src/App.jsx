@@ -135,16 +135,16 @@ function App() {
       
       // kycStatus 'not_submitted': Show hello/welcome page with "Submit Documents" button
       // ONLY for brand new users who have never interacted with KYC before
-      if (verificationStatus === 'not_submitted' && !isExistingKYCUser && currentRoute !== '/pending-verification' && currentRoute !== '/verification/progress' && currentRoute !== '/profile' && currentRoute !== '/auth/logout') {
+      if (verificationStatus === 'not_submitted' && !isExistingKYCUser && currentRoute !== '/pending-verification' && currentRoute !== '/verification/progress' && currentRoute !== '/buyer/verification' && currentRoute !== '/profile' && currentRoute !== '/auth/logout') {
         return <PendingVerification />;
       }
-      // kycStatus 'not_submitted' but existing KYC user: preserve old behavior → VerificationProgress
-      if (verificationStatus === 'not_submitted' && isExistingKYCUser && currentRoute !== '/verification/progress' && currentRoute !== '/profile' && currentRoute !== '/auth/logout') {
-        return <VerificationProgress />;
+      // kycStatus 'not_submitted' but existing KYC user: route by role
+      if (verificationStatus === 'not_submitted' && isExistingKYCUser && currentRoute !== '/verification/progress' && currentRoute !== '/buyer/verification' && currentRoute !== '/profile' && currentRoute !== '/auth/logout') {
+        return currentUserRole === 'buyer' ? <BuyerVerification /> : <VerificationProgress />;
       }
-      // kycStatus 'pending' or 'rejected': Show document submission page
-      if ((verificationStatus === 'pending' || verificationStatus === 'rejected') && currentRoute !== '/verification/progress' && currentRoute !== '/profile' && currentRoute !== '/auth/logout') {
-        return <VerificationProgress />;
+      // kycStatus 'pending' or 'rejected': Show document submission page matching role
+      if ((verificationStatus === 'pending' || verificationStatus === 'rejected') && currentRoute !== '/verification/progress' && currentRoute !== '/buyer/verification' && currentRoute !== '/profile' && currentRoute !== '/auth/logout') {
+        return currentUserRole === 'buyer' ? <BuyerVerification /> : <VerificationProgress />;
       }
     }
 
@@ -152,7 +152,7 @@ function App() {
     // This runs AFTER the verification check above, so it only triggers for verified/rejected users
     // who haven't seen their result yet
     if (user && user.role !== 'admin' && user.kycResultSeen === false && !isPublicRoute) {
-      const kycResultRoutes = ['/kyc-congrats', '/kyc-sorry', '/verification/progress', '/profile', '/auth/logout'];
+      const kycResultRoutes = ['/kyc-congrats', '/kyc-sorry', '/verification/progress', '/buyer/verification', '/profile', '/auth/logout'];
       if (!kycResultRoutes.includes(currentRoute)) {
         if (user.kycStatus === 'verified') {
           return <KYCCongrats />;
