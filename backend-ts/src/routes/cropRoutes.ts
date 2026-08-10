@@ -2,7 +2,7 @@ import { Router } from 'express';
 import {
   createCrop, getCrops, getCropById, updateCrop, deleteCrop, getCropsByFarmer,
   getMyListings, toggleInterest, getInterestedBuyers, getMyInterestedCrops,
-  getTrendingCrops, getSimilarCrops, getRecommendedCrops,
+  getTrendingCrops, getSimilarCrops, getRecommendedCrops, uploadImagesHandler,
 } from '../controllers/cropController.js';
 import { protect, authorize, requireKYC } from '../middleware/auth.js';
 import { uploadCropImages } from '../middleware/localUpload.js';
@@ -12,6 +12,10 @@ import { UserRole } from '../types/enums.js';
 import { cacheRoute } from '../middleware/cacheRoute.js';
 
 const router = Router();
+
+// Upload image endpoints
+router.post('/upload-images', protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, uploadCropImages(), uploadImagesHandler);
+router.post('/with-images', protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, uploadCropImages(), uploadImagesHandler);
 
 // Cache public GET requests for 60 seconds
 router.get('/', cacheRoute(60), getCrops);

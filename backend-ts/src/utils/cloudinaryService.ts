@@ -14,6 +14,7 @@ export async function uploadFile(
   fileBuffer: Buffer,
   fileName: string,
   folder = 'general',
+  mimeType = 'image/jpeg',
 ): Promise<UploadResult> {
   if (!fileBuffer || fileBuffer.length === 0) {
     throw new Error('Cannot upload an empty file buffer');
@@ -29,22 +30,30 @@ export async function uploadFile(
   }
 
   try {
-    const result = await cloudinary.uploader.upload(
-      `data:application/octet-stream;base64,${fileBuffer.toString('base64')}`,
-      {
-        folder: `farmdirect/${folder}`,
-        resource_type: 'auto',
-        use_filename: true,
-        unique_filename: true,
-        overwrite: false,
-      },
-    );
-    return {
-      url: result.secure_url,
-      fileName,
-      fileSize: fileBuffer.length,
-      publicId: result.public_id,
-    };
+    const result = await new Promise<UploadResult>((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: `farmdirect/${folder}`,
+          resource_type: 'auto',
+          use_filename: true,
+          unique_filename: true,
+          overwrite: false,
+        },
+        (error, res) => {
+          if (error || !res) {
+            return reject(error || new Error('Upload result undefined from Cloudinary'));
+          }
+          resolve({
+            url: res.secure_url,
+            fileName,
+            fileSize: fileBuffer.length,
+            publicId: res.public_id,
+          });
+        },
+      );
+      uploadStream.end(fileBuffer);
+    });
+    return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
 

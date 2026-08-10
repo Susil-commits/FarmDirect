@@ -20,10 +20,11 @@ export const uploadService = {
     try {
       const formData = new FormData();
       files.forEach(file => {
+        formData.append('images', file);
         formData.append('files', file);
       });
 
-      const response = await directApi.post('/crops/with-images', formData);
+      const response = await directApi.post('/crops/upload-images', formData);
       return response.data;
     } catch (error) {
       console.error('Crop image upload error:', error);
