@@ -16,7 +16,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
 import { useCart } from '../context/CartContext';
 import { cropService } from '../services/appService';
-import { getImageUrl } from '../utils/formatters';
+import { getImageUrl, getCropFallbackImage } from '../utils/formatters';
 import { useVoiceSearch } from '../hooks/useVoiceSearch';
 import '../styles/Marketplace.css';
 
@@ -448,11 +448,16 @@ export default function Marketplace() {
                 </button>
               </div>
               <div className="h-52 bg-stone-100 rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
-                {quickViewCrop.images?.[0] ? (
-                  <img src={getImageUrl(quickViewCrop.images[0])} alt={quickViewCrop.cropName || 'Crop image'} className="w-full h-full object-cover" loading="lazy" />
-                ) : (
-                  <span className="text-7xl">🌾</span>
-                )}
+                <img 
+                  src={getImageUrl(quickViewCrop.images?.[0] || quickViewCrop.image, quickViewCrop.category || quickViewCrop.cropName || quickViewCrop.name)} 
+                  alt={quickViewCrop.cropName || 'Crop image'} 
+                  className="w-full h-full object-cover" 
+                  loading="lazy" 
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = getCropFallbackImage(quickViewCrop.category || quickViewCrop.cropName || quickViewCrop.name);
+                  }}
+                />
               </div>
               <p className="text-3xl font-extrabold text-emerald-700 mb-2">₹{quickViewCrop.price} <span className="text-sm font-normal text-stone-500">/ {quickViewCrop.unit || 'kg'}</span></p>
               <p className="text-stone-600 text-sm mb-6 line-clamp-3">{quickViewCrop.description || 'Fresh produce harvested directly from farm.'}</p>
@@ -475,17 +480,21 @@ export default function Marketplace() {
 }
 
 function TrendingCard({ crop, onView, onToggleWishlist, isFavorite, onQuickAdd }) {
-  const [imgError, setImgError] = useState(false);
   const cropImage = crop.images?.[0] || crop.image;
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 cursor-pointer border border-stone-200/80 flex flex-col" onClick={onView}>
       <div className="relative h-40 bg-stone-100 flex items-center justify-center overflow-hidden">
-        {cropImage && !imgError ? (
-          <img src={getImageUrl(cropImage)} alt={crop.cropName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onError={() => setImgError(true)} />
-        ) : (
-          <span className="text-5xl group-hover:scale-110 transition-transform duration-300">🌾</span>
-        )}
+        <img 
+          src={getImageUrl(cropImage, crop.category || crop.cropName || crop.name)} 
+          alt={crop.cropName || crop.name} 
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+          loading="lazy" 
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = getCropFallbackImage(crop.category || crop.cropName || crop.name);
+          }} 
+        />
         <button onClick={(e) => { e.stopPropagation(); onToggleWishlist(); }} className={`absolute top-2.5 right-2.5 p-2 rounded-full transition-all cursor-pointer ${isFavorite ? 'bg-red-500 text-white shadow-md' : 'bg-white/90 text-stone-500 hover:bg-white hover:text-red-500'}`}>
           <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
         </button>
@@ -513,17 +522,21 @@ function TrendingCard({ crop, onView, onToggleWishlist, isFavorite, onQuickAdd }
 }
 
 function CropCardEnhanced({ crop, isFavorite, onToggleFavorite, onViewCrop, onQuickAdd }) {
-  const [imgError, setImgError] = useState(false);
   const cropImage = crop.images?.[0] || crop.image;
 
   return (
     <div className="group bg-white rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 border border-stone-200/80 flex flex-col h-full">
       <div className="relative h-56 bg-stone-100 flex items-center justify-center overflow-hidden cursor-pointer" onClick={onViewCrop}>
-        {cropImage && !imgError ? (
-          <img src={getImageUrl(cropImage)} alt={crop.cropName || crop.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onError={() => setImgError(true)} />
-        ) : (
-          <span className="text-7xl group-hover:scale-110 transition-transform duration-300">🌾</span>
-        )}
+        <img 
+          src={getImageUrl(cropImage, crop.category || crop.cropName || crop.name)} 
+          alt={crop.cropName || crop.name} 
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+          loading="lazy" 
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = getCropFallbackImage(crop.category || crop.cropName || crop.name);
+          }} 
+        />
         <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 max-w-[75%]">
           {crop.farmer_verified && (
             <span className="px-2.5 py-1 bg-emerald-700 text-white text-[11px] font-bold rounded-full flex items-center gap-1 shadow-xs">

@@ -10,7 +10,7 @@ import PageTransition from '../components/common/PageTransition.jsx';
 import Button from '../components/common/Button';
 import CouponInput from '../components/common/CouponInput';
 import '../styles/ShoppingCart.css';
-import { getImageUrl } from '../utils/formatters';
+import { getImageUrl, getCropFallbackImage } from '../utils/formatters';
 
 export default function ShoppingCart() {
   const { cart, removeFromCart, updateQuantity, clearCart, getTotalPrice, appliedCoupon, _getDiscountedTotal } = useCart();
@@ -522,22 +522,16 @@ function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuant
         className="cart-item-image"
         onClick={() => onNavigate(`/crop/${item.id || item._id}`)}
       >
-        {!showFallback && rawItemImage ? (
-          <img
-            src={getImageUrl(rawItemImage)}
-            alt={item.name}
-            className="cart-item-img"
-            loading="lazy"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <div className="cart-item-img-fallback">
-            <span className="cart-item-emoji">
-              {getCropEmoji(item.cropType || item.category)}
-            </span>
-          </div>
-        )}
-
+        <img
+          src={getImageUrl(rawItemImage, item.category || item.name)}
+          alt={item.name}
+          className="cart-item-img"
+          loading="lazy"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = getCropFallbackImage(item.category || item.name);
+          }}
+        />
         {/* Top-left stacked badges */}
         <div className="cart-item-badges">
           {isOrganic && (

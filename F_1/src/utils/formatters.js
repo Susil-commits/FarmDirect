@@ -200,24 +200,78 @@ export const formatOrderStatus = (status) => {
 };
 
 /**
- * Resolve image URLs for production deployment.
- * In development, Vite proxies /uploads to the backend, so relative URLs work.
- * In production (Vercel/Netlify), relative /uploads/ paths must be prefixed with
- * the backend domain, otherwise they 404 on the frontend host.
- *
- * @param {string|null|undefined} url - Raw image URL from API (could be relative or absolute)
- * @returns {string|null} - Resolved absolute URL, or null if input is falsy
+ * High-quality fallback stock images mapped by crop category or name keywords.
  */
-export const getImageUrl = (url) => {
-  if (!url) return null;
-  // Already an absolute URL (http/https) — return as-is
-  if (url.startsWith('http')) return url;
-  // Relative /uploads/ path — prefix with backend origin
-  if (url.startsWith('/uploads/')) {
-    // Use the direct backend URL (e.g., https://backend.onrender.com) and strip /api suffix
-    const backendOrigin = (import.meta.env.VITE_API_DIRECT_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
-    return `${backendOrigin}${url}`;
+export const CROP_FALLBACK_IMAGES = {
+  vegetables: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&auto=format&fit=crop&q=80',
+  fruits: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=800&auto=format&fit=crop&q=80',
+  grains: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=800&auto=format&fit=crop&q=80',
+  pulses: 'https://images.unsplash.com/photo-1515543904379-3d757afe72e3?w=800&auto=format&fit=crop&q=80',
+  spices: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&auto=format&fit=crop&q=80',
+  dairy: 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=800&auto=format&fit=crop&q=80',
+  seeds: 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?w=800&auto=format&fit=crop&q=80',
+  herbs: 'https://images.unsplash.com/photo-1515586000433-45406d8e6662?w=800&auto=format&fit=crop&q=80',
+  default: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80',
+};
+
+export const getCropFallbackImage = (categoryOrName = '') => {
+  const term = String(categoryOrName || '').toLowerCase();
+  if (term.includes('veg') || term.includes('tomato') || term.includes('potato') || term.includes('onion') || term.includes('carrot') || term.includes('cabbage')) {
+    return CROP_FALLBACK_IMAGES.vegetables;
   }
-  // Other relative paths — return as-is (they may be frontend assets)
-  return url;
+  if (term.includes('fruit') || term.includes('apple') || term.includes('mango') || term.includes('banana') || term.includes('grape') || term.includes('orange')) {
+    return CROP_FALLBACK_IMAGES.fruits;
+  }
+  if (term.includes('grain') || term.includes('wheat') || term.includes('rice') || term.includes('corn') || term.includes('barley') || term.includes('millet')) {
+    return CROP_FALLBACK_IMAGES.grains;
+  }
+  if (term.includes('pulse') || term.includes('dal') || term.includes('bean') || term.includes('lentil') || term.includes('chana') || term.includes('pea')) {
+    return CROP_FALLBACK_IMAGES.pulses;
+  }
+  if (term.includes('spice') || term.includes('chilli') || term.includes('turmeric') || term.includes('pepper') || term.includes('cardamom') || term.includes('ginger')) {
+    return CROP_FALLBACK_IMAGES.spices;
+  }
+  if (term.includes('milk') || term.includes('dairy') || term.includes('butter') || term.includes('paneer') || term.includes('ghee')) {
+    return CROP_FALLBACK_IMAGES.dairy;
+  }
+  if (term.includes('herb') || term.includes('mint') || term.includes('coriander') || term.includes('basil')) {
+    return CROP_FALLBACK_IMAGES.herbs;
+  }
+  if (term.includes('seed') || term.includes('sesame') || term.includes('mustard')) {
+    return CROP_FALLBACK_IMAGES.seeds;
+  }
+  return CROP_FALLBACK_IMAGES.default;
+};
+
+/**
+ * Resolve image URLs for production & development deployment.
+ * Handles missing URLs by returning a category fallback image,
+ * handles relative paths ('uploads/...' or '/uploads/...'), and
+ * handles full HTTP/HTTPS URLs.
+ *
+ * @param {string|null|undefined} url - Raw image URL from API
+ * @param {string} [categoryOrName] - Optional category or crop name for intelligent fallback
+ * @returns {string} - Resolved absolute image URL or category fallback
+ */
+export const getImageUrl = (url, categoryOrName = '') => {
+  if (!url || typeof url !== 'string' || url.trim() === '') {
+    return getCropFallbackImage(categoryOrName);
+  }
+
+  const cleanUrl = url.trim();
+
+  // Absolute URL (http/https or data URI) — return as-is
+  if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://') || cleanUrl.startsWith('data:')) {
+    return cleanUrl;
+  }
+
+  // Handle relative upload paths (e.g. 'uploads/crop.jpg' or '/uploads/crop.jpg')
+  let normalizedPath = cleanUrl.startsWith('/') ? cleanUrl : '/' + cleanUrl;
+
+  if (normalizedPath.startsWith('/uploads/') || normalizedPath.startsWith('/images/')) {
+    const backendOrigin = (import.meta.env.VITE_API_DIRECT_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+    return `${backendOrigin}${normalizedPath}`;
+  }
+
+  return cleanUrl;
 };

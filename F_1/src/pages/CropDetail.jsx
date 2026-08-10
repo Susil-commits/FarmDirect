@@ -17,7 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import { useRecentlyViewed } from '../context/RecentlyViewedContext';
 import { useToast } from '../context/ToastContext';
 import { useCart } from '../context/CartContext';
-import { getImageUrl } from '../utils/formatters';
+import { getImageUrl, getCropFallbackImage } from '../utils/formatters';
 import { cropService, wishlistService, userService } from '../services/appService';
 import '../styles/CropDetail.css';
 
@@ -382,47 +382,42 @@ export default function CropDetail() {
             <div className="lg:col-span-2">
               {/* Image Gallery */}
               <Card className="mb-6 animate-slide-in-left overflow-hidden">
-                <div className="bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center relative" style={{ minHeight: '400px' }}>
-                  {cropImages.length > 0 ? (
+                <div className="bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center relative min-h-[400px]">
+                  <img
+                    src={getImageUrl(cropImages[activeImageIndex], crop?.category || cropType || cropName)}
+                    alt={cropName}
+                    className="w-full h-full object-cover min-h-[400px]"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = getCropFallbackImage(crop?.category || cropType || cropName);
+                    }}
+                  />
+                  {cropImages.length > 1 && (
                     <>
-                      <img
-                        src={getImageUrl(cropImages[activeImageIndex])}
-                        alt={cropName}
-                        className="w-full h-full object-cover"
-                        style={{ minHeight: '400px' }}
-                      />
-                      {cropImages.length > 1 && (
-                        <>
+                      <button
+                        onClick={() => setActiveImageIndex(prev => Math.max(0, prev - 1))}
+                        disabled={activeImageIndex === 0}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-700 p-2 rounded-full shadow-lg transition disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        <ChevronLeft size={24} />
+                      </button>
+                      <button
+                        onClick={() => setActiveImageIndex(prev => Math.min(cropImages.length - 1, prev + 1))}
+                        disabled={activeImageIndex === cropImages.length - 1}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-700 p-2 rounded-full shadow-lg transition disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        <ChevronRight size={24} />
+                      </button>
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                        {cropImages?.map((_, i) => (
                           <button
-                            onClick={() => setActiveImageIndex(prev => Math.max(0, prev - 1))}
-                            disabled={activeImageIndex === 0}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-700 p-2 rounded-full shadow-lg transition disabled:opacity-30 disabled:cursor-not-allowed"
-                          >
-                            <ChevronLeft size={24} />
-                          </button>
-                          <button
-                            onClick={() => setActiveImageIndex(prev => Math.min(cropImages.length - 1, prev + 1))}
-                            disabled={activeImageIndex === cropImages.length - 1}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-700 p-2 rounded-full shadow-lg transition disabled:opacity-30 disabled:cursor-not-allowed"
-                          >
-                            <ChevronRight size={24} />
-                          </button>
-                          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                            {cropImages?.map((_, i) => (
-                              <button
-                                key={i}
-                                onClick={() => setActiveImageIndex(i)}
-                                className={`w-2.5 h-2.5 rounded-full transition-all ${i === activeImageIndex ? 'bg-white scale-125 shadow' : 'bg-white/50 hover:bg-white/70'}`}
-                              />
-                            )) ?? []}
-                          </div>
-                        </>
-                      )}
+                            key={i}
+                            onClick={() => setActiveImageIndex(i)}
+                            className={`w-2.5 h-2.5 rounded-full transition-all ${i === activeImageIndex ? 'bg-white scale-125 shadow' : 'bg-white/50 hover:bg-white/70'}`}
+                          />
+                        )) ?? []}
+                      </div>
                     </>
-                  ) : (
-                    <span className="text-9xl animate-bounce-soft">
-                      {cropType === 'vegetables' ? '🥬' : cropType === 'crops' ? '🌾' : '🌿'}
-                    </span>
                   )}
                   {!isAvailable && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -439,7 +434,16 @@ export default function CropDetail() {
                         className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition ${i === activeImageIndex ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200 hover:border-green-300'}`}
                         aria-label={`View thumbnail ${i + 1}`}
                       >
-                        <img src={getImageUrl(img)} alt={`${cropName} thumbnail ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                        <img 
+                          src={getImageUrl(img, crop?.category || cropType || cropName)} 
+                          alt={`${cropName} thumbnail ${i + 1}`} 
+                          className="w-full h-full object-cover" 
+                          loading="lazy" 
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = getCropFallbackImage(crop?.category || cropType || cropName);
+                          }}
+                        />
                       </button>
                     )) ?? []}
                   </div>
