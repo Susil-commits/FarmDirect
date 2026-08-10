@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { CheckCircle2, Play, Volume2, Sparkles, ArrowRight, ShieldCheck, MapPin, Clock, Leaf } from 'lucide-react';
 
 export default function HeroCreamSection({ onExploreClick }) {

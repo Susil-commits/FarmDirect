@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { ArrowUpRight, ShieldCheck, Truck, Percent, Layers, HeartHandshake, Sparkles } from 'lucide-react';
 
 export default function ForestGreenPeelSection({ onExploreClick }) {

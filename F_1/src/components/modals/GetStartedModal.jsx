@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { X, ArrowRight, Sprout, ShieldCheck, Mail } from 'lucide-react';
 
 export default function GetStartedModal({ isOpen, onClose, onSuccess }) {
