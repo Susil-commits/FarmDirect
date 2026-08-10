@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Search, ShoppingBag, ShieldCheck, MapPin, Sparkles, ArrowRight, RefreshCw, Calculator } from 'lucide-react';
 
 export default function CreamValueSection() {

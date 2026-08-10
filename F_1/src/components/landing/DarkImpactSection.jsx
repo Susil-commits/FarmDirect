@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Sprout, ArrowRight, Quote, Award, Users, TrendingUp, ShieldCheck, Heart } from 'lucide-react';
 
 export default function DarkImpactSection({ onExploreClick }) {
