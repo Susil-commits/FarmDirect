@@ -45,45 +45,46 @@ export default function DocumentPreviewModal({ document, onClose }) {
   const isPdf = /\.pdf$/i.test(document.fileName || '') || document.mimeType === 'application/pdf';
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-[#132E20]/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
+      <div className="bg-white/95 backdrop-blur-xl border border-stone-200 rounded-[32px] max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-scale-in flex flex-col" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100 bg-[#FBF8F3]">
           <div>
-            <h3 className="font-bold text-gray-900 text-lg">{document.fileName}</h3>
-            <p className="text-xs text-gray-500">
-              {document.type || 'Document'} • {formatFileSize(document.fileSize)}
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736]">KYC VERIFICATION PREVIEW</span>
+            <h3 className="font-serif-display text-2xl font-normal text-[#132E20]">{document.fileName}</h3>
+            <p className="text-xs text-stone-500">
+              {document.type || 'Document'} &bull; {formatFileSize(document.fileSize)}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-gray-100 rounded-full transition"
+            className="p-2 hover:bg-stone-100 rounded-full transition cursor-pointer text-stone-400 hover:text-stone-700"
           >
-            <X size={20} className="text-gray-500" />
+            <X size={18} />
           </button>
         </div>
 
         {/* Preview Content */}
-        <div className="p-4 overflow-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
+        <div className="p-6 overflow-auto max-h-[75vh]">
           {isImage && !imageError ? (
             <img
               src={resolveDocUrl(document.url)}
               alt={document.fileName}
-              className="w-full h-auto rounded-lg"
+              className="w-full h-auto rounded-2xl border border-stone-200 shadow-md"
               onError={() => setImageError(true)}
             />
           ) : isPdf ? (
             <iframe
               src={getProxyUrl(document.url)}
-              className="w-full rounded-lg border border-gray-200"
-              style={{ height: 'calc(90vh - 160px)', minHeight: '500px' }}
+              className="w-full rounded-2xl border border-stone-200"
+              style={{ height: 'calc(80vh - 160px)', minHeight: '480px' }}
               title={document.fileName}
             />
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-              <FileText size={64} className="mb-4" />
-              <p className="font-semibold text-gray-600">Document Preview</p>
-              <p className="text-sm mt-1">This file type cannot be previewed inline.</p>
+            <div className="flex flex-col items-center justify-center py-16 text-stone-400">
+              <FileText size={56} className="mb-3 text-[#D97736]" />
+              <p className="font-serif-display text-2xl font-normal text-[#132E20]">Document Preview</p>
+              <p className="text-xs text-stone-500 mt-1">This file format can be reviewed directly in admin portal</p>
             </div>
           )}
         </div>
@@ -91,3 +92,4 @@ export default function DocumentPreviewModal({ document, onClose }) {
     </div>
   );
 }
+

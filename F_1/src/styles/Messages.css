@@ -72,8 +72,8 @@
 }
 
 .chat-search-input:focus {
-  border-color: #22c55e;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+  border-color: #132E20;
+  box-shadow: 0 0 0 3px rgba(19, 46, 32, 0.15);
 }
 
 .chat-search-input::placeholder {
@@ -111,7 +111,7 @@
 }
 
 .conversation-item.active {
-  background: #f0fdf4;
+  background: #FBF8F3;
 }
 
 .conversation-item.active::before {
@@ -121,7 +121,7 @@
   top: 8px;
   bottom: 8px;
   width: 3px;
-  background: #22c55e;
+  background: #132E20;
   border-radius: 0 4px 4px 0;
 }
 
@@ -158,7 +158,7 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #22c55e;
+  background: #132E20;
   border: 2px solid #ffffff;
 }
 
@@ -533,7 +533,7 @@
   display: flex !important;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #34d399, #059669);
+  background: linear-gradient(135deg, #132E20, #1B3B2B);
   color: #fff;
   font-size: 12px;
   font-weight: 600;
@@ -551,21 +551,32 @@
 }
 
 .message-wrapper.sent .message-bubble {
-  background: #d9fdd3;
+  background: #132E20;
+  color: #FBF8F3;
   border-top-right-radius: 4px;
   margin-right: 0;
+  box-shadow: 0 4px 12px rgba(19, 46, 32, 0.15);
+}
+
+.message-wrapper.sent .message-text {
+  color: #FBF8F3;
+}
+
+.message-wrapper.sent .message-time {
+  color: rgba(251, 248, 243, 0.7);
 }
 
 .message-wrapper.received .message-bubble {
-  background: #ffffff;
+  background: #FBF8F3;
+  border: 1px solid #e7e5e4;
   border-top-left-radius: 4px;
-  box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .message-text {
   font-size: 0.875rem;
-  line-height: 1.4;
-  color: #111827;
+  line-height: 1.45;
+  color: #132E20;
   white-space: pre-wrap;
 }
 

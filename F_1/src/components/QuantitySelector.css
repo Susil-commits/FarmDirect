@@ -12,13 +12,13 @@
 }
 
 .quantity-selector:hover {
-  border-color: #10b981;
-  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.1);
+  border-color: #132E20;
+  box-shadow: 0 0 0 1px rgba(19, 46, 32, 0.15);
 }
 
 .quantity-selector:focus-within {
-  border-color: #10b981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  border-color: #132E20;
+  box-shadow: 0 0 0 2px rgba(19, 46, 32, 0.2);
 }
 
 /* Size Variants */
@@ -52,7 +52,7 @@
 
 .qty-btn:hover:not(:disabled) {
   background: #f3f4f6;
-  color: #10b981;
+  color: #132E20;
 }
 
 .qty-btn:active:not(:disabled) {

@@ -23,9 +23,9 @@
 }
 
 .view-mode-btn.active {
-  background: linear-gradient(135deg, var(--primary-main), var(--primary-dark));
+  background: linear-gradient(135deg, #132E20, #1B3B2B);
   color: white;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 2px 8px rgba(19, 46, 32, 0.3);
 }
 
 .view-mode-btn:not(.active) {
@@ -39,13 +39,13 @@
 
 /* ---- Search Bar ---- */
 .search-bar-container {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(251, 248, 243, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-xl);
   padding: var(--spacing-lg);
   box-shadow: var(--shadow-md);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(19, 46, 32, 0.12);
   margin-bottom: var(--spacing-2xl);
 }
 
@@ -67,8 +67,8 @@
 
 .search-input:focus {
   outline: none;
-  border-color: var(--primary-main);
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+  border-color: #132E20;
+  box-shadow: 0 0 0 3px rgba(19, 46, 32, 0.15);
 }
 
 .search-icon {
@@ -84,12 +84,12 @@
 .filters-sidebar {
   position: sticky;
   top: 1rem;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(251, 248, 243, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-xl);
   padding: var(--spacing-lg);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(19, 46, 32, 0.12);
   box-shadow: var(--shadow-md);
 }
 
@@ -125,8 +125,8 @@
 
 .filter-select:focus {
   outline: none;
-  border-color: var(--primary-main);
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+  border-color: #132E20;
+  box-shadow: 0 0 0 3px rgba(19, 46, 32, 0.15);
 }
 
 .filter-options {
@@ -146,14 +146,14 @@
 }
 
 .filter-option:hover {
-  background: var(--primary-50);
+  background: #FBF8F3;
 }
 
 .filter-option input[type="radio"] {
   cursor: pointer;
   width: 1rem;
   height: 1rem;
-  accent-color: var(--primary-main);
+  accent-color: #132E20;
 }
 
 .filter-option label {
@@ -358,7 +358,7 @@
 .result-price-value {
   font-size: 1.5rem;
   font-weight: var(--font-weight-bold);
-  color: var(--primary-main);
+  color: #132E20;
 }
 
 .result-actions {
@@ -379,24 +379,24 @@
 }
 
 .result-action-btn.primary {
-  background: linear-gradient(135deg, var(--primary-main), var(--primary-dark));
+  background: linear-gradient(135deg, #132E20, #1B3B2B);
   color: white;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);
+  box-shadow: 0 2px 8px rgba(19, 46, 32, 0.25);
 }
 
 .result-action-btn.primary:hover {
-  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.35);
+  box-shadow: 0 4px 15px rgba(19, 46, 32, 0.35);
   transform: translateY(-1px);
 }
 
 .result-action-btn.outline {
   background-color: white;
-  color: var(--primary-main);
-  border: 1px solid var(--primary-main);
+  color: #132E20;
+  border: 1px solid #132E20;
 }
 
 .result-action-btn.outline:hover {
-  background-color: var(--primary-50);
+  background-color: #FBF8F3;
 }
 
 /* ---- Pagination ---- */
@@ -422,16 +422,16 @@
 }
 
 .pagination-btn:hover {
-  background-color: var(--primary-50);
-  border-color: var(--primary-200);
-  color: var(--primary-main);
+  background-color: #FBF8F3;
+  border-color: rgba(19, 46, 32, 0.3);
+  color: #132E20;
 }
 
 .pagination-btn.active {
-  background: linear-gradient(135deg, var(--primary-main), var(--primary-dark));
+  background: linear-gradient(135deg, #132E20, #1B3B2B);
   color: white;
-  border-color: var(--primary-main);
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+  border-color: #132E20;
+  box-shadow: 0 2px 8px rgba(19, 46, 32, 0.3);
 }
 
 /* ---- Empty State ---- */

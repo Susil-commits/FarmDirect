@@ -9,7 +9,7 @@
   right: -8px;
   min-width: 20px;
   height: 20px;
-  background: linear-gradient(135deg, var(--primary-dark, #10b981) 0%, var(--primary-700, #059669) 100%);
+  background: linear-gradient(135deg, #132E20 0%, #1B3B2B 100%);
   color: white;
   font-size: 12px;
   font-weight: bold;
@@ -18,7 +18,7 @@
   align-items: center;
   justify-content: center;
   padding: 0 4px;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 2px 8px rgba(19, 46, 32, 0.3);
   animation: badgePulse 2s ease-in-out infinite;
 }
 
@@ -37,7 +37,7 @@
 
 .nav-icon-button:hover {
   transform: translateY(-2px);
-  background-color: rgba(34, 197, 94, 0.06);
+  background-color: rgba(19, 46, 32, 0.06);
 }
 
 .nav-icon-button.has-items {
@@ -88,7 +88,7 @@
 .item-preview-image {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, var(--primary-100, #dcfce7) 0%, var(--primary-200, #bbf7d0) 100%);
+  background: linear-gradient(135deg, #FBF8F3 0%, #F4EFE6 100%);
   border-radius: var(--radius-sm, 6px);
   display: flex;
   align-items: center;
@@ -113,7 +113,7 @@
 
 .item-preview-price {
   font-size: 12px;
-  color: var(--primary-700, #059669);
+  color: #132E20;
   font-weight: bold;
 }
 

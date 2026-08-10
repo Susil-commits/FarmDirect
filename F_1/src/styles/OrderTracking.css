@@ -30,8 +30,8 @@
 }
 
 .order-list-item.selected {
-  border-color: var(--accent-main, #fb923c);
-  background-color: var(--warning-light, #fef3c7);
+  border-color: #D97736;
+  background-color: #F4EFE6;
 }
 
 .order-list-number {
@@ -102,14 +102,14 @@
 }
 
 .timeline-circle.completed {
-  background-color: var(--primary-600, #16a34a);
+  background-color: #132E20;
   color: white;
 }
 
 .timeline-circle.current {
-  background-color: var(--accent-main, #fb923c);
+  background-color: #D97736;
   color: white;
-  box-shadow: 0 0 0 8px rgba(251, 146, 60, 0.1);
+  box-shadow: 0 0 0 8px rgba(217, 119, 54, 0.15);
   animation: pulse-tracking 2s infinite;
 }
 
@@ -121,10 +121,10 @@
 /* Unique box-shadow pulse (different from global opacity-based pulse) */
 @keyframes pulse-tracking {
   0%, 100% {
-    box-shadow: 0 0 0 8px rgba(251, 146, 60, 0.1);
+    box-shadow: 0 0 0 8px rgba(217, 119, 54, 0.15);
   }
   50% {
-    box-shadow: 0 0 0 12px rgba(251, 146, 60, 0.05);
+    box-shadow: 0 0 0 12px rgba(217, 119, 54, 0.08);
   }
 }
 
@@ -139,7 +139,7 @@
 }
 
 .timeline-line.completed {
-  background-color: var(--primary-600, #16a34a);
+  background-color: #132E20;
 }
 
 .timeline-line.pending {
@@ -159,11 +159,11 @@
 }
 
 .timeline-title.completed {
-  color: var(--primary-600, #16a34a);
+  color: #132E20;
 }
 
 .timeline-title.current {
-  color: var(--accent-main, #fb923c);
+  color: #D97736;
 }
 
 .timeline-title.pending {
@@ -389,25 +389,25 @@
 }
 
 .action-button.primary {
-  background: linear-gradient(135deg, var(--primary-main, #22c55e), var(--primary-dark, #059669));
+  background: linear-gradient(135deg, #132E20, #1B3B2B);
   color: white;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);
+  box-shadow: 0 2px 8px rgba(19, 46, 32, 0.25);
 }
 
 .action-button.primary:hover {
-  background: linear-gradient(135deg, var(--primary-dark, #059669), var(--primary-700, #047857));
-  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.35);
+  background: linear-gradient(135deg, #1B3B2B, #132E20);
+  box-shadow: 0 4px 16px rgba(19, 46, 32, 0.35);
   transform: translateY(-1px);
 }
 
 .action-button.outline {
   background-color: white;
-  color: var(--primary-main, #22c55e);
-  border: 2px solid var(--primary-main, #22c55e);
+  color: #132E20;
+  border: 2px solid #132E20;
 }
 
 .action-button.outline:hover {
-  background-color: var(--primary-50, #f0fdf4);
+  background-color: #FBF8F3;
   transform: translateY(-1px);
 }
 

@@ -268,26 +268,22 @@ export default function AdminProfile() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-28 pb-12">
+      <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body pt-28 pb-16">
         {/* Premium Header Section */}
-        <div className="relative min-h-64 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 overflow-hidden">
-          {/* Animated background elements */}
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute top-0 right-1/4 w-96 h-96 bg-white rounded-full filter blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-0 left-1/3 w-72 h-72 bg-indigo-400 rounded-full filter blur-3xl animate-pulse"></div>
-          </div>
+        <div className="relative min-h-64 bg-gradient-to-tr from-[#132E20] via-[#1B3B2B] to-[#254D38] overflow-hidden rounded-[36px] max-w-7xl mx-auto shadow-2xl border border-white/10">
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#D97736]/20 rounded-full blur-3xl pointer-events-none"></div>
 
           {/* Header Content */}
           <div className="relative h-full flex items-center py-10 px-6 md:px-12">
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 w-full">
               {/* Avatar */}
               <div className="relative">
-                <div className="w-24 h-24 sm:w-40 sm:h-40 rounded-3xl bg-white shadow-2xl p-3 ring-4 ring-white transform hover:scale-105 transition duration-300">
+                <div className="w-24 h-24 sm:w-36 sm:h-36 rounded-3xl bg-white shadow-2xl p-2.5 ring-4 ring-white/20">
                   <Avatar user={user} size="xl" className="w-full h-full" />
                 </div>
                 {isEditing && (
-                  <label className="absolute bottom-2 right-2 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-full p-3 cursor-pointer shadow-lg transition transform hover:scale-110">
-                    <Camera size={20} />
+                  <label className="absolute bottom-1 right-1 bg-[#D97736] hover:bg-[#c06528] text-white rounded-full p-2.5 cursor-pointer shadow-lg transition">
+                    <Camera size={16} />
                     <input type="file" name="photo" onChange={handleChange} hidden accept="image/*" />
                   </label>
                 )}
@@ -295,32 +291,37 @@ export default function AdminProfile() {
 
               {/* Info */}
               <div className="text-white flex-1 min-w-0 text-center sm:text-left">
-                <h1 className="text-3xl sm:text-5xl font-black mb-2 break-words">{user?.name || 'Administrator'}</h1>
-                <div className="flex items-center gap-3 flex-wrap mb-4">
-                  <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition">
-                    <Shield size={16} /> {department}
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736] bg-[#D97736]/20 px-3 py-1 rounded-full border border-[#D97736]/30 inline-block mb-2">
+                  ADMINISTRATOR CONTROL
+                </span>
+                <h1 className="font-serif-display text-3xl sm:text-5xl font-normal text-[#FBF8F3] mb-2 break-words">
+                  {user?.name || 'Administrator'}
+                </h1>
+                <div className="flex items-center gap-2 flex-wrap mb-3 justify-center sm:justify-start">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold bg-white/15 backdrop-blur-sm border border-white/20 text-white">
+                    <Shield size={14} className="text-[#D97736]" /> {department}
                   </span>
-                  <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold bg-green-400/20 backdrop-blur-sm border border-green-400/30 text-green-100">
-                    <CheckCircle size={16} /> Active & Verified
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 backdrop-blur-sm border border-emerald-400/30 text-emerald-200">
+                    <CheckCircle size={14} /> Active & Verified
                   </span>
-                  <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold bg-blue-400/20 backdrop-blur-sm border border-blue-400/30 text-blue-100">
-                    <Zap size={16} /> {adminLevel}
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 backdrop-blur-sm border border-amber-400/30 text-amber-200">
+                    <Zap size={14} /> {adminLevel}
                   </span>
                 </div>
                 {joinDate && (
-                  <p className="text-blue-100 text-sm">Member since {joinDate} &bull; {membershipDuration} active</p>
+                  <p className="text-stone-300 text-xs">Member since {joinDate} &bull; {membershipDuration} active</p>
                 )}
               </div>
 
               {/* Quick Stats */}
-              <div className="hidden lg:grid grid-cols-2 gap-4">
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                  <p className="text-blue-100 text-xs font-semibold uppercase tracking-wide">Active Sessions</p>
-                  <p className="text-3xl font-bold text-white mt-1">{stats.activeSessions}</p>
+              <div className="hidden lg:grid grid-cols-2 gap-3">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/15 text-center">
+                  <p className="text-stone-300 text-[10px] font-bold uppercase tracking-wider">Active Sessions</p>
+                  <p className="font-serif-display text-3xl font-bold text-white mt-0.5">{stats.activeSessions}</p>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                  <p className="text-blue-100 text-xs font-semibold uppercase tracking-wide">Total Users</p>
-                  <p className="text-3xl font-bold text-white mt-1">{statsLoading ? '...' : stats.totalUsers.toLocaleString()}</p>
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/15 text-center">
+                  <p className="text-stone-300 text-[10px] font-bold uppercase tracking-wider">Total Users</p>
+                  <p className="font-serif-display text-3xl font-bold text-[#FBF8F3] mt-0.5">{statsLoading ? '...' : stats.totalUsers.toLocaleString()}</p>
                 </div>
               </div>
             </div>

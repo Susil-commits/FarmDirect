@@ -366,8 +366,7 @@ export default function CropDetail() {
   return (
     <ErrorBoundary>
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white px-4 relative pt-28 pb-12">
-        <div className="absolute inset-0 premium-gradient pointer-events-none"></div>
+      <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body px-4 relative pt-28 pb-28 lg:pb-16">
         <div className="max-w-6xl mx-auto relative z-10">
           
           {/* Back Button */}
@@ -808,6 +807,39 @@ export default function CropDetail() {
         </div>
       </div>
 
+      {/* Sticky Mobile Action Bar */}
+      {isAvailable && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-stone-200/80 p-3 px-4 z-40 flex items-center justify-between gap-3 shadow-xl">
+          <div>
+            <p className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Est. Total</p>
+            <p className="text-xl font-extrabold text-[#132E20]">₹{cropPrice * quantity}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                if (!isAuthenticated) {
+                  setRedirectPath(`/crop/${cropId}`);
+                  setShowLoginPrompt(true);
+                } else if (user?.role !== 'buyer') {
+                  addToast('Only buyers can make offers.', 'warning');
+                } else {
+                  setShowOfferModal(true);
+                }
+              }}
+              className="px-3.5 py-2.5 bg-stone-100 text-stone-800 font-bold rounded-xl text-xs hover:bg-stone-200 transition min-h-[44px] cursor-pointer border border-stone-200"
+            >
+              Make Offer
+            </button>
+            <button
+              onClick={handleAddToCart}
+              className="px-4 py-2.5 bg-[#132E20] text-white font-bold rounded-xl text-xs hover:bg-[#1B3B2B] transition min-h-[44px] flex items-center gap-1.5 cursor-pointer shadow-md"
+            >
+              <ShoppingCart size={16} /> Add to Cart
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Login Prompt Modal */}
       <LoginPrompt
         isOpen={showLoginPrompt}
@@ -823,10 +855,11 @@ export default function CropDetail() {
         onClose={() => setShowOfferModal(false)}
         crop={crop}
         onSuccess={() => {
-          // Additional logic on success if needed, e.g., reloading state
+          addToast('Offer sent successfully!', 'success');
         }}
       />
     </PageTransition>
     </ErrorBoundary>
   );
 }
+

@@ -186,7 +186,8 @@ export function WishlistProvider({ children }) {
             const crop = item.cropId || item;
             return { ...crop, _id: crop._id, id: crop._id || crop.id };
           }));
-        } catch {
+        } catch (resyncErr) {
+          console.error('Failed to re-sync wishlist:', resyncErr);
         }
       }
     }

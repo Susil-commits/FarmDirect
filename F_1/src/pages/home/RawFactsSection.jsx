@@ -1,87 +1,69 @@
-import { Leaf, TrendingUp, ShieldCheck, Users } from 'lucide-react';
-import AnimatedNumber from '../../components/common/AnimatedNumber';
-import ScrollAnimation from '../../components/common/ScrollAnimation';
+import React from 'react';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
+import { Sprout, Sparkles, Volume2, ShieldCheck, Heart, Layers } from 'lucide-react';
 
 export default function RawFactsSection() {
-  const facts = [
+  const cards = [
     {
-      id: 1,
-      icon: Users,
-      value: 0,
-      suffix: '',
-      title: 'Middlemen',
-      description: 'We connect you directly with farmers, eliminating all intermediary costs and delays.',
-      color: 'from-blue-500 to-cyan-400',
+      tag: '100+ CROP VARIETIES',
+      title: 'Built around how you eat, not how supermarkets dictate.',
+      desc: 'FarmDirect automatically detects regional soil harvests, organic certifications, and seasonal availability across 18 agricultural zones.',
+      badge: 'Certified Organic',
     },
     {
-      id: 2,
-      icon: TrendingUp,
-      value: 30,
-      prefix: '+',
-      suffix: '%',
-      title: 'Farmer Profit',
-      description: 'By selling directly, farmers earn significantly more compared to traditional wholesale markets.',
-      color: 'from-green-500 to-emerald-400',
+      tag: 'FARMER VOICE DICTATION',
+      title: 'Farmer logs updated right from the field.',
+      desc: 'Growers send voice notes directly from their farm plots — giving you instant audio updates on today’s picking schedule.',
+      badge: 'Voice Verified',
     },
     {
-      id: 3,
-      icon: Leaf,
-      value: 100,
-      suffix: '%',
-      title: 'Freshness Guarantee',
-      description: 'Produce goes straight from the farm to your table, ensuring maximum nutritional value.',
-      color: 'from-amber-500 to-orange-400',
+      tag: 'FAIR PRICE TRANSPARENCY',
+      title: 'Your trade stays honest.',
+      desc: 'Zero hidden commission margins. Every invoice shows exact farm-gate earnings, packaging costs, and express delivery logistics.',
+      badge: '100% Transparent',
     },
-    {
-      id: 4,
-      icon: ShieldCheck,
-      value: 48,
-      suffix: 'h',
-      title: 'Harvest to Home',
-      description: 'Our optimized logistics ensure most orders are delivered within 48 hours of harvest.',
-      color: 'from-purple-500 to-indigo-400',
-    }
   ];
 
   return (
-    <section className="py-24 px-4 sm:px-6 lg:px-8 relative z-20 bg-white/50 backdrop-blur-3xl border-y border-white/60">
-      <div className="max-w-7xl mx-auto">
-        <ScrollAnimation className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-4">
-            The Direct Impact
+    <section className="relative bg-[#FBF8F3] text-[#132E20] py-20 px-4 md:px-8 border-t border-[#132E20]/10">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center max-w-3xl mx-auto mb-14">
+          <span className="font-sans-body text-xs font-bold uppercase tracking-widest text-[#132E20]/60 bg-[#F4EFE6] px-3.5 py-1.5 rounded-full border border-[#132E20]/10">
+            WISPR FARM DIRECTIVITY
+          </span>
+          <h2 className="font-serif-display text-4xl sm:text-5xl md:text-6xl font-normal mt-4 leading-tight">
+            Built around <span className="italic text-[#D97736] font-normal">how farmers harvest</span>, not how traders dictate.
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto font-medium">
-            Why direct farm-to-table trade is better for everyone.
-          </p>
-        </ScrollAnimation>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {facts.map((fact, index) => (
-            <ScrollAnimation 
-              key={fact.id} 
-              className="bg-white/70 backdrop-blur-xl border border-white/80 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-300 group hover:-translate-y-2"
-              style={{ animationDelay: `${index * 0.1}s` }}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {cards.map((item, idx) => (
+            <motion.div
+              key={item.tag}
+              initial={{ opacity: 0, y: 25 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: idx * 0.15 }}
+              className="bg-white/80 backdrop-blur-sm border border-[#132E20]/12 rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between"
             >
-              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${fact.color} flex items-center justify-center text-white mb-6 shadow-lg transform group-hover:rotate-6 transition-transform duration-300`}>
-                <fact.icon className="w-7 h-7" />
-              </div>
-              
-              <div className="mb-4">
-                <h3 className="text-5xl font-black text-gray-900 tracking-tighter flex items-baseline gap-1">
-                  <AnimatedNumber 
-                    value={fact.value} 
-                    prefix={fact.prefix}
-                    suffix={fact.suffix}
-                    animateOnVisible={true} 
-                  />
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-sans-body text-[10px] font-extrabold tracking-widest uppercase text-[#D97736]">
+                    {item.tag}
+                  </span>
+                  <span className="font-sans-body text-[10px] font-bold bg-[#F4EFE6] text-[#132E20] px-2.5 py-1 rounded-full border border-[#132E20]/10">
+                    {item.badge}
+                  </span>
+                </div>
+                <h3 className="font-serif-display text-2xl font-bold text-[#132E20] mb-3">
+                  {item.title}
                 </h3>
-                <p className="text-lg font-bold text-gray-800 mt-2">{fact.title}</p>
+                <p className="font-sans-body text-sm text-[#132E20]/75 leading-relaxed">
+                  {item.desc}
+                </p>
               </div>
-              
-              <p className="text-gray-600 leading-relaxed font-medium text-sm">
-                {fact.description}
-              </p>
-            </ScrollAnimation>
+            </motion.div>
           ))}
         </div>
       </div>

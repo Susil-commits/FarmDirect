@@ -6,7 +6,7 @@
   width: 100%;
   height: 8px;
   border-radius: 5px;
-  background: linear-gradient(to right, #86efac, #10b981, #059669);
+  background: linear-gradient(to right, #F4EFE6, #D97736, #132E20);
   outline: none;
   -webkit-slider-thumb-appearance: none;
   appearance: none;
@@ -20,36 +20,36 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: white;
+  background: #FBF8F3;
   cursor: pointer;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2), 0 2px 8px rgba(0, 0, 0, 0.2);
-  border: 2px solid #22c55e;
+  box-shadow: 0 0 0 3px rgba(19, 46, 32, 0.2), 0 2px 8px rgba(0, 0, 0, 0.2);
+  border: 2px solid #132E20;
   transition: all 0.2s ease;
 }
 
 .slider::-webkit-slider-thumb:hover {
   transform: scale(1.2);
-  box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 6px rgba(19, 46, 32, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .slider::-webkit-slider-thumb:active {
-  box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 8px rgba(19, 46, 32, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .slider::-moz-range-thumb {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: white;
+  background: #FBF8F3;
   cursor: pointer;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2), 0 2px 8px rgba(0, 0, 0, 0.2);
-  border: 2px solid #22c55e;
+  box-shadow: 0 0 0 3px rgba(19, 46, 32, 0.2), 0 2px 8px rgba(0, 0, 0, 0.2);
+  border: 2px solid #132E20;
   transition: all 0.2s ease;
 }
 
 .slider::-moz-range-thumb:hover {
   transform: scale(1.2);
-  box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 6px rgba(19, 46, 32, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .slider::-moz-range-track {
@@ -101,7 +101,7 @@ input[type='checkbox'] {
 
 input[type='radio']:hover,
 input[type='checkbox']:hover {
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+  box-shadow: 0 0 0 3px rgba(19, 46, 32, 0.2);
 }
 
 input[type='radio']:checked,
@@ -124,18 +124,18 @@ input[type='checkbox']:checked {
 }
 
 .filter-panel::-webkit-scrollbar-track {
-  background: #f0fdf4;
+  background: #FBF8F3;
   border-radius: 10px;
 }
 
 .filter-panel::-webkit-scrollbar-thumb {
-  background: #22c55e;
+  background: #132E20;
   border-radius: 10px;
   transition: all 0.3s ease;
 }
 
 .filter-panel::-webkit-scrollbar-thumb:hover {
-  background: #16a34a;
+  background: #1B3B2B;
 }
 
 /* ---- Responsive ---- */

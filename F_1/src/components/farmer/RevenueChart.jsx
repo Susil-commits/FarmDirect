@@ -1,122 +1,91 @@
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import Card from '../../components/common/Card';
 
 export default function RevenueChart({ data }) {
   if (!data || !data.data || data.data.length === 0) {
     return (
-      <Card>
-        <div className="p-16 text-center">
-          <p className="text-gray-500">No revenue data available for this period</p>
-        </div>
-      </Card>
+      <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] p-12 text-center shadow-xl">
+        <p className="text-stone-500 font-medium text-xs">No harvest revenue data recorded for this selection</p>
+      </div>
     );
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-6 font-sans-body text-[#132E20]">
       {/* Revenue Trend Line Chart */}
-      <Card>
-        <div className="p-6">
-          <h3 className="text-lg font-bold mb-4">Revenue Trend</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data.data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="date" 
-                style={{ fontSize: '12px' }}
-              />
-              <YAxis 
-                style={{ fontSize: '12px' }}
-                tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}K`}
-              />
-              <Tooltip 
-                formatter={(value) => `₹${(value / 1000).toFixed(2)}K`}
-                labelFormatter={(label) => `Date: ${label}`}
-              />
-              <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="revenue" 
-                stroke="#10b981" 
-                name="Revenue"
-                strokeWidth={2}
-                dot={{ fill: '#10b981' }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+      <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] p-6 shadow-xl">
+        <div className="mb-4">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736]">SALES ANALYTICS</span>
+          <h3 className="font-serif-display text-2xl font-normal text-[#132E20]">Revenue Trajectory Trend</h3>
         </div>
-      </Card>
+        <ResponsiveContainer width="100%" height={280}>
+          <LineChart data={data.data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" />
+            <XAxis dataKey="date" style={{ fontSize: '11px', fill: '#57534e' }} />
+            <YAxis style={{ fontSize: '11px', fill: '#57534e' }} tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}K`} />
+            <Tooltip formatter={(value) => `₹${(value / 1000).toFixed(2)}K`} labelFormatter={(label) => `Date: ${label}`} />
+            <Legend />
+            <Line type="monotone" dataKey="revenue" stroke="#D97736" name="Gross Revenue" strokeWidth={3} dot={{ fill: '#D97736', r: 4 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
 
       {/* Orders & Units Sold Bar Chart */}
-      <Card>
-        <div className="p-6">
-          <h3 className="text-lg font-bold mb-4">Orders & Units Sold</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data.data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="date"
-                style={{ fontSize: '12px' }}
-              />
-              <YAxis 
-                style={{ fontSize: '12px' }}
-              />
-              <Tooltip 
-                contentStyle={{ backgroundColor: '#f3f4f6', border: '1px solid #e5e7eb' }}
-              />
-              <Legend />
-              <Bar 
-                dataKey="orders" 
-                fill="#3b82f6" 
-                name="Orders"
-              />
-              <Bar 
-                dataKey="units" 
-                fill="#8b5cf6" 
-                name="Units Sold"
-              />
-            </BarChart>
-          </ResponsiveContainer>
+      <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] p-6 shadow-xl">
+        <div className="mb-4">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736]">QUANTITY METRICS</span>
+          <h3 className="font-serif-display text-2xl font-normal text-[#132E20]">Orders & Units Dispatched</h3>
         </div>
-      </Card>
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart data={data.data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" />
+            <XAxis dataKey="date" style={{ fontSize: '11px', fill: '#57534e' }} />
+            <YAxis style={{ fontSize: '11px', fill: '#57534e' }} />
+            <Tooltip contentStyle={{ backgroundColor: '#FBF8F3', borderRadius: '16px', border: '1px solid #e7e5e4' }} />
+            <Legend />
+            <Bar dataKey="orders" fill="#132E20" name="Orders Received" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="units" fill="#D97736" name="Units Sold (kg)" radius={[6, 6, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
       {/* Summary Stats */}
-      <Card>
-        <div className="p-6">
-          <h3 className="text-lg font-bold mb-4">Revenue Summary</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <SummaryStat
-              label="Total Revenue"
-              value={`₹${(data.totals.totalRevenue / 100000).toFixed(2)}L`}
-              color="text-green-600"
-            />
-            <SummaryStat
-              label="Total Orders"
-              value={data.totals.totalOrders}
-              color="text-blue-600"
-            />
-            <SummaryStat
-              label="Total Units"
-              value={data.totals.totalUnits}
-              color="text-purple-600"
-            />
-            <SummaryStat
-              label="Avg Daily Revenue"
-              value={`₹${(parseFloat(data.totals.avgDailyRevenue) / 1000).toFixed(1)}K`}
-              color="text-orange-600"
-            />
-          </div>
+      <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] p-6 shadow-xl">
+        <div className="mb-4">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736]">PERFORMANCE SUMMARY</span>
+          <h3 className="font-serif-display text-2xl font-normal text-[#132E20]">Revenue Highlights</h3>
         </div>
-      </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <SummaryStat
+            label="Total Revenue"
+            value={`₹${(data.totals.totalRevenue / 100000).toFixed(2)}L`}
+            color="text-[#132E20]"
+          />
+          <SummaryStat
+            label="Total Orders"
+            value={data.totals.totalOrders}
+            color="text-[#D97736]"
+          />
+          <SummaryStat
+            label="Total Units"
+            value={data.totals.totalUnits}
+            color="text-[#132E20]"
+          />
+          <SummaryStat
+            label="Avg Order Value"
+            value={`₹${(data.totals.averageOrderValue || 0).toLocaleString('en-IN')}`}
+            color="text-[#D97736]"
+          />
+        </div>
+      </div>
     </div>
   );
 }
 
 function SummaryStat({ label, value, color }) {
   return (
-    <div className="border-l-4 border-gray-300 pl-4">
-      <p className="text-gray-600 text-sm">{label}</p>
-      <p className={`text-2xl font-bold ${color} mt-1`}>{value}</p>
+    <div className="p-4 bg-stone-50 border border-stone-200/80 rounded-2xl">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-stone-500">{label}</p>
+      <p className={`font-serif-display text-2xl font-normal mt-1 ${color}`}>{value}</p>
     </div>
   );
 }

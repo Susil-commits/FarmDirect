@@ -24,7 +24,7 @@ const createCustomIcon = (color) => {
 };
 
 const farmerIcon = createCustomIcon('green');
-const buyerIcon = createCustomIcon('blue');
+const buyerIcon = createCustomIcon('orange');
 
 export default function OrderMap({ order }) {
   const defaultFarmerCoords = [28.6139, 77.2090];
@@ -39,7 +39,7 @@ export default function OrderMap({ order }) {
   ];
 
   return (
-    <div className="w-full h-80 rounded-xl overflow-hidden border-2 border-slate-200 shadow-inner relative z-0">
+    <div className="w-full h-80 rounded-[28px] overflow-hidden border border-stone-200/90 shadow-xl relative z-0">
       <MapContainer 
         center={center} 
         zoom={10} 
@@ -54,37 +54,38 @@ export default function OrderMap({ order }) {
         {/* Farmer Marker */}
         <Marker position={farmerCoords} icon={farmerIcon}>
           <Popup>
-            <div className="font-bold flex items-center gap-2 text-green-700">
-              <MapPin size={16} /> Farmer Location
+            <div className="font-bold flex items-center gap-2 text-[#132E20]">
+              <MapPin size={16} className="text-emerald-700" /> Farm Origin Location
             </div>
-            <span className="text-sm">Origin</span>
+            <span className="text-xs text-stone-600">Direct Farm Pickup Point</span>
           </Popup>
         </Marker>
 
         {/* Buyer Marker */}
         <Marker position={buyerCoords} icon={buyerIcon}>
           <Popup>
-             <div className="font-bold flex items-center gap-2 text-blue-700">
-              <MapPin size={16} /> Your Location
+             <div className="font-bold flex items-center gap-2 text-[#D97736]">
+              <MapPin size={16} /> Destination Delivery Address
             </div>
-            <span className="text-sm">Destination</span>
+            <span className="text-xs text-stone-600">Delivery Point</span>
           </Popup>
         </Marker>
 
         {/* Route Line */}
         <Polyline 
           positions={[farmerCoords, buyerCoords]} 
-          color="#f59e0b" 
+          color="#D97736" 
           weight={4} 
-          dashArray="10, 10" 
+          dashArray="8, 8" 
         />
       </MapContainer>
       
       {/* Overlay Status Badge */}
-      <div className="absolute top-4 left-4 z-[400] bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg border border-slate-200 flex items-center gap-2">
-         <Truck className="w-5 h-5 text-orange-600" />
-         <span className="font-semibold text-slate-800 text-sm tracking-wide">Live Route Tracking</span>
+      <div className="absolute top-4 left-4 z-[400] bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-stone-200 flex items-center gap-2 font-sans-body">
+         <Truck className="w-4 h-4 text-[#D97736]" />
+         <span className="font-bold text-[#132E20] text-xs uppercase tracking-wider">Live Route Tracking</span>
       </div>
     </div>
   );
 }
+

@@ -1,107 +1,43 @@
 import React from 'react';
 import { useRouter } from '../hooks/useRouter';
-import PageTransition from '../components/common/PageTransition';
+import PageTransition from '../components/common/PageTransition.jsx';
+import DynamicFloatingNavbar from '../components/landing/DynamicFloatingNavbar';
+import GiantBrandFooter from '../components/common/GiantBrandFooter';
 
 export default function Refund() {
   const { navigate } = useRouter();
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gray-50 pt-32 pb-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg shadow-lg p-8 md:p-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-8">Refund Policy</h1>
-            
-            <div className="prose prose-lg max-w-none text-gray-700 space-y-6">
-              <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">1. Refund Eligibility</h2>
-                <p>
-                  Customers are eligible for refunds within 7 days of purchase if the product quality does not meet 
-                  the description provided on the listing. Refund requests must be supported with evidence (photos/videos).
-                </p>
-              </section>
+      <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body">
+        <DynamicFloatingNavbar activeSection="cream" onNavigate={navigate} />
 
-              <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">2. Non-Refundable Items</h2>
-                <p>
-                  Refunds cannot be processed for items that are:
-                  <ul className="list-disc list-inside mt-2 space-y-1">
-                    <li>Consumed or used</li>
-                    <li>Damaged due to mishandling during delivery</li>
-                    <li>Not collected within the agreed timeframe</li>
-                  </ul>
-                </p>
-              </section>
+        <section className="pt-32 pb-20 px-4 md:px-8 max-w-4xl mx-auto">
+          <span className="font-sans-body text-xs font-bold uppercase tracking-widest text-[#132E20]/60 bg-[#F4EFE6] px-3.5 py-1.5 rounded-full border border-[#132E20]/10">
+            REFUND POLICY
+          </span>
+          <h1 className="font-serif-display text-5xl sm:text-6xl font-normal mt-4 leading-tight mb-8">
+            100% Purity <span className="italic text-[#D97736]">refund guarantee.</span>
+          </h1>
 
-              <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">3. Refund Timeline</h2>
-                <p>
-                  Once a refund is approved, it will be processed within 5-7 business days. The refund amount will be 
-                  credited to the original payment method used for the purchase.
-                </p>
-              </section>
+          <div className="bg-white/90 border border-[#132E20]/12 rounded-3xl p-8 sm:p-12 shadow-xl space-y-6 text-sm text-[#132E20]/80 leading-relaxed">
+            <h3 className="font-serif-display text-2xl font-bold text-[#132E20]">
+              Instant Quality Refund
+            </h3>
+            <p>
+              If your fresh produce arrives damaged or fails organic purity standards, submit a photo report in your dashboard within 24 hours. We issue a 100% refund to your original payment method within 1 business hour.
+            </p>
 
-              <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">4. Return Process</h2>
-                <p>
-                  For eligible refunds, customers must arrange return of the product with the farmer. Pickup arrangements 
-                  will be coordinated through FarmDirect's support team.
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">5. Partial Refunds</h2>
-                <p>
-                  Partial refunds may be issued if only a portion of the ordered product has quality issues. The refund 
-                  amount will be calculated proportionally based on the affected quantity.
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">6. Refund for Cancellations</h2>
-                <p>
-                  Orders can be cancelled before confirmation by the seller. Once confirmed, cancellations are subject 
-                  to a 10% administrative fee. Cancellations cannot be processed 1 hour before scheduled delivery.
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">7. Dispute Resolution</h2>
-                <p>
-                  If you disagree with a refund decision, you can raise a formal dispute through FarmDirect's support 
-                  team. We will investigate and provide a resolution within 3-5 business days.
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">8. Contact</h2>
-                <p>
-                  For refund-related queries, contact us at <strong>refunds@farmdirect.com</strong> or call 
-                  <strong> +91-98765-43210</strong>.
-                </p>
-              </section>
-            </div>
-
-
-          {/* Footer */}
-          <div className="mt-16 pt-8 border-t border-gray-200">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-              <button
-                onClick={() => navigate('/')}
-                className="flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold transition-colors cursor-pointer"
-              >
-                ← Back to Home
-              </button>
-              <div className="flex gap-6 text-sm">
-                <button onClick={() => navigate('/privacy')} className="text-gray-600 hover:text-gray-900 transition">Privacy</button>
-                <button onClick={() => navigate('/terms')} className="text-gray-600 hover:text-gray-900 transition">Terms</button>
-                <button onClick={() => navigate('/contact')} className="text-gray-600 hover:text-gray-900 transition">Contact</button>
-              </div>
-            </div>
+            <h3 className="font-serif-display text-2xl font-bold text-[#132E20]">
+              Fair Farmer Protection
+            </h3>
+            <p>
+              Refund claims are verified by our regional agronomists to protect local farmers while upholding uncompromised quality for buyers.
+            </p>
           </div>
-            <p className="text-gray-600 text-sm mt-8">Last updated: 2026</p>
-          </div>
-        </div>
+        </section>
+
+        <GiantBrandFooter onNavigate={navigate} />
       </div>
     </PageTransition>
   );

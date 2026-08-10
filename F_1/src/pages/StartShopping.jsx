@@ -54,7 +54,7 @@ export default function StartShopping() {
       }
       
       if (user.kycStatus !== VERIFICATION_STATUS.VERIFIED) {
-        handleNavigation('/verify');
+        handleNavigation('/verification/progress');
         return;
       }
       

@@ -88,69 +88,69 @@ export default function BulkUploadForm({ onUploadSuccess, onDownloadTemplate }) 
   };
 
   return (
-    <div className="space-y-6">
-      {/* Instructions */}
-      <Card>
-        <div className="p-6 bg-blue-50 border-l-4 border-blue-600">
-          <h3 className="font-bold text-blue-900 mb-3">CSV Upload Guide</h3>
-          <ul className="text-blue-800 text-sm space-y-2">
-            <li>✓ Required columns: <strong>cropName, category, price, quantity, description</strong></li>
-            <li>✓ Optional columns: <strong>unit, discount</strong></li>
-            <li>✓ Maximum 1000 crops per upload</li>
-            <li>✓ File size limit: 5 MB</li>
-            <li>✓ Use comma (,) as delimiter</li>
-          </ul>
-          <Button
-            onClick={onDownloadTemplate}
-            className="mt-4 flex items-center gap-2"
-            variant="primary"
-          >
-            <Download size={16} />
-            Download Template
-          </Button>
+    <div className="space-y-6 font-sans-body text-[#132E20]">
+      {/* Instructions Card */}
+      <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] p-6 shadow-xl relative overflow-hidden">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-2xl bg-[#D97736]/10 text-[#D97736] flex items-center justify-center font-bold">
+            <Download size={20} />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736]">BULK LISTING GUIDE</span>
+            <h3 className="font-serif-display text-2xl font-normal text-[#132E20]">CSV Crop Import Standard</h3>
+          </div>
         </div>
-      </Card>
+        <ul className="text-stone-600 text-xs space-y-1.5 mb-4 pl-1">
+          <li className="flex items-center gap-2">✓ Required columns: <strong className="text-[#132E20]">cropName, category, price, quantity, description</strong></li>
+          <li className="flex items-center gap-2">✓ Optional columns: <strong className="text-[#132E20]">unit, discount</strong></li>
+          <li className="flex items-center gap-2">✓ Maximum 1,000 crops per single batch upload</li>
+          <li className="flex items-center gap-2">✓ Standard file size limit: 5 MB (.csv format)</li>
+        </ul>
+        <button
+          onClick={onDownloadTemplate}
+          className="py-2.5 px-5 bg-[#132E20] hover:bg-[#1B3B2B] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md flex items-center gap-2 transition cursor-pointer"
+        >
+          <Download size={16} />
+          <span>Download Sample CSV Template</span>
+        </button>
+      </div>
 
       {/* Upload Area */}
-      <Card>
-        <div className="p-6">
-          <h3 className="font-bold mb-4">Upload CSV File</h3>
-          
-          <form onSubmit={handleUpload}>
-            <div
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
-                dragActive 
-                  ? 'border-green-600 bg-green-50' 
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
-            >
-              <Upload className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-              <p className="font-semibold text-gray-900 mb-1">
-                {file ? file.name : 'Drag and drop your CSV file here'}
-              </p>
-              <p className="text-gray-600 text-sm mb-4">
-                or click to select a file
-              </p>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                className="hidden"
-                id="fileInput"
-              />
-              <label
-                htmlFor="fileInput"
-                className="cursor-pointer"
-              >
-                <Button as="span" variant="secondary" size="sm">
-                  Select File
-                </Button>
-              </label>
-            </div>
+      <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] p-6 shadow-xl">
+        <h3 className="font-serif-display text-2xl font-normal text-[#132E20] mb-4">Upload Crop CSV Batch</h3>
+        
+        <form onSubmit={handleUpload}>
+          <div
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            className={`border-2 border-dashed rounded-[24px] p-8 text-center transition-all cursor-pointer ${
+              dragActive 
+                ? 'border-[#D97736] bg-[#D97736]/10' 
+                : 'border-stone-200 hover:border-stone-400 bg-stone-50/50'
+            }`}
+          >
+            <Upload className="w-12 h-12 mx-auto mb-3 text-[#D97736]" />
+            <p className="font-bold text-[#132E20] text-sm mb-1">
+              {file ? file.name : 'Drag & drop your crop CSV batch file here'}
+            </p>
+            <p className="text-stone-500 text-xs mb-4">
+              or browse from your local file directory
+            </p>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange}
+              className="hidden"
+              id="fileInput"
+            />
+            <label htmlFor="fileInput" className="cursor-pointer">
+              <span className="inline-block py-2.5 px-5 bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold text-xs uppercase tracking-wider rounded-xl transition">
+                Browse Files
+              </span>
+            </label>
+          </div>
 
             {error && (
               <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
@@ -197,18 +197,17 @@ export default function BulkUploadForm({ onUploadSuccess, onDownloadTemplate }) 
             </div>
           </form>
         </div>
-      </Card>
 
       {/* Upload Result */}
       {result && (
         <Card>
           <div className={`p-6 border-l-4 ${
-            result.summary.inserted > 0
+            result.summary?.inserted > 0
               ? 'border-green-600 bg-green-50'
               : 'border-yellow-600 bg-yellow-50'
           }`}>
             <h3 className="font-bold mb-4 flex items-center gap-2">
-              {result.summary.inserted > 0 ? (
+              {result.summary?.inserted > 0 ? (
                 <>
                   <CheckCircle className="w-5 h-5 text-green-600" />
                   <span className="text-green-900">Upload Complete</span>
@@ -225,15 +224,15 @@ export default function BulkUploadForm({ onUploadSuccess, onDownloadTemplate }) 
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="text-center">
                 <p className="text-gray-600 text-sm">Total Rows</p>
-                <p className="text-2xl font-bold text-gray-900">{result.summary.total}</p>
+                <p className="text-2xl font-bold text-gray-900">{result.summary?.total ?? 0}</p>
               </div>
               <div className="text-center">
                 <p className="text-gray-600 text-sm">Imported</p>
-                <p className="text-2xl font-bold text-green-600">{result.summary.inserted}</p>
+                <p className="text-2xl font-bold text-green-600">{result.summary?.inserted ?? 0}</p>
               </div>
               <div className="text-center">
                 <p className="text-gray-600 text-sm">Failed</p>
-                <p className="text-2xl font-bold text-red-600">{result.summary.failed}</p>
+                <p className="text-2xl font-bold text-red-600">{result.summary?.failed ?? 0}</p>
               </div>
             </div>
 
@@ -255,7 +254,7 @@ export default function BulkUploadForm({ onUploadSuccess, onDownloadTemplate }) 
               </div>
             )}
 
-            {result.summary.inserted > 0 && (
+            {result.summary?.inserted > 0 && (
               <p className="mt-4 text-sm text-gray-600">
                 ✓ {result.summary.inserted} crops have been added to your farm. 
                 They are pending admin review.

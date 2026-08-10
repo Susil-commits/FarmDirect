@@ -207,62 +207,56 @@ export default function BuyerDashboardNew() {
   return (
     <ErrorBoundary>
     <PageTransition>
-      <div className="min-h-screen premium-gradient px-4 relative overflow-hidden pt-28 pb-12">
-        {/* Decorative background circles */}
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-green-400/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="max-w-6xl mx-auto relative z-10">
+      <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body pt-28 pb-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
           <ScrollAnimation className="scroll-slide mb-8">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition mb-4"
-            >
-              ← Back
-            </button>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">My Dashboard</h1>
-            <p className="text-gray-600">
-              Welcome back, {user?.firstName}! Track your orders and manage your interests.
-            </p>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#D97736] bg-[#D97736]/10 px-3.5 py-1 rounded-full border border-[#D97736]/20 inline-block mb-2">
+              BUYER DASHBOARD
+            </span>
+            <h1 className="font-serif-display text-4xl sm:text-5xl font-normal text-[#132E20]">
+              Welcome back, <span className="italic text-[#D97736]">{user?.firstName || 'Buyer'}.</span>
+            </h1>
+            <p className="text-stone-600 text-sm mt-1">Track your active farm orders, direct crop negotiations, and wishlist.</p>
           </ScrollAnimation>
 
-          {/* Stats */}
+          {/* Stats Grid */}
           <ScrollAnimation className="scroll-slide mb-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="p-6 bg-gradient-to-br from-blue-50 to-white">
+              <div className="bg-gradient-to-tr from-[#132E20] to-[#1B3B2B] text-white p-6 rounded-3xl shadow-xl border border-white/10">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-600">Total Orders</p>
-                  <ShoppingCart className="w-5 h-5 text-blue-600" />
+                  <p className="text-xs font-bold uppercase tracking-wider text-white/70">Total Orders</p>
+                  <ShoppingCart className="w-5 h-5 text-[#D97736]" />
                 </div>
-                <p className="text-3xl font-bold text-gray-900">{stats.totalOrders}</p>
-                <p className="text-xs text-gray-500 mt-1">All time</p>
-              </Card>
+                <p className="font-serif-display text-4xl font-extrabold text-[#FBF8F3]">{stats.totalOrders}</p>
+                <p className="text-[11px] text-white/60 mt-1">All time orders</p>
+              </div>
 
-              <Card className="p-6 bg-gradient-to-br from-green-50 to-white">
+              <div className="bg-white/90 border border-stone-200/90 p-6 rounded-3xl shadow-md">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-600">Interested Crops</p>
-                  <Leaf className="w-5 h-5 text-green-600" />
+                  <p className="text-xs font-bold uppercase tracking-wider text-stone-500">Interested Crops</p>
+                  <Leaf className="w-5 h-5 text-emerald-600" />
                 </div>
-                <p className="text-3xl font-bold text-gray-900">{stats.interestedCount}</p>
-                <p className="text-xs text-gray-500 mt-1">Marked for inquiry</p>
-              </Card>
+                <p className="font-serif-display text-3xl font-bold text-[#132E20]">{stats.interestedCount}</p>
+                <p className="text-[11px] text-stone-500 mt-1">Marked for inquiry</p>
+              </div>
 
-              <Card className="p-6 bg-gradient-to-br from-orange-50 to-white">
+              <div className="bg-white/90 border border-stone-200/90 p-6 rounded-3xl shadow-md">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-600">Active Orders</p>
-                  <Truck className="w-5 h-5 text-orange-600" />
+                  <p className="text-xs font-bold uppercase tracking-wider text-stone-500">Active Orders</p>
+                  <Truck className="w-5 h-5 text-amber-600" />
                 </div>
-                <p className="text-3xl font-bold text-gray-900">{stats.activeOrdersCount}</p>
-                <p className="text-xs text-gray-500 mt-1">In progress</p>
-              </Card>
+                <p className="font-serif-display text-3xl font-bold text-[#132E20]">{stats.activeOrdersCount}</p>
+                <p className="text-[11px] text-stone-500 mt-1">Express field transit</p>
+              </div>
 
-              <Card className="p-6 bg-gradient-to-br from-purple-50 to-white">
+              <div className="bg-white/90 border border-stone-200/90 p-6 rounded-3xl shadow-md">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-gray-600">Total Spent</p>
-                  <IndianRupee className="w-5 h-5 text-purple-600" />
+                  <p className="text-xs font-bold uppercase tracking-wider text-stone-500">Total Spent</p>
+                  <IndianRupee className="w-5 h-5 text-[#D97736]" />
                 </div>
-                <p className="text-3xl font-bold text-gray-900">₹{stats.totalSpent.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 mt-1">Completed orders</p>
-              </Card>
+                <p className="font-serif-display text-3xl font-bold text-[#132E20]">₹{stats.totalSpent.toLocaleString()}</p>
+                <p className="text-[11px] text-stone-500 mt-1">85%+ direct to farmers</p>
+              </div>
             </div>
           </ScrollAnimation>
 

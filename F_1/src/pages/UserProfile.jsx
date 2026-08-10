@@ -213,38 +213,40 @@ export default function UserProfile() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen premium-gradient relative overflow-hidden pt-28 pb-12">
-        <div className="pt-6 px-6 md:px-12 relative z-10">
+      <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body pt-28 pb-16 relative overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 relative z-10 mb-6">
           <BackButton label="Back" />
         </div>
 
-        <div className="relative h-56 glass-deep border-b border-white/40 overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-green-300 rounded-full filter blur-3xl pointer-events-none"></div>
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-300 rounded-full filter blur-3xl pointer-events-none"></div>
-          </div>
-          <div className="relative h-full flex items-center px-6 md:px-12">
-            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 mb-8">
+          <div className="relative bg-gradient-to-tr from-[#132E20] via-[#1B3B2B] to-[#254D38] overflow-hidden rounded-[36px] p-6 sm:p-10 shadow-2xl border border-white/10">
+            <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#D97736]/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 relative z-10">
               <div className="relative">
-                <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-2xl bg-white shadow-2xl p-2 ring-4 ring-white">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-white shadow-2xl p-2.5 ring-4 ring-white/20">
                   <Avatar user={user} size="xl" className="w-full h-full" />
                 </div>
                 {isEditing && (
-                  <label className="absolute bottom-2 right-2 bg-green-500 hover:bg-green-600 text-white rounded-full p-3 cursor-pointer shadow-lg transition">
-                    <Camera size={18} />
+                  <label className="absolute bottom-1 right-1 bg-[#D97736] hover:bg-[#c06528] text-white rounded-full p-2.5 cursor-pointer shadow-lg transition">
+                    <Camera size={16} />
                     <input type="file" name="photo" onChange={handleChange} hidden accept="image/*" />
                   </label>
                 )}
               </div>
               <div className="text-white min-w-0 text-center sm:text-left">
-                <h1 className="text-2xl sm:text-4xl font-bold break-words">{user?.name || 'User'}</h1>
-                <div className="flex items-center gap-3 mt-3">
-                  <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold backdrop-blur-sm ${user?.role === 'farmer' ? 'bg-green-400/30 text-green-100' : 'bg-blue-400/30 text-blue-100'}`}>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736] bg-[#D97736]/20 px-3 py-1 rounded-full border border-[#D97736]/30 inline-block mb-2">
+                  ACCOUNT PROFILE
+                </span>
+                <h1 className="font-serif-display text-3xl sm:text-5xl font-normal text-[#FBF8F3] break-words">
+                  {user?.name || 'User'}
+                </h1>
+                <div className="flex items-center gap-2 mt-3 justify-center sm:justify-start">
+                  <span className="inline-block px-3.5 py-1 rounded-full text-xs font-bold bg-white/15 backdrop-blur-sm border border-white/20 text-white">
                     {user?.role?.toUpperCase() || 'BUYER'}
                   </span>
                   {user?.verified && (
-                    <span className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-bold bg-green-400/30 text-green-100">
-                      <Shield size={16} /> Verified
+                    <span className="inline-flex items-center gap-1 px-3.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 backdrop-blur-sm border border-emerald-400/30 text-emerald-200">
+                      <Shield size={14} /> Verified Member
                     </span>
                   )}
                 </div>

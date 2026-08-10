@@ -1,8 +1,10 @@
-import { ArrowRight, Leaf, TrendingUp, Users, MapPin, Smartphone, BarChart3, Shield, Zap, CreditCard } from 'lucide-react';
+import { ArrowRight, Leaf, TrendingUp, Users, MapPin, Smartphone, BarChart3, Shield, Zap, CreditCard, Sparkles } from 'lucide-react';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
+import DynamicFloatingNavbar from '../components/landing/DynamicFloatingNavbar';
+import GiantBrandFooter from '../components/common/GiantBrandFooter';
 import { useRouter } from '../hooks/useRouter';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,34 +14,34 @@ export default function JoinAsFarmer() {
 
   const benefits = [
     {
-      icon: <TrendingUp className="w-8 h-8 text-green-600" />,
+      icon: <TrendingUp className="w-8 h-8 text-[#D97736]" />,
       title: 'Increase Sales',
       desc: 'Direct access to customers without middlemen reducing your profits'
     },
     {
-      icon: <Users className="w-8 h-8 text-green-600" />,
+      icon: <Users className="w-8 h-8 text-[#D97736]" />,
       title: 'Direct Connection',
       desc: 'Build relationships directly with buyers who value your work'
     },
     {
-      icon: <CreditCard className="w-8 h-8 text-green-600" />,
+      icon: <CreditCard className="w-8 h-8 text-[#D97736]" />,
       title: 'Better Margins',
-      desc: 'Keep more of what you earn - no middleman commissions'
+      desc: 'Keep 85%+ of invoice value — zero middleman commissions'
     },
     {
-      icon: <Smartphone className="w-8 h-8 text-green-600" />,
-      title: 'Easy Management',
-      desc: 'Simple dashboard to manage inventory and orders'
+      icon: <Smartphone className="w-8 h-8 text-[#D97736]" />,
+      title: 'Voice & App Management',
+      desc: 'Simple dashboard and voice logs to manage inventory and orders'
     },
     {
-      icon: <BarChart3 className="w-8 h-8 text-green-600" />,
+      icon: <BarChart3 className="w-8 h-8 text-[#D97736]" />,
       title: 'Growth Tools',
-      desc: 'Analytics and insights to grow your farm business'
+      desc: 'Analytics and harvest insights to grow your farm business'
     },
     {
-      icon: <Shield className="w-8 h-8 text-green-600" />,
-      title: 'Secure Payments',
-      desc: 'Safe and timely payment processing to your bank account'
+      icon: <Shield className="w-8 h-8 text-[#D97736]" />,
+      title: 'Secure Payouts',
+      desc: 'Safe 24-hour settlement processing directly to your bank account'
     },
   ];
 
@@ -55,13 +57,13 @@ export default function JoinAsFarmer() {
       desc: 'Farmers report significant revenue increases'
     },
     {
-      metric: '3-5',
-      label: 'Days Typical Delivery',
+      metric: '4-12h',
+      label: 'Express Dispatch Window',
       desc: 'Fast logistics to keep produce fresh'
     },
     {
       metric: '24/7',
-      label: 'Customer Support',
+      label: 'Agronomist Support',
       desc: 'We\'re here to help your farm succeed'
     },
   ];
@@ -75,70 +77,57 @@ export default function JoinAsFarmer() {
     },
     {
       number: 2,
-      title: 'Complete Your Profile',
+      title: 'Complete Your Profile & KYC',
       desc: 'Tell buyers about your farm',
-      details: ['Add farm name and location', 'Upload farm photos', 'Describe what you grow', 'Set your pricing']
+      details: ['Add farm name and location', 'Upload farm photos & Govt ID', 'Describe what you grow', 'Set your pricing']
     },
     {
       number: 3,
-      title: 'List Your Products',
-      desc: 'Add crops you want to sell',
+      title: 'List Your Produce',
+      desc: 'Add crops you want to sell via voice or form',
       details: ['Choose product category', 'Set prices and quantities', 'Add photos and descriptions', 'Go live!']
     },
     {
       number: 4,
-      title: 'Start Getting Orders',
-      desc: 'Earn money from your harvest',
+      title: 'Start Receiving Direct Orders',
+      desc: 'Earn 85%+ margin from your harvest',
       details: ['Receive orders instantly', 'Manage inventory easily', 'Get paid securely', 'Grow your business']
     },
   ];
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white pt-28 pb-12">
-        {/* Hero Section */}
-        <section className="pt-32 pb-20 px-4 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
-          <div className="max-w-6xl mx-auto relative z-10">
-            <ScrollAnimation className="scroll-slide mb-12">
-              <div className="text-center">
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight animate-slide-in-down">
-                  Grow Your Farm Business <span className="text-green-600">Direct</span>
-                </h1>
-                <p className="text-xl text-gray-700 mb-8 max-w-2xl mx-auto animate-slide-in-down" style={{ animationDelay: '0.1s' }}>
-                  Skip the middlemen. Sell your fresh produce directly to customers. Keep more profit, build lasting relationships, and grow your farm business.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-in-down" style={{ animationDelay: '0.2s' }}>
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    className="flex items-center gap-2 justify-center"
-                    onClick={() => navigate('/auth/register')}
-                  >
-                    <Leaf size={20} />
-                    Start as a Farmer
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => navigate('/')}
-                  >
-                    Back to Home
-                  </Button>
-                </div>
-              </div>
-            </ScrollAnimation>
+      <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body">
+        <DynamicFloatingNavbar activeSection="cream" onNavigate={navigate} />
 
-            {/* Hero Image */}
-            <ScrollAnimation className="scroll-slide mt-12">
-              <div className="rounded-2xl overflow-hidden glass premium-glow h-80 md:h-96 flex items-center justify-center">
-                <img
-                  src="https://i.pinimg.com/474x/71/c2/2d/71c22dcb20e1d22a8737839675f6f875.jpg"
-                  alt="Farmer selling fresh produce"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </ScrollAnimation>
-          </div>
+        {/* Hero Section */}
+        <section className="pt-32 pb-16 px-4 md:px-8 max-w-6xl mx-auto text-center">
+          <ScrollAnimation className="scroll-slide">
+            <div className="inline-flex items-center gap-2 bg-[#F4EFE6] border border-[#132E20]/15 px-3.5 py-1.5 rounded-full text-xs font-bold text-[#132E20] mb-6">
+              <Sparkles className="w-3.5 h-3.5 text-[#D97736]" />
+              <span>DIRECT FARMER REGISTRATION</span>
+            </div>
+
+            <h1 className="font-serif-display text-5xl sm:text-6xl md:text-7xl font-normal leading-[0.98] tracking-tight max-w-4xl mx-auto">
+              Grow Your Farm Business <span className="italic text-[#D97736] font-normal">Direct.</span>
+            </h1>
+
+            <p className="font-sans-body text-base md:text-lg text-[#132E20]/75 mt-6 max-w-2xl mx-auto leading-relaxed">
+              Skip distributor cuts. Sell fresh produce directly to buyers. Keep 85%+ profit margin and build long-term contract relationships.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+              <Button
+                variant="primary"
+                size="lg"
+                className="flex items-center gap-2 justify-center bg-[#132E20] hover:bg-[#1B3B2B] text-white font-bold rounded-xl px-8 py-3.5 shadow-lg cursor-pointer"
+                onClick={() => navigate('/auth/register')}
+              >
+                <Leaf size={20} className="text-[#D97736]" />
+                Start as a Farmer
+              </Button>
+            </div>
+          </ScrollAnimation>
         </section>
 
         {/* Why Join Us */}
@@ -348,8 +337,11 @@ export default function JoinAsFarmer() {
             </div>
           </ScrollAnimation>
         </section>
+
+        <GiantBrandFooter onNavigate={navigate} />
       </div>
     </PageTransition>
   );
 }
+
 

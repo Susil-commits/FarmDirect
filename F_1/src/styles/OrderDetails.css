@@ -4,7 +4,7 @@
 
 .order-details-container {
   min-height: 100vh;
-  background: linear-gradient(to bottom right, var(--gray-50, #ffffff), var(--primary-50, #f0fdf4), var(--gray-50, #ffffff));
+  background: linear-gradient(to bottom right, #FBF8F3, #F4EFE6, #FBF8F3);
   padding: 3rem 1rem;
 }
 
@@ -59,7 +59,7 @@
 
 .order-item-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 10px 25px rgba(19, 46, 32, 0.12);
 }
 
 /* Payment modal styles */
@@ -73,7 +73,7 @@
 }
 
 .payment-input-focus:focus-within {
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 0 0 3px rgba(19, 46, 32, 0.15);
 }
 
 /* Responsive design */
@@ -189,7 +189,7 @@
   width: 0.75rem;
   height: 0.75rem;
   border-radius: 50%;
-  background-color: var(--primary-dark, #10b981);
+  background-color: #132E20;
   position: relative;
 }
 
@@ -198,7 +198,7 @@
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  border: 2px solid rgba(16, 185, 129, 0.2);
+  border: 2px solid rgba(19, 46, 32, 0.2);
 }
 
 .timeline-content {

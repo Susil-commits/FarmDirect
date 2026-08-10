@@ -48,13 +48,13 @@ export default function InventoryManager({ items = [], onRefresh }) {
 
   if (!items || items.length === 0) {
     return (
-      <Card>
-        <div className="p-12 text-center">
-          <AlertTriangle className="w-12 h-12 text-green-600 mx-auto mb-4 opacity-50" />
-          <p className="text-gray-600 font-medium">No low-stock items</p>
-          <p className="text-gray-500 text-sm mt-2">All your inventory is above the threshold</p>
+      <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] p-12 text-center shadow-xl font-sans-body">
+        <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+          <AlertTriangle size={24} />
         </div>
-      </Card>
+        <h3 className="font-serif-display text-2xl font-normal text-[#132E20]">Inventory Fully Stocked</h3>
+        <p className="text-stone-500 text-xs mt-1">All your active crop listings are operating safely above your low-stock thresholds.</p>
+      </div>
     );
   }
 
@@ -62,12 +62,12 @@ export default function InventoryManager({ items = [], onRefresh }) {
   const warningItems = items.filter(item => item.quantity > 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans-body text-[#132E20]">
       {message && (
-        <div className={`p-4 rounded-lg ${
+        <div className={`p-4 rounded-2xl text-xs font-bold ${
           message.type === 'success' 
-            ? 'bg-green-50 border border-green-200 text-green-700'
-            : 'bg-red-50 border border-red-200 text-red-700'
+            ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+            : 'bg-red-50 border border-red-200 text-red-800'
         }`}>
           {message.text}
         </div>
@@ -75,9 +75,9 @@ export default function InventoryManager({ items = [], onRefresh }) {
 
       {/* Critical (Out of Stock) */}
       {criticalItems.length > 0 && (
-        <Card>
-          <div className="p-6 border-b border-red-200 bg-red-50">
-            <h3 className="flex items-center gap-2 font-bold text-red-900">
+        <div className="bg-white/95 backdrop-blur-xl border border-red-200 rounded-[28px] overflow-hidden shadow-xl">
+          <div className="p-6 border-b border-red-100 bg-red-50/50">
+            <h3 className="flex items-center gap-2 font-serif-display text-2xl text-red-900">
               <AlertTriangle size={20} />
               Out of Stock ({criticalItems.length})
             </h3>
@@ -100,14 +100,14 @@ export default function InventoryManager({ items = [], onRefresh }) {
               ))}
             </div>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* Warning (Low Stock) */}
       {warningItems.length > 0 && (
-        <Card>
-          <div className="p-6 border-b border-yellow-200 bg-yellow-50">
-            <h3 className="flex items-center gap-2 font-bold text-yellow-900">
+        <div className="bg-white/95 backdrop-blur-xl border border-amber-200 rounded-[28px] overflow-hidden shadow-xl">
+          <div className="p-6 border-b border-amber-100 bg-amber-50/50">
+            <h3 className="flex items-center gap-2 font-serif-display text-2xl text-amber-900">
               <AlertTriangle size={20} />
               Low Stock ({warningItems.length})
             </h3>
@@ -129,21 +129,18 @@ export default function InventoryManager({ items = [], onRefresh }) {
               ))}
             </div>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* About Low Stock Threshold */}
-      <Card>
-        <div className="p-6 bg-blue-50">
-          <h4 className="font-semibold text-blue-900 mb-3">About Low-Stock Alerts</h4>
-          <ul className="text-blue-800 text-sm space-y-2">
-            <li>• <strong>Threshold:</strong> When inventory falls below this level, you'll receive alerts</li>
-            <li>• <strong>Edit Threshold:</strong> Click the edit icon to adjust the threshold for each crop</li>
-            <li>• <strong>Notifications:</strong> You'll receive real-time notifications when threshold is breached</li>
-            <li>• <strong>Recommendations:</strong> Consider restocking when you see these alerts</li>
-          </ul>
-        </div>
-      </Card>
+      <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] p-6 shadow-xl">
+        <h4 className="font-serif-display text-2xl font-normal text-[#132E20] mb-2">About Low-Stock Thresholds</h4>
+        <ul className="text-stone-600 text-xs space-y-1.5 pl-1">
+          <li className="flex items-center gap-2">✓ <strong>Threshold:</strong> Automated notifications trigger when crop stock drops below threshold</li>
+          <li className="flex items-center gap-2">✓ <strong>Edit Threshold:</strong> Click edit to configure custom safety stock levels per crop</li>
+          <li className="flex items-center gap-2">✓ <strong>Notifications:</strong> Real-time SMS & email alerts dispatched to farmer phone</li>
+        </ul>
+      </div>
     </div>
   );
 }

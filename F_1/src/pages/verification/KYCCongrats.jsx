@@ -41,19 +41,19 @@ export default function KYCCongrats() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center px-4 pt-28 pb-12">
+      <div className="min-h-screen bg-gradient-to-br from-[#FBF8F3] via-[#F4EFE6] to-[#FBF8F3] flex items-center justify-center px-4 pt-28 pb-12">
         <div className="max-w-2xl w-full">
           {/* Main Card */}
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-[#132E20]/10">
             {/* Top Celebration Bar */}
-            <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-5 sm:px-8 py-10 sm:py-12 text-center">
+            <div className="bg-gradient-to-r from-[#132E20] via-[#1B3B2B] to-[#D97736] px-5 sm:px-8 py-10 sm:py-12 text-center">
               <div className="inline-flex items-center justify-center w-24 h-24 bg-white/20 rounded-full mb-6 backdrop-blur-sm">
                 <CheckCircle size={56} className="text-white" />
               </div>
               <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-3 tracking-tight">
                 Congratulations!
               </h1>
-              <p className="text-green-100 text-lg font-medium">
+              <p className="text-white/90 text-lg font-medium">
                 Your KYC verification has been approved
               </p>
             </div>
@@ -61,17 +61,17 @@ export default function KYCCongrats() {
             {/* Content */}
             <div className="px-5 sm:px-8 py-8 sm:py-10">
               {/* Role-specific message */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 mb-8 border border-green-100">
+              <div className="bg-gradient-to-r from-[#FBF8F3] to-[#F4EFE6] rounded-2xl p-6 mb-8 border border-[#132E20]/10">
                 {isFarmer ? (
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-[#132E20] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
                       <Sprout size={24} className="text-white" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-green-800 mb-2">
+                      <h3 className="text-xl font-bold text-[#132E20] mb-2">
                         Start Selling Your Crops!
                       </h3>
-                      <p className="text-green-700 leading-relaxed">
+                      <p className="text-[#132E20]/80 leading-relaxed">
                         Your account is now fully verified. You can now list your crops on the marketplace, 
                         set your prices, and start selling to buyers across the country. 
                         Your farm-fresh produce is ready to reach new customers!
@@ -80,14 +80,14 @@ export default function KYCCongrats() {
                   </div>
                 ) : (
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-[#D97736] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
                       <ShoppingBag size={24} className="text-white" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-emerald-800 mb-2">
+                      <h3 className="text-xl font-bold text-[#D97736] mb-2">
                         Start Exploring the Marketplace!
                       </h3>
-                      <p className="text-emerald-700 leading-relaxed">
+                      <p className="text-gray-700 leading-relaxed">
                         Your account is now fully verified. You can now browse the marketplace, 
                         discover fresh crops from verified farmers, add items to your wishlist, 
                         and place orders with confidence.
@@ -106,20 +106,20 @@ export default function KYCCongrats() {
                   {isFarmer ? (
                     <>
                       <div className="flex items-center gap-3 text-gray-700">
-                        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="text-green-600 font-bold">1</span>
+                        <div className="w-8 h-8 bg-[#132E20]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-[#132E20] font-bold">1</span>
                         </div>
                         <span>Post your crops with photos, descriptions, and pricing</span>
                       </div>
                       <div className="flex items-center gap-3 text-gray-700">
-                        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="text-green-600 font-bold">2</span>
+                        <div className="w-8 h-8 bg-[#132E20]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-[#132E20] font-bold">2</span>
                         </div>
                         <span>Manage your inventory and track orders from buyers</span>
                       </div>
                       <div className="flex items-center gap-3 text-gray-700">
-                        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="text-green-600 font-bold">3</span>
+                        <div className="w-8 h-8 bg-[#132E20]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-[#132E20] font-bold">3</span>
                         </div>
                         <span>Build your reputation with ratings and reviews</span>
                       </div>
@@ -127,20 +127,20 @@ export default function KYCCongrats() {
                   ) : (
                     <>
                       <div className="flex items-center gap-3 text-gray-700">
-                        <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="text-emerald-600 font-bold">1</span>
+                        <div className="w-8 h-8 bg-[#D97736]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-[#D97736] font-bold">1</span>
                         </div>
                         <span>Browse the marketplace for fresh, farm-direct crops</span>
                       </div>
                       <div className="flex items-center gap-3 text-gray-700">
-                        <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="text-emerald-600 font-bold">2</span>
+                        <div className="w-8 h-8 bg-[#D97736]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-[#D97736] font-bold">2</span>
                         </div>
                         <span>Add crops to your wishlist and shopping cart</span>
                       </div>
                       <div className="flex items-center gap-3 text-gray-700">
-                        <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="text-emerald-600 font-bold">3</span>
+                        <div className="w-8 h-8 bg-[#D97736]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-[#D97736] font-bold">3</span>
                         </div>
                         <span>Place orders and track deliveries in real-time</span>
                       </div>
@@ -153,14 +153,14 @@ export default function KYCCongrats() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={handleContinue}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-lg rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/30 transform hover:-translate-y-0.5"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#132E20] to-[#1B3B2B] text-white font-bold text-lg rounded-xl hover:opacity-95 transition-all duration-300 shadow-lg shadow-[#132E20]/25 transform hover:-translate-y-0.5"
                 >
                   {isFarmer ? 'Go to Farmer Dashboard' : 'Go to Buyer Dashboard'}
                   <ArrowRight size={20} />
                 </button>
                 <button
                   onClick={handleGoToMarketplace}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-white text-green-700 font-bold text-lg rounded-xl border-2 border-green-200 hover:bg-green-50 hover:border-green-300 transition-all duration-300"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-white text-[#132E20] font-bold text-lg rounded-xl border-2 border-[#132E20]/20 hover:bg-[#FBF8F3] hover:border-[#132E20] transition-all duration-300"
                 >
                   <ShoppingBag size={20} />
                   Explore Marketplace

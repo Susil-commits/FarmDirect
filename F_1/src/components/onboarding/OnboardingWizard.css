@@ -1,9 +1,9 @@
 /* OnboardingWizard.css - Wizard animations and styles */
 
 .onboarding-wizard {
-  --primary-color: #22c55e;
-  --primary-dark: #16a34a;
-  --accent-color: #10b981;
+  --primary-color: #132E20;
+  --primary-dark: #1B3B2B;
+  --accent-color: #D97736;
 }
 
 /* Step transitions */
@@ -48,7 +48,7 @@
 
 /* Step indicator glow */
 .onboarding-wizard button[class*="scale-105"] {
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 20px rgba(19, 46, 32, 0.4);
 }
 
 /* Form field animations */

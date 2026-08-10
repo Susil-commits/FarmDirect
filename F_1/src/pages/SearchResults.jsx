@@ -306,64 +306,70 @@ export default function SearchResults() {
                           {/* Crop Header */}
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex-1">
-                              <h3 className="text-lg font-bold text-gray-900">{crop.name}</h3>
-                              <p className="text-sm text-gray-600">{crop.category}</p>
+                              <h3 className="text-lg font-bold text-stone-900">{crop.cropName || crop.name}</h3>
+                              <p className="text-xs text-stone-500 uppercase tracking-wider font-semibold">{crop.category || crop.cropType}</p>
                             </div>
-                            <button className="text-red-600 hover:text-red-700">
-                              <Heart className="w-5 h-5" />
-                            </button>
                           </div>
 
                           {/* Rating */}
                           <div className="flex items-center gap-2 mb-3">
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-0.5">
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}
-                                  className={`w-4 h-4 ${
-                                    i < Math.floor(crop.rating || 0)
-                                      ? 'fill-yellow-400 text-yellow-400'
-                                      : 'text-gray-300'
+                                  className={`w-3.5 h-3.5 ${
+                                    i < Math.floor(crop.rating || 4.5)
+                                      ? 'fill-amber-400 text-amber-400'
+                                      : 'text-stone-200'
                                   }`}
                                 />
                               ))}
                             </div>
-                            <span className="text-sm text-gray-600">({crop.reviews?.length || 0})</span>
+                            <span className="text-xs text-stone-500">({crop.totalReviews || crop.reviews?.length || 0})</span>
                           </div>
 
                           {/* Description */}
-                          <p className="text-sm text-gray-600 mb-4 line-clamp-2">{crop.description}</p>
+                          <p className="text-sm text-stone-600 mb-4 line-clamp-2">{crop.description || 'Fresh produce directly from verified local farm.'}</p>
 
                           {/* Farmer Info */}
-                          <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-                            <MapPin className="w-4 h-4" />
-                            <span>{crop.farmerId?.location || 'Location unavailable'}</span>
+                          <div className="flex items-center gap-2 text-xs text-stone-500 mb-4">
+                            <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span className="truncate">{crop.pickupLocation || crop.location || crop.farmerId?.location || 'Farm Direct'}</span>
                           </div>
 
                           {/* Price & Actions */}
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-stone-100 mt-auto">
                             <div>
-                              <p className="text-xs text-gray-600">Price per kg</p>
-                              <p className="text-2xl font-bold text-green-600">₹{crop.price}</p>
+                              <p className="text-[11px] font-bold text-stone-400 uppercase tracking-wider">Price / {crop.unit || 'kg'}</p>
+                              <p className="text-xl font-extrabold text-[#132E20]">₹{Math.floor(crop.price || 0)}</p>
                             </div>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex items-center gap-2">
                               <Button
-                                onClick={() => navigate(`/crop/${crop._id}`)}
+                                onClick={() => navigate(`/crop/${crop._id || crop.id}`)}
                                 variant="outline"
-                                className="text-sm"
+                                className="text-xs font-bold px-3 py-2 border-stone-200 min-h-[38px]"
                               >
                                 View
                               </Button>
                               <Button
                                 onClick={() => {
-                                  addToCart({
-                                    ...crop,
-                                    quantity: 1
-                                  });
-                                  addToast('Added to cart', 'success');
+                                  const cartProduct = {
+                                    _id: crop._id || crop.id,
+                                    id: crop._id || crop.id,
+                                    cropName: crop.cropName || crop.name,
+                                    category: crop.category,
+                                    price: crop.price,
+                                    unit: crop.unit || 'kg',
+                                    images: crop.images || [],
+                                    farmerId: crop.farmerId,
+                                    pickupLocation: crop.pickupLocation || crop.location,
+                                    quantity: crop.quantity,
+                                  };
+                                  addToCart(cartProduct, 1);
+                                  addToast(`${cartProduct.cropName} added to cart`, 'success');
                                 }}
                                 variant="primary"
-                                className="text-sm"
+                                className="text-xs font-bold px-3.5 py-2 bg-[#132E20] hover:bg-[#1B3B2B] text-white min-h-[38px]"
                               >
                                 Add to Cart
                               </Button>

@@ -108,7 +108,7 @@ export default function ShoppingCart() {
 
     if (!isAuthenticated) {
       addToast('Please login to place your order', 'warning');
-      navigate('/login');
+      navigate('/auth/login');
       return;
     }
 
