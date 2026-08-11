@@ -2,8 +2,11 @@ import React from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { Zap, ShieldCheck, Clock, MapPin, ArrowRight, HeartHandshake } from 'lucide-react';
+import { useRouter } from '../../hooks/useRouter';
 
 export default function FeaturesSection() {
+  const { navigate } = useRouter();
+
   const featureCards = [
     {
       speed: '4x Faster',
@@ -11,6 +14,7 @@ export default function FeaturesSection() {
       desc: 'Crops are harvested upon your order confirmation and delivered in under 6 hours — vs traditional 4-day wholesale supply chains.',
       stat: '4h Avg Dispatch',
       badge: 'Zero Storage Decay',
+      path: '/marketplace',
     },
     {
       speed: '85%+ Payout',
@@ -18,6 +22,7 @@ export default function FeaturesSection() {
       desc: 'Local growers receive 85%+ of invoice value compared to only 25% through multi-tier mandi agents.',
       stat: 'Fair Payout Guaranteed',
       badge: 'Transparent Invoice',
+      path: '/about',
     },
   ];
 
@@ -44,7 +49,8 @@ export default function FeaturesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: idx * 0.15 }}
-              className="bg-[#1B3B2B]/80 border border-white/15 rounded-3xl p-8 shadow-xl flex flex-col justify-between hover:border-[#D97736]/50 transition-colors group"
+              onClick={() => navigate(card.path)}
+              className="bg-[#1B3B2B]/80 border border-white/15 rounded-3xl p-8 shadow-xl flex flex-col justify-between hover:border-[#D97736]/50 transition-colors group cursor-pointer"
             >
               <div>
                 <div className="flex items-center justify-between mb-4">

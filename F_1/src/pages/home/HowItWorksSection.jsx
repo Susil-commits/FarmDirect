@@ -1,7 +1,10 @@
 import ScrollAnimation from '../../components/common/ScrollAnimation';
 import { ShoppingBag, Sprout, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { useRouter } from '../../hooks/useRouter';
 
 export default function HowItWorksSection() {
+  const { navigate } = useRouter();
+
   return (
     <section className="py-24 px-4 md:px-8 relative z-10 bg-[#FBF8F3]/90 backdrop-blur-xl border-y border-[#132E20]/10 my-8">
       <div className="max-w-6xl mx-auto relative z-10">
@@ -111,6 +114,16 @@ export default function HowItWorksSection() {
               </div>
             </ScrollAnimation>
           </div>
+
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => navigate('/marketplace')}
+              className="inline-flex items-center gap-2 bg-[#132E20] hover:bg-[#1B3B2B] text-[#FBF8F3] font-sans-body px-6 py-3 rounded-full font-semibold text-sm shadow-md transition-all cursor-pointer group"
+            >
+              <span>Explore Marketplace as Buyer</span>
+              <ArrowRight className="w-4 h-4 text-[#D97736] group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
         </div>
 
         {/* For Farmers */}
@@ -206,6 +219,16 @@ export default function HowItWorksSection() {
                 </div>
               </div>
             </ScrollAnimation>
+          </div>
+
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => navigate('/join-farmer')}
+              className="inline-flex items-center gap-2 bg-[#D97736] hover:bg-[#C86428] text-white font-sans-body px-6 py-3 rounded-full font-semibold text-sm shadow-md transition-all cursor-pointer group"
+            >
+              <span>Join as Verified Farmer</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         </div>
       </div>

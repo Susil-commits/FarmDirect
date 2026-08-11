@@ -103,7 +103,11 @@ export default function HeroCreamSection({ onExploreClick }) {
 
               <a
                 href="#how-it-works"
-                className="font-sans-body px-6 py-3.5 rounded-full bg-white/70 border border-[#132E20]/20 text-[#132E20] font-semibold text-sm hover:bg-white transition-all duration-200 shadow-sm flex items-center gap-2"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="font-sans-body px-6 py-3.5 rounded-full bg-white/70 border border-[#132E20]/20 text-[#132E20] font-semibold text-sm hover:bg-white transition-all duration-200 shadow-sm flex items-center gap-2 cursor-pointer"
               >
                 <ShieldCheck className="w-4 h-4 text-[#D97736]" />
                 <span>See Fair-Price Guarantee</span>
