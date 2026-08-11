@@ -76,7 +76,7 @@ export default function Home() {
           });
         }
       } catch (error) {
-        console.error('Error fetching stats:', error);
+        console.error('Error fetching stats:', error?.message || error);
       } finally {
         setStatsLoading(false);
       }

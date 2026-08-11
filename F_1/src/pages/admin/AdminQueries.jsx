@@ -78,7 +78,7 @@ export default function AdminQueries() {
         setStats(response.data);
       }
     } catch (err) {
-      console.error('Error fetching stats:', err);
+      console.error('Error fetching stats:', err?.message || err);
     }
   };
 
