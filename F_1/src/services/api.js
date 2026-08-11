@@ -18,7 +18,8 @@ const MAX_RETRIES = 1;
 const RETRY_DELAY_MS = 1000;
 const RETRY_METHODS = new Set(['get', 'head', 'options']);
 
-// Track if we're already refreshing to avoid multiple refresh requests
+// Track in-flight refresh request to deduplicate concurrent refresh calls
+let refreshPromise = null;
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -42,6 +43,11 @@ const processQueue = (error, token = null) => {
  * Requires backend endpoint: POST /auth/refresh-token
  */
 export const refreshAuthToken = async () => {
+  // If a refresh request is already in-flight, return the active promise
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
   // Cooldown guard: don't hammer the refresh endpoint if it just failed
   const now = Date.now();
   if (now - lastRefreshAttempt < REFRESH_COOLDOWN_MS) {
@@ -49,29 +55,35 @@ export const refreshAuthToken = async () => {
   }
   lastRefreshAttempt = now;
 
-  try {
-    const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {}, {
-      withCredentials: true,
-      timeout: REQUEST_TIMEOUT_MS,
-    });
+  refreshPromise = (async () => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {}, {
+        withCredentials: true,
+        timeout: REQUEST_TIMEOUT_MS,
+      });
 
-    const { token: newToken } = response.data;
+      const { token: newToken } = response.data;
 
-    // Store new token in memory
-    setAccessToken(newToken);
+      // Store new token in memory
+      setAccessToken(newToken);
 
-    // Update timestamp for session activity
-    safeStorage.setItem('lastActivityTime', Date.now().toString());
+      // Update timestamp for session activity
+      safeStorage.setItem('lastActivityTime', Date.now().toString());
 
-    return newToken;
-  } catch (error) {
-    // Refresh failed — clear auth data silently. Do NOT hard-redirect (window.location.href)
-    // because that causes infinite reload loops when the backend is unreachable.
-    clearAccessToken();
-    safeStorage.removeItem('userData');
-    safeStorage.removeItem('verificationStatus');
-    throw error;
-  }
+      return newToken;
+    } catch (error) {
+      // Refresh failed — clear auth data silently. Do NOT hard-redirect (window.location.href)
+      // because that causes infinite reload loops when the backend is unreachable.
+      clearAccessToken();
+      safeStorage.removeItem('userData');
+      safeStorage.removeItem('verificationStatus');
+      throw error;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
 };
 
 const api = axios.create({

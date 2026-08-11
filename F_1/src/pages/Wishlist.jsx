@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Heart, MapPin, Star, ShoppingCart, Eye, Check, Trash2 } from 'lucide-react';
 import { getImageUrl, getCropFallbackImage } from '../utils/formatters';
 import { useWishlist } from '../hooks/useWishlist';
@@ -129,8 +129,6 @@ export default function Wishlist() {
 function WishlistCard({ product, index, onRemove, onAddToCart, onViewCrop }) {
   const staggerDelay = index * 0.08;
   const rawProductImage = product.image || product.images?.[0];
-  const [imgError, setImgError] = useState(false);
-  const showFallback = !rawProductImage || imgError;
 
   const renderStars = (rating) => {
     const stars = [];

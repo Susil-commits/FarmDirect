@@ -436,9 +436,6 @@ export default function ShoppingCart() {
 function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuantityChange, onNavigate }) {
   const staggerDelay = index * 0.08;
   const rawItemImage = item.image || item.images?.[0];
-  const [imgError, setImgError] = useState(false);
-  const showFallback = !rawItemImage || imgError;
-
   const renderStars = (rating) => {
     const stars = [];
     const fullStars = Math.floor(rating || 0);
@@ -451,16 +448,6 @@ function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuant
     }
     return stars;
   };
-
-  const getCropEmoji = (cropType) => {
-    const map = {
-      vegetables: '🥬', fruits: '🍎', grains: '🌾',
-      herbs: '🌿', pulses: '🫘', spices: '🌶️',
-    };
-    return map[cropType?.toLowerCase()] || '🌾';
-  };
-
-  // ---- Derived product flags ----
   const isOrganic = useMemo(() => {
     return !!(item.specifications?.organicCertified ||
       item.certifications?.includes?.('Organic') ||

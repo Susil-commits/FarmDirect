@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, ArrowRight, Sprout, ShieldCheck, Mail } from 'lucide-react';
 

@@ -162,7 +162,7 @@ export const AuthProvider = ({ children }) => {
             }
           }
         }
-      } catch (err) {
+      } catch {
         // Silent refresh failed (no valid refresh cookie) -> clear user session
         clearAccessToken();
         localStorage.removeItem('userData');
