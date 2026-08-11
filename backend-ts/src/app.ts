@@ -16,6 +16,7 @@ import errorHandler from './middleware/errorHandler.js';
 import { requestId } from './middleware/requestId.js';
 import { resetServerStartTime, getServerStartTime } from './utils/serverTime.js';
 import { uploadSingleFile } from './middleware/localUpload.js';
+import { generatePresignedUploadParams } from './utils/cloudinaryService.js';
 import { trimStrings } from './middleware/sanitizer.js';
 
 import { getUploadsRoot } from './config/localStorage.js';
@@ -198,6 +199,12 @@ app.use('/api/data', dataAccessRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/negotiations', negotiationRoutes);
+
+app.post('/api/upload/presign', (req: Request, res: Response): void => {
+  const { folder = 'general' } = req.body as { folder?: string };
+  const params = generatePresignedUploadParams(folder);
+  res.status(200).json({ success: true, ...params });
+});
 
 app.post('/api/upload', uploadSingleFile('general'), (req: Request, res: Response): void => {
   if (!req.uploadedFile) {

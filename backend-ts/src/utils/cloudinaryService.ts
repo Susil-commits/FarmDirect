@@ -1,5 +1,6 @@
 import { cloudinary, isCloudinaryConfigured } from '../config/cloudinary.js';
 import { saveToLocalStorage, deleteFromLocalStorage, type LocalStorageResult } from '../config/localStorage.js';
+import { env } from '../config/env.js';
 
 export interface UploadResult {
   url: string;
@@ -101,4 +102,38 @@ export async function deleteFile(fileUrl: string): Promise<boolean> {
   return deleteFromLocalStorage(fileUrl);
 }
 
-export default { uploadFile, deleteFile };
+export interface PresignedUploadResult {
+  direct: boolean;
+  timestamp?: number;
+  signature?: string;
+  apiKey?: string;
+  cloudName?: string;
+  folder?: string;
+  uploadUrl?: string;
+}
+
+export function generatePresignedUploadParams(folder = 'general'): PresignedUploadResult {
+  if (!isCloudinaryConfigured()) {
+    return { direct: false };
+  }
+
+  const timestamp = Math.round(new Date().getTime() / 1000);
+  const folderPath = `farmdirect/${folder}`;
+  const paramsToSign = {
+    timestamp,
+    folder: folderPath,
+  };
+  const signature = cloudinary.utils.api_sign_request(paramsToSign, env.cloudinaryApiSecret!);
+
+  return {
+    direct: true,
+    timestamp,
+    signature,
+    apiKey: env.cloudinaryApiKey,
+    cloudName: env.cloudinaryCloudName,
+    folder: folderPath,
+    uploadUrl: `https://api.cloudinary.com/v1_1/${env.cloudinaryCloudName}/image/upload`,
+  };
+}
+
+export default { uploadFile, deleteFile, generatePresignedUploadParams };
