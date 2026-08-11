@@ -272,7 +272,7 @@ export const getAllCrops = asyncHandler(async (req: Request, res: Response) => {
   if (status) query.status = status;
   if (search) query.$or = [{ cropName: { $regex: search, $options: 'i' } }, { category: { $regex: search, $options: 'i' } }];
   const [crops, total] = await Promise.all([
-    CropListing.find(query).populate('farmerId', 'firstName lastName farmName').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+    CropListing.find(query).lean().populate('farmerId', 'firstName lastName farmName').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
     CropListing.countDocuments(query),
   ]);
   paginated(res, crops, total, Number(page), Number(limit));
@@ -328,7 +328,7 @@ export const getAllOrders = asyncHandler(async (req: Request, res: Response) => 
   // B10 FIX: ObjectId fields cannot use $regex — search on orderNumber (string) instead
   if (search) query.orderNumber = { $regex: search, $options: 'i' };
   const [orders, total] = await Promise.all([
-    Order.find(query).populate('buyerId', 'firstName lastName email phone city state').populate('farmerId', 'firstName lastName name farmName phone city state').populate('cropId', 'cropName images price unit').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+    Order.find(query).lean().populate('buyerId', 'firstName lastName email phone city state').populate('farmerId', 'firstName lastName name farmName phone city state').populate('cropId', 'cropName images price unit').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
     Order.countDocuments(query),
   ]);
   paginated(res, orders, total, Number(page), Number(limit));
@@ -512,7 +512,7 @@ export const getAuditLogs = asyncHandler(async (req: Request, res: Response) => 
   if (adminId) query.adminId = adminId;
   const skip = (Number(page) - 1) * Number(limit);
   const [logs, total] = await Promise.all([
-    AuditLog.find(query).populate('adminId', 'name email').skip(skip).limit(Number(limit)).sort({ timestamp: -1 }),
+    AuditLog.find(query).lean().populate('adminId', 'name email').skip(skip).limit(Number(limit)).sort({ timestamp: -1 }),
     AuditLog.countDocuments(query),
   ]);
   res.status(200).json({ success: true, logs, pagination: { total, page: Number(page), pages: Math.ceil(total / Number(limit)) } });
@@ -537,7 +537,7 @@ export const getApprovedFarmers = asyncHandler(async (req: Request, res: Respons
   if (search) query.$or = [{ firstName: { $regex: search, $options: 'i' } }, { lastName: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }, { farmName: { $regex: search, $options: 'i' } }];
   const skip = (Number(page) - 1) * Number(limit);
   const [farmers, total] = await Promise.all([
-    User.find(query).select('-password').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+    User.find(query).lean().select('-password').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
     User.countDocuments(query),
   ]);
   paginated(res, farmers, total, Number(page), Number(limit));
@@ -549,7 +549,7 @@ export const getApprovedBuyers = asyncHandler(async (req: Request, res: Response
   if (search) query.$or = [{ firstName: { $regex: search, $options: 'i' } }, { lastName: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }];
   const skip = (Number(page) - 1) * Number(limit);
   const [buyers, total] = await Promise.all([
-    User.find(query).select('-password').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+    User.find(query).lean().select('-password').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
     User.countDocuments(query),
   ]);
   paginated(res, buyers, total, Number(page), Number(limit));
@@ -561,7 +561,7 @@ export const getSuspendedUsers = asyncHandler(async (req: Request, res: Response
   if (search) query.$or = [{ firstName: { $regex: search, $options: 'i' } }, { lastName: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }];
   const skip = (Number(page) - 1) * Number(limit);
   const [users, total] = await Promise.all([
-    User.find(query).select('-password').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+    User.find(query).lean().select('-password').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
     User.countDocuments(query),
   ]);
   paginated(res, users, total, Number(page), Number(limit));
@@ -569,7 +569,7 @@ export const getSuspendedUsers = asyncHandler(async (req: Request, res: Response
 
 export const getUserDocuments = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
-  const user = await User.findById(userId).select('firstName lastName email role kycStatus farmImages kycDocuments');
+  const user = await User.findById(userId).lean().select('firstName lastName email role kycStatus farmImages kycDocuments');
   if (!user) return sendError(res, 'User not found', 404);
 
   let cropImages: { cropName: string; images: string[] }[] = [];
@@ -596,7 +596,7 @@ export const searchDocuments = asyncHandler(async (req: Request, res: Response) 
   if (kycStatus) query.kycStatus = kycStatus;
   const skip = (Number(page) - 1) * Number(limit);
   const [users, total] = await Promise.all([
-    User.find(query).select('firstName lastName email role kycStatus kycSubmittedAt kycDocuments farmImages').skip(skip).limit(Number(limit)).sort({ kycSubmittedAt: -1 }),
+    User.find(query).lean().select('firstName lastName email role kycStatus kycSubmittedAt kycDocuments farmImages').skip(skip).limit(Number(limit)).sort({ kycSubmittedAt: -1 }),
     User.countDocuments(query),
   ]);
   res.status(200).json({ success: true, users, pagination: { total, page: Number(page), pages: Math.ceil(total / Number(limit)) } });

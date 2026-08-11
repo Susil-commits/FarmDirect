@@ -4,7 +4,7 @@ import { authService, userService } from '../services/appService.js';
 import { socialAuthService } from '../services/socialAuthService.js';
 import { isTokenExpired } from '../utils/jwtUtils.js';
 import { getAccessToken, setAccessToken, clearAccessToken } from '../utils/tokenStore.js';
-import { refreshAuthToken } from '../services/api.js';
+import { refreshAuthToken, canAttemptRefresh } from '../services/api.js';
 
 export const AuthContext = createContext();
 
@@ -84,6 +84,16 @@ export const AuthProvider = ({ children }) => {
       if (!storedUser) {
         // Guest user — no stored session data, skip background refresh
         clearAccessToken();
+        setUser(null);
+        setSessionActive(false);
+        setLoading(false);
+        return;
+      }
+
+      if (!canAttemptRefresh()) {
+        // Refresh cooldown is active; skip doomed refresh attempt
+        clearAccessToken();
+        localStorage.removeItem('userData');
         setUser(null);
         setSessionActive(false);
         setLoading(false);
