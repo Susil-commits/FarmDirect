@@ -1,5 +1,5 @@
 import { ArrowRight, Leaf } from 'lucide-react';
-import { useState, useEffect, useRef, lazy, Suspense, useMemo } from 'react';
+import { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import Button from '../components/common/Button';
 import PageTransition from '../components/common/PageTransition.jsx';

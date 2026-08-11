@@ -4,11 +4,6 @@
  * 
  * CRITICAL: File uploads MUST bypass the Vite proxy because http-proxy
  * can corrupt multipart/form-data boundaries, causing multer to see
-/**
- * Direct backend API instance for file uploads.
- * 
- * CRITICAL: File uploads MUST bypass the Vite proxy because http-proxy
- * can corrupt multipart/form-data boundaries, causing multer to see
  * req.files as empty on the backend.
  * 
  * In production, this connects to the deployed backend URL.
@@ -16,6 +11,7 @@
  */
 import axios from 'axios';
 import { getAccessToken, clearAccessToken } from '../utils/tokenStore.js';
+import { safeStorage } from '../utils/storage.js';
 
 const BACKEND_URL = import.meta.env.VITE_API_DIRECT_URL || 'http://localhost:10000/api';
 
@@ -60,7 +56,7 @@ directApi.interceptors.response.use(
     // token refresh; directApi is intentionally simpler (upload-only path).
     if (error.response?.status === 401) {
       clearAccessToken();
-      localStorage.removeItem('userData');
+      safeStorage.removeItem('userData');
     }
     return Promise.reject(error);
   }
