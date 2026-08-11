@@ -27,6 +27,10 @@ let failedQueue = [];
 let lastRefreshAttempt = 0;
 const REFRESH_COOLDOWN_MS = 10000; // 10 second cooldown between refresh attempts
 
+export const canAttemptRefresh = () => {
+  return Date.now() - lastRefreshAttempt >= REFRESH_COOLDOWN_MS;
+};
+
 const processQueue = (error, token = null) => {
   failedQueue.forEach(prom => {
     if (error) {
@@ -101,6 +105,17 @@ api.interceptors.request.use(
   async (config) => {
     let token = getAccessToken();
 
+    // Track cold start / slow response timer (3 seconds)
+    const requestId = Math.random().toString(36).substring(2, 9);
+    config._requestId = requestId;
+
+    if (typeof window !== 'undefined' && !config.url?.includes('/health')) {
+      config._wakingTimer = setTimeout(() => {
+        config._wakingTriggered = true;
+        window.dispatchEvent(new CustomEvent('farm-server-waking', { detail: { requestId } }));
+      }, 3000);
+    }
+
     // DEBUG: Log FormData requests to trace multipart upload issues (dev only)
     if (import.meta.env.DEV && config.data instanceof FormData) {
       for (const [key, value] of config.data.entries()) {
@@ -146,11 +161,25 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Helper to clear timer and signal server ready
+const clearWakingTimer = (config) => {
+  if (config?._wakingTimer) {
+    clearTimeout(config._wakingTimer);
+  }
+  if (config?._wakingTriggered && typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('farm-server-ready', { detail: { requestId: config._requestId } }));
+  }
+};
+
 // Response interceptor - Handle auth errors and retries
 api.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    clearWakingTimer(response.config);
+    return response.data;
+  },
   async (error) => {
     const originalRequest = error.config;
+    clearWakingTimer(originalRequest);
 
     // ── Rate limit (429) — user-friendly message ─────────────────────────────
     if (error.response?.status === 429) {

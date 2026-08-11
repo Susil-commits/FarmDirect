@@ -31,6 +31,32 @@ export function ToastProvider({ children }) {
     removeToastRef.current = removeToast;
   }, [removeToast]);
 
+  const wakingToastIdRef = useRef(null);
+
+  useEffect(() => {
+    const handleWaking = () => {
+      if (!wakingToastIdRef.current) {
+        wakingToastIdRef.current = addToast('Waking up the server — this can take up to 30s on first load…', 'info', 0);
+      }
+    };
+
+    const handleReady = () => {
+      if (wakingToastIdRef.current) {
+        removeToast(wakingToastIdRef.current);
+        wakingToastIdRef.current = null;
+        addToast('Connected!', 'success', 3000);
+      }
+    };
+
+    window.addEventListener('farm-server-waking', handleWaking);
+    window.addEventListener('farm-server-ready', handleReady);
+
+    return () => {
+      window.removeEventListener('farm-server-waking', handleWaking);
+      window.removeEventListener('farm-server-ready', handleReady);
+    };
+  }, [addToast, removeToast]);
+
 
   const success = useCallback((msg, duration) => addToast(msg, 'success', duration), [addToast]);
   const error = useCallback((msg, duration) => addToast(msg, 'error', duration ?? 6000), [addToast]);

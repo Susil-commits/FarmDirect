@@ -2,6 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { visualizer } from 'rollup-plugin-visualizer'
+
 export default defineConfig({
   plugins: [
     react(),
@@ -94,6 +96,12 @@ export default defineConfig({
         enabled: false,
       },
     }),
+    visualizer({
+      filename: 'dist/stats.html',
+      open: false,
+      gzipSize: true,
+      brotliSize: true,
+    }),
   ],
   server: {
     port: 5173,
@@ -109,6 +117,20 @@ export default defineConfig({
     }
   },
   build: {
-    sourcemap: true
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('recharts')) return 'vendor-charts';
+            if (id.includes('socket.io-client')) return 'vendor-socket';
+            if (id.includes('@tanstack/react-query')) return 'vendor-query';
+            if (id.includes('leaflet') || id.includes('react-leaflet')) return 'vendor-maps';
+            if (id.includes('lucide-react')) return 'vendor-icons';
+            if (id.includes('framer-motion')) return 'vendor-motion';
+          }
+        },
+      },
+    },
   }
 })
