@@ -3,13 +3,21 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, ShoppingBag, ShieldCheck, MapPin, Sparkles, ArrowRight, RefreshCw, Calculator } from 'lucide-react';
 
-export default function CreamValueSection() {
+export default function CreamValueSection({ onExploreClick, onNavigate }) {
   const [calculatorQty, setCalculatorQty] = useState(10); // 10 kg
   const pricePerKgFarmer = 45; // Farmer gets ₹45
   const logisticsFeePerKg = 12; // Logistics ₹12
   const farmDirectTotal = (pricePerKgFarmer + logisticsFeePerKg) * calculatorQty;
   const traditionalStoreTotal = 95 * calculatorQty; // Retail store ₹95/kg
   const savings = traditionalStoreTotal - farmDirectTotal;
+
+  const handleStepClick = () => {
+    if (onNavigate) {
+      onNavigate('/how-it-works');
+    } else if (onExploreClick) {
+      onExploreClick();
+    }
+  };
 
   const steps = [
     {
@@ -89,7 +97,8 @@ export default function CreamValueSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: idx * 0.15 }}
-                className="bg-white/80 backdrop-blur-sm border border-[#132E20]/12 rounded-3xl p-8 relative shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+                onClick={handleStepClick}
+                className="bg-white/80 backdrop-blur-sm border border-[#132E20]/12 rounded-3xl p-8 relative shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer"
               >
                 <div>
                   <div className="flex items-center justify-between mb-6">

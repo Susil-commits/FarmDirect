@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Sprout, ArrowRight, Quote, Award, Users, TrendingUp, ShieldCheck, Heart } from 'lucide-react';
 
-export default function DarkImpactSection({ onExploreClick }) {
+export default function DarkImpactSection({ onExploreClick, onNavigate }) {
   const stats = [
     { label: 'Direct Earnings to Farmers', value: '₹4.8 Cr+', icon: TrendingUp, detail: '+42% higher income vs mandi' },
     { label: 'Verified Local Growers', value: '1,450+', icon: Sprout, detail: 'Across 18 agricultural zones' },
@@ -177,9 +177,36 @@ export default function DarkImpactSection({ onExploreClick }) {
             <span>FarmDirect Protocol © 2026 • Direct Farmer Marketplace</span>
           </div>
           <div className="flex items-center gap-6">
-            <a href="#hero" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#hero" className="hover:text-white transition-colors">Farmer Terms</a>
-            <a href="#hero" className="hover:text-white transition-colors">Fair-Price Charter</a>
+            <a
+              href="/privacy"
+              onClick={(e) => {
+                e.preventDefault();
+                if (onNavigate) onNavigate('/privacy');
+              }}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Privacy Policy
+            </a>
+            <a
+              href="/terms"
+              onClick={(e) => {
+                e.preventDefault();
+                if (onNavigate) onNavigate('/terms');
+              }}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Farmer Terms
+            </a>
+            <a
+              href="/how-it-works"
+              onClick={(e) => {
+                e.preventDefault();
+                if (onNavigate) onNavigate('/how-it-works');
+              }}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Fair-Price Charter
+            </a>
           </div>
         </div>
       </div>

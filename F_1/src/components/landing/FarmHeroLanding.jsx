@@ -65,10 +65,10 @@ export default function FarmHeroLanding({ onNavigate }) {
       <ForestGreenPeelSection onExploreClick={handleExploreClick} />
 
       {/* Section 3: Overlapping Warm Cream Peel-Up */}
-      <CreamValueSection onExploreClick={handleExploreClick} />
+      <CreamValueSection onExploreClick={handleExploreClick} onNavigate={onNavigate} />
 
       {/* Section 4: Overlapping Near-Black Peel-Up */}
-      <DarkImpactSection onExploreClick={handleExploreClick} />
+      <DarkImpactSection onExploreClick={handleExploreClick} onNavigate={onNavigate} />
     </div>
   );
 }
