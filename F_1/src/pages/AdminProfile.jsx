@@ -179,8 +179,8 @@ export default function AdminProfile() {
         });
         setStatsLoading(false);
       } catch (error) {
-        console.error('Error fetching stats:', error);
-        setStatsError('Failed to load dashboard stats');
+        console.error('Error fetching stats:', error?.message || error);
+        setStatsError(error?.message || 'Failed to load dashboard stats');
         setStatsLoading(false);
       }
     };
