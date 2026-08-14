@@ -153,6 +153,10 @@ export function ChatProvider({ children }) {
     }
   }, []);
 
+  // Keep fetchUnreadCountRef always pointing to the latest fetchUnreadCount callback.
+  // Without this, markAsRead / markConversationAsRead call the stale initial stub.
+  useEffect(() => { fetchUnreadCountRef.current = fetchUnreadCount; }, [fetchUnreadCount]);
+
   // Delete message
   const deleteMessage = useCallback(async (messageId) => {
     try {
