@@ -5,7 +5,7 @@ import ForestGreenPeelSection from './ForestGreenPeelSection';
 import CreamValueSection from './CreamValueSection';
 import DarkImpactSection from './DarkImpactSection';
 
-export default function FarmHeroLanding({ onNavigate }) {
+export default function FarmHeroLanding({ onNavigate, onGetStarted }) {
   const [activeSection, setActiveSection] = useState('cream');
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function FarmHeroLanding({ onNavigate }) {
       <DynamicFloatingNavbar activeSection={activeSection} onNavigate={onNavigate} />
 
       {/* Section 1: Hero Warm Cream */}
-      <HeroCreamSection onExploreClick={handleExploreClick} />
+      <HeroCreamSection onExploreClick={handleExploreClick} onGetStarted={onGetStarted} />
 
       {/* Section 2: Overlapping Dark Forest-Green Peel-Up */}
       <ForestGreenPeelSection onExploreClick={handleExploreClick} />
@@ -68,7 +68,7 @@ export default function FarmHeroLanding({ onNavigate }) {
       <CreamValueSection onExploreClick={handleExploreClick} onNavigate={onNavigate} />
 
       {/* Section 4: Overlapping Near-Black Peel-Up */}
-      <DarkImpactSection onExploreClick={handleExploreClick} onNavigate={onNavigate} />
+      <DarkImpactSection onExploreClick={handleExploreClick} onNavigate={onNavigate} onGetStarted={onGetStarted} />
     </div>
   );
 }

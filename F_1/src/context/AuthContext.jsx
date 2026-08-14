@@ -73,9 +73,15 @@ export const AuthProvider = ({ children }) => {
   const [lastActivity, setLastActivity] = useState(null);
   const [loginHistory, setLoginHistory] = useState([]);
   const logoutRef = useRef(null);
+  // Guard against StrictMode double-invocation — initializeAuth must only run once
+  const initCalledRef = useRef(false);
 
   // Initialize authentication on mount
   useEffect(() => {
+    // StrictMode fires effects twice in dev; this ref ensures we only init once
+    if (initCalledRef.current) return;
+    initCalledRef.current = true;
+
     const initializeAuth = async () => {
       const storedUser = localStorage.getItem('userData');
       const storedVerificationStatus = localStorage.getItem('verificationStatus');

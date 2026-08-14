@@ -1,5 +1,5 @@
 import { ArrowRight, Leaf } from 'lucide-react';
-import { useState, useEffect, useRef, Suspense, useMemo } from 'react';
+import { useState, useEffect, useRef, Suspense, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import Button from '../components/common/Button';
 import PageTransition from '../components/common/PageTransition.jsx';
@@ -13,6 +13,7 @@ import ErrorBoundary from '../components/common/ErrorBoundary';
 import OptimizedImage from '../components/common/OptimizedImage';
 import LiveActivityTicker from '../components/common/LiveActivityTicker';
 import FarmHeroLanding from '../components/landing/FarmHeroLanding';
+import GetStartedModal from '../components/modals/GetStartedModal';
 
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 
@@ -28,6 +29,9 @@ export default function Home() {
   const { navigate } = useRouter();
   const { _user } = useAuth();
   const _heroRef = useRef(null);
+  const [showGetStarted, setShowGetStarted] = useState(false);
+  const openGetStarted = useCallback(() => setShowGetStarted(true), []);
+  const closeGetStarted = useCallback(() => setShowGetStarted(false), []);
   const { ref: _particleRef, triggerBurst: _triggerBurst } = useParticleEffect({
     particleCount: 15,
     particleColor: '#22c55e',
@@ -113,6 +117,7 @@ export default function Home() {
   }, []);
 
   return (
+    <>
     <ErrorBoundary>
     <PageTransition>
       <div className="min-h-screen bg-white relative">
@@ -157,7 +162,7 @@ export default function Home() {
         `}</style>
 
         {/* FarmDirect 2.0 Landing Hero Experience */}
-        <FarmHeroLanding onNavigate={handleNavigation} />
+        <FarmHeroLanding onNavigate={handleNavigation} onGetStarted={openGetStarted} />
 
 
         {/* Raw Facts Data Section */}
@@ -204,5 +209,9 @@ export default function Home() {
       </div>
     </PageTransition>
     </ErrorBoundary>
+
+    {/* GetStarted Modal — rendered outside PageTransition so it layers above everything */}
+    <GetStartedModal isOpen={showGetStarted} onClose={closeGetStarted} />
+    </>
   );
 }

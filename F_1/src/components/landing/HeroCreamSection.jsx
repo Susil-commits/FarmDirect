@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Play, Volume2, Sparkles, ArrowRight, ShieldCheck, MapPin, Clock, Leaf } from 'lucide-react';
 
-export default function HeroCreamSection({ onExploreClick }) {
+export default function HeroCreamSection({ onExploreClick, onGetStarted }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioActive, setAudioActive] = useState(true);
 
@@ -100,6 +100,16 @@ export default function HeroCreamSection({ onExploreClick }) {
                 <span>Browse Today's Harvest</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
+
+              {onGetStarted && (
+                <button
+                  onClick={onGetStarted}
+                  className="font-sans-body px-6 py-3.5 rounded-full bg-[#D97736] text-white font-semibold text-sm md:text-base shadow-lg hover:bg-[#c76a28] hover:shadow-xl transition-all duration-300 flex items-center gap-2 cursor-pointer group"
+                >
+                  <span>Get Started Free</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              )}
 
               <a
                 href="#how-it-works"

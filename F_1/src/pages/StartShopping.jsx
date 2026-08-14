@@ -72,9 +72,9 @@ export default function StartShopping() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-white pt-28 pb-12">
+      <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-white pt-20 pb-12">
         {/* Back Button */}
-        <div className="sticky top-16 z-40 bg-white/80 backdrop-blur-sm border-b border-gray-200/50 pt-32 pb-2 px-4">
+        <div className="sticky top-16 z-40 bg-white/80 backdrop-blur-sm border-b border-gray-200/50 pt-3 pb-2 px-4">
           <div className="max-w-6xl mx-auto">
             <button
               onClick={() => handleNavigation('/')}
