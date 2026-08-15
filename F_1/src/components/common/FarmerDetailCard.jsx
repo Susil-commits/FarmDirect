@@ -2,11 +2,6 @@ import React from 'react';
 import { CheckCircle, MapPin } from 'lucide-react';
 import Avatar from './Avatar';
 
-/**
- * FarmerDetailCard Component
- * Displays farmer info for crop detail page
- * Shows: photo, name, stats, bio, certifications
- */
 export default function FarmerDetailCard({
   farmer
 }) {
@@ -18,21 +13,20 @@ export default function FarmerDetailCard({
     );
   }
 
-  // Extract farmer data (handle both string and object formats)
   const farmerName = typeof farmer === 'string' ? farmer : (farmer.name || 'Local Farmer');
   const farmerData = typeof farmer === 'object' ? farmer : { name: farmer };
   const isVerified = farmerData.verified || farmerData.farmer_verified;
 
   return (
     <div className="border border-green-200 rounded-lg p-6 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 shadow-sm hover:shadow-md transition-shadow">
-      {/* Header: Farmer Title */}
+      {}
       <div className="mb-4 pb-4 border-b border-green-200">
         <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wide">Sold By</h3>
       </div>
 
-      {/* Main Farmer Section */}
+      {}
       <div className="flex flex-col items-center text-center mb-6">
-        {/* Avatar */}
+        {}
         <div className="mb-4">
           <Avatar
             user={farmerData}
@@ -41,7 +35,7 @@ export default function FarmerDetailCard({
           />
         </div>
 
-        {/* Farmer Name with Verified Badge */}
+        {}
         <div className="flex items-center justify-center gap-2 mb-2">
           <h2 className="text-2xl font-bold text-gray-900">{farmerName}</h2>
           {isVerified && (
@@ -49,14 +43,14 @@ export default function FarmerDetailCard({
           )}
         </div>
 
-        {/* Verified Badge Text */}
+        {}
         {isVerified && (
           <span className="inline-block px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full mb-3">
             ✓ Verified Farmer
           </span>
         )}
 
-        {/* Location */}
+        {}
         {farmerData.location && (
           <div className="flex items-center justify-center gap-2 text-gray-600 mb-3">
             <MapPin size={16} className="text-green-600" />
@@ -65,9 +59,9 @@ export default function FarmerDetailCard({
         )}
       </div>
 
-      {/* Stats Grid */}
+      {}
       <div className="grid grid-cols-3 gap-3 mb-6 pb-6 border-b border-green-200">
-        {/* Stat: Member Since */}
+        {}
         <div className="text-center">
           <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Member Since</p>
           <p className="text-sm font-bold text-gray-900">
@@ -75,7 +69,7 @@ export default function FarmerDetailCard({
           </p>
         </div>
 
-        {/* Stat: Total Sales */}
+        {}
         <div className="text-center">
           <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Total Sales</p>
           <p className="text-sm font-bold text-gray-900">
@@ -83,7 +77,7 @@ export default function FarmerDetailCard({
           </p>
         </div>
 
-        {/* Stat: Listings */}
+        {}
         <div className="text-center">
           <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Active Listings</p>
           <p className="text-sm font-bold text-gray-900">
@@ -92,7 +86,7 @@ export default function FarmerDetailCard({
         </div>
       </div>
 
-      {/* Rating Section */}
+      {}
       <div className="mb-6 pb-6 border-b border-green-200">
         <div className="flex items-center justify-center gap-2">
           <span className="text-xl">⭐</span>
@@ -103,7 +97,7 @@ export default function FarmerDetailCard({
         </div>
       </div>
 
-      {/* Bio Section */}
+      {}
       {farmerData.bio && (
         <div className="mb-6 pb-6 border-b border-green-200">
           <p className="text-sm text-gray-700 italic leading-relaxed">
@@ -112,7 +106,7 @@ export default function FarmerDetailCard({
         </div>
       )}
 
-      {/* Certifications/Badges */}
+      {}
       {farmerData.certifications && farmerData.certifications.length > 0 && (
         <div className="mb-6 pb-6 border-b border-green-200">
           <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-3">Certifications</p>

@@ -22,7 +22,6 @@ export default function CropPerformanceTable({ data }) {
     );
   }
 
-  // Sort data
   const sortedData = [...data].sort((a, b) => {
     let aVal, bVal;
 
@@ -182,7 +181,7 @@ export default function CropPerformanceTable({ data }) {
           </table>
         </div>
 
-        {/* Legend */}
+        {}
         <div className="mt-6 pt-6 border-t border-gray-200">
           <p className="text-sm font-semibold text-gray-700 mb-3">Performance Score Legend</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">

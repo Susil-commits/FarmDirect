@@ -1,18 +1,3 @@
-/**
- * Payment Service - COD + Razorpay (Online) Payments
- *
- * Project: FaRm - Farm Marketplace Application
- *
- * Supported methods:
- * - COD: order created → cash collected on pickup
- * - Razorpay: order created → Razorpay checkout → signature verified on server → marked paid
- *
- * Razorpay flow:
- *   1. createOrder() with paymentMethod 'razorpay' (order saved, paymentStatus pending)
- *   2. initializeRazorpayPayment(orderIds) → backend creates Razorpay order, returns keyId + razorpayOrderId
- *   3. openRazorpayCheckout(...) → opens Razorpay modal
- *   4. verifyRazorpayPayment({...}) → backend verifies HMAC signature, marks orders paid
- */
 
 import api from './api';
 
@@ -70,12 +55,6 @@ const paymentService = {
     return api.get('/orders/payment/pending-cod');
   },
 
-
-  /**
-   * Create a Razorpay order for one or more existing buyer orders.
-   * @param {string|string[]} orderIds - single orderId or array of orderIds
-   * @returns {Promise<{razorpayOrderId, amount, currency, keyId, orderIds}>}
-   */
   initializeRazorpayPayment: async (orderIds) => {
     const payload = Array.isArray(orderIds)
       ? { orderIds }
@@ -83,10 +62,6 @@ const paymentService = {
     return api.post('/payments/razorpay/init', payload);
   },
 
-  /**
-   * Verify a completed Razorpay payment with the server (HMAC signature check).
-   * @param {object} data - { razorpayOrderId, razorpayPaymentId, razorpaySignature }
-   */
   verifyRazorpayPayment: async ({ razorpayOrderId, razorpayPaymentId, razorpaySignature }) => {
     return api.post('/payments/razorpay/verify', {
       razorpayOrderId,
@@ -95,28 +70,10 @@ const paymentService = {
     });
   },
 
-  /**
-   * Report a failed payment attempt to the server.
-   */
   reportRazorpayFailure: async (razorpayOrderId, reason) => {
     return api.post('/payments/razorpay/failed', { razorpayOrderId, reason });
   },
 
-  /**
-   * Open the Razorpay checkout modal.
-   * Resolves once the modal is opened (payment result is delivered via callbacks).
-   *
-   * @param {object} opts
-   * @param {string} opts.keyId         - Razorpay key id (returned by initializeRazorpayPayment)
-   * @param {string} opts.razorpayOrderId
-   * @param {number} opts.amount       - amount in paise
-   * @param {string} [opts.name]
-   * @param {string} [opts.description]
-   * @param {object} [opts.prefill]     - { name, email, contact }
-   * @param {function} [opts.onSuccess] - handler(response)
-   * @param {function} [opts.onDismiss] - called when user closes the modal
-   * @param {function} [opts.onFailure] - handler(error)
-   */
   openRazorpayCheckout: async ({
     keyId,
     razorpayOrderId,

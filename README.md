@@ -205,6 +205,42 @@ FaRm enforces mandatory identity verification for buyers and farmers to ensure p
 
 ---
 
+## 🤖 FaRm AI Assistant (AgriBot) Architecture
+
+AgriBot is a domain-specific, privacy-first agricultural and marketplace assistant powered by **Google Gemini** (`@google/genai`).
+
+```text
+ Client (Browser / Mobile)                 API Engine (backend-ts)              Google Gemini API
+      │                                             │                                  │
+      ├─── 1. POST /api/ai/chat ───────────────────►│                                  │
+      │    (Query + Role + Route Context)           ├── 2. Pre-Guardrail Filter        │
+      │                                             │   (Block Injections/Off-Topic)   │
+      │                                             ├── 3. Multi-Model Cascade ───────►│
+      │                                             │   (gemini-3.5/3.7/flash-latest)  │
+      │                                             │◄── 4. Structured Output ─────────┤
+      │                                             ├── 5. Action Link Enricher        │
+      │◄── 6. Reply + Actions + Dynamic Chips ──────┤                                  │
+      │    (Ephemeral / Zero Server Storage)        │ (Zero DB/Session Persistence)    │
+```
+
+### Architecture Highlights
+- **Strict Agricultural & Platform Guardrails:**
+  - **Allowed Domain:** Crop cultivation, soil health, bio-fertilizers, organic pest control, seasonal crop calendars, and FaRm platform workflows (listing crops, price negotiations, escrow payments, KYC verification, order tracking).
+  - **Deflection Engine:** Pre-guardrail regex patterns and system instructions automatically deflect prompt injections, jailbreaks, and off-topic requests (coding, politics, entertainment) back to agriculture.
+- **Zero-History & Stateless Design:**
+  - **Privacy-First:** Neither MongoDB nor Redis stores conversation logs or user interactions.
+  - **Ephemeral Client Sessions:** The client retains ephemeral state in React memory with a 1-click **Clear Chat (Stateless Reset)** button.
+- **Multi-Model Cascade & Fallback Resilience:**
+  - Automatically cascades across `gemini-3.5-flash`, `gemini-3.7-flash`, and `gemini-flash-latest` with a built-in offline agricultural knowledge engine.
+  - Dedicated rate limiter (`rl:ai:`, 30 req/min per IP) protects API quota.
+- **Modern Interactive Client (`AgriBotWidget.jsx`):**
+  - **Voice Input (Speech-to-Text):** Web Speech API integration for hands-free voice queries.
+  - **Text-to-Speech:** Audio read-aloud toggle for spoken responses.
+  - **1-Click Action Chips:** Direct navigation badges (`/create-crop`, `/marketplace`, `/orders`, `/verification/progress`).
+  - **Context-Aware Starter Prompts:** Tailored dynamically for Farmers, Buyers, and Guests.
+
+---
+
 ## 🔄 Real-Time Order Lifecycle
 
 Order updates are synchronized across farmer and buyer dashboards in real-time using Socket.io and state-machine transitions.

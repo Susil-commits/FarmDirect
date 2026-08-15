@@ -64,7 +64,6 @@ export default function FarmerDashboardNew() {
   const [expandedCrop, setExpandedCrop] = useState(null);
   const [startOrderLoading, setStartOrderLoading] = useState({});
 
-  // Cancel modal state
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelTargetOrder, setCancelTargetOrder] = useState(null);
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -114,10 +113,10 @@ export default function FarmerDashboardNew() {
   useEffect(() => {
     window.scrollTo(0, 0);
     if (user?.role === 'farmer') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      
       fetchFarmerData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [user]);
 
   const handleDeleteCrop = async (cropId) => {
@@ -229,7 +228,7 @@ export default function FarmerDashboardNew() {
             <p className="text-stone-600 text-sm mt-1">Track live crop listings, direct buyer offers, and payout analytics.</p>
           </ScrollAnimation>
 
-          {/* 3D Glass Stats Grid */}
+          {}
           <ScrollAnimation className="scroll-slide mb-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
               <div className="bg-gradient-to-tr from-[#132E20] to-[#1B3B2B] text-white p-6 rounded-3xl lg:col-span-2 shadow-xl border border-white/10">
@@ -274,7 +273,7 @@ export default function FarmerDashboardNew() {
             </div>
           </ScrollAnimation>
 
-          {/* Tab Navigation */}
+          {}
           <ScrollAnimation className="scroll-slide mb-8">
             <div className="flex gap-2 border-b border-stone-200/80 overflow-x-auto pb-1 scrollbar-none">
               {['inventory', 'orders', 'negotiations', 'analytics'].map(tab => (

@@ -1,21 +1,8 @@
-/**
- * Frontend Service for File Uploads
- * This service handles file uploads to your backend
- * which stores files locally on disk.
- *
- * IMPORTANT: File uploads use directApi (bypassing Vite proxy)
- * because the Vite proxy can interfere with multipart/form-data boundaries,
- * causing multer to see req.files as empty.
- */
 
 import directApi from './directApi.js';
 
 export const uploadService = {
-  /**
-   * Upload crop images
-   * @param {File[]} files - Array of image files
-   * @returns {Promise<Object>} - Upload result with file URLs
-   */
+  
   uploadCropImages: async (files) => {
     try {
       const formData = new FormData();
@@ -32,11 +19,6 @@ export const uploadService = {
     }
   },
 
-  /**
-   * Upload profile picture
-   * @param {File} file - Image file
-   * @returns {Promise<Object>} - Upload result with file URL
-   */
   uploadProfilePicture: async (file) => {
     try {
       const formData = new FormData();
@@ -50,18 +32,10 @@ export const uploadService = {
     }
   },
 
-  /**
-   * Upload KYC documents with proper field names for document type mapping
-   * @param {Object} fileMap - Object mapping document type to File (e.g., { governmentId: File, addressProof: File })
-   * @param {String} documentType - Type of KYC document ('buyer_kyc' or 'farmer_kyc')
-   * @returns {Promise<Object>} - Upload result
-   */
   uploadKYCDocuments: async (fileMap, documentType) => {
     try {
       const formData = new FormData();
       
-      // Append each file with its document type as the field name
-      // This allows the backend to map files to document types via fieldName
       Object.entries(fileMap).forEach(([docType, file]) => {
         if (file) {
           formData.append(docType, file);
@@ -69,7 +43,6 @@ export const uploadService = {
       });
       formData.append('documentType', documentType);
 
-      
       const response = await directApi.post('/auth/kyc/submit', formData);
       
       return response.data;
@@ -85,12 +58,6 @@ export const uploadService = {
     }
   },
 
-  /**
-   * Upload order invoice
-   * @param {String} orderId - Order ID
-   * @param {File} file - Invoice file
-   * @returns {Promise<Object>} - Upload result
-   */
   uploadOrderInvoice: async (orderId, file) => {
     try {
       const formData = new FormData();

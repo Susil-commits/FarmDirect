@@ -1,9 +1,5 @@
 import LoadingSpinner from './LoadingSpinner';
 
-/**
- * Local Page Loader - Shows loading overlay on component level
- * Used for async operations like order placement, data fetching
- */
 export default function PageLoader({ message = 'Loading...' }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center pointer-events-none">

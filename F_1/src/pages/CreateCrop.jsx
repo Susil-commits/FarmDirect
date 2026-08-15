@@ -9,11 +9,6 @@ import ScrollAnimation from '../components/common/ScrollAnimation.jsx';
 import { AlertCircle, CheckCircle, ArrowLeft, Leaf, Upload, X, Image } from 'lucide-react';
 import { cropService } from '../services/appService.js';
 
-/**
- * Create Crop Listing Page
- * Farmers can create new crop listings after KYC verification
- * No additional verification needed - KYC is the only gate
- */
 export default function CreateCrop() {
   const { user } = useAuth();
   const { navigate } = useRouter();
@@ -35,7 +30,6 @@ export default function CreateCrop() {
   const [success, setSuccess] = useState(null);
   const [imagePreview, setImagePreview] = useState([]);
 
-  // Check KYC status
   const kycVerified = user?.kycStatus === 'verified';
 
   const handleInputChange = (e) => {
@@ -50,14 +44,12 @@ export default function CreateCrop() {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    // Limit to 5 images
     const totalImages = formData.images.length + files.length;
     if (totalImages > 5) {
       setError('Maximum 5 images allowed');
       return;
     }
 
-    // Create preview URLs
     const newPreviews = files.map(file => URL.createObjectURL(file));
     setImagePreview(prev => [...prev, ...newPreviews]);
     setFormData(prev => ({
@@ -84,7 +76,6 @@ export default function CreateCrop() {
       return;
     }
 
-    // Validate required fields
     if (!formData.cropName || !formData.price || !formData.quantity || !formData.pickupLocation || !formData.contactNumber) {
       setError('Please fill in all required fields: Crop Name, Price, Quantity, Pickup Location, and Contact Number');
       return;
@@ -94,7 +85,6 @@ export default function CreateCrop() {
       setLoading(true);
       setError(null);
 
-      // Build FormData for image upload
       const submitData = new FormData();
       submitData.append('cropName', formData.cropName);
       submitData.append('cropType', formData.cropType);
@@ -107,7 +97,6 @@ export default function CreateCrop() {
       submitData.append('contactNumber', formData.contactNumber);
       submitData.append('specifications', formData.specifications || '{}');
 
-      // Append images
       formData.images.forEach((file) => {
         submitData.append('images', file);
       });
@@ -131,7 +120,7 @@ export default function CreateCrop() {
       <PageTransition>
         <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body px-4 pt-28 pb-16 relative overflow-hidden">
           <div className="max-w-2xl mx-auto relative z-10">
-            {/* Back Button */}
+            {}
             <ScrollAnimation className="scroll-slide mb-6">
               <button
                 onClick={() => navigate('/farmer/dashboard')}
@@ -141,7 +130,7 @@ export default function CreateCrop() {
               </button>
             </ScrollAnimation>
 
-            {/* Hero Section */}
+            {}
             <ScrollAnimation className="scroll-slide mb-8">
               <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[32px] p-6 sm:p-8 flex items-center gap-4 shadow-xl">
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#132E20] to-[#1B3B2B] text-white flex items-center justify-center shadow-lg text-2xl">
@@ -155,7 +144,7 @@ export default function CreateCrop() {
               </div>
             </ScrollAnimation>
 
-            {/* KYC Status Check */}
+            {}
             {!kycVerified && (
               <ScrollAnimation className="scroll-slide mb-8">
                 <Card className="p-6 bg-yellow-50 border-2 border-yellow-300">
@@ -179,7 +168,7 @@ export default function CreateCrop() {
               </ScrollAnimation>
             )}
 
-            {/* KYC Verified Badge */}
+            {}
             {kycVerified && (
               <ScrollAnimation className="scroll-slide mb-6">
                 <div className="p-4 bg-green-50 border-l-4 border-green-500 rounded-lg flex items-center gap-3">

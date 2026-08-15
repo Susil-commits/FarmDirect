@@ -1,11 +1,4 @@
-/**
- * Centralised, validated environment configuration.
- *
- * Instead of scattering `process.env.X` lookups across the codebase, we read
- * and validate everything once here. A missing required variable (in
- * production) throws immediately so the server fails fast instead of
- * silently misbehaving.
- */
+
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -56,12 +49,12 @@ export interface EnvConfig {
   googleClientSecret?: string;
   githubClientId?: string;
   githubClientSecret?: string;
+  geminiApiKey?: string;
 }
 
 function loadEnv(): EnvConfig {
   const required: Array<[string, string | undefined]> = [];
 
-  // In production, fail fast on missing critical vars.
   if (isProd) {
     required.push(['MONGODB_URI', process.env.MONGODB_URI]);
     required.push(['JWT_SECRET', process.env.JWT_SECRET]);
@@ -118,15 +111,12 @@ function loadEnv(): EnvConfig {
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
     githubClientId: process.env.GITHUB_CLIENT_ID,
     githubClientSecret: process.env.GITHUB_CLIENT_SECRET,
+    geminiApiKey: process.env.GEMINI_API_KEY,
   };
 }
 
 export const env = loadEnv();
 
-/**
- * Cloudinary is configured if the individual vars are present.
- * They are populated from CLOUDINARY_URL during loadEnv() if needed.
- */
 export function isCloudinaryConfigured(): boolean {
   return Boolean(env.cloudinaryCloudName && env.cloudinaryApiKey && env.cloudinaryApiSecret);
 }

@@ -44,7 +44,7 @@ export function startOutboxWorker() {
           event.status = 'FAILED';
         }
         await event.save();
-        throw err; // Trigger bullmq retry
+        throw err; 
       }
     },
     { connection }

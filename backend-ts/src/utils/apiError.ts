@@ -1,7 +1,4 @@
-/**
- * A typed application error. Throwing `ApiError` lets the error-handler
- * middleware respond with a precise HTTP status code instead of always 500.
- */
+
 export class ApiError extends Error {
   public readonly statusCode: number;
   public readonly isOperational: boolean;
@@ -22,7 +19,6 @@ export class ApiError extends Error {
     Object.setPrototypeOf(this, ApiError.prototype);
     Error.captureStackTrace?.(this, this.constructor);
   }
-
 
   static badRequest(message = 'Bad Request', details?: unknown): ApiError {
     return new ApiError(400, message, { details, code: 'BAD_REQUEST' });
@@ -52,7 +48,6 @@ export class ApiError extends Error {
     return new ApiError(429, message, { code: 'TOO_MANY_REQUESTS' });
   }
 
-
   static internal(message = 'Internal Server Error'): ApiError {
     return new ApiError(500, message, { isOperational: false, code: 'INTERNAL_ERROR' });
   }
@@ -61,11 +56,6 @@ export class ApiError extends Error {
     return new ApiError(503, message, { isOperational: true, code: 'SERVICE_UNAVAILABLE' });
   }
 
-
-  /**
-   * Safely convert any unknown thrown value into an ApiError.
-   * Use in catch blocks where you receive `unknown`.
-   */
   static fromUnknown(error: unknown, fallbackMessage = 'An unexpected error occurred'): ApiError {
     if (error instanceof ApiError) return error;
     if (error instanceof Error) {
@@ -77,12 +67,10 @@ export class ApiError extends Error {
     return new ApiError(500, fallbackMessage, { isOperational: false, code: 'INTERNAL_ERROR' });
   }
 
-  /** Return true when the status code is in the 4xx range (client error). */
   get isClientError(): boolean {
     return this.statusCode >= 400 && this.statusCode < 500;
   }
 
-  /** Return true when the status code is in the 5xx range (server error). */
   get isServerError(): boolean {
     return this.statusCode >= 500;
   }

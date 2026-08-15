@@ -21,14 +21,12 @@ export default function AdminDashboardStats() {
   const [_loading, _setLoading] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  // Reset scroll position to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
   useEffect(() => {
        
-      // eslint-disable-next-line react-hooks/immutability
     fetchData();
   }, []);
 
@@ -73,10 +71,8 @@ export default function AdminDashboardStats() {
     );
   }
 
-  // Use stats directly
   const statisticsData = stats;
 
-  // Mock time-series data for Revenue Chart
   const revenueData = [
     { name: 'Jan', revenue: 4000 },
     { name: 'Feb', revenue: 3000 },
@@ -87,7 +83,6 @@ export default function AdminDashboardStats() {
     { name: 'Jul', revenue: statisticsData.orders?.totalRevenue || 12000 },
   ];
 
-  // Dynamic data for Order Status Pie Chart
   const orderPieData = [
     { name: 'Completed', value: statisticsData.orders?.completed || 10 },
     { name: 'Pending', value: statisticsData.orders?.pending || 5 },
@@ -99,7 +94,7 @@ export default function AdminDashboardStats() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pt-28 pb-12">
-        {/* Top Navigation Bar */}
+        {}
         <div className="sticky top-0 bg-white border-b border-slate-200 px-3 sm:px-6 py-4 flex items-center justify-between shadow-sm z-30">
           <div className="flex items-center gap-3 min-w-0">
             <BarChart3 size={28} className="text-green-600 flex-shrink-0" />
@@ -113,10 +108,10 @@ export default function AdminDashboardStats() {
           </button>
         </div>
 
-        {/* Content */}
+        {}
         <div className="p-6">
           <div className="space-y-6 max-w-7xl mx-auto">
-            {/* Stats Cards */}
+            {}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
               <Card className="bg-blue-100 border-2 border-blue-600 shadow-xl hover:shadow-2xl transition transform hover:scale-105">
                 <div className="p-8">
@@ -154,7 +149,7 @@ export default function AdminDashboardStats() {
               </Card>
             </div>
 
-            {/* Dashboard Info */}
+            {}
             <Card className="bg-white shadow-md rounded-xl border border-slate-200">
               <div className="p-8">
                 <div className="flex items-center gap-3 mb-4">
@@ -195,7 +190,7 @@ export default function AdminDashboardStats() {
               </div>
             </Card>
 
-            {/* Advanced Analytics Charts */}
+            {}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="bg-white shadow-md rounded-xl border border-slate-200">
                 <div className="p-6">
@@ -255,10 +250,9 @@ export default function AdminDashboardStats() {
           </div>
         </div>
 
-
       </div>
 
-      {/* Logout Confirmation Modal */}
+      {}
       {showLogoutConfirm && (
         <LogoutConfirmationModal
           onConfirm={async () => {

@@ -1,9 +1,3 @@
-/**
- * Centralised string-literal enums for every domain status / type used across
- * the FaRm marketplace. Using enums (instead of bare strings) gives us
- * compile-time exhaustiveness checking in switch statements and guarantees
- * that a typo can never reach the database.
- */
 
 export enum UserRole {
   Farmer = 'farmer',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-// eslint-disable-next-line no-unused-vars
+
 import { motion } from 'framer-motion';
 import { Check, ArrowRight, Sparkles, Calculator } from 'lucide-react';
 import GiantBrandFooter from '../components/common/GiantBrandFooter';
@@ -8,7 +8,7 @@ import { useRouter } from '../hooks/useRouter';
 
 export default function Pricing() {
   const { navigate } = useRouter();
-  const [billingCycle, setBillingCycle] = useState('annual'); // annual or monthly
+  const [billingCycle, setBillingCycle] = useState('annual'); 
   const [teamSize, setTeamSize] = useState(10);
   const [hourlyRate, setHourlyRate] = useState(1500);
 
@@ -78,7 +78,7 @@ export default function Pricing() {
       <DynamicFloatingNavbar activeSection="cream" onNavigate={navigate} />
 
       <section className="pt-32 pb-20 px-4 md:px-8 max-w-6xl mx-auto">
-        {/* Header */}
+        {}
         <div className="text-center max-w-3xl mx-auto mb-12">
           <span className="font-sans-body text-xs font-bold uppercase tracking-widest text-[#132E20]/60 bg-[#F4EFE6] px-3.5 py-1.5 rounded-full border border-[#132E20]/10">
             TRANSPARENT PRICING
@@ -90,7 +90,7 @@ export default function Pricing() {
             Simple, honest pricing with zero middleman markups. Pay only for pure harvest and direct transport.
           </p>
 
-          {/* Billing Cycle Switcher (Wispr Flow style at video 1:04) */}
+          {}
           <div className="inline-flex items-center bg-[#F4EFE6] p-1.5 rounded-full border border-[#132E20]/10 mt-8">
             <button
               onClick={() => setBillingCycle('monthly')}
@@ -118,7 +118,7 @@ export default function Pricing() {
           </div>
         </div>
 
-        {/* 3 Pricing Cards Grid (Wispr Flow style) */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
           {plans.map((plan, idx) => (
             <motion.div
@@ -189,7 +189,7 @@ export default function Pricing() {
           ))}
         </div>
 
-        {/* Interactive Savings / ROI Calculator (Wispr Flow style at video 1:05) */}
+        {}
         <div className="bg-[#132E20] text-[#FBF8F3] rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden mb-20 border border-white/10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-6 space-y-4">

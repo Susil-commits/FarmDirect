@@ -1,4 +1,4 @@
-// Format currency (INR)
+
 export const formatCurrency = (amount, currency = 'INR') => {
   const num = Number(amount);
   if (isNaN(num)) return '₹0';
@@ -8,7 +8,6 @@ export const formatCurrency = (amount, currency = 'INR') => {
   }).format(num);
 };
 
-// Format date
 export const formatDate = (date, format = 'short') => {
   if (!date) return '';
   const d = new Date(date);
@@ -25,7 +24,6 @@ export const formatDate = (date, format = 'short') => {
   return d.toLocaleDateString('en-IN', options[format] ?? options.short);
 };
 
-// Format relative time (e.g., "2 hours ago")
 export const formatRelativeTime = (date) => {
   if (!date) return '';
   const d = new Date(date);
@@ -54,7 +52,6 @@ export const formatRelativeTime = (date) => {
   return `${years}y ago`;
 };
 
-// Format phone number
 export const formatPhoneNumber = (phone) => {
   if (!phone) return '';
   const cleaned = String(phone).replace(/\D/g, '');
@@ -63,31 +60,26 @@ export const formatPhoneNumber = (phone) => {
   return `+91 ${cleaned.slice(0, 5)} ${cleaned.slice(5, 10)}`;
 };
 
-// Format number with commas
 export const formatNumber = (num) => {
   if (num === null || num === undefined || isNaN(Number(num))) return '0';
   return new Intl.NumberFormat('en-IN').format(num);
 };
 
-// Truncate text
 export const truncateText = (text, length = 100) => {
   if (!text) return '';
   return text.length > length ? text.substring(0, length) + '...' : text;
 };
 
-// Format rating
 export const formatRating = (rating) => {
   const n = parseFloat(rating);
   return isNaN(n) ? '0.0' : n.toFixed(1);
 };
 
-// Capitalize string
 export const capitalize = (str) => {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
-// Convert status to readable text
 export const getStatusLabel = (status) => {
   const labels = {
     pending: 'Pending',
@@ -107,7 +99,6 @@ export const getStatusLabel = (status) => {
   return labels[status] || capitalize(status);
 };
 
-// Get status color
 export const getStatusColor = (status) => {
   const colors = {
     pending: 'yellow',
@@ -127,13 +118,11 @@ export const getStatusColor = (status) => {
   return colors[status] || 'gray';
 };
 
-// Format product title
 export const formatProductTitle = (title) => {
   if (!title) return '';
   return title.split(' ').map(word => capitalize(word)).join(' ');
 };
 
-// Format address
 export const formatAddress = (address) => {
   if (!address) return '';
   const parts = [
@@ -147,12 +136,10 @@ export const formatAddress = (address) => {
   return parts.join(', ');
 };
 
-// Get initials from name
 export const getInitials = (firstName, lastName) => {
   return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
 };
 
-// Format file size
 export const formatFileSize = (bytes) => {
   if (bytes === 0) return '0 Bytes';
   
@@ -163,7 +150,6 @@ export const formatFileSize = (bytes) => {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 };
 
-// Get badge color based on priority
 export const getPriorityColor = (priority) => {
   const colors = {
     low: 'blue',
@@ -174,17 +160,11 @@ export const getPriorityColor = (priority) => {
   return colors[priority] || 'gray';
 };
 
-// Format review stars
 export const formatStars = (rating) => {
   const n = Math.max(0, Math.min(5, Math.floor(Number(rating) || 0)));
   return '★'.repeat(n) + '☆'.repeat(5 - n);
 };
 
-/**
- * Format order status into a human-readable label.
- * @param {string} status - Order status from the backend enum
- * @returns {{ label: string, color: string }}
- */
 export const formatOrderStatus = (status) => {
   const map = {
     pending:           { label: 'Pending',           color: 'yellow' },
@@ -199,9 +179,6 @@ export const formatOrderStatus = (status) => {
   return map[status] ?? { label: capitalize(status || 'Unknown'), color: 'gray' };
 };
 
-/**
- * High-quality fallback stock images mapped by crop category or name keywords.
- */
 export const CROP_FALLBACK_IMAGES = {
   vegetables: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&auto=format&fit=crop&q=80',
   fruits: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=800&auto=format&fit=crop&q=80',
@@ -243,16 +220,6 @@ export const getCropFallbackImage = (categoryOrName = '') => {
   return CROP_FALLBACK_IMAGES.default;
 };
 
-/**
- * Resolve image URLs for production & development deployment.
- * Handles missing URLs by returning a category fallback image,
- * handles relative paths ('uploads/...' or '/uploads/...'), and
- * handles full HTTP/HTTPS URLs.
- *
- * @param {string|null|undefined} url - Raw image URL from API
- * @param {string} [categoryOrName] - Optional category or crop name for intelligent fallback
- * @returns {string} - Resolved absolute image URL or category fallback
- */
 export const getImageUrl = (url, categoryOrName = '') => {
   if (!url || typeof url !== 'string' || url.trim() === '') {
     return getCropFallbackImage(categoryOrName);
@@ -260,12 +227,10 @@ export const getImageUrl = (url, categoryOrName = '') => {
 
   const cleanUrl = url.trim();
 
-  // Absolute URL (http/https or data URI) — return as-is
   if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://') || cleanUrl.startsWith('data:')) {
     return cleanUrl;
   }
 
-  // Handle relative upload paths (e.g. 'uploads/crop.jpg' or '/uploads/crop.jpg')
   let normalizedPath = cleanUrl.startsWith('/') ? cleanUrl : '/' + cleanUrl;
 
   if (normalizedPath.startsWith('/uploads/') || normalizedPath.startsWith('/images/')) {

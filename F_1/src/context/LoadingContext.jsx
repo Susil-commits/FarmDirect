@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+
 import { createContext, useState } from 'react';
 
 export const LoadingContext = createContext();
@@ -22,5 +22,4 @@ export function LoadingProvider({ children }) {
     </LoadingContext.Provider>
   );
 }
-
-
+

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-// eslint-disable-next-line no-unused-vars
+
 import { motion } from 'framer-motion';
 import { ChevronRight, HelpCircle } from 'lucide-react';
 
@@ -37,9 +37,9 @@ export default function FaqsSection() {
           </h2>
         </div>
 
-        {/* Side-by-side FAQ Layout (Wispr Flow style at video 0:26) */}
+        {}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Questions Buttons */}
+          {}
           <div className="lg:col-span-5 space-y-3">
             <span className="font-sans-body text-xs font-bold uppercase tracking-wider text-[#132E20]/50 block mb-2 px-2">
               Questions
@@ -64,7 +64,7 @@ export default function FaqsSection() {
             ))}
           </div>
 
-          {/* Right Column: Active Answer Card */}
+          {}
           <div className="lg:col-span-7">
             <span className="font-sans-body text-xs font-bold uppercase tracking-wider text-[#132E20]/50 block mb-2 px-2">
               Answer

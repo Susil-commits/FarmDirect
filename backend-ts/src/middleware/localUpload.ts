@@ -39,7 +39,6 @@ const upload = multer({
   limits: { fileSize: env.maxFileSize },
 });
 
-/** Upload a single file (field name `file`) to storage. */
 export function uploadSingleFile(folder = 'general') {
   return [
     upload.single('file'),
@@ -65,7 +64,6 @@ export function uploadSingleFile(folder = 'general') {
   ];
 }
 
-/** Upload multiple files (any field name) to storage. */
 export function uploadMultipleFiles(folder = 'general', maxFiles = 5) {
   return [
     upload.any(),

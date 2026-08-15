@@ -16,8 +16,6 @@ import {
 import api from '../../services/api.js';
 import { useToast } from '../../hooks/useToast';
 
-// ─── Document URL Helpers (DO NOT MODIFY — document preview is working) ───
-
 import { getImageUrl } from '../../utils/formatters';
 
 const resolveDocUrl = (url) => {
@@ -26,15 +24,12 @@ const resolveDocUrl = (url) => {
   return getImageUrl(url) || url;
 };
 
-// Uses VITE_API_BASE_URL to bypass Vercel's SPA catch-all in production
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 const getProxyUrl = (url) => {
   if (!url) return '';
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   return `${API_BASE}/admin/documents/proxy?url=${encodeURIComponent(url)}`;
 };
-
-// ─── Document Thumbnail Card ───
 
 const DocThumbnail = ({ doc, onPreview, formatFileSize, isImageDoc }) => {
   const [imgError, setImgError] = useState(false);
@@ -66,8 +61,6 @@ const DocThumbnail = ({ doc, onPreview, formatFileSize, isImageDoc }) => {
   );
 };
 
-// ─── Stats Card Component ───
-
 const StatsCard = ({ icon, label, value, sub, color, gradient }) => {
   const IconComponent = icon;
   return (
@@ -85,8 +78,6 @@ const StatsCard = ({ icon, label, value, sub, color, gradient }) => {
     </div>
   );
 };
-
-// ─── KYC Status Badge ───
 
 const KYCStatusBadge = ({ status }) => {
   if (status === 'verified') {
@@ -115,8 +106,6 @@ const KYCStatusBadge = ({ status }) => {
   );
 };
 
-// ─── Main Component ───
-
 export default function AdminManagement() {
   const { user, logout } = useAuth();
   const { navigate } = useRouter();
@@ -136,41 +125,31 @@ export default function AdminManagement() {
   const [previewImageError, setPreviewImageError] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Expand/collapse state
   const [expandedUsers, setExpandedUsers] = useState({});
   const [docLoadingUsers, setDocLoadingUsers] = useState({});
   const [userDocuments, setUserDocuments] = useState({});
   const [previewDoc, setPreviewDoc] = useState(null);
 
-  // Dashboard stats (real data from backend)
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
 
-  // Tab counts
   const [tabCounts, setTabCounts] = useState({ farmers: 0, buyers: 0, suspended: 0 });
 
   useEffect(() => {
     window.scrollTo(0, 0);
        
-      // eslint-disable-next-line react-hooks/immutability
     fetchStats();
   }, []);
 
-       
   useEffect(() => {
        
-      // eslint-disable-next-line react-hooks/immutability
     fetchUsers();
        
-       
-      // eslint-disable-next-line react-hooks/set-state-in-effect
     setExpandedUsers({});
        
     setUserDocuments({});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [activeTab, searchTerm]);
-
-  // ─── Fetch dashboard stats ───
 
   const fetchStats = async () => {
     try {
@@ -179,11 +158,10 @@ export default function AdminManagement() {
       const data = response.data?.data || response.data || {};
       setStats(data);
 
-      // Derive tab counts from stats
       setTabCounts({
         farmers: data.users?.farmers || 0,
         buyers: data.users?.buyers || 0,
-        suspended: 0, // Will be populated by fetchUsers for suspended tab
+        suspended: 0, 
       });
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
@@ -191,8 +169,6 @@ export default function AdminManagement() {
       setStatsLoading(false);
     }
   };
-
-  // ─── Fetch users ───
 
   const fetchUsers = async () => {
     try {
@@ -210,7 +186,6 @@ export default function AdminManagement() {
       const userList = response.data?.data || response.data || [];
       setUsers(userList);
 
-      // Update suspended count from actual data
       if (activeTab === 'suspended') {
         setTabCounts(prev => ({
           ...prev,
@@ -223,8 +198,6 @@ export default function AdminManagement() {
       setLoading(false);
     }
   };
-
-  // ─── Expand/collapse user ───
 
   const toggleExpandUser = async (userId) => {
     const isCurrentlyExpanded = expandedUsers[userId];
@@ -249,8 +222,6 @@ export default function AdminManagement() {
       }
     }
   };
-
-  // ─── Freeze ───
 
   const handleFreezeClick = (user) => {
     setSelectedUser(user);
@@ -282,8 +253,6 @@ export default function AdminManagement() {
       setActionLoading(false);
     }
   };
-
-  // ─── Delete ───
 
   const handleDeleteClick = (user) => {
     setSelectedUser(user);
@@ -323,8 +292,6 @@ export default function AdminManagement() {
     }
   };
 
-  // ─── Unfreeze ───
-
   const handleUnfreeze = async (user) => {
     if (!window.confirm(`Unfreeze ${user.firstName}?`)) return;
 
@@ -341,8 +308,6 @@ export default function AdminManagement() {
       setActionLoading(false);
     }
   };
-
-  // ─── Helpers ───
 
   const formatFileSize = (bytes) => {
     if (!bytes) return '0 B';
@@ -389,8 +354,6 @@ export default function AdminManagement() {
     return '₹' + Number(amount).toLocaleString('en-IN');
   };
 
-  // ─── Access control ───
-
   if (!user || user.role !== 'admin') {
     return (
       <PageTransition>
@@ -407,14 +370,12 @@ export default function AdminManagement() {
     );
   }
 
-  // ─── Render ───
-
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50 flex pt-28 pb-12">
-        {/* Mobile Backdrop */}
+        {}
         {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
-        {/* ─── Sidebar ─── */}
+        {}
         <aside className={`fixed lg:static inset-y-0 left-0 transition-all duration-300 z-40 ${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-purple-700 via-purple-800 to-indigo-900 text-white flex flex-col shadow-2xl ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
           <div className="p-6 border-b border-purple-600/50">
             <div className="flex items-center justify-between">
@@ -464,11 +425,11 @@ export default function AdminManagement() {
           </div>
         </aside>
 
-        {/* ─── Main Content ─── */}
+        {}
         <div className="flex-1 overflow-auto min-h-screen pt-28 pb-12">
           <div className="p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
-              {/* ─── Header ─── */}
+              {}
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
                   <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"><Menu size={24} /></button>
@@ -487,7 +448,7 @@ export default function AdminManagement() {
                 </button>
               </div>
 
-              {/* ─── Stats Cards ─── */}
+              {}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <StatsCard
                   icon={Users}
@@ -523,7 +484,7 @@ export default function AdminManagement() {
                 />
               </div>
 
-              {/* ─── Tabs ─── */}
+              {}
               <div className="flex gap-2 mb-6 flex-wrap">
                 {[
                   { id: 'farmers', label: 'Farmers', icon: Sprout, count: tabCounts.farmers },
@@ -552,7 +513,7 @@ export default function AdminManagement() {
                 ))}
               </div>
 
-              {/* ─── Search ─── */}
+              {}
               <div className="relative mb-6">
                 <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -564,7 +525,7 @@ export default function AdminManagement() {
                 />
               </div>
 
-              {/* ─── Content ─── */}
+              {}
               {loading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map(i => (
@@ -627,11 +588,11 @@ export default function AdminManagement() {
                         key={userItem._id}
                         className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300"
                       >
-                        {/* ─── Main Row ─── */}
+                        {}
                         <div className="p-5">
                           <div className="flex flex-col sm:flex-row items-start gap-4">
                             <div className="flex items-start gap-4 min-w-0 flex-1">
-                            {/* Expand Toggle */}
+                            {}
                             <button
                               onClick={() => toggleExpandUser(userItem._id)}
                               className="mt-3 p-1.5 hover:bg-purple-50 rounded-xl transition-colors flex-shrink-0 group"
@@ -644,12 +605,12 @@ export default function AdminManagement() {
                               )}
                             </button>
 
-                            {/* Avatar */}
+                            {}
                             <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getAvatarGradient(userItem.role)} flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-md`}>
                               {getUserInitials(userItem)}
                             </div>
 
-                            {/* User Info */}
+                            {}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2.5 flex-wrap mb-1">
                                 <h3 className="text-base font-bold text-gray-900">
@@ -675,7 +636,7 @@ export default function AdminManagement() {
                               </div>
                               <p className="text-gray-500 text-sm">{userItem.email}</p>
 
-                              {/* Quick Info */}
+                              {}
                               <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-400">
                                 {userItem.phone && (
                                   <span className="flex items-center gap-1">
@@ -701,7 +662,7 @@ export default function AdminManagement() {
                             </div>
                             </div>
 
-                            {/* Actions */}
+                            {}
                             <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
                               {activeTab === 'suspended' ? (
                                 <>
@@ -745,7 +706,7 @@ export default function AdminManagement() {
                           </div>
                         </div>
 
-                        {/* ─── Expanded KYC Details Panel ─── */}
+                        {}
                         {isExpanded && (
                           <div className="border-t-2 border-purple-100 bg-gradient-to-b from-purple-50/40 to-white">
                             {docsLoading ? (
@@ -755,7 +716,7 @@ export default function AdminManagement() {
                               </div>
                             ) : (
                               <div className="p-6 space-y-6">
-                                {/* KYC Personal Details */}
+                                {}
                                 <div>
                                   <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
                                     <div className="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center">
@@ -793,7 +754,7 @@ export default function AdminManagement() {
                                   </div>
                                 </div>
 
-                                {/* Role-Specific Details */}
+                                {}
                                 {userItem.role === 'farmer' && (
                                   <div>
                                     <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -862,7 +823,7 @@ export default function AdminManagement() {
                                   </div>
                                 )}
 
-                                {/* KYC Documents Section */}
+                                {}
                                 <div>
                                   <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
                                     <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center">
@@ -871,7 +832,7 @@ export default function AdminManagement() {
                                     KYC Documents
                                   </h4>
 
-                                  {/* Inline KYC docs from user object */}
+                                  {}
                                   {userItem.kycDocuments && Object.keys(userItem.kycDocuments).length > 0 ? (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                                       {Object.entries(userItem.kycDocuments).map(([docType, docData]) => {
@@ -944,7 +905,7 @@ export default function AdminManagement() {
                                   )}
                                 </div>
 
-                                {/* Farm Images (farmers only) */}
+                                {}
                                 {userItem.role === 'farmer' && docs && !docs.error && docs.documents?.farmImages?.length > 0 && (
                                   <div>
                                     <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -983,7 +944,7 @@ export default function AdminManagement() {
                                   </div>
                                 )}
 
-                                {/* Rejection Reason */}
+                                {}
                                 {userItem.kycStatus === 'rejected' && userItem.kycRejectionReason && (
                                   <div className="bg-red-50 border-l-4 border-red-500 rounded-xl p-4">
                                     <p className="text-sm font-bold text-red-800 mb-1">Rejection Reason</p>
@@ -991,7 +952,7 @@ export default function AdminManagement() {
                                   </div>
                                 )}
 
-                                {/* Admin Comments */}
+                                {}
                                 {userItem.kycComments && (
                                   <div className="bg-blue-50 border-l-4 border-blue-500 rounded-xl p-4">
                                     <p className="text-sm font-bold text-blue-800 mb-1">Admin Comments</p>
@@ -1011,7 +972,7 @@ export default function AdminManagement() {
           </div>
         </div>
 
-        {/* ─── Document Preview Modal (DO NOT MODIFY) ─── */}
+        {}
         {previewDoc && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => { setPreviewDoc(null); setPreviewImageError(false); }}>
             <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -1064,7 +1025,7 @@ export default function AdminManagement() {
           </div>
         )}
 
-        {/* ─── Freeze Modal ─── */}
+        {}
         {showFreezeModal && selectedUser && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
@@ -1136,7 +1097,7 @@ export default function AdminManagement() {
           </div>
         )}
 
-        {/* ─── Delete Modal ─── */}
+        {}
         {showDeleteModal && selectedUser && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
@@ -1198,7 +1159,7 @@ export default function AdminManagement() {
         )}
       </div>
 
-      {/* ─── Logout Confirmation ─── */}
+      {}
       {showLogoutConfirm && (
         <LogoutConfirmationModal
           onConfirm={async () => {

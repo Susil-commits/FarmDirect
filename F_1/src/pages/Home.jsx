@@ -106,9 +106,9 @@ export default function Home() {
       width: `${60 + i * 10}px`,
       height: `${60 + i * 10}px`,
       opacity: 0.1,
-      // eslint-disable-next-line react-hooks/purity
+      
       left: `${15 + Math.random() * 70}%`,
-      // eslint-disable-next-line react-hooks/purity
+      
       top: `${10 + Math.random() * 70}%`,
       animationDelay: `${i * 0.7}s`,
       animationDuration: `${3 + i}s`,
@@ -121,7 +121,7 @@ export default function Home() {
     <ErrorBoundary>
     <PageTransition>
       <div className="min-h-screen bg-white relative">
-        {/* Organic Animated Mesh Background */}
+        {}
         <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
           <div 
             className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-green-300/40 to-emerald-200/20 blur-3xl animate-blob transition-transform duration-300 ease-out"
@@ -161,32 +161,31 @@ export default function Home() {
           }
         `}</style>
 
-        {/* FarmDirect 2.0 Landing Hero Experience */}
+        {}
         <FarmHeroLanding onNavigate={handleNavigation} onGetStarted={openGetStarted} />
 
-
-        {/* Raw Facts Data Section */}
+        {}
         <LazySection height="400px">
           <Suspense fallback={<div style={{ height: '400px' }} />}>
             <RawFactsSection />
           </Suspense>
         </LazySection>
 
-        {/* Features */}
+        {}
         <LazySection height="600px">
           <Suspense fallback={<div style={{ height: '600px' }} />}>
             <FeaturesSection />
           </Suspense>
         </LazySection>
 
-        {/* How It Works */}
+        {}
         <LazySection height="1200px">
           <Suspense fallback={<div style={{ height: '1200px' }} />}>
             <HowItWorksSection />
           </Suspense>
         </LazySection>
 
-        {/* FAQs Section */}
+        {}
         <LazySection height="500px">
           <Suspense fallback={<div style={{ height: '500px' }} />}>
             <FaqsSection />
@@ -199,7 +198,7 @@ export default function Home() {
           </Suspense>
         </LazySection>
 
-        {/* Testimonials */}
+        {}
         <LazySection height="400px">
           <Suspense fallback={<div style={{ height: '400px' }} />}>
             <TestimonialsSection />
@@ -210,7 +209,7 @@ export default function Home() {
     </PageTransition>
     </ErrorBoundary>
 
-    {/* GetStarted Modal — rendered outside PageTransition so it layers above everything */}
+    {}
     <GetStartedModal isOpen={showGetStarted} onClose={closeGetStarted} />
     </>
   );

@@ -2,7 +2,7 @@ import { Queue } from 'bullmq';
 import IORedis from 'ioredis';
 
 const redisUrl = process.env.REDIS_URI || process.env.REDIS_URL;
-// BullMQ requires IORedis specifically
+
 export const connection = redisUrl ? new IORedis(redisUrl, { maxRetriesPerRequest: null }) : undefined;
 
 if (!connection) {
@@ -21,7 +21,7 @@ export async function enqueueAnomalyDetection(data: AnomalyJobData) {
   if (anomalyQueue) {
     await anomalyQueue.add('detect-anomaly', data, {
       removeOnComplete: true,
-      removeOnFail: 100 // keep last 100 failed jobs for debugging
+      removeOnFail: 100 
     });
   } else {
     console.warn('Redis not ready, skipping anomaly queueing');

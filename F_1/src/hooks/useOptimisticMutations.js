@@ -1,9 +1,5 @@
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 
-/**
- * Hook for mutations with optimistic updates
- * Automatically updates cache before API call completes
- */
 export const useOptimisticMutation = (
   mutationFn,
   queryKey,
@@ -15,17 +11,15 @@ export const useOptimisticMutation = (
   return useMutation({
     mutationFn,
     onMutate: async (variables) => {
-      // Cancel pending queries
+      
       await queryClient.cancelQueries({
         queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
       });
 
-      // Get previous data for rollback
       const previousData = queryClient.getQueryData(
         Array.isArray(queryKey) ? queryKey : [queryKey]
       );
 
-      // Optimistic update
       const optimisticData = optimisticDataFn(
         previousData, 
         variables
@@ -40,7 +34,7 @@ export const useOptimisticMutation = (
     },
 
     onSuccess: (data, variables, context) => {
-      // Revalidate the query after success
+      
       queryClient.invalidateQueries({
         queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
       });
@@ -51,7 +45,7 @@ export const useOptimisticMutation = (
     },
 
     onError: (error, variables, context) => {
-      // Rollback to previous data on error
+      
       if (context?.previousData) {
         queryClient.setQueryData(
           Array.isArray(queryKey) ? queryKey : [queryKey],
@@ -68,10 +62,6 @@ export const useOptimisticMutation = (
   });
 };
 
-/**
- * Hook for adding item optimistically
- * Common pattern for add to cart, add to wishlist, etc.
- */
 export const useAddItemMutation = (
   mutationFn,
   queryKey,
@@ -93,10 +83,6 @@ export const useAddItemMutation = (
   );
 };
 
-/**
- * Hook for removing item optimistically
- * Common pattern for remove from cart, remove from wishlist, etc.
- */
 export const useRemoveItemMutation = (
   mutationFn,
   queryKey,
@@ -107,17 +93,15 @@ export const useRemoveItemMutation = (
   return useMutation({
     mutationFn,
     onMutate: async (itemId) => {
-      // Cancel pending queries
+      
       await queryClient.cancelQueries({
         queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
       });
 
-      // Get previous data
       const previousData = queryClient.getQueryData(
         Array.isArray(queryKey) ? queryKey : [queryKey]
       );
 
-      // Optimistic remove
       if (previousData?.items) {
         queryClient.setQueryData(
           Array.isArray(queryKey) ? queryKey : [queryKey],
@@ -159,9 +143,6 @@ export const useRemoveItemMutation = (
   });
 };
 
-/**
- * Hook for updating item optimistically
- */
 export const useUpdateItemMutation = (
   mutationFn,
   queryKey,
@@ -223,10 +204,6 @@ export const useUpdateItemMutation = (
   });
 };
 
-/**
- * Batch invalidation utility
- * Invalidate multiple queries at once
- */
 export const useInvalidateQueries = () => {
   const queryClient = useQueryClient();
 
@@ -237,10 +214,6 @@ export const useInvalidateQueries = () => {
   };
 };
 
-/**
- * Prefetch utility
- * Prefetch queries before they're needed
- */
 export const usePrefetchQueries = () => {
   const queryClient = useQueryClient();
 
@@ -251,9 +224,6 @@ export const usePrefetchQueries = () => {
   };
 };
 
-/**
- * Mutation with automatic cache invalidation
- */
 export const useMutationWithInvalidation = (
   mutationFn,
   invalidateKeys = [],
@@ -264,7 +234,7 @@ export const useMutationWithInvalidation = (
   return useMutation({
     mutationFn,
     onSuccess: async (...args) => {
-      // Invalidate specified queries
+      
       for (const key of invalidateKeys) {
         await queryClient.invalidateQueries({ queryKey: key });
       }
@@ -277,18 +247,11 @@ export const useMutationWithInvalidation = (
   });
 };
 
-/**
- * Hook to reset all cache
- */
 export const useClearCache = () => {
   const queryClient = useQueryClient();
   return () => queryClient.clear();
 };
 
-/**
- * Hook to get infinite query data
- * Useful for combining pages from infinite queries
- */
 export const useInfiniteQueryData = (queryKey) => {
   const queryClient = useQueryClient();
   const data = queryClient.getQueryData(queryKey);

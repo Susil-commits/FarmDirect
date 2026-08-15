@@ -17,7 +17,7 @@ export default function KYCSorry() {
   const rejectionReason = user?.kycRejectionReason || 'No specific reason provided.';
 
   useEffect(() => {
-    // Mark KYC result as seen so this page doesn't show again
+    
     if (!markedRef.current && user) {
       markedRef.current = true;
       adminService.markKYCResultSeen().then(() => {
@@ -34,7 +34,7 @@ export default function KYCSorry() {
     try {
       setDeleting(true);
       await authServiceExtended.deleteAccount();
-      // Logout and redirect to home
+      
       if (logout) {
         await logout();
       }
@@ -60,9 +60,9 @@ export default function KYCSorry() {
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-rose-50 to-orange-50 flex items-center justify-center px-4 pt-28 pb-12">
         <div className="max-w-2xl w-full">
-          {/* Main Card */}
+          {}
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-            {/* Top Banner */}
+            {}
             <div className="bg-gradient-to-r from-red-500 to-rose-600 px-5 sm:px-8 py-10 sm:py-12 text-center">
               <div className="inline-flex items-center justify-center w-24 h-24 bg-white/20 rounded-full mb-6 backdrop-blur-sm">
                 <XCircle size={56} className="text-white" />

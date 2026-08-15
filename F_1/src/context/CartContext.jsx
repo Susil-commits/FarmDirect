@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 export const CartContext = createContext();
@@ -18,8 +18,6 @@ export function CartProvider({ children }) {
           id: item._id || item.id,
         }));
        
-       
-      // eslint-disable-next-line react-hooks/set-state-in-effect
         setCart(normalized);
       } catch (e) {
         console.error('Failed to load cart:', e);
@@ -74,7 +72,7 @@ export function CartProvider({ children }) {
     setCart(prev => {
       const productId = product._id || product.id;
       const existing = prev.find(item => (item._id || item.id) === productId);
-      // B25 FIX: Cap at available stock (product.quantity) so the buyer can
+      
       const maxQty = product.quantity ?? 1000;
       if (existing) {
         const newQty = Math.min(existing.quantity + quantity, maxQty);
@@ -104,7 +102,7 @@ export function CartProvider({ children }) {
       setCart(prev =>
         prev.map(item => {
           if ((item._id || item.id) !== productId) return item;
-          // B25 FIX: Respect available stock cap when manually changing quantity
+          
           const maxQty = item.quantity != null ? (item.stockQuantity ?? 1000) : 1000;
           return { ...item, quantity: Math.min(quantity, maxQty) };
         })

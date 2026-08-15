@@ -1,26 +1,18 @@
-/**
- * Domain interfaces & Data-Transfer-Objects (DTOs) for the FaRm marketplace.
- * These describe the shape of every Mongoose document as well as the request
- * / response payloads exchanged with the API.
- */
+
 import type { Types, Document } from 'mongoose';
 import type * as Enums from './enums.js';
 
-
-/** Fields added to every document by `{ timestamps: true }` on Mongoose. */
 export interface Timestamps {
   createdAt: Date;
   updatedAt: Date;
 }
 
-/** The minimal user object attached to `req.user` by the auth middleware. */
 export interface AuthUser {
   _id: Types.ObjectId;
   role: Enums.UserRole;
   email: string;
   status: Enums.UserStatus;
 }
-
 
 export interface IUserAddress {
   _id?: Types.ObjectId;
@@ -117,7 +109,6 @@ export interface IUser extends Timestamps, Document {
   blockedUsers?: Types.ObjectId[];
 }
 
-
 export interface ICropSpecifications {
   size?: string;
   color?: string;
@@ -186,7 +177,6 @@ export interface ICropListing extends Timestamps, Document {
   monthlyStats?: IMonthlyStats;
 }
 
-
 export interface IOrderTimelineEntry {
   event: string;
   description?: string;
@@ -232,7 +222,6 @@ export interface IOrder extends Timestamps, Document {
   anomalyScore?: number | null;
 }
 
-
 export interface INegotiationTimelineEntry {
   status: Enums.NegotiationStatus;
   offeredPrice?: number;
@@ -272,7 +261,6 @@ export interface IReview extends Timestamps, Document {
   isFlagged?: boolean;
 }
 
-
 export interface INotification extends Timestamps, Document {
   userId: Types.ObjectId;
   title: string;
@@ -285,7 +273,6 @@ export interface INotification extends Timestamps, Document {
   readAt?: Date | null;
   priority: Enums.NotificationPriority;
 }
-
 
 export interface IMessageAttachment {
   url: string;
@@ -315,7 +302,6 @@ export interface IMessage extends Timestamps, Document {
   replyTo?: Types.ObjectId | null;
   metadata?: IMessageMetadata;
 }
-
 
 export interface IWishlist extends Timestamps, Document {
   userId: Types.ObjectId;
@@ -387,7 +373,6 @@ export interface IAuditLog extends Timestamps, Document {
   errorMessage?: string;
   timestamp: Date;
 }
-
 
 export interface RegisterDto {
   firstName: string;
@@ -480,7 +465,6 @@ export interface RespondOfferDto {
   message?: string;
 }
 
-
 export interface Pagination {
   total: number;
   page: number;
@@ -499,16 +483,13 @@ export interface PaginatedResponse<T> extends ApiResponse<T> {
   pagination: Pagination;
 }
 
-/** A discount computation result returned by the coupon helper. */
 export interface DiscountResult {
   discountAmount: number;
   finalAmount: number;
 }
 
-/** Order status transition map used by the order workflow. */
 export type OrderTransitionMap = Record<Enums.OrderStatus, Enums.OrderStatus[]>;
 
-/** Minimal order shape used by socket event helpers (avoids importing the full model). */
 export interface OrderLike {
   _id: Types.ObjectId | string;
   orderNumber: string;
@@ -525,7 +506,6 @@ export type PopulatedDocType<T> = T extends Document<infer U>
   ? T
   : T | null;
 
-/** File metadata attached to the request by the upload middleware. */
 export interface UploadedFileMeta {
   url: string;
   fileName: string;

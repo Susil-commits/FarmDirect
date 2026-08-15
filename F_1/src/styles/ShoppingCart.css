@@ -1,8 +1,6 @@
-/* ============================================
-   SHOPPING CART - MODERN PREMIUM DESIGN
-   ============================================ */
 
-/* ---- Page Root ---- */
+
+
 .cart-page {
   min-height: 100vh;
   position: relative;
@@ -26,7 +24,7 @@
   margin: 0 auto;
 }
 
-/* ---- Header Section ---- */
+
 .cart-header-section {
   display: flex;
   align-items: flex-end;
@@ -101,7 +99,7 @@
   transform: translateY(-1px);
 }
 
-/* ---- Empty State ---- */
+
 .cart-empty {
   display: flex;
   flex-direction: column;
@@ -154,7 +152,7 @@
   margin: 0 0 var(--spacing-xl);
 }
 
-/* ---- Content Grid ---- */
+
 .cart-content-grid {
   display: grid;
   grid-template-columns: 1fr 400px;
@@ -169,7 +167,7 @@
   gap: var(--spacing-md);
 }
 
-/* ---- Item Card ---- */
+
 .cart-item-card {
   display: grid;
   grid-template-columns: 130px 1fr 160px 130px 64px;
@@ -210,7 +208,7 @@
   opacity: 1;
 }
 
-/* Stagger animation */
+
 .cart-stagger-item {
   opacity: 0;
   animation: cartStaggerIn 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
@@ -222,7 +220,7 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ---- Item Image ---- */
+
 .cart-item-image {
   position: relative;
   width: 130px;
@@ -235,7 +233,7 @@
   transition: transform 0.3s ease;
 }
 
-/* Out-of-stock item styling */
+
 .cart-item-out-of-stock {
   opacity: 0.75;
 }
@@ -290,7 +288,7 @@
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
-/* ---- Item Badges ---- */
+
 .cart-item-badges {
   position: absolute;
   top: var(--spacing-sm);
@@ -341,7 +339,7 @@
   white-space: nowrap;
 }
 
-/* ---- Stock Badges ---- */
+
 .cart-stock-badge {
   display: inline-flex;
   align-items: center;
@@ -384,7 +382,7 @@
   background: currentColor;
 }
 
-/* ---- Item Details ---- */
+
 .cart-item-details {
   display: flex;
   flex-direction: column;
@@ -392,7 +390,7 @@
   min-width: 0;
 }
 
-/* Name row: title + inline category badge */
+
 .cart-item-name-row {
   display: flex;
   align-items: center;
@@ -430,7 +428,7 @@
   color: var(--primary-main);
 }
 
-/* Farmer Info */
+
 .cart-item-farmer {
   display: flex;
   align-items: center;
@@ -478,7 +476,7 @@
   white-space: nowrap;
 }
 
-/* Rating */
+
 .cart-item-rating {
   display: flex;
   align-items: center;
@@ -503,7 +501,7 @@
   color: var(--gray-400);
 }
 
-/* Extra Detail Chips */
+
 .cart-item-extra-details {
   display: flex;
   flex-wrap: wrap;
@@ -532,7 +530,7 @@
   font-weight: var(--font-weight-semibold);
 }
 
-/* ---- Unit Price ---- */
+
 .cart-item-unit-price {
   display: flex;
   flex-direction: column;
@@ -567,7 +565,7 @@
   font-weight: var(--font-weight-semibold);
 }
 
-/* ---- Quantity + Subtotal Group ---- */
+
 .cart-item-quantity-group {
   display: flex;
   flex-direction: column;
@@ -575,7 +573,7 @@
   align-items: flex-end;
 }
 
-/* ---- Quantity Controls ---- */
+
 .cart-item-quantity {
   display: flex;
   flex-direction: column;
@@ -651,7 +649,7 @@
   margin: 0;
 }
 
-/* ---- Subtotal ---- */
+
 .cart-item-subtotal {
   display: flex;
   flex-direction: column;
@@ -673,7 +671,7 @@
   color: var(--gray-900);
 }
 
-/* ---- Item Actions (Remove + Wishlist) ---- */
+
 .cart-item-actions {
   display: flex;
   flex-direction: column;
@@ -726,7 +724,7 @@
   transform: scale(1.05);
 }
 
-/* ---- Clear Cart ---- */
+
 .cart-clear-row {
   display: flex;
   justify-content: flex-end;
@@ -753,7 +751,7 @@
   background: rgba(239, 68, 68, 0.03);
 }
 
-/* ---- Summary Column ---- */
+
 .cart-summary-column {
   position: relative;
 }
@@ -783,7 +781,7 @@
   margin: var(--spacing-md) 0;
 }
 
-/* Summary Rows */
+
 .cart-summary-row {
   display: flex;
   justify-content: space-between;
@@ -845,7 +843,7 @@
   background-clip: text;
 }
 
-/* Delivery note */
+
 .cart-delivery-note {
   font-size: 0.8125rem;
   color: #f59e0b;
@@ -865,7 +863,7 @@
   font-size: 1rem;
 }
 
-/* Checkout Button */
+
 .cart-checkout-btn {
   width: 100%;
   padding: var(--spacing-md) var(--spacing-xl);
@@ -900,7 +898,7 @@
   transform: translateY(0);
 }
 
-/* Continue Shopping */
+
 .cart-continue-btn {
   width: 100%;
   display: inline-flex;
@@ -925,7 +923,7 @@
   background: rgba(34, 197, 94, 0.03);
 }
 
-/* Trust badges */
+
 .cart-trust-row {
   display: flex;
   justify-content: center;
@@ -944,7 +942,7 @@
   gap: 4px;
 }
 
-/* ---- Promo Section ---- */
+
 .cart-promo-section {
   margin-top: var(--spacing-md);
   padding-top: var(--spacing-md);
@@ -1008,7 +1006,7 @@
   color: white;
 }
 
-/* ---- Footer ---- */
+
 .cart-footer {
   margin-top: var(--spacing-3xl);
   padding-top: var(--spacing-xl);
@@ -1061,9 +1059,7 @@
   color: var(--primary-main);
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
+
 
 @media (max-width: 1100px) {
   .cart-content-grid {
@@ -1120,7 +1116,7 @@
     font-size: 1.5rem;
   }
 
-  /* Simplify detail chips at this width */
+  
   .cart-item-extra-details {
     display: none;
   }
@@ -1152,7 +1148,7 @@
     justify-content: center;
   }
 
-  /* Switch item card to two-row layout */
+  
   .cart-item-card {
     grid-template-columns: 90px 1fr auto;
     grid-template-rows: auto auto auto;
@@ -1344,7 +1340,7 @@
   }
 }
 
-/* ===== Payment Method Selector ===== */
+
 .cart-payment-selector {
   margin: var(--spacing-md) 0;
 }

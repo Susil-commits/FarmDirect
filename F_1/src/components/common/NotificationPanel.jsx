@@ -10,7 +10,6 @@ export default function NotificationPanel({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  // Define tabs based on user role
   const getTabsForRole = () => {
     if (!user) return [];
 
@@ -48,7 +47,6 @@ export default function NotificationPanel({ isOpen, onClose }) {
     return baseTabsAll;
   };
 
-  // Filter notifications based on active tab
   const getFilteredNotifications = () => {
     let filtered = notifications;
 
@@ -101,15 +99,15 @@ export default function NotificationPanel({ isOpen, onClose }) {
 
   return (
     <>
-      {/* Overlay */}
+      {}
       <div
         className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
         onClick={onClose}
       ></div>
 
-      {/* Panel */}
+      {}
       <div className="fixed top-16 right-4 z-50 w-96 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden animate-fade-in">
-        {/* Header */}
+        {}
         <div className="bg-linear-to-r from-green-50 to-green-100 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-lg font-bold text-gray-900">Notifications</h2>
           <button
@@ -121,7 +119,7 @@ export default function NotificationPanel({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Tabs */}
+        {}
         <div className="flex gap-1 px-4 pt-4 border-b border-gray-200 overflow-x-auto">
           {tabs.map(tab => (
             <button
@@ -140,7 +138,7 @@ export default function NotificationPanel({ isOpen, onClose }) {
           ))}
         </div>
 
-        {/* Mark all as read button */}
+        {}
         {filteredNotifications.some(n => !n.isRead) && (
           <div className="px-4 py-2 border-b border-gray-200 flex justify-end">
             <button
@@ -153,7 +151,7 @@ export default function NotificationPanel({ isOpen, onClose }) {
           </div>
         )}
 
-        {/* Notifications List */}
+        {}
         <div className="max-h-96 overflow-y-auto">
           {filteredNotifications.length > 0 ? (
             <div className="divide-y divide-gray-200">
@@ -163,12 +161,12 @@ export default function NotificationPanel({ isOpen, onClose }) {
                   className={`p-4 hover:bg-gray-50 transition ${getNotificationColor(notification)} ${!notification.isRead ? 'font-semibold' : ''}`}
                 >
                   <div className="flex gap-3">
-                    {/* Icon */}
+                    {}
                     <div className="text-xl shrink-0 mt-0.5">
                       {getIcon(notification)}
                     </div>
 
-                    {/* Content */}
+                    {}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 truncate">
                         {notification.title}
@@ -181,7 +179,7 @@ export default function NotificationPanel({ isOpen, onClose }) {
                       </p>
                     </div>
 
-                    {/* Unread Indicator & Actions */}
+                    {}
                     <div className="flex items-center gap-2 shrink-0">
                       {!notification.isRead && (
                         <button
@@ -212,13 +210,13 @@ export default function NotificationPanel({ isOpen, onClose }) {
           )}
         </div>
 
-        {/* Footer */}
+        {}
         {filteredNotifications.length > 0 && (
           <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 text-center">
             <button
               onClick={() => {
                 onClose();
-                // Navigate to full notifications page if needed
+                
               }}
               className="text-xs text-green-600 hover:text-green-700 font-medium"
             >

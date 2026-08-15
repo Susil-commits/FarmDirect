@@ -8,14 +8,6 @@ interface ValidationSchemas {
   params?: ZodSchema;
 }
 
-/**
- * Validate `req.body`, `req.query`, and `req.params` against a set of Zod
- * schemas. The validated (and optionally transformed) data replaces the
- * raw request fields.
- *
- * Errors are returned as a structured `{ field: message }` map for easy
- * consumption by frontend form libraries.
- */
 export function validateRequest(schemas: ValidationSchemas): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -51,12 +43,6 @@ export function validateRequest(schemas: ValidationSchemas): RequestHandler {
   };
 }
 
-/**
- * Middleware that validates a route param (default: `id`) is a valid
- * MongoDB ObjectId. Returns 400 if the param is missing or malformed.
- *
- * Usage: `router.get('/:id', validateObjectId(), getById)`
- */
 export function validateObjectId(paramName = 'id'): RequestHandler {
   return (req: Request, res: Response, next: NextFunction) => {
     const value = req.params[paramName];

@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+
 import React, { createContext, useState, useCallback, useEffect, useContext, useRef } from 'react';
 import { authService, userService } from '../services/appService.js';
 import { socialAuthService } from '../services/socialAuthService.js';
@@ -8,22 +8,15 @@ import { refreshAuthToken, canAttemptRefresh } from '../services/api.js';
 
 export const AuthContext = createContext();
 
-/**
- * Generate simplified device fingerprint for session tracking
- */
 const getDeviceFingerprint = () => {
   const userAgent = navigator.userAgent;
   const language = navigator.language;
   const screenResolution = `${window.innerWidth}x${window.innerHeight}`;
   
-  // Create simple fingerprint (not cryptographically secure, just for demo)
   const fingerprint = btoa(`${userAgent}|${language}|${screenResolution}`).substring(0, 16);
   return fingerprint;
 };
 
-/**
- * Track login history in localStorage
- */
 const recordLoginHistory = (user) => {
   try {
     const loginHistory = JSON.parse(localStorage.getItem('loginHistory') || '[]');
@@ -33,10 +26,9 @@ const recordLoginHistory = (user) => {
       email: user?.email,
       role: user?.role,
       deviceFingerprint: getDeviceFingerprint(),
-      ip: 'local', // Would come from backend in real scenario
+      ip: 'local', 
     };
 
-    // Keep only last 10 logins
     loginHistory.unshift(newLogin);
     if (loginHistory.length > 10) {
       loginHistory.pop();
@@ -48,10 +40,6 @@ const recordLoginHistory = (user) => {
   }
 };
 
-/**
- * Check if session has been idle too long
- * @param {number} maxIdleTime - Max idle time in milliseconds (default: 30 minutes)
- */
 const isSessionExpired = (maxIdleTime = 1800000) => {
   const lastActivity = localStorage.getItem('lastActivityTime');
   if (!lastActivity) return false;
@@ -68,17 +56,15 @@ export const AuthProvider = ({ children }) => {
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [verificationData, setVerificationData] = useState(null);
   
-  // NEW: Session and role management
   const [sessionActive, setSessionActive] = useState(false);
   const [lastActivity, setLastActivity] = useState(null);
   const [loginHistory, setLoginHistory] = useState([]);
   const logoutRef = useRef(null);
-  // Guard against StrictMode double-invocation — initializeAuth must only run once
+  
   const initCalledRef = useRef(false);
 
-  // Initialize authentication on mount
   useEffect(() => {
-    // StrictMode fires effects twice in dev; this ref ensures we only init once
+    
     if (initCalledRef.current) return;
     initCalledRef.current = true;
 
@@ -88,7 +74,7 @@ export const AuthProvider = ({ children }) => {
       const storedServerStartTime = localStorage.getItem('serverStartTime');
       
       if (!storedUser) {
-        // Guest user — no stored session data, skip background refresh
+        
         clearAccessToken();
         setUser(null);
         setSessionActive(false);
@@ -97,7 +83,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       if (!canAttemptRefresh()) {
-        // Refresh cooldown is active; skip doomed refresh attempt
+        
         clearAccessToken();
         localStorage.removeItem('userData');
         setUser(null);
@@ -107,7 +93,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        // Attempt silent token refresh via HttpOnly cookie
+        
         const newToken = await refreshAuthToken();
         if (newToken) {
           setSessionActive(true);
@@ -125,13 +111,12 @@ export const AuthProvider = ({ children }) => {
           try {
             const history = JSON.parse(localStorage.getItem('loginHistory') || '[]');
             setLoginHistory(history);
-          } catch { /* ignore */ }
+          } catch {  }
 
           if (!localStorage.getItem('lastActivityTime')) {
             localStorage.setItem('lastActivityTime', Date.now().toString());
           }
 
-          // Fetch latest user info from backend
           try {
             const response = await authService.getCurrentUser();
             const userData = response.user || response.data?.user || response;
@@ -179,7 +164,7 @@ export const AuthProvider = ({ children }) => {
           }
         }
       } catch {
-        // Silent refresh failed (no valid refresh cookie) -> clear user session
+        
         clearAccessToken();
         localStorage.removeItem('userData');
         setUser(null);
@@ -192,36 +177,32 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
-  // Monitor session activity and idle timeout
   useEffect(() => {
     if (!user) return;
 
     let activityTimeout;
     
     const handleActivity = () => {
-      // Clear previous timeout
+      
       clearTimeout(activityTimeout);
       
-      // Debounce: only update after 2 seconds of inactivity
       activityTimeout = setTimeout(() => {
         const now = Date.now().toString();
         localStorage.setItem('lastActivityTime', now);
         setLastActivity(new Date());
 
-        // Check for idle timeout (30 minutes)
         if (isSessionExpired(1800000)) {
           console.warn('Session expired due to inactivity');
-          // Let the user know before logging them out
+          
           try {
             const event = new CustomEvent('farm-session-expired');
             window.dispatchEvent(event);
-          } catch { /* ignore */ }
+          } catch {  }
           if (logoutRef.current) logoutRef.current();
         }
-      }, 2000); // 2 second debounce
+      }, 2000); 
     };
 
-    // Add activity listeners
     const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
     events.forEach(event => {
       window.addEventListener(event, handleActivity);
@@ -235,11 +216,8 @@ export const AuthProvider = ({ children }) => {
     };
   }, [user]);
 
-  // Periodic token refresh check (every 5 minutes)
-  // DISABLED: This was causing constant state updates and re-renders
-  // Token refresh will happen on-demand when needed
   useEffect(() => {
-    // Placeholder - not checking on interval
+    
     return () => {};
   }, []);
 
@@ -248,12 +226,6 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const response = await authService.register(userData);
-      
-      // DO NOT auto-login after registration.
-      // The user must explicitly login via the login page after registration.
-      // Previously, storing the token here caused App.jsx to redirect
-      // unverified users directly to VerificationProgress instead of
-      // showing the login page.
       
       try {
         const currentStats = JSON.parse(
@@ -268,7 +240,7 @@ export const AuthProvider = ({ children }) => {
         }
         
         localStorage.setItem('farmStats', JSON.stringify(currentStats));
-      } catch { /* ignore */ }
+      } catch {  }
       return response;
     } catch (err) {
       setError(err?.message || err || 'Registration failed');
@@ -284,32 +256,26 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authService.login(credentials);
       
-      // Store token in memory
       setAccessToken(response.token);
       
-      // Store server start time for detecting server restart
       if (response.serverStartTime) {
         localStorage.setItem('serverStartTime', response.serverStartTime.toString());
       }
       
-      // Store user data
       if (response.user) {
         localStorage.setItem('userData', JSON.stringify(response.user));
       }
 
-      // Update auth state
       setUser(response.user);
       setSessionActive(true);
       localStorage.setItem('lastActivityTime', Date.now().toString());
       
-      // Record login history
       recordLoginHistory(response.user);
       try {
         const history = JSON.parse(localStorage.getItem('loginHistory') || '[]');
         setLoginHistory(history);
-      } catch { /* ignore */ }
+      } catch {  }
 
-      // Store verification status
       const verifyStatus = response.user?.kycStatus || 'not_submitted';
       setVerificationStatus(verifyStatus);
       localStorage.setItem('verificationStatus', verifyStatus);
@@ -326,16 +292,15 @@ export const AuthProvider = ({ children }) => {
   const logout = useCallback(async () => {
     setLoading(true);
     try {
-      // Get user ID before clearing
+      
       const userId = user?.id;
       
       await authService.logout();
       
-      // Clear in-memory token & user storage
       clearAccessToken();
       localStorage.removeItem('verificationStatus');
       localStorage.removeItem('serverStartTime');
-      // Clear user-specific submission state
+      
       if (userId) {
         localStorage.removeItem(`verificationSubmittedAt_${userId}`);
       }
@@ -343,7 +308,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('currentRoute');
       localStorage.removeItem('lastActivityTime');
 
-      // Clear state
       setUser(null);
       setSessionActive(false);
       setVerificationStatus(null);
@@ -356,7 +320,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
-  // Keep logoutRef up-to-date so it can be called from activity listener without TDZ
   useEffect(() => { logoutRef.current = logout; }, [logout]);
 
   const updatePassword = useCallback(async (passwordData) => {
@@ -382,8 +345,7 @@ export const AuthProvider = ({ children }) => {
   const resetPassword = useCallback(async (token, password) => {
     try {
       const response = await authService.resetPassword(token, password);
-      // BUG 16 FIX: Backend POST /auth/reset-password returns { success, message } only.
-      // No token or user is returned — user must log in again after password reset.
+      
       return response;
     } catch (err) {
       setError(err);
@@ -476,7 +438,7 @@ export const AuthProvider = ({ children }) => {
       let data;
       
       if (documents instanceof FormData) {
-        // Send FormData directly with actual files (multipart/form-data)
+        
         console.log('📎 Sending FormData with files:',
           Array.from(documents.entries()).map(([k, v]) =>
             v instanceof File ? `${k}: ${v.name} (${v.size} bytes)` : `${k}: ${v}`
@@ -484,17 +446,14 @@ export const AuthProvider = ({ children }) => {
         );
         data = await authService.submitKYCFormData(documents);
       } else {
-        // Fallback for JSON payload
+        
         data = await authService.submitKYC(documents);
       }
 
-      
-      // Update context state
       setVerificationData(documents);
       setVerificationStatus('pending');
       localStorage.setItem('verificationStatus', 'pending');
       
-      // Store file metadata for UI display (not the actual files)
       if (documents instanceof FormData) {
         const metadata = {};
         for (let [key, value] of documents.entries()) {
@@ -509,14 +468,12 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('verificationData', JSON.stringify(documents));
       }
       
-      // CRITICAL: Update user with fresh data from backend (includes kycDocuments)
-      // The backend returns the updated user with kycDocuments in the response
       if (data?.user) {
         const updatedUser = { ...user, ...data.user };
         setUser(updatedUser);
         localStorage.setItem('userData', JSON.stringify(updatedUser));
       } else {
-        // Fallback: fetch fresh user data from backend
+        
         if (refreshUserRef.current) await refreshUserRef.current();
       }
       
@@ -530,7 +487,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
-  // Refresh user data from backend (useful after KYC submission, profile updates, etc.)
   const refreshUser = useCallback(async () => {
     try {
       const response = await authService.getCurrentUser();
@@ -554,12 +510,11 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Keep refreshUserRef up-to-date so it can be called from submitVerificationDocuments without TDZ
   useEffect(() => { refreshUserRef.current = refreshUser; }, [refreshUser]);
 
   const fetchVerificationStatus = useCallback(async () => {
     try {
-      // Fetch latest user data from backend to get current kycStatus
+      
       const response = await authService.getCurrentUser();
       const userData = response.user || response.data?.user || response;
       
@@ -567,12 +522,10 @@ export const AuthProvider = ({ children }) => {
         const newStatus = userData.kycStatus || null;
         const oldStatus = localStorage.getItem('verificationStatus');
         
-        // Update if status changed
         if (newStatus !== oldStatus) {
           setVerificationStatus(newStatus);
           localStorage.setItem('verificationStatus', newStatus);
           
-          // Update user data as well
           setUser(userData);
           localStorage.setItem('userData', JSON.stringify(userData));
         }
@@ -581,22 +534,18 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (err) {
       console.error('Error fetching verification status:', err);
-      // Fall back to stored status if API fails
+      
       const storedStatus = localStorage.getItem('verificationStatus');
       setVerificationStatus(storedStatus);
       return storedStatus;
     }
   }, []);
 
-  // Periodic verification status check (every 30 seconds for pending users)
-  // DISABLED: This was causing constant re-renders and API calls
-  // Verification status can be checked on-demand instead
   useEffect(() => {
-    // Placeholder - not fetching on interval to prevent constant refreshes
+    
     return () => {};
   }, []);
 
-  // NEW: Role-based access guards
   const hasRole = useCallback((role) => {
     if (!user) return false;
     if (Array.isArray(role)) {
@@ -614,17 +563,14 @@ export const AuthProvider = ({ children }) => {
     return userPermissions.includes(permission);
   }, [user]);
 
-  // NEW: Get login history
   const getLoginHistory = useCallback(() => {
     return loginHistory;
   }, [loginHistory]);
 
-  // NEW: Get last login info
   const getLastLogin = useCallback(() => {
-    return loginHistory[1] || null; // Index 1 is second-most-recent (first is current)
+    return loginHistory[1] || null; 
   }, [loginHistory]);
 
-  // NEW: Force session check
   const checkSession = useCallback(async () => {
     const token = getAccessToken();
     
@@ -646,7 +592,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const value = {
-    // Existing
+    
     user,
     loading,
     error,
@@ -655,7 +601,6 @@ export const AuthProvider = ({ children }) => {
     verificationData,
     redirectPath,
     
-    // Methods - Existing
     register,
     login,
     logout,
@@ -671,22 +616,18 @@ export const AuthProvider = ({ children }) => {
     fetchVerificationStatus,
     refreshUser,
     
-    // Utilities - Existing
     setUser,
     setRedirectPath,
     clearRedirectPath: () => setRedirectPath(null),
     clearError: () => setError(null),
 
-    // NEW: Session Management
     sessionActive,
     lastActivity,
     checkSession,
     
-    // NEW: Role & Permission Guards
     hasRole,
     hasPermission,
     
-    // NEW: Login History & Device Tracking
     getLoginHistory,
     getLastLogin,
     deviceFingerprint: getDeviceFingerprint(),

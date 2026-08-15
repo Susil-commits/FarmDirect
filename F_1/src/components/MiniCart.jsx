@@ -22,22 +22,22 @@ export default function MiniCart({ isOpen, onClose }) {
   };
 
   const subtotal = getTotalPrice();
-  const discount = subtotal * 0.05; // 5% discount
-  const tax = (subtotal - discount) * 0.18; // 18% tax
+  const discount = subtotal * 0.05; 
+  const tax = (subtotal - discount) * 0.18; 
   const total = subtotal - discount + tax;
 
   return (
     <>
-      {/* Overlay */}
+      {}
       <div
         className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />
       
-      {/* Mini Cart Dropdown */}
+      {}
       <div className="mini-cart-dropdown">
-        {/* Header */}
+        {}
         <div className="mini-cart-header">
           <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <ShoppingCart size={20} /> Shopping Cart
@@ -51,7 +51,7 @@ export default function MiniCart({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Items List */}
+        {}
         <div className="mini-cart-items">
           {cart.length === 0 ? (
             <div className="empty-state">
@@ -63,7 +63,7 @@ export default function MiniCart({ isOpen, onClose }) {
             <div className="items-list">
               {cart.map((item) => (
                 <div key={item.id} className="cart-item">
-                  {/* Item Image */}
+                  {}
                   <div className="item-image">
                     {item.icon ? (
                       <img src={getImageUrl(item.icon)} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
@@ -72,7 +72,7 @@ export default function MiniCart({ isOpen, onClose }) {
                     )}
                   </div>
 
-                  {/* Item Info */}
+                  {}
                   <div className="item-info">
                     <h4 className="font-semibold text-gray-900 text-sm">{item.name}</h4>
                     <p className="text-xs text-gray-600">
@@ -80,12 +80,12 @@ export default function MiniCart({ isOpen, onClose }) {
                     </p>
                   </div>
 
-                  {/* Price */}
+                  {}
                   <div className="item-price">
                     <p className="text-green-600 font-bold">₹{(item.price * item.quantity).toFixed(2)}</p>
                   </div>
 
-                  {/* Quantity Controls */}
+                  {}
                   <div className="item-qty">
                     <QuantitySelector
                       quantity={item.quantity}
@@ -96,7 +96,7 @@ export default function MiniCart({ isOpen, onClose }) {
                     />
                   </div>
 
-                  {/* Remove Button */}
+                  {}
                   <button
                     onClick={() => removeFromCart(item.id)}
                     className="item-remove"
@@ -110,10 +110,10 @@ export default function MiniCart({ isOpen, onClose }) {
           )}
         </div>
 
-        {/* Footer */}
+        {}
         {cart.length > 0 && (
           <div className="mini-cart-footer">
-            {/* Price Breakdown */}
+            {}
             <div className="price-summary">
               <div className="summary-row">
                 <span className="text-gray-600">Subtotal</span>
@@ -133,7 +133,7 @@ export default function MiniCart({ isOpen, onClose }) {
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {}
             <div className="action-buttons">
               <button
                 onClick={handleViewCart}

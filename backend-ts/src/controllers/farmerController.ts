@@ -31,7 +31,6 @@ export async function getDashboardStats(req: Request, res: Response, next: NextF
   try {
     const farmerId = req.user!._id;
 
-    // B15 FIX: Replace load-all-into-memory find() with aggregate queries that
     const [cropStats, orderStats] = await Promise.all([
       CropListing.aggregate([
         { $match: { farmerId } },
@@ -211,7 +210,6 @@ export async function getCategoryBreakdown(req: Request, res: Response, next: Ne
     const startDate = getStartDate(period);
     const now = new Date();
 
-    // B17 FIX: Use Order aggregation grouped by crop category instead of
     const breakdown = await Order.aggregate([
       { $match: { farmerId, createdAt: { $gte: startDate, $lte: now }, orderStatus: OrderStatus.Completed } },
       {
@@ -334,7 +332,7 @@ export async function bulkUploadCrops(req: Request, res: Response, next: NextFun
         cropType: rowData.croptype || 'vegetables',
         category: rowData.category,
         price: parseFloat(rowData.price),
-        quantity: parseInt(rowData.quantity, 10),  // B16 FIX: explicit radix 10
+        quantity: parseInt(rowData.quantity, 10),  
         description: rowData.description || 'No description provided',
         unit: rowData.unit || 'kg',
         discount: parseFloat(rowData.discount) || 0,

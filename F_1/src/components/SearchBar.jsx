@@ -23,7 +23,6 @@ export default function SearchBar() {
     hasQuery
   } = useSearch(crops);
 
-  // Fetch crops on mount
   useEffect(() => {
     const fetchCrops = async () => {
       try {
@@ -36,7 +35,6 @@ export default function SearchBar() {
     fetchCrops();
   }, []);
 
-  // Handle click outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -115,10 +113,10 @@ export default function SearchBar() {
           )}
         </div>
 
-        {/* Dropdown */}
+        {}
         {isOpen && (
           <div ref={dropdownRef} className="search-dropdown" role="listbox">
-            {/* Recent Searches */}
+            {}
             {!hasQuery && recentSearches.length > 0 && (
               <div className="dropdown-section">
                 <div className="dropdown-section-header">
@@ -150,7 +148,7 @@ export default function SearchBar() {
               </div>
             )}
 
-            {/* Search Results */}
+            {}
             {hasQuery && (
               <>
                 {searchResults.length > 0 ? (
@@ -205,7 +203,7 @@ export default function SearchBar() {
                   </div>
                 )}
 
-                {/* Go to search results */}
+                {}
                 <div className="dropdown-footer">
                   <button
                     onClick={() => handleSearch(query)}
@@ -217,7 +215,7 @@ export default function SearchBar() {
               </>
             )}
 
-            {/* Empty state when no query and no recent */}
+            {}
             {!hasQuery && recentSearches.length === 0 && (
               <div className="dropdown-empty">
                 <div className="empty-icon">💡</div>

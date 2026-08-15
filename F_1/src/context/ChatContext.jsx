@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+
 import { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
 import messageService from '../services/messageService';
 import { AuthContext } from './AuthContext';
@@ -15,14 +15,11 @@ export function ChatProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Track the latest message ID we've seen to detect new messages during polling
   const lastMessageIdRef = useRef(null);
 
-  // Guards to prevent overlapping polling requests (prevents request storms on slow networks)
   const pollingUnreadRef = useRef(false);
   const pollingMessagesRef = useRef(false);
 
-  // Helper to unwrap API responses that use { success, data } envelope
   const unwrapData = (response) => {
     if (!response) return response;
     if (response.data !== undefined && response.success !== undefined) {
@@ -31,7 +28,6 @@ export function ChatProvider({ children }) {
     return response;
   };
 
-  // Fetch all conversations
   const fetchConversations = useCallback(async () => {
     try {
       setLoading(true);
@@ -46,9 +42,6 @@ export function ChatProvider({ children }) {
     }
   }, []);
 
-       
-  // Fetch messages for a specific conversation
-       
   const fetchMessages = useCallback(async (receiverId, page = 1) => {
     try {
       setLoading(true);
@@ -57,7 +50,7 @@ export function ChatProvider({ children }) {
       const msgs = Array.isArray(data) ? data : [];
       setMessages(msgs);
       setCurrentChat(receiverId);
-      // Track latest message for poll detection
+      
       if (msgs.length > 0) {
         lastMessageIdRef.current = msgs[msgs.length - 1]._id;
       } else {
@@ -73,7 +66,6 @@ export function ChatProvider({ children }) {
        
   }, []);
 
-  // Send message
   const sendMessage = useCallback(async (receiverId, content, cropId = null) => {
     try {
       const response = await messageService.sendMessage(receiverId, content, cropId);
@@ -86,7 +78,6 @@ export function ChatProvider({ children }) {
         return updated;
       });
 
-      // Update conversation list
       await fetchConversations();
 
       return messageData;
@@ -99,7 +90,6 @@ export function ChatProvider({ children }) {
        
   }, [fetchConversations]);
 
-  // Mark message as read
   const markAsRead = useCallback(async (messageId) => {
     try {
       await messageService.markMessageAsRead(messageId);
@@ -114,7 +104,6 @@ export function ChatProvider({ children }) {
     }
   }, []);
 
-  // Mark conversation as read
   const markConversationAsRead = useCallback(async (receiverId) => {
     try {
       await messageService.markConversationAsRead(receiverId);
@@ -124,7 +113,7 @@ export function ChatProvider({ children }) {
           isRead: true,
         }))
       );
-      // Update conversations list to reset unread count for this user
+      
       setConversations((prev) =>
         prev.map((conv) =>
           conv.otherUser?._id === receiverId ? { ...conv, unreadCount: 0 } : conv
@@ -137,10 +126,8 @@ export function ChatProvider({ children }) {
     }
   }, []);
        
-
-  // Get unread count (with in-flight guard to prevent overlapping requests)
   const fetchUnreadCount = useCallback(async () => {
-    if (pollingUnreadRef.current) return; // skip if a request is already in-flight
+    if (pollingUnreadRef.current) return; 
     pollingUnreadRef.current = true;
     try {
       const response = await messageService.getUnreadCount();
@@ -153,11 +140,8 @@ export function ChatProvider({ children }) {
     }
   }, []);
 
-  // Keep fetchUnreadCountRef always pointing to the latest fetchUnreadCount callback.
-  // Without this, markAsRead / markConversationAsRead call the stale initial stub.
   useEffect(() => { fetchUnreadCountRef.current = fetchUnreadCount; }, [fetchUnreadCount]);
 
-  // Delete message
   const deleteMessage = useCallback(async (messageId) => {
     try {
       await messageService.deleteMessage(messageId);
@@ -169,7 +153,6 @@ export function ChatProvider({ children }) {
     }
   }, []);
 
-  // Search messages
   const searchMessages = useCallback(async (query, receiverId) => {
     try {
       const data = await messageService.searchMessages(query, receiverId);
@@ -180,7 +163,6 @@ export function ChatProvider({ children }) {
     }
   }, []);
 
-  // Block user
   const blockUser = useCallback(async (userId) => {
     try {
       const response = await messageService.toggleBlockUser(userId);
@@ -191,19 +173,11 @@ export function ChatProvider({ children }) {
     }
   }, []);
 
-  // Global unread count polling (every 30 seconds, pauses when tab is hidden)
-  // Only polls when a user is authenticated — avoids 401/400 storms on public pages
   const { user } = useContext(AuthContext);
   const isAuthenticated = Boolean(user);
 
-  // ---- Real-time delivery via WebSocket (instant incoming messages) ----
-  // The backend emits `message:new` to the receiver. We append instantly to the
-  // open chat for a snappy UI, and bump unread / refresh the list otherwise.
-  // The 30s polling below stays as a fallback for when the socket drops.
   const { subscribe: subscribeSocket, connected: socketConnected } = useSocket();
 
-  // Normalize a sparse socket payload into the shape ChatBubble expects
-  // (senderId must be an object with _id; ChatBubble guards on !message.senderId).
   const normalizeSocketMessage = useCallback(
     (msg) => ({
       _id: msg.id,
@@ -220,8 +194,6 @@ export function ChatProvider({ children }) {
     [user?._id]
   );
 
-  // Debounced refresh of the conversation list + unread count when messages
-  // arrive in chats that aren't currently open.
   const convRefreshTimer = useRef(null);
   const scheduleConversationRefresh = useCallback(() => {
     if (convRefreshTimer.current) clearTimeout(convRefreshTimer.current);
@@ -239,17 +211,17 @@ export function ChatProvider({ children }) {
       const incomingSenderId = String(msg.senderId);
 
       if (currentChat && incomingSenderId === String(currentChat)) {
-        // Active conversation → append instantly, dedupe by id
+        
         setMessages((prev) => {
           if (prev.some((m) => m._id === msg.id)) return prev;
           lastMessageIdRef.current = msg.id;
           return [...prev, normalizeSocketMessage(msg)];
         });
-        // Best-effort: tell the server we've seen it (no UI churn)
+        
         messageService.markConversationAsRead(currentChat).catch(() => {});
        
       } else {
-        // Other conversation → bump unread + refresh list (debounced)
+        
         setUnreadCount((prev) => prev + 1);
         scheduleConversationRefresh();
       }
@@ -267,11 +239,9 @@ export function ChatProvider({ children }) {
     scheduleConversationRefresh,
   ]);
 
-  // Clear currentChat on logout to prevent stale IDs from triggering 401 polls
   useEffect(() => {
     if (!isAuthenticated) {
        
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentChat(null);
     }
   }, [isAuthenticated]);
@@ -282,7 +252,7 @@ export function ChatProvider({ children }) {
     let active = true;
 
     const poll = () => { if (active) fetchUnreadCountRef.current(); };
-    poll(); // initial fetch
+    poll(); 
     interval = setInterval(poll, 30000);
 
     const onVis = () => {
@@ -297,8 +267,6 @@ export function ChatProvider({ children }) {
     };
   }, [fetchUnreadCount, isAuthenticated]);
 
-  // Gentle polling for new messages in current conversation (every 30s, with in-flight guard)
-  // Only polls when authenticated — avoids 401 storms on public/unauthenticated pages
   useEffect(() => {
     if (!currentChat || !isAuthenticated) return;
 
@@ -313,13 +281,10 @@ export function ChatProvider({ children }) {
         const data = unwrapData(response);
         const serverMessages = Array.isArray(data) ? data : [];
 
-        // Only update if there are more messages than we have locally (new ones arrived)
         if (serverMessages.length > 0) {
           const lastServerId = serverMessages[serverMessages.length - 1]._id;
           if (lastServerId !== lastMessageIdRef.current) {
-            // Merge: keep any locally-appended (not-yet-replicated) messages from
-            // the real-time socket, then add server messages we don't have yet,
-            // sorted chronologically. Avoids clobbering instant appends on lag.
+            
             setMessages((prev) => {
               const localIds = new Set(prev.map((m) => m._id));
               const merged = [
@@ -332,12 +297,12 @@ export function ChatProvider({ children }) {
               return merged;
             });
             lastMessageIdRef.current = lastServerId;
-            // Refresh conversations too (unread counts may have changed)
+            
             fetchConversations();
           }
         }
       } catch {
-        // silent fail on poll
+        
       } finally {
         pollingMessagesRef.current = false;
       }
@@ -345,7 +310,6 @@ export function ChatProvider({ children }) {
 
     interval = setInterval(poll, 30000);
        
-
     const onVis = () => {
       active = !document.hidden;
       if (active) poll();

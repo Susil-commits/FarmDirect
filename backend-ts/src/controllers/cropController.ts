@@ -15,7 +15,7 @@ import { getCache, setCache, clearPrefix } from '../utils/cache.js';
 
 export async function createCrop(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    // B11 FIX: Guard upload error FIRST. Previously this check appeared after KYC
+    
     if (req.uploadError) {
       sendError(res, req.uploadError || 'Image upload failed', 400);
       return;
@@ -139,7 +139,6 @@ export async function getCrops(req: Request, res: Response, next: NextFunction):
       ];
     }
 
-    // B13 FIX: Whitelist sort fields to prevent arbitrary MongoDB field injection.
     const ALLOWED_SORT_FIELDS = new Set(['createdAt', 'price', 'rating', 'sold', 'views', 'quantity']);
     const safeSortBy = ALLOWED_SORT_FIELDS.has(sortBy) ? sortBy : 'createdAt';
 
@@ -361,7 +360,6 @@ export async function deleteCrop(req: Request, res: Response, next: NextFunction
       return;
     }
 
-    // B12 FIX: Don't hard-delete active orders when a crop is deleted.
     const activeOrders = await Order.find({
       cropId: req.params.id,
       orderStatus: { $nin: [OrderStatus.Completed, OrderStatus.Cancelled] },
@@ -420,7 +418,7 @@ export async function getCropsByFarmer(req: Request, res: Response, next: NextFu
 
 export async function getMyListings(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    // B14 FIX: Only populate the fields a farmer legitimately needs to see for
+    
     const crops = await CropListing.find({ farmerId: req.user!._id })
       .lean()
       .populate(
@@ -434,7 +432,6 @@ export async function getMyListings(req: Request, res: Response, next: NextFunct
     next(error);
   }
 }
-
 
 export async function toggleInterest(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -555,4 +552,3 @@ export async function uploadImagesHandler(req: Request, res: Response): Promise<
     images: imageUrls,
   });
 }
-

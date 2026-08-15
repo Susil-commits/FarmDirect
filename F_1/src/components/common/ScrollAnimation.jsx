@@ -20,7 +20,6 @@ export default function ScrollAnimation({ children, className = '' }) {
     if (currentRef) {
       observer.observe(currentRef);
       
-      // Check if already in viewport on first render
       const rect = currentRef.getBoundingClientRect();
       if (rect.top < window.innerHeight && rect.bottom > 0) {
         setIsVisible(true);

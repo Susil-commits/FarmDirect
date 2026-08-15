@@ -13,7 +13,6 @@ export default function AdminQueries() {
   const [showDetail, setShowDetail] = useState(false);
   const [stats, setStats] = useState(null);
   
-  // Filter & Search
   const [filters, setFilters] = useState({
     status: 'All',
     inquiryType: 'All',
@@ -23,7 +22,6 @@ export default function AdminQueries() {
     limit: 10
   });
 
-  // Response form
   const [responseForm, setResponseForm] = useState({
     adminResponse: '',
     status: 'Resolved'
@@ -31,16 +29,12 @@ export default function AdminQueries() {
   const [respondLoading, setRespondLoading] = useState(false);
   const { addToast } = useToast();
 
-  // Fetch queries and stats
   useEffect(() => {
        
-       
-      // eslint-disable-next-line react-hooks/immutability
     fetchQueries();
        
-      // eslint-disable-next-line react-hooks/immutability
     fetchStats();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+      
   }, [filters.status, filters.inquiryType, filters.page, filters.limit]);
 
   const fetchQueries = async () => {
@@ -209,7 +203,7 @@ export default function AdminQueries() {
     return (
       <div className="min-h-screen bg-gray-50 p-6 pt-28 pb-12">
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
+          {}
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold text-gray-900">Query Details</h1>
             <Button
@@ -227,7 +221,7 @@ export default function AdminQueries() {
             </div>
           )}
 
-          {/* Query Details */}
+          {}
           <Card className="p-8 mb-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
               <div>
@@ -266,7 +260,7 @@ export default function AdminQueries() {
               </div>
             </div>
 
-            {/* Message */}
+            {}
             <div className="border-t pt-6">
               <p className="text-sm text-gray-600 font-semibold mb-3">Message</p>
               <div className="bg-gray-50 rounded-lg p-4 text-gray-700 whitespace-pre-wrap">
@@ -275,7 +269,7 @@ export default function AdminQueries() {
             </div>
           </Card>
 
-          {/* Response Form */}
+          {}
           <Card className="p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <MessageSquare size={24} className="text-green-600" />
@@ -347,7 +341,7 @@ export default function AdminQueries() {
   return (
     <div className="min-h-screen bg-gray-50 p-6 pt-28 pb-12">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Contact Queries</h1>
@@ -366,7 +360,7 @@ export default function AdminQueries() {
           </Button>
         </div>
 
-        {/* Statistics */}
+        {}
         {stats && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <Card className="p-6">
@@ -397,7 +391,7 @@ export default function AdminQueries() {
           </div>
         )}
 
-        {/* Filters & Search */}
+        {}
         <Card className="p-6 mb-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
             <div>
@@ -495,7 +489,7 @@ export default function AdminQueries() {
           </div>
         </Card>
 
-        {/* Queries Table */}
+        {}
         <Card>
           {loading ? (
             <div className="p-12 text-center">

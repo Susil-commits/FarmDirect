@@ -13,7 +13,7 @@ export default function GitHubCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Get authorization code from URL
+        
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
         const error = params.get('error');
@@ -30,12 +30,10 @@ export default function GitHubCallback() {
           return;
         }
 
-        // Exchange code for token via backend
         await githubLogin(code);
 
         addToast('GitHub login successful!', 'success');
 
-        // Redirect based on user role or redirect path
         setTimeout(() => {
           if (redirectPath) {
             clearRedirectPath();
@@ -59,7 +57,6 @@ export default function GitHubCallback() {
 
     handleCallback();
        
-      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -80,4 +77,4 @@ export default function GitHubCallback() {
     </PageTransition>
   );
 }
-
+

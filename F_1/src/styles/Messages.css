@@ -1,9 +1,6 @@
-/* ================================
-   MESSAGES / CHAT STYLES
-   Modern WhatsApp-like chat interface
-   ================================ */
 
-/* ---------- Page Layout ---------- */
+
+
 .messages-page {
   display: flex;
   height: calc(100vh - 4rem);
@@ -12,14 +9,14 @@
   animation: slideInUp 0.3s ease;
 }
 
-/* Chat panel wrapper (takes remaining width on desktop) */
+
 .chat-panel-wrapper {
   flex: 1;
   min-width: 0;
   display: flex;
 }
 
-/* ---------- Sidebar ---------- */
+
 .chat-sidebar {
   width: 380px;
   min-width: 380px;
@@ -80,7 +77,7 @@
   color: #9ca3af;
 }
 
-/* ---------- Conversation List ---------- */
+
 .conversation-list {
   flex: 1;
   overflow-y: auto;
@@ -221,7 +218,7 @@
   flex-shrink: 0;
 }
 
-/* Empty state */
+
 .conversation-empty {
   display: flex;
   flex-direction: column;
@@ -243,7 +240,7 @@
   line-height: 1.5;
 }
 
-/* ---------- Chat Panel ---------- */
+
 .chat-panel {
   flex: 1;
   display: flex;
@@ -252,7 +249,7 @@
   position: relative;
 }
 
-/* Empty state */
+
 .chat-panel-empty {
   flex: 1;
   display: flex;
@@ -306,7 +303,7 @@
   line-height: 1.6;
 }
 
-/* Chat Header */
+
 .chat-header {
   display: flex;
   align-items: center;
@@ -406,7 +403,7 @@
   color: #374151;
 }
 
-/* Dropdown Menu */
+
 .chat-header-dropdown {
   position: absolute;
   right: 1rem;
@@ -448,7 +445,7 @@
   background: #fef2f2;
 }
 
-/* Messages Area */
+
 .chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -485,7 +482,7 @@
   line-height: 1.5;
 }
 
-/* Date separator */
+
 .chat-date-separator {
   display: flex;
   align-items: center;
@@ -503,7 +500,7 @@
   box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 
-/* ---------- Message Bubble ---------- */
+
 .message-wrapper {
   display: flex;
   margin-bottom: 0.375rem;
@@ -605,7 +602,7 @@
   height: 14px;
 }
 
-/* Message hover actions */
+
 .message-wrapper {
   position: relative;
 }
@@ -639,7 +636,7 @@
   display: flex;
 }
 
-/* Touch devices have no reliable hover — keep message actions reachable */
+
 @media (hover: none) {
   .message-wrapper .message-actions {
     display: flex;
@@ -670,7 +667,7 @@
   color: #ef4444;
 }
 
-/* ---------- Chat Input ---------- */
+
 .chat-input-area {
   padding: 0.625rem 1rem;
   background: #f9fafb;
@@ -744,7 +741,7 @@
   cursor: not-allowed;
 }
 
-/* ---------- Mobile Styles ---------- */
+
 @media (max-width: 768px) {
   .messages-page {
     height: calc(100vh - 4rem);
@@ -777,7 +774,7 @@
     display: none;
   }
 
-  /* Mobile back button */
+  
   .chat-mobile-back {
     display: flex;
     align-items: center;
@@ -843,7 +840,7 @@
   }
 }
 
-/* ---------- Crop Context Badge ---------- */
+
 .chat-crop-context {
   display: inline-flex;
   align-items: center;
@@ -857,7 +854,7 @@
   margin-top: 0.25rem;
 }
 
-/* ---------- Error Banner ---------- */
+
 .chat-error-banner {
   display: flex;
   align-items: center;
@@ -876,7 +873,7 @@
   color: #ef4444;
 }
 
-/* Loading spinner */
+
 .chat-spinner {
   animation: spin 0.8s linear infinite;
   color: #22c55e;
@@ -886,7 +883,7 @@
   to { transform: rotate(360deg); }
 }
 
-/* Smooth fade for message groups */
+
 .message-group {
   animation: slideInUp 0.2s ease;
 }

@@ -1,14 +1,8 @@
-/**
- * Order Tracking Service
- * Handles order status updates and tracking
- * Uses the configured api instance with auth interceptors
- */
+
 import api from './api.js';
 
 export const orderTrackingService = {
-  /**
-   * Get all user orders
-   */
+  
   getUserOrders: async () => {
     try {
       return await api.get('/orders/my-orders');
@@ -18,10 +12,6 @@ export const orderTrackingService = {
     }
   },
 
-  /**
-   * Get single order details with tracking
-   * @param {string} orderId - Order ID
-   */
   getOrderDetails: async (orderId) => {
     try {
       return await api.get(`/orders/${orderId}`);
@@ -31,11 +21,6 @@ export const orderTrackingService = {
     }
   },
 
-  /**
-   * Cancel order (if eligible)
-   * @param {string} orderId - Order ID
-   * @param {string} reason - Cancellation reason
-   */
   cancelOrder: async (orderId, reason) => {
     try {
       return await api.post(`/orders/${orderId}/cancel`, { reason });
@@ -45,10 +30,6 @@ export const orderTrackingService = {
     }
   },
 
-  /**
-   * Get order tracking timeline
-   * @param {string} orderId - Order ID
-   */
   getTrackingTimeline: async (orderId) => {
     try {
       return await api.get(`/orders/${orderId}/tracking`);
@@ -58,11 +39,6 @@ export const orderTrackingService = {
     }
   },
 
-  /**
-   * Request return/refund
-   * @param {string} orderId - Order ID
-   * @param {object} data - Return details
-   */
   requestReturn: async (orderId, data) => {
     try {
       return await api.post(`/orders/${orderId}/return`, data);

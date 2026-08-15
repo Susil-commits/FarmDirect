@@ -1,4 +1,4 @@
-/* SearchBar Component Styles */
+
 
 .search-bar-container {
   display: flex;
@@ -70,7 +70,7 @@
   color: #6b7280;
 }
 
-/* Dropdown */
+
 .search-dropdown {
   position: absolute;
   top: calc(100% + 0.5rem);
@@ -151,7 +151,7 @@
   color: #6b7280;
 }
 
-/* Result Items */
+
 .result-item {
   display: flex;
   align-items: center;
@@ -200,7 +200,7 @@
   text-overflow: ellipsis;
 }
 
-/* Empty State */
+
 .dropdown-empty {
   padding: 2rem 1rem;
   text-align: center;
@@ -223,7 +223,7 @@
   color: #9ca3af;
 }
 
-/* Footer Action */
+
 .dropdown-footer {
   padding: 0.75rem;
   border-top: 1px solid #f3f4f6;
@@ -251,7 +251,7 @@
   transform: translateY(0);
 }
 
-/* Footer Action */
+
 .dropdown-action {
   width: calc(100% - 2rem);
   margin: 0 1rem;
@@ -269,7 +269,7 @@
   color: #1B3B2B;
 }
 
-/* Scrollbar styling */
+
 .search-dropdown::-webkit-scrollbar {
   width: 6px;
 }
@@ -287,7 +287,7 @@
   background: #9ca3af;
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
   .search-bar-container {
     max-width: none;

@@ -3,7 +3,7 @@ import { redisClient } from '../config/redis.js';
 
 export const cacheRoute = (ttlSeconds: number) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    // Only cache GET requests
+    
     if (req.method !== 'GET') {
       return next();
     }
@@ -12,7 +12,6 @@ export const cacheRoute = (ttlSeconds: number) => {
       return next();
     }
 
-    // Use full URL as the cache key, prefixed with "route-cache:"
     const key = `route-cache:${req.originalUrl || req.url}`;
 
     try {
@@ -26,7 +25,6 @@ export const cacheRoute = (ttlSeconds: number) => {
 
       res.setHeader('X-Cache', 'MISS');
 
-      // Intercept res.send/res.json to cache the response body
       const originalJson = res.json.bind(res);
       const originalSend = res.send.bind(res);
 
@@ -44,7 +42,7 @@ export const cacheRoute = (ttlSeconds: number) => {
 
       res.send = (body: any) => {
         if (!responseSent && res.statusCode >= 200 && res.statusCode < 300) {
-          // If body is already string, use it. Else convert to string if it's an object
+          
           const stringBody = typeof body === 'object' ? JSON.stringify(body) : body;
           redisClient.setEx(key, ttlSeconds, stringBody).catch((err) => {
             console.error('Redis Route Cache Set Error:', err);

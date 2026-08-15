@@ -10,7 +10,7 @@ import ScrollAnimation from '../../components/common/ScrollAnimation';
 import messageService from '../../services/messageService.js';
 
 export default function AdminMessages() {
-  // State Management
+  
   const [conversations, setConversations] = useState([]);
   const [filteredConversations, setFilteredConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -24,18 +24,16 @@ export default function AdminMessages() {
     activeUsers: 0,
   });
 
-  // Filters & Search
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
-    userRole: 'all', // 'all', 'farmer', 'buyer'
-    status: 'all', // 'all', 'unread', 'archived'
-    sortBy: 'recent', // 'recent', 'oldest', 'unread'
+    userRole: 'all', 
+    status: 'all', 
+    sortBy: 'recent', 
   });
 
-  // View Mode
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'detail'
+  const [viewMode, setViewMode] = useState('list'); 
   const [replyText, setReplyText] = useState('');
-  // eslint-disable-next-line no-unused-vars
+  
   const [showMoreOptions, setShowMoreOptions] = useState(null);
   const messagesEndRef = useRef(null);
 
@@ -59,8 +57,7 @@ export default function AdminMessages() {
     setLoading(true);
     setError('');
     try {
-      // Since there's no admin endpoint yet, we fetch data from existing API
-      // This is a placeholder - you may need to create an admin endpoint
+      
       const response = await messageService.getConversations();
       
       if (response.data) {
@@ -69,7 +66,7 @@ export default function AdminMessages() {
       }
     } catch (err) {
       console.error(err);
-      // Fallback - show demo data structure for now
+      
       setConversations([]);
     } finally {
       setLoading(false);
@@ -79,7 +76,6 @@ export default function AdminMessages() {
   const applyFilters = useCallback(() => {
     let filtered = conversations;
 
-    // Search filter
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(conv => {
@@ -93,19 +89,16 @@ export default function AdminMessages() {
       });
     }
 
-    // Role filter
     if (filters.userRole !== 'all') {
       filtered = filtered.filter(conv => 
         conv.otherUser?.role?.toLowerCase() === filters.userRole.toLowerCase()
       );
     }
 
-    // Status filter
     if (filters.status === 'unread') {
       filtered = filtered.filter(conv => (conv.unreadCount || 0) > 0);
     }
 
-    // Sort
     if (filters.sortBy === 'recent') {
       filtered.sort((a, b) => 
         new Date(b.lastMessage?.createdAt) - new Date(a.lastMessage?.createdAt)
@@ -121,24 +114,19 @@ export default function AdminMessages() {
     setFilteredConversations(filtered);
   }, [conversations, searchTerm, filters]);
 
-  // Fetch all conversations on mount
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    
     fetchAllConversations();
   }, [fetchAllConversations]);
 
-  // Apply filters when search or filter changes
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    
     applyFilters();
   }, [applyFilters]);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
-
-
 
   const fetchMessages = async (conversation) => {
     setMessagesLoading(true);
@@ -146,7 +134,6 @@ export default function AdminMessages() {
       setSelectedConversation(conversation);
       setViewMode('detail');
       
-      // Fetch actual messages for this conversation
       const response = await messageService.getConversation(conversation.otherUser._id, 1, 100);
       
       if (response.data) {
@@ -202,12 +189,11 @@ export default function AdminMessages() {
     return { badge: 'bg-gray-500', text: 'text-gray-600', chip: 'bg-gray-100' };
   };
 
-  // LIST VIEW
   if (viewMode === 'list') {
     return (
       <PageTransition>
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white pt-28 pb-12">
-          {/* Hero Section */}
+          {}
           <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white py-8 px-4">
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-between">
@@ -223,7 +209,7 @@ export default function AdminMessages() {
           </div>
 
           <div className="max-w-7xl mx-auto px-4 py-8">
-            {/* Stats Cards */}
+            {}
             <ScrollAnimation className="scroll-slide">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
                 <Card hover className="bg-gradient-to-br from-blue-50 to-white p-6">
@@ -258,10 +244,10 @@ export default function AdminMessages() {
               </div>
             </ScrollAnimation>
 
-            {/* Search & Filter Bar */}
+            {}
             <Card className="p-6 mb-6 bg-white border-l-4 border-emerald-500">
               <div className="space-y-4">
-                {/* Search */}
+                {}
                 <div className="flex gap-2">
                   <div className="flex-1 relative">
                     <Search size={20} className="absolute left-3 top-3 text-gray-400" />
@@ -281,9 +267,9 @@ export default function AdminMessages() {
                   </button>
                 </div>
 
-                {/* Filters */}
+                {}
                 <div className="flex flex-wrap gap-3">
-                  {/* Role Filter */}
+                  {}
                   <select
                     value={filters.userRole}
                     onChange={(e) => setFilters({ ...filters, userRole: e.target.value })}
@@ -294,7 +280,7 @@ export default function AdminMessages() {
                     <option value="buyer">Buyers</option>
                   </select>
 
-                  {/* Status Filter */}
+                  {}
                   <select
                     value={filters.status}
                     onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -304,7 +290,7 @@ export default function AdminMessages() {
                     <option value="unread">Unread Only</option>
                   </select>
 
-                  {/* Sort Filter */}
+                  {}
                   <select
                     value={filters.sortBy}
                     onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
@@ -318,7 +304,7 @@ export default function AdminMessages() {
               </div>
             </Card>
 
-            {/* Error Message */}
+            {}
             {error && (
               <Card className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
                 <p className="text-red-700 flex items-center gap-2">
@@ -328,7 +314,7 @@ export default function AdminMessages() {
               </Card>
             )}
 
-            {/* Conversations List */}
+            {}
             <div className="space-y-3">
               {loading ? (
                 <div className="flex justify-center py-12">
@@ -352,12 +338,12 @@ export default function AdminMessages() {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 flex gap-4">
-                        {/* Avatar */}
+                        {}
                         <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
                           {conversation.otherUser?.firstName?.[0]?.toUpperCase()}
                         </div>
 
-                        {/* Content */}
+                        {}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">
                             <h3 className="font-bold text-gray-900">
@@ -385,7 +371,7 @@ export default function AdminMessages() {
                         </div>
                       </div>
 
-                      {/* Time & Arrow */}
+                      {}
                       <div className="flex flex-col items-end gap-2 ml-4 flex-shrink-0">
                         <span className="text-xs text-gray-500 flex items-center gap-1 whitespace-nowrap">
                           <Clock size={14} />
@@ -404,12 +390,11 @@ export default function AdminMessages() {
     );
   }
 
-  // DETAIL VIEW
   if (viewMode === 'detail' && selectedConversation) {
     return (
       <PageTransition>
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white pt-28 pb-12">
-          {/* Header */}
+          {}
           <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white py-6 px-4 sticky top-0 z-40 shadow-lg">
             <div className="max-w-6xl mx-auto flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -435,7 +420,7 @@ export default function AdminMessages() {
                 </div>
               </div>
 
-              {/* Actions */}
+              {}
               <div className="flex items-center gap-2">
                 <button className="p-2 hover:bg-emerald-500 rounded-lg transition-colors" title="Download Conversation">
                   <Download size={20} />
@@ -451,7 +436,7 @@ export default function AdminMessages() {
           </div>
 
           <div className="max-w-6xl mx-auto px-4 py-6">
-            {/* User Info Card */}
+            {}
             <Card className="p-6 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
@@ -477,7 +462,7 @@ export default function AdminMessages() {
               </div>
             </Card>
 
-            {/* Messages */}
+            {}
             <Card className="p-6 bg-white mb-6 h-96 overflow-y-auto">
               {messagesLoading ? (
                 <div className="flex justify-center items-center h-full">
@@ -516,7 +501,7 @@ export default function AdminMessages() {
               )}
             </Card>
 
-            {/* Reply Box */}
+            {}
             <Card className="p-6 bg-white">
               <div className="flex gap-3">
                 <input

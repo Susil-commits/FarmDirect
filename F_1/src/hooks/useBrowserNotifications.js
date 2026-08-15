@@ -1,15 +1,3 @@
-/**
- * useBrowserNotifications
- * Thin wrapper around the Web Notifications API.
- * - requestNotificationPermission(): prompts the user (only once per session,
- *   and only when authenticated). Returns the current permission state.
- * - showBrowserNotification(title, options): fires an OS-level notification,
- *   but ONLY when the document is hidden (tab in background) and permission is
- *   granted. When the tab is visible we rely on in-app toasts instead, to avoid
- *   double notifications.
- *
- * Guards for environments without Notification support (older browsers / SSR).
- */
 
 let permissionRequestedThisSession = false;
 
@@ -37,10 +25,6 @@ export const requestNotificationPermission = async () => {
   }
 };
 
-/**
- * Show a browser (OS-level) notification. Only fires when the tab is hidden
- * so users aren't double-notified (in-app toast handles the visible case).
- */
 export const showBrowserNotification = (title, options = {}) => {
   if (!isNotificationsSupported()) return;
   if (Notification.permission !== 'granted') return;
@@ -72,10 +56,6 @@ export const showBrowserNotification = (title, options = {}) => {
   }
 };
 
-/**
- * Convenience helper used by the realtime layer: shows an OS notification when
- * the app is in the background, otherwise no-op (toast handles foreground).
- */
 export const notifyIfBackground = (title, body, options = {}) => {
   showBrowserNotification(title, { ...options, body });
 };

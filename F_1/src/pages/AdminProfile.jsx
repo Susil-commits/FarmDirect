@@ -38,7 +38,6 @@ export default function AdminProfile() {
   const [activityLoading, setActivityLoading] = useState(false);
   const [statsError, setStatsError] = useState(null);
 
-  // Derive real user data — no hardcoded values
   const joinDate = user?.createdAt 
     ? new Date(user.createdAt).toISOString().split('T')[0]
     : null;
@@ -70,13 +69,12 @@ export default function AdminProfile() {
     photo: user?.photo || user?.profilePicture || null,
   });
 
-  // Sync formData when user data loads
   useEffect(() => {
     if (user) {
       const actualJoinDate = user?.createdAt 
         ? new Date(user.createdAt).toISOString().split('T')[0]
         : '';
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      
       setFormData({
         name: user?.name || '',
         email: user?.email || '',
@@ -115,7 +113,6 @@ export default function AdminProfile() {
         const result = await uploadService.uploadProfilePicture(photoFile);
         if (result?.url) {
        
-      // eslint-disable-next-line react-hooks/immutability
           formData.photo = result.url;
         }
       }
@@ -141,7 +138,6 @@ export default function AdminProfile() {
     addToast('Logged out successfully', 'info');
   };
 
-  // Fetch real-time stats from backend
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -151,20 +147,18 @@ export default function AdminProfile() {
         const statsRes = await adminService.getDashboardStats();
         const statsData = statsRes.data?.data || statsRes.data || {};
 
-        // Extract values from the dashboard stats response
         const users = statsData.users || {};
         const crops = statsData.crops || {};
         const orders = statsData.orders || {};
         const reviews = statsData.reviews || {};
 
-        // Count active sessions from login history
         let activeSessions = 0;
         try {
           const loginHistory = JSON.parse(localStorage.getItem('loginHistory') || '[]');
           const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
           activeSessions = loginHistory.filter(entry => entry.timestamp > oneDayAgo).length;
         } catch {
-          activeSessions = 1; // at least current session
+          activeSessions = 1; 
         }
 
         setStats({
@@ -193,7 +187,6 @@ export default function AdminProfile() {
     return () => { clearInterval(interval); document.removeEventListener('visibilitychange', onVis); };
   }, []);
 
-  // Fetch real activity logs from audit trail
   useEffect(() => {
     const fetchActivity = async () => {
       if (activeTab !== 'activity') return;
@@ -212,7 +205,6 @@ export default function AdminProfile() {
     fetchActivity();
   }, [activeTab]);
 
-  // Format relative time
   const getRelativeTime = (timestamp) => {
     if (!timestamp) return 'Unknown';
     const now = new Date();
@@ -229,7 +221,6 @@ export default function AdminProfile() {
     return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
   };
 
-  // Map audit action to display text and icon
   const getActivityDisplay = (log) => {
     const actionMap = {
       'approve_kyc': { label: 'Approved KYC verification', icon: CheckCircle, bgClass: 'bg-emerald-500/20', textClass: 'text-emerald-400' },
@@ -269,14 +260,14 @@ export default function AdminProfile() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body pt-28 pb-16">
-        {/* Premium Header Section */}
+        {}
         <div className="relative min-h-64 bg-gradient-to-tr from-[#132E20] via-[#1B3B2B] to-[#254D38] overflow-hidden rounded-[36px] max-w-7xl mx-auto shadow-2xl border border-white/10">
           <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#D97736]/20 rounded-full blur-3xl pointer-events-none"></div>
 
-          {/* Header Content */}
+          {}
           <div className="relative h-full flex items-center py-10 px-6 md:px-12">
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 w-full">
-              {/* Avatar */}
+              {}
               <div className="relative">
                 <div className="w-24 h-24 sm:w-36 sm:h-36 rounded-3xl bg-white shadow-2xl p-2.5 ring-4 ring-white/20">
                   <Avatar user={user} size="xl" className="w-full h-full" />
@@ -289,7 +280,7 @@ export default function AdminProfile() {
                 )}
               </div>
 
-              {/* Info */}
+              {}
               <div className="text-white flex-1 min-w-0 text-center sm:text-left">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736] bg-[#D97736]/20 px-3 py-1 rounded-full border border-[#D97736]/30 inline-block mb-2">
                   ADMINISTRATOR CONTROL
@@ -313,7 +304,7 @@ export default function AdminProfile() {
                 )}
               </div>
 
-              {/* Quick Stats */}
+              {}
               <div className="hidden lg:grid grid-cols-2 gap-3">
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/15 text-center">
                   <p className="text-stone-300 text-[10px] font-bold uppercase tracking-wider">Active Sessions</p>
@@ -328,9 +319,9 @@ export default function AdminProfile() {
           </div>
         </div>
 
-        {/* Main Content */}
+        {}
         <div className="max-w-7xl mx-auto px-4 md:px-6 -mt-8 pb-12 relative z-10">
-          {/* Tab Navigation */}
+          {}
           <div className="bg-gradient-to-r from-slate-700 to-slate-800 rounded-2xl shadow-2xl p-2 mb-8 flex gap-2 overflow-x-auto border border-slate-600">
             {[
               { id: 'overview', label: 'Overview', icon: BarChart3 },
@@ -353,10 +344,10 @@ export default function AdminProfile() {
             ))}
           </div>
 
-          {/* Overview Tab */}
+          {}
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              {/* Stats Error Banner */}
+              {}
               {statsError && (
                 <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center gap-3">
                   <AlertTriangle size={20} className="text-amber-400 flex-shrink-0" />
@@ -364,7 +355,7 @@ export default function AdminProfile() {
                 </div>
               )}
 
-              {/* Quick Stats Grid */}
+              {}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 <Card _glass={false} className="bg-gradient-to-br from-blue-600 to-blue-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
                   <div className="p-8">
@@ -409,7 +400,7 @@ export default function AdminProfile() {
                 </Card>
               </div>
 
-              {/* Additional Stats Row */}
+              {}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 <Card _glass={false} className="bg-gradient-to-br from-amber-600 to-orange-700 border-0 text-white overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
                   <div className="p-8">
@@ -451,7 +442,7 @@ export default function AdminProfile() {
                 </Card>
               </div>
 
-              {/* User Breakdown */}
+              {}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 <Card _glass={false} className="bg-slate-700 border border-slate-600 text-white">
                   <div className="p-8">
@@ -534,12 +525,12 @@ export default function AdminProfile() {
             </div>
           )}
 
-          {/* Profile Info Tab */}
+          {}
           {activeTab === 'profile' && (
             <div className="space-y-6">
               {!isEditing ? (
                 <>
-                  {/* Info Cards */}
+                  {}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <Card _glass={false} className="bg-gradient-to-br from-blue-600 to-blue-700 border border-blue-500/30 text-white hover:shadow-2xl transition duration-300">
                       <div className="p-8">
@@ -594,7 +585,7 @@ export default function AdminProfile() {
                     </Card>
                   </div>
 
-                  {/* Edit Button */}
+                  {}
                   <button
                     onClick={() => setIsEditing(true)}
                     className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-bold py-4 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-2xl transform hover:scale-105 text-lg"
@@ -610,7 +601,7 @@ export default function AdminProfile() {
                     </h2>
 
                     <form className="space-y-8">
-                      {/* Form Fields */}
+                      {}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                           <label className="block text-sm font-bold text-slate-300 mb-3 uppercase tracking-wide">Full Name</label>
@@ -658,7 +649,7 @@ export default function AdminProfile() {
                         </div>
                       </div>
 
-                      {/* Photo Upload */}
+                      {}
                       <div className="bg-gradient-to-br from-blue-600/40 to-indigo-600/40 p-8 rounded-xl border-2 border-dashed border-blue-500/50">
                         <div className="text-center">
                           <Camera size={40} className="mx-auto mb-4 text-blue-400" />
@@ -680,7 +671,7 @@ export default function AdminProfile() {
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
+                      {}
                       <div className="flex gap-4">
                         <button
                           onClick={handleSave}
@@ -702,7 +693,7 @@ export default function AdminProfile() {
             </div>
           )}
 
-          {/* Activity Tab */}
+          {}
           {activeTab === 'activity' && (
             <div className="space-y-6">
               <Card _glass={false} className="bg-slate-700 border border-slate-600">
@@ -757,11 +748,11 @@ export default function AdminProfile() {
             </div>
           )}
 
-          {/* Settings Tab */}
+          {}
           {activeTab === 'settings' && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* Security Settings */}
+                {}
                 <Card _glass={false} className="bg-gradient-to-br from-red-600/40 to-red-700/40 border border-red-500/30">
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-6">
@@ -779,7 +770,7 @@ export default function AdminProfile() {
                   </div>
                 </Card>
 
-                {/* Notification Settings */}
+                {}
                 <Card _glass={false} className="bg-gradient-to-br from-blue-600/40 to-blue-700/40 border border-blue-500/30">
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-6">
@@ -800,7 +791,7 @@ export default function AdminProfile() {
                 </Card>
               </div>
 
-              {/* Logout Button */}
+              {}
               <button
                 onClick={handleLogout}
                 className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-4 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-2xl transform hover:scale-105 text-lg flex items-center justify-center gap-3"
@@ -811,7 +802,7 @@ export default function AdminProfile() {
           )}
         </div>
 
-        {/* Logout Confirmation Modal */}
+        {}
         {showLogoutConfirm && (
           <LogoutConfirmationModal
             onConfirm={handleConfirmLogout}

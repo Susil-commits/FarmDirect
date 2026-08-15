@@ -3,19 +3,10 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useRouter } from '../../context/RouterContext.jsx';
 import Card from './Card.jsx';
 
-/**
- * PHASE 3: PROTECTED ROUTE COMPONENT
- * Routes protected by role-based access control
- * 
- * Usage:
- * <ProtectedRoute roles={['admin', 'farmer']} redirectTo="/login">
- *   <AdminDashboard />
- * </ProtectedRoute>
- */
 export const ProtectedRoute = ({ 
   children, 
   roles = null,
-  requiredRoles = null, // Legacy support
+  requiredRoles = null, 
   requiredPermissions = null,
   requiredKYC = false,
   fallback = null,
@@ -25,10 +16,8 @@ export const ProtectedRoute = ({
   const { navigate } = useRouter();
   const [_unauthorized, _setUnauthorized] = React.useState(false);
 
-  // Use roles prop or fallback to requiredRoles for backward compatibility
   const rolesToCheck = roles || requiredRoles;
 
-  // Not authenticated
   if (!isAuthenticated) {
     if (fallback) return fallback;
     return (
@@ -47,7 +36,6 @@ export const ProtectedRoute = ({
     );
   }
 
-  // Role check
   if (rolesToCheck && !hasRole(rolesToCheck)) {
     if (fallback) return fallback;
     return (
@@ -73,7 +61,6 @@ export const ProtectedRoute = ({
     );
   }
 
-  // Permission check
   if (requiredPermissions && !hasPermission(requiredPermissions)) {
     if (fallback) return fallback;
     return (
@@ -92,7 +79,6 @@ export const ProtectedRoute = ({
     );
   }
 
-  // KYC verification check
   if (requiredKYC && user?.role === 'farmer' && user?.kycStatus !== 'verified') {
     if (fallback) return fallback;
     return (
@@ -124,23 +110,9 @@ export const ProtectedRoute = ({
     );
   }
 
-  // All checks passed
   return children;
 };
 
-/**
- * ROLE-BASED CONDITIONAL RENDERING COMPONENT
- * Show content only if user has specific role
- * 
- * Usage:
- * <RoleBasedView roles="admin">
- *   <AdminPanel />
- * </RoleBasedView>
- * 
- * <RoleBasedView roles={['admin', 'farmer']}>
- *   <Dashboard />
- * </RoleBasedView>
- */
 export function RoleBasedView({ children, roles, fallback = null }) {
   const { hasRole } = useAuth();
 
@@ -151,10 +123,6 @@ export function RoleBasedView({ children, roles, fallback = null }) {
   return children;
 }
 
-/**
- * PERMISSION-BASED CONDITIONAL RENDERING
- * Show content only if user has specific permission
- */
 export function PermissionBasedView({ children, permission, fallback = null }) {
   const { hasPermission } = useAuth();
 
@@ -165,11 +133,6 @@ export function PermissionBasedView({ children, permission, fallback = null }) {
   return children;
 }
 
-/**
- * GUEST VIEW MARKER
- * Shows content only when user is NOT authenticated
- * Useful for marketing, landing pages, etc.
- */
 export function GuestOnly({ children, fallback = null }) {
   const { isAuthenticated } = useAuth();
 
@@ -180,10 +143,6 @@ export function GuestOnly({ children, fallback = null }) {
   return children;
 }
 
-/**
- * AUTHENTICATED VIEW MARKER
- * Shows content only when user IS authenticated
- */
 export function AuthenticatedOnly({ children, fallback = null }) {
   const { isAuthenticated } = useAuth();
 
@@ -194,10 +153,6 @@ export function AuthenticatedOnly({ children, fallback = null }) {
   return children;
 }
 
-/**
- * KYC VERIFIED MARKER
- * For farmers who need KYC status verified
- */
 export function KYCVerified({ children, fallback = null }) {
   const { user, isAuthenticated } = useAuth();
 
@@ -210,11 +165,6 @@ export function KYCVerified({ children, fallback = null }) {
   return children;
 }
 
-/**
- * LOADING GATE
- * Wait for auth state to load before rendering children
- * Prevents flash of unauthorized content
- */
 export function AuthLoading({ children, fallback = null }) {
   const { loading } = useAuth();
 

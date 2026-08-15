@@ -1,18 +1,5 @@
 import { lazy } from 'react';
 
-/**
- * Robust lazy loading wrapper with auto-retry and cache-busting logic.
- * Solves "Failed to fetch dynamically imported module" / MIME type "text/html" errors
- * caused by deployment hash changes, stale Service Worker caches.
- *
- * IMPORTANT: Does NOT reload on generic network blips to prevent reload loops.
- *
- * @param {Function} componentImport Function returning dynamic import promise, e.g. () => import('./MyComponent')
- * @returns {React.LazyExoticComponent}
- */
-
-// Minimum 8 seconds between auto-reloads — prevents reload storms from multiple
-// concurrent lazy chunks all failing at once (e.g. on deployment hash change).
 const RELOAD_DEBOUNCE_MS = 8000;
 let lastReloadTime = 0;
 
@@ -22,7 +9,7 @@ export function lazyWithRetry(componentImport) {
 
     try {
       const component = await componentImport();
-      // Reset the reload flag once a dynamic import succeeds
+      
       if (pageHasAlreadyBeenReloaded) {
         sessionStorage.removeItem('lazy_retry_reloaded');
       }
@@ -31,8 +18,7 @@ export function lazyWithRetry(componentImport) {
       console.warn('[lazyWithRetry] Dynamic import chunk failed:', error);
 
       const errorMessage = error?.message || '';
-      // Only reload for genuine deployment-stale-chunk errors, NOT generic network blips.
-      // Notably: 'import' alone is too broad — it matches any import-related error.
+      
       const isChunkOrModuleError =
         error?.name === 'ChunkLoadError' ||
         errorMessage.includes('Failed to fetch dynamically imported module') ||
@@ -48,7 +34,7 @@ export function lazyWithRetry(componentImport) {
         lastReloadTime = now;
         sessionStorage.setItem('lazy_retry_reloaded', 'true');
         window.location.reload();
-        // Return pending promise so React Suspense doesn't crash during reload
+        
         return new Promise(() => {});
       }
 

@@ -4,16 +4,6 @@ import { couponService } from '../../services/appService';
 import { useCart } from '../../hooks/useCart';
 import { useToast } from '../../hooks/useToast';
 
-/**
- * CouponInput — reusable promo-code field.
- * Validates against the backend (server is source of truth) and stores the
- * applied coupon in CartContext so both the cart and checkout see the discount.
- *
- * Props:
- *   amount  - subtotal to validate the coupon against (defaults to cart total)
- *   onApplied - optional callback(coupon) when a coupon is successfully applied
- *   variant  - 'cart' | 'checkout' (visual tweak)
- */
 export default function CouponInput({ amount, onApplied, variant = 'cart' }) {
   const { appliedCoupon, applyCoupon, removeCoupon, getTotalPrice } = useCart();
   const { addToast } = useToast();

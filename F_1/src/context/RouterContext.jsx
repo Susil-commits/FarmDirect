@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+
 import { createContext, useState, useContext, useMemo, useEffect } from 'react';
 
 export const RouterContext = createContext();

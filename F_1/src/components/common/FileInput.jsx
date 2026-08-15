@@ -1,16 +1,12 @@
 import React, { useRef, useState } from 'react';
 import { Upload, X, Camera } from 'lucide-react';
 
-/**
- * FileInput Component
- * Handles file upload with photo preview and camera capture
- */
 export default function FileInput({
   label = 'Upload Photo',
   name = 'photo',
   onChange = () => {},
   accept = 'image/*',
-  maxSize = 5, // MB
+  maxSize = 5, 
   preview = null,
   error = null,
   helperText = null,
@@ -33,13 +29,12 @@ export default function FileInput({
   };
 
   const validateFile = (file) => {
-    // Check file type
+    
     if (!file.type.startsWith('image/')) {
       setUploadError('Please upload an image file');
       return false;
     }
 
-    // Check file size
     const fileSizeMB = file.size / (1024 * 1024);
     if (fileSizeMB > maxSize) {
       setUploadError(`File size must be less than ${maxSize}MB`);
@@ -53,7 +48,6 @@ export default function FileInput({
   const handleFile = (file) => {
     if (!validateFile(file)) return;
 
-    // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewUrl(reader.result);
@@ -61,7 +55,7 @@ export default function FileInput({
         target: {
           name,
           files: [file],
-          value: reader.result, // Also include base64 for easy storage
+          value: reader.result, 
         },
       });
     };

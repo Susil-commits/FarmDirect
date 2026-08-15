@@ -4,10 +4,6 @@ import Button from './Button';
 import { useWishlist } from '../../hooks/useWishlist';
 import { getImageUrl } from '../../utils/formatters';
 
-/**
- * RelatedProducts Component
- * Horizontal scrollable list of related products from same farmer or category
- */
 export default function RelatedProducts({ 
   products = [],
   title = 'Related Products',
@@ -44,7 +40,7 @@ export default function RelatedProducts({
     const container = containerRef.current;
     if (container) {
       container.addEventListener('scroll', handleScroll);
-      handleScroll(); // Check initial state
+      handleScroll(); 
     }
     return () => container?.removeEventListener('scroll', handleScroll);
   }, []);
@@ -96,9 +92,6 @@ export default function RelatedProducts({
   );
 }
 
-/**
- * Individual Related Product Card
- */
 function RelatedProductCard({ 
   product, 
   onProductClick, 
@@ -122,7 +115,7 @@ function RelatedProductCard({
       className="shrink-0 w-48 bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
       onClick={() => onProductClick?.(product.id)}
     >
-      {/* Image */}
+      {}
       <div className="relative h-40 bg-gray-100 overflow-hidden">
         {product.image ? (
           <img
@@ -136,7 +129,7 @@ function RelatedProductCard({
           </div>
         )}
 
-        {/* Wishlist Button */}
+        {}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -151,7 +144,7 @@ function RelatedProductCard({
           <Heart size={16} fill={favorited ? 'currentColor' : 'none'} />
         </button>
 
-        {/* Verified Badge */}
+        {}
         {product.farmer_verified && (
           <div className="absolute top-2 left-2 bg-white px-2 py-1 rounded-full text-xs font-semibold text-green-600 shadow-sm">
             ✓ Verified
@@ -159,7 +152,7 @@ function RelatedProductCard({
         )}
       </div>
 
-      {/* Content */}
+      {}
       <div className="p-3">
         <h3 className="font-semibold text-gray-900 text-sm truncate">
           {product.name}

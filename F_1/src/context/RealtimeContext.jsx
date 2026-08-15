@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+
 import React, { createContext, useContext, useEffect, useCallback } from 'react';
 import { useSocket } from './SocketContext';
 import { useToast } from './ToastContext';
@@ -8,23 +8,6 @@ import {
   notifyIfBackground,
 } from '../hooks/useBrowserNotifications';
 
-/**
- * RealtimeProvider
- * ---------------
- * Central listener for all socket events that the backend emits but the rest
- * of the app previously ignored (orders, crop interest, KYC, user status).
- *
- * Responsibilities:
- *  1. Subscribe once to every server-pushed event.
- *  2. Show an in-app toast for each meaningful event (foreground).
- *  3. Fire an OS-level browser notification when the tab is hidden.
- *  4. Expose "signals" (latest event objects) as state so pages can react
- *     instantly — e.g. OrderTrackingNew / OrderDetails refresh when an
- *     order:updated arrives.
- *
- * Note: `notification:new` and chat `message:new` are handled by their own
- * contexts (NotificationContext / ChatContext). This provider covers the rest.
- */
 export const RealtimeContext = createContext(null);
 
 export const RealtimeProvider = ({ children }) => {

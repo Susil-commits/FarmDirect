@@ -1,6 +1,4 @@
-/* ============================================
-   PRODUCT REVIEWS COMPONENT STYLES
-   ============================================ */
+
 
 .reviews-section {
   margin-top: var(--spacing-3xl);
@@ -8,7 +6,7 @@
   border-top: 2px solid var(--gray-200);
 }
 
-/* Reviews Summary */
+
 .reviews-summary {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -28,7 +26,7 @@
   gap: var(--spacing-2xl);
 }
 
-/* Rating Display */
+
 .rating-display {
   text-align: center;
   padding: var(--spacing-lg);
@@ -54,7 +52,7 @@
   color: var(--gray-600);
 }
 
-/* Rating Breakdown */
+
 .rating-breakdown {
   flex: 1;
   display: flex;
@@ -96,7 +94,7 @@
   text-align: right;
 }
 
-/* Review Form */
+
 .review-form-container {
   padding: var(--spacing-xl);
   background: rgba(251, 248, 243, 0.9);
@@ -142,7 +140,7 @@
   box-shadow: 0 0 0 3px rgba(19, 46, 32, 0.15);
 }
 
-/* Rating Selector */
+
 .rating-selector {
   display: flex;
   gap: var(--spacing-md);
@@ -175,7 +173,7 @@
   transform: scale(1.15);
 }
 
-/* Reviews List */
+
 .reviews-list {
   margin-top: var(--spacing-2xl);
 }
@@ -198,7 +196,7 @@
   color: var(--gray-600);
 }
 
-/* Review Card */
+
 .review-card {
   padding: var(--spacing-lg);
   background: rgba(251, 248, 243, 0.9);
@@ -291,7 +289,7 @@
   margin-bottom: var(--spacing-lg);
 }
 
-/* Review Footer */
+
 .review-footer {
   display: flex;
   gap: var(--spacing-lg);
@@ -317,9 +315,7 @@
   color: #132E20;
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
+
 
 @media (max-width: 768px) {
   .reviews-summary {

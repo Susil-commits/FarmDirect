@@ -82,22 +82,22 @@ export default function FarmerProfile() {
     <ErrorBoundary>
     <PageTransition>
       <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body pt-28 pb-16">
-        {/* Premium Header Section */}
+        {}
         <div className="relative min-h-64 bg-gradient-to-tr from-[#132E20] via-[#1B3B2B] to-[#254D38] overflow-hidden rounded-[36px] max-w-7xl mx-auto shadow-2xl border border-white/10">
-          {/* Ambient Glow */}
+          {}
           <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#D97736]/20 rounded-full blur-3xl pointer-events-none"></div>
 
-          {/* Header Content */}
+          {}
           <div className="relative h-full flex items-center py-10 px-6 md:px-12">
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 w-full">
-              {/* Avatar */}
+              {}
               <div className="relative">
                 <div className="w-24 h-24 sm:w-36 sm:h-36 rounded-3xl bg-white shadow-2xl p-2.5 ring-4 ring-white/20">
                   <Avatar user={farmer} size="xl" className="w-full h-full" />
                 </div>
               </div>
 
-              {/* Info */}
+              {}
               <div className="text-white flex-1 min-w-0 text-center sm:text-left">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736] bg-[#D97736]/20 px-3 py-1 rounded-full border border-[#D97736]/30 inline-block mb-2">
                   VERIFIED GROWER
@@ -128,7 +128,7 @@ export default function FarmerProfile() {
                 </div>
               </div>
 
-              {/* Quick Stats */}
+              {}
               <div className="hidden lg:grid grid-cols-2 gap-3">
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/15 text-center">
                   <p className="text-stone-300 text-[10px] font-bold uppercase tracking-wider">Rating</p>
@@ -143,9 +143,9 @@ export default function FarmerProfile() {
           </div>
         </div>
 
-        {/* Main Content */}
+        {}
         <div className="max-w-7xl mx-auto px-4 md:px-6 pt-8 pb-12 relative z-10">
-          {/* Tab Navigation */}
+          {}
           <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg p-1.5 mb-8 flex gap-2 overflow-x-auto border border-stone-200 scrollbar-none">
             {[
               { id: 'products', label: '🌾 Products', icon: Package },
@@ -168,7 +168,7 @@ export default function FarmerProfile() {
             ))}
           </div>
 
-          {/* Products Tab */}
+          {}
           {activeTab === 'products' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between mb-4">
@@ -184,7 +184,7 @@ export default function FarmerProfile() {
                     <TiltCard key={crop.id || crop._id || idx} maxTilt={8}>
                       <div className="bg-slate-700/50 border border-slate-600 rounded-xl overflow-hidden hover:shadow-2xl hover:border-emerald-500/50 transition duration-300 transform">
                         <div className="p-4 relative group">
-                          {/* Image */}
+                          {}
                           <div className="relative mb-4 overflow-hidden rounded-lg">
                             <div className="bg-gradient-to-br from-emerald-900/50 to-green-900/50 rounded-lg relative min-h-40 flex items-center justify-center group-hover:shadow-lg transition-shadow">
                               {crop.image ? (
@@ -198,7 +198,7 @@ export default function FarmerProfile() {
                               )}
                             </div>
 
-                            {/* Wishlist */}
+                            {}
                             <button 
                               onClick={() => {
                                 if (isInWishlist(crop.id || crop._id)) {
@@ -217,7 +217,7 @@ export default function FarmerProfile() {
                             </button>
                           </div>
 
-                          {/* Info */}
+                          {}
                           <h3 className="font-bold text-white mb-1">{crop.name}</h3>
                           <div className="flex items-center justify-between mb-4">
                             <span className="text-lg font-bold text-emerald-400">₹{crop.price}/kg</span>
@@ -252,10 +252,10 @@ export default function FarmerProfile() {
             </div>
           )}
 
-          {/* About Tab */}
+          {}
           {activeTab === 'about' && farmer && (
             <div className="space-y-6">
-              {/* Bio Card */}
+              {}
               <div className="bg-slate-700/50 border border-slate-600 rounded-xl text-white">
                 <div className="p-8">
                   <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
@@ -263,7 +263,7 @@ export default function FarmerProfile() {
                   </h2>
                   <p className="text-slate-300 leading-relaxed text-lg mb-8">{farmer.bio || 'A dedicated farmer committed to providing fresh, quality produce.'}</p>
 
-                  {/* Contact Info Grid */}
+                  {}
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                     <div className="bg-gradient-to-br from-emerald-600/20 to-emerald-700/20 border border-emerald-500/30 rounded-xl p-6 hover:shadow-lg transition">
                       <div className="flex items-center gap-3 mb-3">
@@ -296,7 +296,7 @@ export default function FarmerProfile() {
                     </div>
                   </div>
 
-                  {/* About Details */}
+                  {}
                   {farmer.about && Object.keys(farmer.about).length > 0 && (
                     <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                       {Object.entries(farmer.about).map(([key, value]) => (
@@ -310,7 +310,7 @@ export default function FarmerProfile() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {}
               <div className="flex gap-4">
                 <Button variant="primary" className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600">
                   Follow Farmer
@@ -322,10 +322,10 @@ export default function FarmerProfile() {
             </div>
           )}
 
-          {/* Stats Tab */}
+          {}
           {activeTab === 'stats' && farmer && (
             <div className="space-y-6">
-              {/* Quick Stats Grid */}
+              {}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 border-0 text-white rounded-xl overflow-hidden hover:shadow-2xl transition duration-300 transform hover:scale-105 cursor-pointer">
                   <div className="p-8">
@@ -370,7 +370,7 @@ export default function FarmerProfile() {
                 </div>
               </div>
 
-              {/* Detailed Stats */}
+              {}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 <div className="bg-slate-700/50 border border-slate-600 text-white rounded-xl">
                   <div className="p-8">
@@ -438,7 +438,7 @@ export default function FarmerProfile() {
             </div>
           )}
 
-          {/* Certifications Tab */}
+          {}
           {activeTab === 'certifications' && farmer && (
             <div className="space-y-6">
               <div className="bg-slate-700/50 border border-slate-600 rounded-xl text-white">

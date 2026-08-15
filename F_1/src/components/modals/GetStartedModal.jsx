@@ -4,21 +4,12 @@ import { X, ArrowRight, Sprout } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../hooks/useRouter';
 
-/**
- * GetStartedModal — Premium onboarding entry modal.
- *
- * FIX: AnimatePresence must receive children that mount/unmount based on `isOpen`.
- * Previously the `if (!isOpen) return null` was INSIDE the component, so AnimatePresence
- * never got a chance to animate the exit. Now the parent controls `isOpen` via
- * AnimatePresence's child conditional, and this component always renders the modal body.
- */
 export default function GetStartedModal({ isOpen, onClose }) {
   const [email, setEmail] = useState('');
   const [userRole, setUserRole] = useState('buyer');
   const { initiateGoogleLogin, initiateGitHubLogin } = useAuth();
   const { navigate } = useRouter();
 
-  // Escape key handler
   useEffect(() => {
     if (!isOpen) return;
     const handleKey = (e) => {
@@ -28,7 +19,6 @@ export default function GetStartedModal({ isOpen, onClose }) {
     return () => window.removeEventListener('keydown', handleKey);
   }, [isOpen, onClose]);
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -41,7 +31,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
   const handleEmailSubmit = useCallback((e) => {
     e.preventDefault();
     onClose?.();
-    // Navigate to register with pre-filled role and email params
+    
     const params = new URLSearchParams({ role: userRole });
     if (email) params.set('email', email);
     navigate(`/auth/register?${params.toString()}`);
@@ -61,7 +51,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Get Started">
-          {/* Backdrop */}
+          {}
           <motion.div
             key="backdrop"
             initial={{ opacity: 0 }}
@@ -72,7 +62,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
             className="absolute inset-0 bg-black/55 backdrop-blur-md"
           />
 
-          {/* Modal Card */}
+          {}
           <motion.div
             key="modal"
             initial={{ opacity: 0, scale: 0.94, y: 16 }}
@@ -82,15 +72,15 @@ export default function GetStartedModal({ isOpen, onClose }) {
             className="relative w-full max-w-md z-10"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Glow orbs behind card */}
+            {}
             <div className="absolute -top-8 -left-8 w-40 h-40 bg-emerald-400/25 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-amber-400/20 rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative bg-[#FAFAF7] text-[#132E20] rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#132E20]/12 overflow-hidden">
-              {/* Subtle inner gradient overlay */}
+              {}
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/60 via-transparent to-amber-50/30 pointer-events-none rounded-3xl" />
 
-              {/* Close button */}
+              {}
               <button
                 onClick={onClose}
                 aria-label="Close modal"
@@ -99,9 +89,9 @@ export default function GetStartedModal({ isOpen, onClose }) {
                 <X className="w-4 h-4" />
               </button>
 
-              {/* Header */}
+              {}
               <div className="relative text-center mb-6">
-                {/* Logo mark */}
+                {}
                 <motion.div
                   initial={{ scale: 0.7, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -118,7 +108,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
                   Connect directly with verified local growers
                 </p>
 
-                {/* Role Pill Switcher */}
+                {}
                 <div className="flex bg-[#F0EBE1] p-1 rounded-full border border-[#132E20]/8 mt-5 max-w-xs mx-auto gap-1">
                   {[
                     { value: 'buyer', label: '🛒 Buyer', active: 'bg-[#132E20] text-[#FBF8F3] shadow-sm' },
@@ -138,9 +128,9 @@ export default function GetStartedModal({ isOpen, onClose }) {
                 </div>
               </div>
 
-              {/* OAuth Buttons */}
+              {}
               <div className="relative space-y-2.5 mb-5">
-                {/* Google */}
+                {}
                 <motion.button
                   type="button"
                   onClick={handleGoogleLogin}
@@ -157,7 +147,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
                   <span>Continue with Google</span>
                 </motion.button>
 
-                {/* GitHub */}
+                {}
                 <motion.button
                   type="button"
                   onClick={handleGitHubLogin}
@@ -165,7 +155,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
                   whileTap={{ scale: 0.985 }}
                   className="w-full py-3 px-4 bg-[#0d1117] border border-[#132E20]/10 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-3 hover:bg-[#161b22] transition-all shadow-sm hover:shadow-md"
                 >
-                  {/* GitHub Invertocat SVG */}
+                  {}
                   <svg className="w-4 h-4 flex-shrink-0 fill-white" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
                   </svg>
@@ -173,14 +163,14 @@ export default function GetStartedModal({ isOpen, onClose }) {
                 </motion.button>
               </div>
 
-              {/* Divider */}
+              {}
               <div className="relative my-5 flex items-center gap-3">
                 <div className="flex-1 h-px bg-[#132E20]/10" />
                 <span className="text-[11px] text-[#132E20]/40 uppercase font-bold tracking-widest">or</span>
                 <div className="flex-1 h-px bg-[#132E20]/10" />
               </div>
 
-              {/* Email Form */}
+              {}
               <form onSubmit={handleEmailSubmit} className="relative space-y-3">
                 <div className="relative">
                   <input
@@ -202,7 +192,7 @@ export default function GetStartedModal({ isOpen, onClose }) {
                 </motion.button>
               </form>
 
-              {/* Footer Trust Strip */}
+              {}
               <div className="relative mt-6 pt-5 border-t border-[#132E20]/8 text-center">
                 <p className="text-[10px] font-bold text-[#132E20]/35 uppercase tracking-widest mb-2">
                   Trusted by 1,450+ Verified Local Farms

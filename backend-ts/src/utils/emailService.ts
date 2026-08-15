@@ -21,7 +21,6 @@ export interface EmailTemplate {
   html: string;
 }
 
-/** Simple email format validation. */
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -39,9 +38,6 @@ if (env.smtpHost && env.smtpUser && env.smtpPass) {
   console.warn('Email Service: SMTP not configured. Logging emails to console instead.');
 }
 
-/**
- * Attempt to send an email with one automatic retry on transient failures.
- */
 async function attemptSend(mailOptions: nodemailer.SendMailOptions, attempt = 1): Promise<nodemailer.SentMessageInfo> {
   try {
     return await transporter!.sendMail(mailOptions);

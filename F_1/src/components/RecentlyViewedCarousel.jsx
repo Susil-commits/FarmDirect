@@ -80,7 +80,7 @@ export default function RecentlyViewedCarousel() {
       </div>
 
       <div className="carousel-wrapper">
-        {/* Scroll Buttons */}
+        {}
         {canScrollLeft && (
           <button
             onClick={() => scroll('left')}
@@ -91,7 +91,7 @@ export default function RecentlyViewedCarousel() {
           </button>
         )}
 
-        {/* Carousel */}
+        {}
         <div className="carousel-container" ref={scrollRef}>
           {recentlyViewed.map((product) => (
             <div key={product.id} className="carousel-item">
@@ -109,7 +109,7 @@ export default function RecentlyViewedCarousel() {
                   </div>
                 )}
 
-                {/* Wishlist Button */}
+                {}
                 <button
                   onClick={() => handleToggleWishlist(product)}
                   className={`item-wishlist-btn ${isInWishlist(product.id) ? 'active' : ''}`}
@@ -118,7 +118,7 @@ export default function RecentlyViewedCarousel() {
                   <Heart size={16} fill={isInWishlist(product.id) ? 'currentColor' : 'none'} />
                 </button>
 
-                {/* Remove Button */}
+                {}
                 <button
                   onClick={() => removeFromRecentlyViewed(product.id)}
                   className="item-remove-btn"
@@ -156,7 +156,7 @@ export default function RecentlyViewedCarousel() {
           ))}
         </div>
 
-        {/* Right Scroll Button */}
+        {}
         {canScrollRight && (
           <button
             onClick={() => scroll('right')}

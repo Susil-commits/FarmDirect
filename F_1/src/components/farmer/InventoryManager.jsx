@@ -32,7 +32,6 @@ export default function InventoryManager({ items = [], onRefresh }) {
       setMessage({ type: 'success', text: 'Threshold updated successfully' });
       setEditingId(null);
       
-      // Refresh data after 2 seconds
       setTimeout(() => {
         onRefresh();
       }, 1500);
@@ -73,7 +72,7 @@ export default function InventoryManager({ items = [], onRefresh }) {
         </div>
       )}
 
-      {/* Critical (Out of Stock) */}
+      {}
       {criticalItems.length > 0 && (
         <div className="bg-white/95 backdrop-blur-xl border border-red-200 rounded-[28px] overflow-hidden shadow-xl">
           <div className="p-6 border-b border-red-100 bg-red-50/50">
@@ -103,7 +102,7 @@ export default function InventoryManager({ items = [], onRefresh }) {
         </div>
       )}
 
-      {/* Warning (Low Stock) */}
+      {}
       {warningItems.length > 0 && (
         <div className="bg-white/95 backdrop-blur-xl border border-amber-200 rounded-[28px] overflow-hidden shadow-xl">
           <div className="p-6 border-b border-amber-100 bg-amber-50/50">
@@ -132,7 +131,7 @@ export default function InventoryManager({ items = [], onRefresh }) {
         </div>
       )}
 
-      {/* About Low Stock Threshold */}
+      {}
       <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] p-6 shadow-xl">
         <h4 className="font-serif-display text-2xl font-normal text-[#132E20] mb-2">About Low-Stock Thresholds</h4>
         <ul className="text-stone-600 text-xs space-y-1.5 pl-1">
@@ -206,7 +205,7 @@ function InventoryItem({
         </div>
       </div>
 
-      {/* Progress bar */}
+      {}
       <div className="mb-3">
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
@@ -223,7 +222,7 @@ function InventoryItem({
         </p>
       </div>
 
-      {/* Actions */}
+      {}
       <div className="flex gap-2 justify-end">
         {isEditing ? (
           <>

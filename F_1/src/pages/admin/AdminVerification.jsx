@@ -22,12 +22,9 @@ export default function AdminVerification() {
   const [verificationRequests, setVerificationRequests] = useState([]);
   const [_loading, _setLoading] = useState(true);
 
-  // Reset scroll position to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-
 
     const mapKYCDocuments = (kycDocs) => {
     const docs = [];
@@ -47,7 +44,7 @@ export default function AdminVerification() {
   const fetchVerificationRequests = useCallback(async () => {
     try {
       _setLoading(true);
-      // Fetch both farmers and buyers for KYC review
+      
       const [pendingFarmers, pendingBuyers, rejectedFarmers, rejectedBuyers] = await Promise.all([
         adminService.getPendingKYC({ role: 'farmer' }),
         adminService.getPendingKYC({ role: 'buyer' }),
@@ -92,14 +89,11 @@ export default function AdminVerification() {
     }
   }, []);
 
-  // Fetch verification requests on component mount
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    
     fetchVerificationRequests();
   }, [fetchVerificationRequests]);
 
-
-  // Redirect non-admins
   if (!user || user.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 pt-28 pb-12">
@@ -214,18 +208,18 @@ export default function AdminVerification() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 pt-28 pb-12">
       <div className="max-w-7xl mx-auto">
-        {/* Back Button */}
+        {}
         <div className="mb-6">
           <BackButton label="Back to Admin Dashboard" />
         </div>
 
-        {/* Header */}
+        {}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Verification Dashboard</h1>
           <p className="text-gray-600">Review and verify farmer and buyer documents</p>
         </div>
 
-        {/* Stats Grid */}
+        {}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, i) => (
             <Card key={i}>
@@ -237,11 +231,11 @@ export default function AdminVerification() {
           ))}
         </div>
 
-        {/* Main Content */}
+        {}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Request List */}
+          {}
           <div className="lg:col-span-1 space-y-4">
-            {/* Tabs */}
+            {}
             <div className="flex flex-wrap gap-2 mb-4">
               {['pending', 'verified', 'rejected'].map(tab => (
                 <button
@@ -263,7 +257,7 @@ export default function AdminVerification() {
               ))}
             </div>
 
-            {/* Request List */}
+            {}
             <div className="space-y-3">
               {filteredRequests.map(req => (
                 <Card
@@ -305,12 +299,12 @@ export default function AdminVerification() {
             </div>
           </div>
 
-          {/* Detail View */}
+          {}
           <div className="lg:col-span-2">
             {selectedRequest ? (
               <Card>
                 <div className="p-6">
-                  {/* Header */}
+                  {}
                   <div className="flex items-start justify-between mb-6 pb-6 border-b border-gray-200">
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900 mb-1">{selectedRequest.name}</h2>
@@ -334,7 +328,7 @@ export default function AdminVerification() {
                     </div>
                   </div>
 
-                  {/* Request Info */}
+                  {}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 pb-6 border-b border-gray-200">
                     <div>
                       <p className="text-sm text-gray-600">Submitted Date</p>
@@ -354,7 +348,7 @@ export default function AdminVerification() {
                     )}
                   </div>
 
-                  {/* Documents */}
+                  {}
                   <div className="mb-6">
                     <h3 className="font-bold text-gray-900 mb-4">Submitted Documents</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -394,7 +388,7 @@ export default function AdminVerification() {
                     </div>
                   </div>
 
-                  {/* Actions */}
+                  {}
                   {selectedRequest.status === 'pending' && (
                     <div className="flex gap-3 pt-6 border-t border-gray-200">
                       <Button
@@ -445,7 +439,7 @@ export default function AdminVerification() {
           </div>
         </div>
 
-        {/* Rejection Modal */}
+        {}
         {showRejectionModal && selectedRequest && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <Card className="w-full max-w-md">
@@ -545,4 +539,4 @@ export default function AdminVerification() {
     </div>
   );
 }
-
+

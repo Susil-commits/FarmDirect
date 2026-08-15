@@ -1,6 +1,4 @@
-/* ============================================
-   USER PROFILE PAGE STYLES
-   ============================================ */
+
 
 .profile-page {
   min-height: 100vh;
@@ -17,7 +15,7 @@
   margin: var(--spacing-2xl) 0;
 }
 
-/* Profile Header */
+
 .profile-header {
   margin-bottom: var(--spacing-3xl);
   padding: var(--spacing-2xl);
@@ -85,12 +83,12 @@
   border-color: var(--danger);
 }
 
-/* Profile Content */
+
 .profile-content {
   max-width: 1000px;
 }
 
-/* Tabs Navigation */
+
 .tabs-navigation {
   display: flex;
   gap: var(--spacing-md);
@@ -121,7 +119,7 @@
   background: rgba(19, 46, 32, 0.06);
 }
 
-/* Tab Content */
+
 .tab-content {
   margin-bottom: var(--spacing-2xl);
 }
@@ -139,7 +137,7 @@
   color: var(--gray-900);
 }
 
-/* Profile Form */
+
 .profile-form {
   max-width: 600px;
 }
@@ -188,7 +186,7 @@
   flex: 1;
 }
 
-/* Profile Info (View Mode) */
+
 .profile-info {
   max-width: 600px;
 }
@@ -217,7 +215,7 @@
   text-align: right;
 }
 
-/* Orders */
+
 .orders-list {
   margin-top: var(--spacing-xl);
 }
@@ -235,7 +233,7 @@
   margin-bottom: var(--spacing-lg);
 }
 
-/* Settings */
+
 .settings-group {
   margin: var(--spacing-xl) 0;
 }
@@ -266,7 +264,7 @@
   margin: 0;
 }
 
-/* Toggle Switch */
+
 .toggle {
   position: relative;
   display: inline-block;
@@ -314,7 +312,7 @@
   transform: translateX(26px);
 }
 
-/* Danger Zone */
+
 .danger-zone {
   margin-top: var(--spacing-xl);
   padding: var(--spacing-xl);
@@ -349,7 +347,7 @@
   transform: scale(0.95);
 }
 
-/* Utility Classes */
+
 .p-xl {
   padding: 2rem;
 }
@@ -366,9 +364,7 @@
   margin-top: 1rem;
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
+
 
 @media (max-width: 768px) {
   .header-content {

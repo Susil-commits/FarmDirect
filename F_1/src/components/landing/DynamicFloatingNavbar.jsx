@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-// eslint-disable-next-line no-unused-vars
+
 import { AnimatePresence, motion } from 'framer-motion';
 import { Sprout, ArrowRight, Menu, X, ShoppingBag } from 'lucide-react';
 
 export default function DynamicFloatingNavbar({ activeSection = 'cream', onNavigate }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Theme styles based on current active section behind navbar
   const isCream = activeSection === 'cream';
   const isForest = activeSection === 'forest';
   const _isDark = activeSection === 'dark';
@@ -66,7 +65,7 @@ export default function DynamicFloatingNavbar({ activeSection = 'cream', onNavig
             : '0 10px 30px -10px rgba(0, 0, 0, 0.3)',
         }}
       >
-        {/* Left: Logo & Wordmark */}
+        {}
         <a
           href="#hero"
           onClick={(e) => {
@@ -98,7 +97,7 @@ export default function DynamicFloatingNavbar({ activeSection = 'cream', onNavig
           </div>
         </a>
 
-        {/* Center: Nav Links */}
+        {}
         <div className="hidden md:flex items-center gap-7">
           {navLinks.map((link) => (
             <a
@@ -119,7 +118,7 @@ export default function DynamicFloatingNavbar({ activeSection = 'cream', onNavig
           ))}
         </div>
 
-        {/* Right: Solid Pill CTA Button & Mobile Toggle */}
+        {}
         <div className="flex items-center gap-3">
           <motion.button
             whileHover={{ scale: 1.03 }}
@@ -141,7 +140,7 @@ export default function DynamicFloatingNavbar({ activeSection = 'cream', onNavig
             <ArrowRight className="w-3.5 h-3.5" />
           </motion.button>
 
-          {/* Mobile menu trigger */}
+          {}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-1.5 rounded-full transition-colors"
@@ -156,7 +155,7 @@ export default function DynamicFloatingNavbar({ activeSection = 'cream', onNavig
         </div>
       </motion.nav>
 
-      {/* Mobile Menu Dropdown */}
+      {}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div

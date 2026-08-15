@@ -1,12 +1,10 @@
-/* Order Tracking Styles
-   Premium tracking experience
-   Unique keyframes (pulse box-shadow variant) kept — globals used for slideUp */
+
 
 .scroll-slide {
   animation: slideInUp 0.6s ease-out;
 }
 
-/* Orders List */
+
 .orders-list {
   display: flex;
   flex-direction: column;
@@ -65,7 +63,7 @@
   text-transform: capitalize;
 }
 
-/* Status Timeline */
+
 .status-timeline {
   position: relative;
 }
@@ -118,7 +116,7 @@
   color: var(--gray-500, #6b7280);
 }
 
-/* Unique box-shadow pulse (different from global opacity-based pulse) */
+
 @keyframes pulse-tracking {
   0%, 100% {
     box-shadow: 0 0 0 8px rgba(217, 119, 54, 0.15);
@@ -176,7 +174,7 @@
   margin-top: 0.5rem;
 }
 
-/* Order Items */
+
 .order-items-list {
   display: flex;
   flex-direction: column;
@@ -212,7 +210,7 @@
   color: var(--gray-800, #1f2937);
 }
 
-/* Price Breakdown */
+
 .price-breakdown {
   display: flex;
   flex-direction: column;
@@ -243,7 +241,7 @@
   color: var(--accent-main, #fb923c);
 }
 
-/* Delivery Address */
+
 .delivery-address {
   background-color: var(--gray-50, #f9fafb);
   padding: 1rem;
@@ -277,7 +275,7 @@
   font-size: 0.875rem;
 }
 
-/* Farmer Info */
+
 .farmer-info-card {
   display: flex;
   align-items: center;
@@ -306,7 +304,7 @@
   color: var(--gray-500, #6b7280);
 }
 
-/* Contact Modal */
+
 .contact-modal-overlay {
   position: fixed;
   inset: 0;
@@ -365,7 +363,7 @@
   transform: translateY(-1px);
 }
 
-/* Actions */
+
 .actions-container {
   display: flex;
   gap: 0.75rem;
@@ -411,7 +409,7 @@
   transform: translateY(-1px);
 }
 
-/* Responsive */
+
 @media (max-width: 1024px) {
   .timeline-marker {
     width: 40px;

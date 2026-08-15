@@ -8,7 +8,6 @@ import { OrderStatus, UserRole } from '../types/enums.js';
 import type { Request, Response } from 'express';
 import type { Types } from 'mongoose';
 
-// B22: Rating recomputation uses MongoDB aggregation ($avg) instead of
 async function updateCropRating(cropId: Types.ObjectId | string): Promise<void> {
   const result = await Review.aggregate([
     { $match: { cropId: typeof cropId === 'string' ? { $oid: cropId } : cropId } },
@@ -60,7 +59,7 @@ export const addReview = asyncHandler(async (req: Request, res: Response) => {
     existingReview.comment = comment;
     await existingReview.save();
     await updateCropRating(cropId);
-    // B1 FIX: Also re-calculate the farmer's aggregate rating after an edit
+    
     await updateFarmerRating(crop.farmerId);
     return res.status(200).json({ success: true, message: 'Review updated successfully', data: existingReview });
   }
@@ -68,7 +67,6 @@ export const addReview = asyncHandler(async (req: Request, res: Response) => {
   const review = await Review.create({ cropId, userId, rating, comment });
   await updateCropRating(cropId);
 
-  // Update the FARMER's aggregate rating (crop.farmerId), not the reviewer's (Task 3.8 fix)
   await updateFarmerRating(crop.farmerId);
 
   res.status(201).json({ success: true, message: 'Review added successfully', data: review });
@@ -106,7 +104,7 @@ export const deleteReview = asyncHandler(async (req: Request, res: Response) => 
     return sendError(res, 'Not authorized to delete this review', 403);
   }
   const cropId = review.cropId;
-  // B2 FIX: Load the crop so we can update the farmer's aggregate rating after deletion
+  
   const crop = await CropListing.findById(cropId).select('farmerId');
   await Review.findByIdAndDelete(reviewId);
   await updateCropRating(cropId);

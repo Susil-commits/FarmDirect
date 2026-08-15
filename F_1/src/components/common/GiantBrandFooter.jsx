@@ -33,7 +33,7 @@ export default function GiantBrandFooter({ onNavigate }) {
   return (
     <footer className="relative bg-[#FBF8F3] text-[#132E20] pt-16 pb-12 overflow-hidden border-t border-[#132E20]/10">
       <div className="max-w-6xl mx-auto px-4 md:px-8 relative z-10">
-        {/* Products Grid Pill Cards */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
           {products.map((p) => (
             <div
@@ -66,7 +66,7 @@ export default function GiantBrandFooter({ onNavigate }) {
           ))}
         </div>
 
-        {/* Structured Nav Links Columns */}
+        {}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pb-16 border-b border-[#132E20]/10">
           <div>
             <h4 className="font-sans-body text-xs font-bold uppercase tracking-wider text-[#132E20]/50 mb-4">
@@ -165,14 +165,14 @@ export default function GiantBrandFooter({ onNavigate }) {
           </div>
         </div>
 
-        {/* GIANT BRAND WORDMARK (Wispr Flow style at video 0:30 & 1:08) */}
+        {}
         <div className="pt-10 pb-6 text-center overflow-hidden">
           <h1 className="font-serif-display text-[15vw] sm:text-[14vw] md:text-[13vw] font-bold text-[#132E20] leading-none tracking-tighter select-none opacity-95">
             FarmDirect
           </h1>
         </div>
 
-        {/* Bottom Bar */}
+        {}
         <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-[#132E20]/60 pt-4 border-t border-[#132E20]/10 gap-2">
           <span>© Wispr FarmDirect 2026. All rights reserved.</span>
           <div className="flex items-center gap-4 font-medium">

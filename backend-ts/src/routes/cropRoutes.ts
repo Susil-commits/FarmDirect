@@ -13,11 +13,9 @@ import { cacheRoute } from '../middleware/cacheRoute.js';
 
 const router = Router();
 
-// Upload image endpoints
 router.post('/upload-images', protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, uploadCropImages(), uploadImagesHandler);
 router.post('/with-images', protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, uploadCropImages(), uploadImagesHandler);
 
-// Cache public GET requests for 60 seconds
 router.get('/', cacheRoute(60), getCrops);
 router.get('/trending', cacheRoute(300), getTrendingCrops);
 
@@ -30,7 +28,6 @@ router.get('/:id', validateObjectId(), getCropById);
 router.get('/:id/similar', validateObjectId(), getSimilarCrops);
 router.get('/:id/interested-buyers', validateObjectId(), protect, authorize(UserRole.Farmer, UserRole.Admin), getInterestedBuyers);
 
-// Note: FormData from multipart/form-data bypasses Zod schema (fields arrive as strings).
 router.post('/', protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, uploadCropImages(), createCrop);
 router.put('/:id', validateObjectId(), protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, uploadCropImages(), updateCrop);
 router.delete('/:id', validateObjectId(), protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, deleteCrop);

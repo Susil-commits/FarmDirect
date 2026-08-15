@@ -57,7 +57,6 @@ interface CommunityStatsData {
   orders: { total: number };
 }
 
-// B15 FIX: Type the cache entry properly instead of using `any`
 let cachedCommunityStats: { data: CommunityStatsData; timestamp: number } | null = null;
 const CACHE_TTL = 5 * 60 * 1000;
 
@@ -195,8 +194,6 @@ export const rejectUserKYC = asyncHandler(async (req: Request, res: Response) =>
   const { reason } = req.body as { reason: string };
   const adminUser = req.user as AdminUser;
 
-  // B7 FIX: A rejection reason must be meaningful — an empty string gives the
-  // user nothing actionable to fix. Require at least 10 characters.
   if (!reason || reason.trim().length < 10) {
     return sendError(res, 'A rejection reason of at least 10 characters is required', 400);
   }
@@ -325,7 +322,7 @@ export const getAllOrders = asyncHandler(async (req: Request, res: Response) => 
   const skip = (Number(page) - 1) * Number(limit);
   const query: Record<string, unknown> = {};
   if (status) query.orderStatus = status;
-  // B10 FIX: ObjectId fields cannot use $regex — search on orderNumber (string) instead
+  
   if (search) query.orderNumber = { $regex: search, $options: 'i' };
   const [orders, total] = await Promise.all([
     Order.find(query).lean().populate('buyerId', 'firstName lastName email phone city state').populate('farmerId', 'firstName lastName name farmName phone city state').populate('cropId', 'cropName images price unit').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
@@ -364,7 +361,6 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
     order.cancelledBy = CancelledBy.Admin;
     if (cancellationReason) order.cancellationReason = cancellationReason;
 
-    // B9 FIX: Only restore availability/status if the crop was previously
     const cropForRestore = await CropListing.findById(order.cropId).select('status').lean();
     const wasListingActive = cropForRestore?.status === CropStatus.Active || cropForRestore?.status === CropStatus.SoldOut;
     const restoreSet: Record<string, unknown> = { $inc: { quantity: order.quantity, sold: -order.quantity } };
@@ -448,7 +444,6 @@ export const getUsersWithCrops = asyncHandler(async (req: Request, res: Response
   const query = buildQuery(req);
   const skip = (Number(page) - 1) * Number(limit);
 
-  // B10 FIX: Replace the N+1 per-user CropListing.find inside Promise.all with
   const pipeline: PipelineStage[] = [
     { $match: { ...query } } as PipelineStage,
     { $sort: { createdAt: -1 } } as PipelineStage,
@@ -610,6 +605,7 @@ export const proxyDocument = asyncHandler(async (req: Request, res: Response) =>
   const uploadsDir = getUploadsRoot();
   const filePath = path.resolve(uploadsDir, url.replace(/^\/uploads\//, ''));
   if (!filePath.startsWith(uploadsDir + path.sep) && filePath !== uploadsDir) {
+
     return sendError(res, 'Access denied', 403);
   }
   if (!fs.existsSync(filePath)) return sendError(res, 'File not found', 404);
@@ -621,7 +617,6 @@ export const proxyDocument = asyncHandler(async (req: Request, res: Response) =>
   };
   const contentType = mimeTypes[ext] || 'application/octet-stream';
 
-  // B8 FIX: Use res.sendFile (streaming) instead of readFileSync + res.send.
   res.set({
     'Content-Type': contentType,
     'Content-Disposition': 'inline',

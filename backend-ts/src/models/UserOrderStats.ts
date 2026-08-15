@@ -1,7 +1,7 @@
 import mongoose, { Schema, type Model, type Document } from 'mongoose';
 
 export interface IUserOrderStats extends Document<string> {
-  _id: string; // userId or 'global'
+  _id: string; 
   n: number;
   mean: number;
   m2: number;

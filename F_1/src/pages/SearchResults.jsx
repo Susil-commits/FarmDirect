@@ -25,11 +25,10 @@ export default function SearchResults() {
   const [_results, setResults] = useState([]);
   const [filteredResults, setFilteredResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState('grid'); // grid or list
+  const [viewMode, setViewMode] = useState('grid'); 
   const [page, setPage] = useState(1);
   const resultsPerPage = 12;
 
-  // Filters
   const [filters, setFilters] = useState({
     category: 'all',
     priceRange: 'all',
@@ -42,32 +41,24 @@ export default function SearchResults() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    // Get search query from URL params or localStorage
+    
     const query = localStorage.getItem('searchQuery') || params?.q || '';
     if (query) {
        
-       
-       
-       
-       
-       
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchQuery(query);
        
-      // eslint-disable-next-line react-hooks/immutability
       performSearch(query, filters);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
 
-  // Map UI sort values → backend sortBy + sortOrder params
   const mapSort = (sortBy) => {
     switch (sortBy) {
       case 'price-asc': return { sortBy: 'price', sortOrder: 'asc' };
       case 'price-desc': return { sortBy: 'price', sortOrder: 'desc' };
       case 'rating': return { sortBy: 'rating', sortOrder: 'desc' };
       case 'newest': return { sortBy: 'createdAt', sortOrder: 'desc' };
-      default: return { sortBy: 'sold', sortOrder: 'desc' }; // popular
+      default: return { sortBy: 'sold', sortOrder: 'desc' }; 
     }
   };
 
@@ -117,7 +108,7 @@ export default function SearchResults() {
     const newFilters = { ...filters, [filterName]: value };
     setFilters(newFilters);
     setPage(1);
-    // Re-fetch from the backend with updated filters (server-side filtering/sorting)
+    
     performSearch(searchQuery, newFilters);
   };
 
@@ -146,7 +137,7 @@ export default function SearchResults() {
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-white px-4 pt-28 pb-12">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
+          {}
           <ScrollAnimation className="scroll-slide mb-8">
             <div className="flex items-center gap-3 mb-6">
               <button onClick={() => navigate('/')} className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition">← Back</button>
@@ -155,7 +146,7 @@ export default function SearchResults() {
             <p className="text-gray-600">Found <strong>{filteredResults.length}</strong> results for "<strong>{searchQuery}</strong>"</p>
           </ScrollAnimation>
 
-          {/* Search Bar */}
+          {}
           <ScrollAnimation className="scroll-slide mb-8">
             <Card className="p-4">
               <div className="flex gap-2">
@@ -176,7 +167,7 @@ export default function SearchResults() {
           </ScrollAnimation>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Filters Sidebar */}
+            {}
             <ScrollAnimation className="scroll-slide lg:col-span-1">
               <Card className="p-6 sticky top-4">
                 <div className="flex items-center justify-between mb-6 lg:hidden">
@@ -187,7 +178,7 @@ export default function SearchResults() {
                 </div>
 
                 <div className={`space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-                  {/* Category Filter */}
+                  {}
                   <div>
                     <h4 className="font-bold text-gray-900 mb-3">Category</h4>
                     <select
@@ -203,7 +194,7 @@ export default function SearchResults() {
                     </select>
                   </div>
 
-                  {/* Price Filter */}
+                  {}
                   <div>
                     <h4 className="font-bold text-gray-900 mb-3">Price Range</h4>
                     <div className="space-y-2">
@@ -223,7 +214,7 @@ export default function SearchResults() {
                     </div>
                   </div>
 
-                  {/* Rating Filter */}
+                  {}
                   <div>
                     <h4 className="font-bold text-gray-900 mb-3">Rating</h4>
                     <div className="space-y-2">
@@ -245,7 +236,7 @@ export default function SearchResults() {
                     </div>
                   </div>
 
-                  {/* Sort By */}
+                  {}
                   <div>
                     <h4 className="font-bold text-gray-900 mb-3">Sort By</h4>
                     <select
@@ -264,10 +255,10 @@ export default function SearchResults() {
               </Card>
             </ScrollAnimation>
 
-            {/* Results */}
+            {}
             <div className="lg:col-span-3">
               <ScrollAnimation className="scroll-slide">
-                {/* View Mode Toggle */}
+                {}
                 <div className="flex gap-2 mb-6">
                   <button
                     onClick={() => setViewMode('grid')}
@@ -299,11 +290,11 @@ export default function SearchResults() {
                   <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
                     {paginatedResults.map(crop => (
                       <Card key={crop._id} className={`p-6 hover:shadow-lg transition ${viewMode === 'list' ? 'flex items-center gap-6' : ''}`}>
-                        {/* Crop Image Placeholder */}
+                        {}
                         {viewMode === 'grid' && <div className="w-full h-48 bg-gradient-to-br from-green-100 to-green-200 rounded-lg mb-4 flex items-center justify-center text-3xl">🌾</div>}
 
                         <div className={viewMode === 'list' ? 'flex-1' : ''}>
-                          {/* Crop Header */}
+                          {}
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex-1">
                               <h3 className="text-lg font-bold text-stone-900">{crop.cropName || crop.name}</h3>
@@ -311,7 +302,7 @@ export default function SearchResults() {
                             </div>
                           </div>
 
-                          {/* Rating */}
+                          {}
                           <div className="flex items-center gap-2 mb-3">
                             <div className="flex items-center gap-0.5">
                               {[...Array(5)].map((_, i) => (
@@ -328,16 +319,16 @@ export default function SearchResults() {
                             <span className="text-xs text-stone-500">({crop.totalReviews || crop.reviews?.length || 0})</span>
                           </div>
 
-                          {/* Description */}
+                          {}
                           <p className="text-sm text-stone-600 mb-4 line-clamp-2">{crop.description || 'Fresh produce directly from verified local farm.'}</p>
 
-                          {/* Farmer Info */}
+                          {}
                           <div className="flex items-center gap-2 text-xs text-stone-500 mb-4">
                             <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                             <span className="truncate">{crop.pickupLocation || crop.location || crop.farmerId?.location || 'Farm Direct'}</span>
                           </div>
 
-                          {/* Price & Actions */}
+                          {}
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-stone-100 mt-auto">
                             <div>
                               <p className="text-[11px] font-bold text-stone-400 uppercase tracking-wider">Price / {crop.unit || 'kg'}</p>
@@ -384,7 +375,7 @@ export default function SearchResults() {
             </div>
           </div>
 
-          {/* Pagination */}
+          {}
           {filteredResults.length > resultsPerPage && (
             <ScrollAnimation className="scroll-slide mt-12">
               <div className="flex flex-wrap items-center justify-center gap-2">

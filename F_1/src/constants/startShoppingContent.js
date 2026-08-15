@@ -1,17 +1,15 @@
-// Animation Delays (in seconds)
+
 export const ANIMATION_DELAYS = {
   STAGGER_DELAY_1: '0.1s',
   STAGGER_DELAY_2: '0.2s',
 };
 
-// Hero Section Image
 export const HERO_IMAGE = {
   src: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=1200&h=675&fit=crop',
   alt: 'Fresh vegetables marketplace',
   fallback: 'https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=1200&h=675&fit=crop',
 };
 
-// Benefits Section
 export const BENEFITS = [
   {
     id: 'fresh-produce',
@@ -51,7 +49,6 @@ export const BENEFITS = [
   },
 ];
 
-// Getting Started Steps
 export const STEPS = [
   {
     number: 1,
@@ -97,7 +94,6 @@ export const STEPS = [
   },
 ];
 
-// Quick Facts
 export const QUICK_FACTS = [
   {
     id: 'delivery-time',
@@ -116,7 +112,6 @@ export const QUICK_FACTS = [
   },
 ];
 
-// FAQ Items
 export const FAQ_ITEMS = [
   {
     id: 'account',
@@ -150,7 +145,6 @@ export const FAQ_ITEMS = [
   },
 ];
 
-// Verification Benefits
 export const VERIFICATION_BENEFITS = [
   {
     id: 'security',
@@ -178,7 +172,6 @@ export const VERIFICATION_BENEFITS = [
   },
 ];
 
-// Verification Timeline
 export const VERIFICATION_TIMELINE = [
   {
     time: '⏱️ 1 Min',
@@ -197,7 +190,6 @@ export const VERIFICATION_TIMELINE = [
   },
 ];
 
-// Verification Status
 export const VERIFICATION_STATUS = {
   PENDING: 'pending',
   VERIFIED: 'verified',
@@ -205,7 +197,6 @@ export const VERIFICATION_STATUS = {
   UNVERIFIED: 'unverified',
 };
 
-// Error Messages
 export const ERROR_MESSAGES = {
   NAVIGATION_FAILED: 'Failed to navigate. Please try again.',
   VERIFICATION_REQUIRED: 'Please verify your account to access the marketplace.',

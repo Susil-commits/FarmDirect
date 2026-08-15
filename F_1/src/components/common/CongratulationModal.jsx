@@ -8,12 +8,11 @@ export default function CongratulationModal() {
   const { user } = useAuth();
 
   const handleContinue = () => {
-    // Clear the congratulation flag
+    
     if (user?.id) {
       localStorage.removeItem(`showCongratulation_${user.id}`);
     }
     
-    // Navigate to appropriate dashboard
     if (user?.role === 'farmer') {
       navigate('/farmer/dashboard');
     } else if (user?.role === 'buyer') {
@@ -26,7 +25,7 @@ export default function CongratulationModal() {
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-scale-in">
-        {/* Header with gradient */}
+        {}
         <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-8 text-center relative overflow-hidden">
           <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
           <div className="relative z-10">
@@ -36,7 +35,7 @@ export default function CongratulationModal() {
           </div>
         </div>
 
-        {/* Content */}
+        {}
         <div className="p-8">
           <div className="text-center mb-8">
             <div className="inline-block p-4 bg-green-50 rounded-full mb-4">
@@ -47,7 +46,7 @@ export default function CongratulationModal() {
               Your account has been approved by our admin team. You now have full access to {user?.role === 'farmer' ? 'list and manage your crops' : 'browse and purchase products'}.
             </p>
             
-            {/* Success Details */}
+            {}
             <div className="bg-green-50 rounded-lg p-4 text-left mb-6 border border-green-200">
               <h3 className="font-semibold text-green-900 mb-3">You can now:</h3>
               <ul className="space-y-2 text-sm text-green-800">
@@ -70,7 +69,7 @@ export default function CongratulationModal() {
             </div>
           </div>
 
-          {/* Button */}
+          {}
           <Button
             onClick={handleContinue}
             variant="primary"

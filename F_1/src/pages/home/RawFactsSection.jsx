@@ -1,5 +1,5 @@
 import React from 'react';
-// eslint-disable-next-line no-unused-vars
+
 import { motion } from 'framer-motion';
 import { Sprout, Sparkles, Volume2, ShieldCheck, Heart, Layers } from 'lucide-react';
 

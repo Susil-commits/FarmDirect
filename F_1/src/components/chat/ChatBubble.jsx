@@ -8,7 +8,6 @@ export default function ChatBubble({ message, onDelete, onCopy }) {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
 
-  // Guard against malformed messages
   if (!message || !message.senderId) {
     return null;
   }
@@ -39,7 +38,6 @@ export default function ChatBubble({ message, onDelete, onCopy }) {
     });
   };
 
-  // Generate initials-based avatar for fallback instead of external placeholder
   const getInitials = (name) => {
     if (!name) return '?';
     const parts = name.trim().split(/\s+/);
@@ -51,7 +49,7 @@ export default function ChatBubble({ message, onDelete, onCopy }) {
 
   return (
     <div className={`message-wrapper ${isOwn ? 'sent' : 'received'}`}>
-      {/* Sender avatar for received messages */}
+      {}
       {!isOwn && (
         senderPhoto ? (
           <img
@@ -70,7 +68,7 @@ export default function ChatBubble({ message, onDelete, onCopy }) {
         )
       )}
 
-      {/* Bubble */}
+      {}
       <div className="message-bubble">
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <span className="message-text">{message.content || ''}</span>
@@ -84,7 +82,7 @@ export default function ChatBubble({ message, onDelete, onCopy }) {
           </span>
         </div>
 
-        {/* Hover actions */}
+        {}
         <div className="message-actions">
           <button
             onClick={handleCopy}

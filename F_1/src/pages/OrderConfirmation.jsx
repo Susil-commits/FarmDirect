@@ -29,7 +29,6 @@ export default function OrderConfirmation() {
   useEffect(() => {
     window.scrollTo(0, 0);
        
-      // eslint-disable-next-line react-hooks/immutability
     fetchOrderData();
   }, []);
 
@@ -42,7 +41,6 @@ export default function OrderConfirmation() {
         return;
       }
 
-      // api.js interceptor unwraps to response.data, so response = { order: {...} }
       const response = await orderService.getOrderById(orderId);
       const orderData = response.order;
       setOrder(orderData);
@@ -190,7 +188,7 @@ export default function OrderConfirmation() {
       <div className="min-h-screen bg-gradient-to-br from-[#FBF8F3] via-[#F4EFE6] to-[#FBF8F3] px-4 relative pt-28 pb-12">
         <div className="max-w-4xl mx-auto relative z-10">
           
-          {/* Success Message */}
+          {}
           <ScrollAnimation className="scroll-slide mb-12">
             <div className="text-center">
               <div className="mb-6 flex justify-center">
@@ -215,7 +213,7 @@ export default function OrderConfirmation() {
             </div>
           </ScrollAnimation>
 
-          {/* Order Details Card */}
+          {}
           <Card className="mb-8 animate-slide-in-down" style={{ animationDelay: '0.3s' }}>
             <div className="p-8">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
@@ -248,7 +246,7 @@ export default function OrderConfirmation() {
             </div>
           </Card>
 
-          {/* Timeline */}
+          {}
           <Card className="mb-8 animate-slide-in-down" style={{ animationDelay: '0.4s' }}>
             <div className="p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-8">📍 Tracking Your Order</h2>
@@ -285,9 +283,9 @@ export default function OrderConfirmation() {
             </div>
           </Card>
 
-          {/* Pickup & Order Info */}
+          {}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
-            {/* Pickup Location */}
+            {}
             <Card className="animate-slide-in-down" style={{ animationDelay: '0.5s' }}>
               <div className="p-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">📍 Pickup Location</h2>

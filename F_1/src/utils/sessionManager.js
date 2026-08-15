@@ -1,21 +1,14 @@
-/* eslint-disable no-unused-vars */
+
 import { isSessionExpired, getTokenExpiryTime } from './jwtUtils.js';
 import { getAccessToken, clearAccessToken } from './tokenStore.js';
 
-/**
- * Session Manager
- * Handles session monitoring, warnings, and lifecycle
- */
 class SessionManager {
   constructor() {
     this.warningDisplayed = false;
-    this.warningThreshold = 300; // 5 minutes before expiry
+    this.warningThreshold = 300; 
     this.listeners = [];
   }
 
-  /**
-   * Get current session status
-   */
   getSessionStatus() {
     const token = getAccessToken();
     const lastActivity = localStorage.getItem('lastActivityTime');
@@ -45,9 +38,6 @@ class SessionManager {
     };
   }
 
-  /**
-   * Check if session will expire soon and needs warning
-   */
   shouldShowExpiryWarning() {
     const token = getAccessToken();
     if (!token) return false;
@@ -56,9 +46,6 @@ class SessionManager {
     return expirySeconds > 0 && expirySeconds < this.warningThreshold;
   }
 
-  /**
-   * Get formatted session expiry time
-   */
   getFormattedExpiryTime() {
     const token = getAccessToken();
     if (!token) return 'Expired';
@@ -73,17 +60,11 @@ class SessionManager {
     return `${Math.floor(expirySeconds / 86400)}d`;
   }
 
-  /**
-   * Extend session by updating last activity time
-   */
   extendSession() {
     localStorage.setItem('lastActivityTime', Date.now().toString());
     this.notifyListeners('sessionExtended');
   }
 
-  /**
-   * Clear session completely
-   */
   clearSession() {
     clearAccessToken();
     localStorage.removeItem('userData');
@@ -92,9 +73,6 @@ class SessionManager {
     this.notifyListeners('sessionCleared');
   }
 
-  /**
-   * Get session duration (time logged in)
-   */
   getSessionDuration() {
     const loginEntry = JSON.parse(localStorage.getItem('loginHistory') || '[]')[0];
     if (!loginEntry) return null;
@@ -111,24 +89,15 @@ class SessionManager {
     };
   }
 
-  /**
-   * Get login history
-   */
   getLoginHistory() {
     return JSON.parse(localStorage.getItem('loginHistory') || '[]');
   }
 
-  /**
-   * Get previous login information
-   */
   getPreviousLogin() {
     const history = this.getLoginHistory();
     return history[1] || null;
   }
 
-  /**
-   * Validate session token
-   */
   isSessionValid() {
     const token = getAccessToken();
     const user = localStorage.getItem('userData');
@@ -139,9 +108,6 @@ class SessionManager {
     return true;
   }
 
-  /**
-   * Add listener for session events
-   */
   addListener(callback) {
     this.listeners.push(callback);
     return () => {
@@ -149,9 +115,6 @@ class SessionManager {
     };
   }
 
-  /**
-   * Notify all listeners
-   */
   notifyListeners(event) {
     this.listeners.forEach(callback => {
       try {
@@ -162,9 +125,6 @@ class SessionManager {
     });
   }
 
-  /**
-   * Format duration in milliseconds
-   */
   _formatDuration(ms) {
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);
@@ -177,9 +137,6 @@ class SessionManager {
     return `${seconds}s`;
   }
 
-  /**
-   * Log session info for debugging
-   */
   logSessionInfo() {
     const status = this.getSessionStatus();
     const duration = this.getSessionDuration();
@@ -190,7 +147,6 @@ class SessionManager {
   }
 }
 
-// Singleton instance
 export const sessionManager = new SessionManager();
 
 export default sessionManager;

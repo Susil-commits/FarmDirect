@@ -13,7 +13,7 @@ describe('Idempotency Keys in Order Creation', () => {
   let cropId: string;
 
   beforeEach(async () => {
-    // 1. Create a farmer and a buyer
+    
     const { hashPassword } = await import('../utils/password.js');
     const hashedPassword = await hashPassword('Password123!');
 
@@ -29,11 +29,9 @@ describe('Idempotency Keys in Order Creation', () => {
     });
     buyerId = buyer._id.toString();
 
-    // 2. Login buyer to get token
     const loginRes = await request(app).post('/api/auth/login').send({ email: 'buyer@farm.com', password: 'Password123!' });
     buyerToken = loginRes.body.token;
 
-    // 3. Create a crop
     const crop = await CropListing.create({
       farmerId: farmer._id,
       cropName: 'Tomatoes',
@@ -141,7 +139,6 @@ describe('Idempotency Keys in Order Creation', () => {
     const successes = statuses.filter(s => s === 201).length;
     const conflicts = statuses.filter(s => s === 409).length;
 
-    // 1 should succeed, the rest should be 409 (conflict because pending) or 201 (replay if the first finished very fast)
     expect(successes + conflicts).toBe(10);
     expect(successes).toBeGreaterThanOrEqual(1);
 
@@ -156,7 +153,6 @@ describe('Idempotency Keys in Order Creation', () => {
     const { createHash } = await import('crypto');
     const hash = createHash('sha256').update(JSON.stringify(payload)).digest('hex');
 
-    // Create a stale pending doc (60 seconds ago)
     await IdempotencyKey.create({
       key,
       status: 'pending',
@@ -171,7 +167,6 @@ describe('Idempotency Keys in Order Creation', () => {
       .set('Idempotency-Key', key)
       .send({ cropId, quantity: 2 });
 
-    // Since it's stale, it will overtake and process
     expect(res.status).toBe(201);
   });
 });

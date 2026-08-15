@@ -1,10 +1,6 @@
 import { useQuery, useMutation, useInfiniteQuery, useQueries } from '@tanstack/react-query';
 import api from '../services/api.js';
 
-/**
- * PRODUCTS HOOKS
- */
-
 export const useProducts = (filters = {}, options = {}) => {
   return useQuery({
     queryKey: ['products', filters],
@@ -40,7 +36,7 @@ export const useProduct = (productId, options = {}) => {
       return response;
     },
     enabled: !!productId,
-    staleTime: 1000 * 60 * 10, // 10 minutes for single product
+    staleTime: 1000 * 60 * 10, 
     ...options,
   });
 };
@@ -75,10 +71,6 @@ export const useDeleteProduct = (options = {}) => {
   });
 };
 
-/**
- * ORDERS HOOKS
- */
-
 export const useOrders = (filters = {}, options = {}) => {
   return useQuery({
     queryKey: ['orders', filters],
@@ -86,7 +78,7 @@ export const useOrders = (filters = {}, options = {}) => {
       const response = await api.get('/orders', { params: filters });
       return response;
     },
-    staleTime: 1000 * 60 * 2, // 2 minutes for orders
+    staleTime: 1000 * 60 * 2, 
     ...options,
   });
 };
@@ -111,7 +103,7 @@ export const useOrderTracking = (orderId, options = {}) => {
       return response;
     },
     enabled: !!orderId,
-    refetchInterval: 1000 * 30, // Poll every 30 seconds
+    refetchInterval: 1000 * 30, 
     ...options,
   });
 };
@@ -136,10 +128,6 @@ export const useCancelOrder = (options = {}) => {
   });
 };
 
-/**
- * CART HOOKS
- */
-
 export const useCart = (options = {}) => {
   return useQuery({
     queryKey: ['cart'],
@@ -147,7 +135,7 @@ export const useCart = (options = {}) => {
       const response = await api.get('/cart');
       return response;
     },
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 1000 * 60, 
     ...options,
   });
 };
@@ -192,10 +180,6 @@ export const useClearCart = (options = {}) => {
   });
 };
 
-/**
- * WISHLIST HOOKS
- */
-
 export const useWishlist = (options = {}) => {
   return useQuery({
     queryKey: ['wishlist'],
@@ -226,10 +210,6 @@ export const useRemoveFromWishlist = (options = {}) => {
     ...options,
   });
 };
-
-/**
- * FARMERS HOOKS
- */
 
 export const useFarmers = (filters = {}, options = {}) => {
   return useQuery({
@@ -267,10 +247,6 @@ export const useFarmerCrops = (farmerId, options = {}) => {
   });
 };
 
-/**
- * REVIEWS HOOKS
- */
-
 export const useProductReviews = (productId, options = {}) => {
   return useQuery({
     queryKey: ['reviews', productId],
@@ -293,10 +269,6 @@ export const useCreateReview = (options = {}) => {
   });
 };
 
-/**
- * NOTIFICATIONS HOOKS
- */
-
 export const useNotifications = (options = {}) => {
   return useQuery({
     queryKey: ['notifications'],
@@ -304,8 +276,8 @@ export const useNotifications = (options = {}) => {
       const response = await api.get('/notifications');
       return response;
     },
-    refetchInterval: 1000 * 30, // Poll every 30 seconds
-    staleTime: 1000 * 10, // 10 seconds
+    refetchInterval: 1000 * 30, 
+    staleTime: 1000 * 10, 
     ...options,
   });
 };
@@ -319,10 +291,6 @@ export const useMarkNotificationRead = (options = {}) => {
     ...options,
   });
 };
-
-/**
- * SEARCH HOOKS
- */
 
 export const useSearch = (query, options = {}) => {
   return useQuery({
@@ -350,10 +318,6 @@ export const useAutoComplete = (query, options = {}) => {
   });
 };
 
-/**
- * USER PROFILE HOOKS
- */
-
 export const useUserProfile = (userId, options = {}) => {
   return useQuery({
     queryKey: ['user-profile', userId],
@@ -377,10 +341,6 @@ export const useUpdateProfile = (options = {}) => {
   });
 };
 
-/**
- * MULTI-QUERY HOOK
- * Fetch multiple queries in parallel
- */
 export const useMultipleQueries = (queries, options = {}) => {
   return useQueries({
     queries: queries.map(q => ({
@@ -393,7 +353,7 @@ export const useMultipleQueries = (queries, options = {}) => {
 };
 
 export default {
-  // Products
+  
   useProducts,
   useProductInfinite,
   useProduct,
@@ -401,46 +361,37 @@ export default {
   useUpdateProduct,
   useDeleteProduct,
 
-  // Orders
   useOrders,
   useOrder,
   useOrderTracking,
   useCreateOrder,
   useCancelOrder,
 
-  // Cart
   useCart,
   useAddToCart,
   useUpdateCartItem,
   useRemoveFromCart,
   useClearCart,
 
-  // Wishlist
   useWishlist,
   useAddToWishlist,
   useRemoveFromWishlist,
 
-  // Farmers
   useFarmers,
   useFarmer,
   useFarmerCrops,
 
-  // Reviews
   useProductReviews,
   useCreateReview,
 
-  // Notifications
   useNotifications,
   useMarkNotificationRead,
 
-  // Search
   useSearch,
   useAutoComplete,
 
-  // User Profile
   useUserProfile,
   useUpdateProfile,
 
-  // Multi
   useMultipleQueries,
 };

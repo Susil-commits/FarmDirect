@@ -1,4 +1,4 @@
-/* ProgressiveDisclosure.css - Progressive reveal animations */
+
 
 .progressive-disclosure {
   margin-bottom: 1rem;
@@ -64,7 +64,7 @@
   line-height: 1.5;
 }
 
-/* Conditional fields */
+
 .conditional-fields-wrapper {
   background: #FBF8F3;
   border-left: 4px solid #132E20;
@@ -107,7 +107,7 @@
   }
 }
 
-/* Collapsible section */
+
 .collapsible-section {
   border: 1px solid #e5e7eb;
   border-radius: 0.75rem;
@@ -188,7 +188,7 @@
   }
 }
 
-/* Smart reveal */
+
 .smart-reveal {
   display: flex;
   flex-direction: column;
@@ -229,7 +229,7 @@
   border-radius: 0.5rem;
 }
 
-/* Expandable field */
+
 .expandable-field {
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
@@ -298,7 +298,7 @@
   padding: 0 1rem 1rem 1rem;
 }
 
-/* Animations */
+
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -310,7 +310,7 @@
   }
 }
 
-/* Accessibility */
+
 @media (prefers-reduced-motion: reduce) {
   .disclosure-content,
   .field-icon,
@@ -326,7 +326,7 @@
   }
 }
 
-/* Mobile adjustments */
+
 @media (max-width: 640px) {
   .disclosure-header,
   .field-header,

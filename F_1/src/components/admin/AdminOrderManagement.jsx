@@ -35,7 +35,7 @@ export default function AdminOrderManagement({ order }) {
 
   return (
     <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] overflow-hidden shadow-xl">
-      {/* Header */}
+      {}
       <div className="bg-gradient-to-r from-[#132E20] to-[#1B3B2B] px-6 py-5 flex items-center justify-between">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736]">ORDER MANAGEMENT</span>
@@ -52,9 +52,9 @@ export default function AdminOrderManagement({ order }) {
         </div>
       </div>
 
-      {/* Content */}
+      {}
       <div className="p-6 space-y-6">
-        {/* Order Item Card */}
+        {}
         <div className="bg-stone-50 border border-stone-200/80 rounded-2xl p-4">
           <h4 className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-2 flex items-center gap-2">
             <Package size={14} className="text-[#D97736]" /> Crop Order Details
@@ -72,7 +72,7 @@ export default function AdminOrderManagement({ order }) {
           </div>
         </div>
 
-        {/* Pickup Location */}
+        {}
         <div>
           <h4 className="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
             <MapPin size={16} /> Pickup Location
@@ -80,7 +80,7 @@ export default function AdminOrderManagement({ order }) {
           <p className="text-gray-900 font-medium">{order.pickupLocation || 'Not specified'}</p>
         </div>
 
-        {/* Contact Info */}
+        {}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-blue-50 rounded-lg p-4">
             <h4 className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2">
@@ -108,7 +108,7 @@ export default function AdminOrderManagement({ order }) {
           </div>
         </div>
 
-        {/* Payment Info */}
+        {}
         <div className="bg-gray-50 rounded-lg p-4">
           <h4 className="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
             <IndianRupee size={16} /> Payment
@@ -143,7 +143,7 @@ export default function AdminOrderManagement({ order }) {
           </div>
         </div>
 
-        {/* Order Timeline */}
+        {}
         <div>
           <h4 className="text-sm font-semibold text-gray-600 mb-4 flex items-center gap-2">
             <Clock size={16} /> Order Timeline
@@ -182,7 +182,7 @@ export default function AdminOrderManagement({ order }) {
           )}
         </div>
 
-        {/* Order Dates */}
+        {}
         <div className="grid grid-cols-2 gap-4 pt-4 border-t">
           <div>
             <p className="text-xs text-gray-600">Created</p>

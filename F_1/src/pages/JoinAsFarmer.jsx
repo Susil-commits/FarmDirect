@@ -100,7 +100,7 @@ export default function JoinAsFarmer() {
       <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body">
         <DynamicFloatingNavbar activeSection="cream" onNavigate={navigate} />
 
-        {/* Hero Section */}
+        {}
         <section className="pt-32 pb-16 px-4 md:px-8 max-w-6xl mx-auto text-center">
           <ScrollAnimation className="scroll-slide">
             <div className="inline-flex items-center gap-2 bg-[#F4EFE6] border border-[#132E20]/15 px-3.5 py-1.5 rounded-full text-xs font-bold text-[#132E20] mb-6">
@@ -130,7 +130,7 @@ export default function JoinAsFarmer() {
           </ScrollAnimation>
         </section>
 
-        {/* Why Join Us */}
+        {}
         <section className="py-20 px-4 relative">
           <div className="max-w-6xl mx-auto relative z-10">
             <ScrollAnimation className="scroll-slide mb-12">
@@ -160,7 +160,7 @@ export default function JoinAsFarmer() {
           </div>
         </section>
 
-        {/* By The Numbers */}
+        {}
         <section className="py-20 px-4 bg-gradient-to-br from-green-50 via-white to-green-50">
           <div className="max-w-6xl mx-auto">
             <ScrollAnimation className="scroll-slide mb-12">
@@ -183,7 +183,7 @@ export default function JoinAsFarmer() {
           </div>
         </section>
 
-        {/* How to Get Started */}
+        {}
         <section className="py-20 px-4">
           <div className="max-w-6xl mx-auto">
             <ScrollAnimation className="scroll-slide mb-16">
@@ -226,7 +226,7 @@ export default function JoinAsFarmer() {
           </div>
         </section>
 
-        {/* What Farmers Say */}
+        {}
         <section className="py-20 px-4 bg-gradient-to-r from-green-50 to-emerald-50">
           <div className="max-w-6xl mx-auto">
             <ScrollAnimation className="scroll-slide mb-12">
@@ -272,7 +272,7 @@ export default function JoinAsFarmer() {
           </div>
         </section>
 
-        {/* FAQ */}
+        {}
         <section className="py-20 px-4">
           <div className="max-w-4xl mx-auto">
             <ScrollAnimation className="scroll-slide mb-12">
@@ -301,7 +301,7 @@ export default function JoinAsFarmer() {
           </div>
         </section>
 
-        {/* CTA Section */}
+        {}
         <section className="py-20 px-4 bg-gradient-to-r from-green-600 to-emerald-600">
           <ScrollAnimation className="scroll-slide">
             <div className="max-w-4xl mx-auto text-center">
@@ -343,5 +343,4 @@ export default function JoinAsFarmer() {
     </PageTransition>
   );
 }
-
-
+

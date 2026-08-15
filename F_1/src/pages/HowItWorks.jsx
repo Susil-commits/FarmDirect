@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CheckCircle2, Users, TrendingUp, Award, Zap, Shield, Sparkles, ArrowRight, ShieldCheck, Sprout } from 'lucide-react';
-// eslint-disable-next-line no-unused-vars
+
 import { motion } from 'framer-motion';
 import { useRouter } from '../hooks/useRouter';
 import PageTransition from '../components/common/PageTransition';
@@ -9,7 +9,7 @@ import GiantBrandFooter from '../components/common/GiantBrandFooter';
 
 export default function HowItWorks() {
   const { navigate } = useRouter();
-  const [activeTab, setActiveTab] = useState('farmer'); // 'farmer' or 'buyer'
+  const [activeTab, setActiveTab] = useState('farmer'); 
 
   const farmerSteps = [
     { step: '01', title: 'Register & Verify KYC', icon: Users, desc: 'Create account and verify farmer identity with Government ID & land records.' },
@@ -32,7 +32,7 @@ export default function HowItWorks() {
       <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body selection:bg-[#D97736] selection:text-white">
         <DynamicFloatingNavbar activeSection="cream" onNavigate={navigate} />
 
-        {/* Hero Section */}
+        {}
         <section className="pt-32 pb-16 px-4 md:px-8 max-w-6xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -61,7 +61,7 @@ export default function HowItWorks() {
             Connecting local growers directly with households, chefs, and institutions with zero middleman commissions and 100% harvest traceability.
           </motion.p>
 
-          {/* Interactive Role Switcher Pill */}
+          {}
           <div className="inline-flex items-center bg-[#F4EFE6] p-1.5 rounded-full border border-[#132E20]/10 mt-8">
             <button
               onClick={() => setActiveTab('farmer')}
@@ -86,7 +86,7 @@ export default function HowItWorks() {
           </div>
         </section>
 
-        {/* 4 Step Grid */}
+        {}
         <section className="py-12 px-4 md:px-8 max-w-6xl mx-auto mb-16">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {activeSteps.map((item, idx) => {
@@ -115,7 +115,7 @@ export default function HowItWorks() {
           </div>
         </section>
 
-        {/* Dark Feature Highlight Banner */}
+        {}
         <section className="bg-[#132E20] text-[#FBF8F3] py-20 px-4 md:px-8 rounded-t-[60px] md:rounded-t-[80px] shadow-2xl">
           <div className="max-w-6xl mx-auto">
             <div className="text-center max-w-3xl mx-auto mb-14">
@@ -165,7 +165,7 @@ export default function HowItWorks() {
               </div>
             </div>
 
-            {/* Security & Compliance Badges Grid */}
+            {}
             <div className="border-t border-white/10 pt-12 text-center">
               <span className="font-sans-body text-xs font-bold uppercase tracking-widest text-[#FBF8F3]/60 block mb-6">
                 ENTERPRISE COMPLIANCE & SECURITY
@@ -196,4 +196,4 @@ export default function HowItWorks() {
     </PageTransition>
   );
 }
-
+

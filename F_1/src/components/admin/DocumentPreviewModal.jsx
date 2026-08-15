@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { X, FileText, Image as ImageIcon } from 'lucide-react';
 import { getImageUrl } from '../../utils/formatters';
 
-// Resolve document URL: prepend backend origin for relative /uploads/ paths,
-// use cloud URLs directly, and route PDFs through the backend proxy
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const resolveDocUrl = (url) => {
@@ -18,16 +16,10 @@ const getProxyUrl = (url) => {
   return `${API_BASE}/admin/documents/proxy?url=${encodeURIComponent(url)}`;
 };
 
-/**
- * DocumentPreviewModal - Clean inline document preview (no download, no external links)
- * Used for viewing KYC documents, farm images, and crop images.
- * Supports: images (img tag) and PDFs (iframe via backend proxy).
- */
 export default function DocumentPreviewModal({ document, onClose }) {
   const [imageError, setImageError] = useState(false);
 
   if (!document) return null;
-
 
   const formatFileSize = (bytes) => {
     if (!bytes) return '0 B';
@@ -47,7 +39,7 @@ export default function DocumentPreviewModal({ document, onClose }) {
   return (
     <div className="fixed inset-0 bg-[#132E20]/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
       <div className="bg-white/95 backdrop-blur-xl border border-stone-200 rounded-[32px] max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-scale-in flex flex-col" onClick={e => e.stopPropagation()}>
-        {/* Header */}
+        {}
         <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100 bg-[#FBF8F3]">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736]">KYC VERIFICATION PREVIEW</span>
@@ -64,7 +56,7 @@ export default function DocumentPreviewModal({ document, onClose }) {
           </button>
         </div>
 
-        {/* Preview Content */}
+        {}
         <div className="p-6 overflow-auto max-h-[75vh]">
           {isImage && !imageError ? (
             <img
@@ -92,4 +84,4 @@ export default function DocumentPreviewModal({ document, onClose }) {
     </div>
   );
 }
-
+

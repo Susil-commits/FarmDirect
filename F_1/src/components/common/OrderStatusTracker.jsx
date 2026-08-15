@@ -54,7 +54,6 @@ export default function OrderStatusTracker({ order }) {
     },
   ];
 
-  // Handle cancelled orders
   if (order.orderStatus === 'cancelled') {
     stages.forEach(s => { s.status = 'completed'; });
     stages.push({
@@ -79,9 +78,9 @@ export default function OrderStatusTracker({ order }) {
 
             return (
               <div key={stage.id}>
-                {/* Stage Item */}
+                {}
                 <div className="flex gap-4">
-                  {/* Timeline Line and Icon */}
+                  {}
                   <div className="flex flex-col items-center">
                     <div
                       className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold border-2 transition-all ${
@@ -96,7 +95,7 @@ export default function OrderStatusTracker({ order }) {
                     >
                       {stage.icon}
                     </div>
-                    {/* Vertical Line to next stage */}
+                    {}
                     {idx < stages.length - 1 && (
                       <div
                         className={`w-1 h-12 mt-2 transition-all ${
@@ -106,7 +105,7 @@ export default function OrderStatusTracker({ order }) {
                     )}
                   </div>
 
-                  {/* Stage Details */}
+                  {}
                   <div className="pb-6 flex-1">
                     <div className="flex items-start justify-between">
                       <div>
@@ -133,7 +132,7 @@ export default function OrderStatusTracker({ order }) {
                       </div>
                     </div>
 
-                    {/* Timestamp */}
+                    {}
                     {stage.timestamp && (
                       <p className="text-xs text-gray-600 mt-2">
                         {new Date(stage.timestamp).toLocaleDateString('en-IN', {
@@ -152,7 +151,7 @@ export default function OrderStatusTracker({ order }) {
           })}
         </div>
 
-        {/* Quick Info Box */}
+        {}
         <div className="mt-8 pt-6 border-t-2 border-blue-200">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-lg p-4 border border-blue-100">

@@ -31,9 +31,9 @@ export default function ProductReviews({ productId }) {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    
     fetchReviews();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [productId]);
 
   const averageRating = reviews.length > 0
@@ -71,7 +71,7 @@ export default function ProductReviews({ productId }) {
 
   return (
     <div className="reviews-section">
-      {/* Reviews Summary */}
+      {}
       <div className="reviews-summary card-glass">
         <div className="summary-stats">
           <div className="rating-display">
@@ -115,7 +115,7 @@ export default function ProductReviews({ productId }) {
         </button>
       </div>
 
-      {/* Review Form */}
+      {}
       {showForm && (
         <div className="review-form-container card-glass animate-scale-in">
           <h3>Share your experience</h3>
@@ -173,7 +173,7 @@ export default function ProductReviews({ productId }) {
         </div>
       )}
 
-      {/* Reviews List */}
+      {}
       <div className="reviews-list">
         <h3 className="reviews-title">Customer Reviews</h3>
         {reviews.length === 0 ? (

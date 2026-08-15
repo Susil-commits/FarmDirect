@@ -12,9 +12,7 @@ import type { Types, PipelineStage } from 'mongoose';
 const PENDING_STATUSES = [OrderStatus.Confirmed, OrderStatus.Preparing, OrderStatus.ReadyForPickup, OrderStatus.PickedUp];
 
 export class AdminService {
-  /**
-   * Fetches the overall dashboard statistics.
-   */
+  
   static async getDashboardStats() {
     const [
       totalUsers, totalBuyers, totalFarmers, totalAdmins, 
@@ -49,9 +47,6 @@ export class AdminService {
     };
   }
 
-  /**
-   * Fetches detailed analytics for the dashboard.
-   */
   static async getDashboardAnalytics() {
     const [totalUsers, totalFarmers, totalBuyers, pendingKYC, totalCrops, approvedCrops, pendingCrops, totalOrders, completedOrders, pendingOrders] = await Promise.all([
       User.countDocuments({}),
@@ -79,9 +74,6 @@ export class AdminService {
     };
   }
 
-  /**
-   * Toggles the user status (suspend, ban, activate).
-   */
   static async toggleUserStatus(
     userId: string, 
     status: UserStatus, 
@@ -135,9 +127,6 @@ export class AdminService {
     return user;
   }
 
-  /**
-   * Permanently deletes a user and associated data.
-   */
   static async deleteUser(
     userId: string, 
     reason: string | undefined, 

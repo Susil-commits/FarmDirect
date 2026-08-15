@@ -38,7 +38,7 @@ export default function Wishlist() {
       <div className="wishlist-page">
         <div className="wishlist-bg-gradient"></div>
         <div className="wishlist-container">
-          {/* Header */}
+          {}
           <div className="wishlist-header-section">
             <div className="wishlist-header-content">
               <div className="wishlist-title-row">
@@ -60,7 +60,7 @@ export default function Wishlist() {
             )}
           </div>
 
-          {/* Loading State */}
+          {}
           {loading && (
             <div className="wishlist-loading">
               <div className="wishlist-loading-spinner"></div>
@@ -68,7 +68,7 @@ export default function Wishlist() {
             </div>
           )}
 
-          {/* Empty State */}
+          {}
           {!loading && wishlist.length === 0 && (
             <div className="wishlist-empty">
               <div className="wishlist-empty-icon">
@@ -85,7 +85,7 @@ export default function Wishlist() {
             </div>
           )}
 
-          {/* Wishlist Grid */}
+          {}
           {!loading && wishlist.length > 0 && (
             <div className="wishlist-grid">
               {wishlist.map((product, idx) => (
@@ -101,7 +101,7 @@ export default function Wishlist() {
             </div>
           )}
 
-          {/* Footer Navigation */}
+          {}
           {wishlist.length > 0 && (
             <div className="wishlist-footer">
               <div className="wishlist-footer-inner">
@@ -125,7 +125,6 @@ export default function Wishlist() {
   );
 }
 
-// Individual Wishlist Card - Matching Marketplace CropCard Design
 function WishlistCard({ product, index, onRemove, onAddToCart, onViewCrop }) {
   const staggerDelay = index * 0.08;
   const rawProductImage = product.image || product.images?.[0];
@@ -156,7 +155,7 @@ function WishlistCard({ product, index, onRemove, onAddToCart, onViewCrop }) {
       className={`wishlist-card ${staggerDelay > 0 ? 'stagger-item' : ''}`}
       style={{ animationDelay: `${staggerDelay}s`, '--card-delay': staggerDelay }}
     >
-      {/* Image Section */}
+      {}
       <div
         className="wishlist-card-image"
         onClick={() => onViewCrop(product.id || product._id)}
@@ -171,7 +170,7 @@ function WishlistCard({ product, index, onRemove, onAddToCart, onViewCrop }) {
             e.target.src = getCropFallbackImage(product.category || product.name);
           }}
         />
-        {/* Badges Overlay */}
+        {}
         <div className="wishlist-card-badges">
           {product.farmer_verified && (
             <span className="wishlist-badge-verified">
@@ -185,7 +184,7 @@ function WishlistCard({ product, index, onRemove, onAddToCart, onViewCrop }) {
           )}
         </div>
 
-        {/* Remove Button */}
+        {}
         <button
           className="wishlist-card-remove"
           onClick={(e) => {
@@ -198,12 +197,12 @@ function WishlistCard({ product, index, onRemove, onAddToCart, onViewCrop }) {
         </button>
       </div>
 
-      {/* Content Section */}
+      {}
       <div className="wishlist-card-body">
-        {/* Product Name */}
+        {}
         <h3 className="wishlist-card-name">{product.name}</h3>
 
-        {/* Farmer Info */}
+        {}
         <div className="wishlist-card-farmer">
           <div className="wishlist-farmer-avatar">
             {product.farmerName?.[0]?.toUpperCase() || 'F'}
@@ -217,7 +216,7 @@ function WishlistCard({ product, index, onRemove, onAddToCart, onViewCrop }) {
           </div>
         </div>
 
-        {/* Rating */}
+        {}
         <div className="wishlist-card-rating">
           <div className="wishlist-card-stars">
             {renderStars(product.rating)}
@@ -227,13 +226,13 @@ function WishlistCard({ product, index, onRemove, onAddToCart, onViewCrop }) {
           </span>
         </div>
 
-        {/* Price Box */}
+        {}
         <div className="wishlist-card-price-box">
           <span className="wishlist-price-label">Price per {product.unit || 'kg'}</span>
           <span className="wishlist-price-value">₹{Math.floor(product.price || 0)}</span>
         </div>
 
-        {/* Action Buttons */}
+        {}
         <div className="wishlist-card-actions">
           <button
             onClick={(e) => {

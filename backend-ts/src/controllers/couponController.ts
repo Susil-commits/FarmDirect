@@ -6,10 +6,6 @@ import type { ICoupon, DiscountResult } from '../types/index.js';
 import type { Types } from 'mongoose';
 import type { Request, Response } from 'express';
 
-/**
- * Pure discount calculator — does NOT mutate usage counts.
- * Returns { discountAmount, finalAmount } or null if not applicable.
- */
 export function computeDiscount(coupon: ICoupon | null, subtotal: number): DiscountResult | null {
   if (!coupon || typeof subtotal !== 'number') return null;
   if (coupon.minOrderAmount && subtotal < coupon.minOrderAmount) return null;
@@ -80,7 +76,7 @@ export const validateCoupon = asyncHandler(async (req: Request, res: Response) =
 export async function redeemCoupon(code: string, userId: Types.ObjectId | string): Promise<ICoupon | null> {
   if (!code) return null;
   try {
-    // B20 FIX: The previous filter had `{ usageLimit: undefined }` which is a
+    
     const coupon = await Coupon.findOneAndUpdate(
       {
         code: code.toUpperCase().trim(),
@@ -104,7 +100,6 @@ export async function redeemCoupon(code: string, userId: Types.ObjectId | string
   }
 }
 
-
 export const getAllCoupons = asyncHandler(async (req: Request, res: Response) => {
   const { page = '1', limit = '20', active } = req.query as Record<string, string>;
   const query: Record<string, unknown> = {};
@@ -125,7 +120,7 @@ export const getAllCoupons = asyncHandler(async (req: Request, res: Response) =>
 });
 
 export const createCoupon = asyncHandler(async (req: Request, res: Response) => {
-  // B21 FIX: Whitelist allowed fields from req.body instead of spreading the
+  
   const {
     code, type, value, minOrderAmount, maxDiscountAmount,
     description, usageLimit, perUserLimit, validFrom, validUntil, isActive,

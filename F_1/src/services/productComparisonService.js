@@ -1,15 +1,9 @@
-/**
- * Product Comparison Service
- * Handles comparing crops/products side-by-side
- */
+
 import { API_BASE_URL } from './api.js';
 import { getAccessToken } from '../utils/tokenStore.js';
 
 export const productComparisonService = {
-  /**
-   * Get comparison data for multiple crops
-   * @param {array} cropIds - Array of crop IDs to compare
-   */
+  
   compareCrops: async (cropIds) => {
     try {
       const response = await fetch(`${API_BASE_URL}/crops/compare`, {
@@ -26,9 +20,6 @@ export const productComparisonService = {
     }
   },
 
-  /**
-   * Get comparison fields/attributes available
-   */
   getComparisonFields: async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/crops/comparison-fields`);
@@ -41,10 +32,6 @@ export const productComparisonService = {
     }
   },
 
-  /**
-   * Save comparison for user
-   * @param {object} data - Comparison data
-   */
   saveComparison: async (data) => {
     try {
       const token = getAccessToken();
@@ -65,9 +52,6 @@ export const productComparisonService = {
     }
   },
 
-  /**
-   * Get saved comparisons for user
-   */
   getSavedComparisons: async () => {
     try {
       const token = getAccessToken();
@@ -85,10 +69,6 @@ export const productComparisonService = {
     }
   },
 
-  /**
-   * Delete saved comparison
-   * @param {string} comparisonId - Comparison ID
-   */
   deleteComparison: async (comparisonId) => {
     try {
       const token = getAccessToken();
@@ -107,10 +87,6 @@ export const productComparisonService = {
     }
   },
 
-  /**
-   * Export comparison as PDF
-   * @param {string} comparisonId - Comparison ID
-   */
   exportComparison: async (comparisonId) => {
     try {
       const token = getAccessToken();

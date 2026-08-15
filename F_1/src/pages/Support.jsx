@@ -77,7 +77,7 @@ export default function Support() {
             })}
           </div>
 
-          {/* Interactive 2-Column FAQ Section (Wispr Flow style at video 1:06) */}
+          {}
           <div className="bg-[#132E20] text-[#FBF8F3] rounded-[40px] p-8 sm:p-12 shadow-2xl border border-white/10 mb-16">
             <div className="text-center max-w-2xl mx-auto mb-12">
               <span className="font-sans-body text-xs font-bold uppercase tracking-widest text-[#D97736] bg-[#D97736]/15 px-3.5 py-1.5 rounded-full border border-[#D97736]/30">
@@ -89,7 +89,7 @@ export default function Support() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* Questions List - Left Column */}
+              {}
               <div className="lg:col-span-5 space-y-3">
                 <p className="font-sans-body text-xs font-bold uppercase tracking-wider text-[#84A98C] mb-2">Questions</p>
                 {faqs.map((faq, idx) => (
@@ -110,7 +110,7 @@ export default function Support() {
                 ))}
               </div>
 
-              {/* Answer Box - Right Column */}
+              {}
               <div className="lg:col-span-7 bg-[#1B3B2B] border border-white/15 rounded-3xl p-8 shadow-xl">
                 <p className="font-sans-body text-xs font-bold uppercase tracking-wider text-[#D97736] mb-3">Answer</p>
                 <h3 className="font-serif-display text-2xl font-bold text-[#FBF8F3] mb-4">
@@ -129,4 +129,3 @@ export default function Support() {
     </PageTransition>
   );
 }
-

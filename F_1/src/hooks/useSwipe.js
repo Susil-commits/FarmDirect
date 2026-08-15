@@ -1,16 +1,5 @@
 import { useRef, useEffect } from 'react';
 
-/**
- * Hook for detecting swipe gestures
- * @param {Object} options - Configuration options
- * @param {Function} options.onSwipeLeft - Callback for left swipe
- * @param {Function} options.onSwipeRight - Callback for right swipe
- * @param {Function} options.onSwipeUp - Callback for up swipe
- * @param {Function} options.onSwipeDown - Callback for down swipe
- * @param {number} options.minDistance - Minimum swipe distance in px (default: 50)
- * @param {number} options.maxTime - Maximum swipe time in ms (default: 500)
- * @returns {Object} - { ref }
- */
 export const useSwipe = ({
   onSwipeLeft,
   onSwipeRight,
@@ -44,14 +33,11 @@ export const useSwipe = ({
       const deltaY = touchEndY - touchStartY.current;
       const deltaTime = touchEndTime - touchStartTime.current;
 
-      // Check if swipe time is within limits
       if (deltaTime > maxTime) return;
 
-      // Determine swipe direction
       const absoluteDeltaX = Math.abs(deltaX);
       const absoluteDeltaY = Math.abs(deltaY);
 
-      // Horizontal swipes
       if (absoluteDeltaX > absoluteDeltaY && absoluteDeltaX > minDistance) {
         if (deltaX > 0) {
           onSwipeRight?.();
@@ -60,7 +46,6 @@ export const useSwipe = ({
         }
       }
 
-      // Vertical swipes
       if (absoluteDeltaY > absoluteDeltaX && absoluteDeltaY > minDistance) {
         if (deltaY > 0) {
           onSwipeDown?.();
@@ -82,13 +67,6 @@ export const useSwipe = ({
   return { ref };
 };
 
-/**
- * Hook for long press detection
- * @param {Object} options - Configuration options
- * @param {Function} options.onLongPress - Callback when long press detected
- * @param {number} options.duration - Duration to trigger long press in ms (default: 500)
- * @returns {Object} - { ref }
- */
 export const useLongPress = ({
   onLongPress,
   duration = 500,
@@ -138,13 +116,6 @@ export const useLongPress = ({
   return { ref };
 };
 
-/**
- * Hook for double-tap gesture detection
- * @param {Object} options - Configuration options
- * @param {Function} options.onDoubleTap - Callback when double tap detected
- * @param {number} options.delay - Time between taps in ms (default: 300)
- * @returns {Object} - { ref }
- */
 export const useDoubleTap = ({
   onDoubleTap,
   delay = 300,
