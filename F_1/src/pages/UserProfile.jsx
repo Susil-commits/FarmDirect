@@ -49,7 +49,7 @@ export default function UserProfile() {
 
   useEffect(() => {
     if (user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      
       setFormData({
         name: user.name || '',
         email: user.email || '',
@@ -86,7 +86,7 @@ export default function UserProfile() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    
     if (activeTab === 'orders') fetchOrders();
      
     if (activeTab === 'addresses') fetchAddresses();

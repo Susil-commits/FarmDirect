@@ -24,7 +24,6 @@ export const validatePassword = (password) => {
   return { valid: true, message: 'Password meets requirements' };
 };
 
-/** Simple boolean check (for backwards compatibility) */
 export const isValidPassword = (password) => validatePassword(password).valid;
 
 export const validatePincode = (pincode) => {
@@ -56,38 +55,22 @@ export const validateRating = (rating) => {
   return Number.isInteger(n) && n >= 1 && n <= 5;
 };
 
-
-/**
- * Aadhar number validation — 12 digits.
- * Does NOT include Verhoeff checksum (requires extra library).
- */
 export const validateAadhar = (aadhar) => {
   if (!aadhar) return false;
   const digits = String(aadhar).replace(/\D/g, '');
   return digits.length === 12 && !/^0+$/.test(digits);
 };
 
-/**
- * GST Identification Number (GSTIN) validation — 15 characters.
- * Format: 2-digit state code + 10-char PAN + 1 digit entity + 1 'Z' + 1 checksum
- */
 export const validateGST = (gst) => {
   if (!gst) return false;
   return /^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}Z[A-Z\d]{1}$/.test(gst.toUpperCase().trim());
 };
 
-/**
- * IFSC code validation — 11 characters (bank code 4 chars + '0' + 6-digit branch code).
- */
 export const validateIFSC = (ifsc) => {
   if (!ifsc) return false;
   return /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc.toUpperCase().trim());
 };
 
-
-/**
- * Validate crop price: must be a positive number up to 1,000,000.
- */
 export const validateCropPrice = (price) => {
   const n = Number(price);
   if (isNaN(n) || n <= 0) return { valid: false, message: 'Price must be a positive number' };
@@ -95,16 +78,12 @@ export const validateCropPrice = (price) => {
   return { valid: true };
 };
 
-/**
- * Validate crop quantity: must be a positive integer up to 100,000.
- */
 export const validateCropQuantity = (qty) => {
   const n = Number(qty);
   if (!Number.isInteger(n) || n <= 0) return { valid: false, message: 'Quantity must be a positive whole number' };
   if (n > 100_000) return { valid: false, message: 'Quantity cannot exceed 1,00,000' };
   return { valid: true };
 };
-
 
 export const validateFile = (file, maxSize = 5242880, allowedTypes = ['image/jpeg', 'image/png', 'image/webp']) => {
   if (!file) return { valid: false, error: 'File is required' };
@@ -120,7 +99,6 @@ export const validateFile = (file, maxSize = 5242880, allowedTypes = ['image/jpe
 
   return { valid: true };
 };
-
 
 export const validateForm = (values, rules) => {
   const errors = {};
@@ -177,7 +155,6 @@ export const sanitizeInput = (input) => {
   div.textContent = input;
   return div.innerHTML;
 };
-
 
 export const validateCropListing = (cropData) => {
   const errors = {};

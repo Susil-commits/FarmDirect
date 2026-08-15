@@ -1,15 +1,5 @@
 import { useRef, useCallback } from 'react';
 
-/**
- * Hook for creating particle burst effects on elements
- * Creates animated particles that explode from a click/touch point
- * @param {Object} options - Configuration options
- * @param {number} options.particleCount - Number of particles (default: 12)
- * @param {string} options.particleColor - Color of particles (default: '#22c55e')
- * @param {number} options.particleSize - Size of each particle in px (default: 8)
- * @param {number} options.duration - Animation duration in ms (default: 600)
- * @returns {Object} - { ref, triggerBurst, clearParticles }
- */
 export const useParticleEffect = ({
   particleCount = 12,
   particleColor = '#22c55e',
@@ -45,10 +35,9 @@ export const useParticleEffect = ({
         particle.style.borderRadius = '50%';
         particle.style.pointerEvents = 'none';
 
-        // Calculate random direction and distance
         const angle = (i / particleCount) * Math.PI * 2;
-        const _velocity = 4 + Math.random() * 4; // Random speed between 4-8
-        const distance = 80 + Math.random() * 40; // Random distance 80-120px
+        const _velocity = 4 + Math.random() * 4; 
+        const distance = 80 + Math.random() * 40; 
 
         const tx = Math.cos(angle) * distance;
         const ty = Math.sin(angle) * distance;
@@ -61,7 +50,6 @@ export const useParticleEffect = ({
         particlesRef.current.push(particle);
       }
 
-      // Cleanup after animation
       setTimeout(clearParticles, duration);
     },
     [particleCount, particleColor, particleSize, duration, clearParticles]
@@ -70,13 +58,6 @@ export const useParticleEffect = ({
   return { ref: containerRef, triggerBurst, clearParticles };
 };
 
-/**
- * Hook for creating ripple effects (water-like expansion)
- * @param {Object} options - Configuration options
- * @param {string} options.rippleColor - Color of ripple (default: 'rgba(255, 255, 255, 0.6)')
- * @param {number} options.duration - Animation duration in ms (default: 600)
- * @returns {Object} - { ref, triggerRipple }
- */
 export const useRippleEffect = ({
   rippleColor = 'rgba(255, 255, 255, 0.6)',
   duration = 600,
@@ -104,7 +85,6 @@ export const useRippleEffect = ({
 
       container.appendChild(ripple);
 
-      // Remove ripple after animation
       setTimeout(() => {
         ripple.remove();
       }, duration);

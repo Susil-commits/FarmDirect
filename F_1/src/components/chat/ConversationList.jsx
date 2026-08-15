@@ -57,7 +57,7 @@ export default function ConversationList({
 
   return (
     <div className={`chat-sidebar ${className}`}>
-      {/* Header */}
+      {}
       <div className="chat-sidebar-header">
         <h2>Messages</h2>
         <div className="chat-search-wrapper">
@@ -72,7 +72,7 @@ export default function ConversationList({
         </div>
       </div>
 
-      {/* List */}
+      {}
       <div className="conversation-list">
         {loading ? (
           <div className="conversation-empty">
@@ -107,7 +107,7 @@ export default function ConversationList({
                 onClick={() => otherUser._id && onSelectConversation(otherUser._id)}
                 className={`conversation-item ${currentChat === otherUser._id ? 'active' : ''}`}
               >
-                {/* Avatar */}
+                {}
                 <div className="conversation-avatar-wrapper">
                   {hasPhoto ? (
                     <img
@@ -128,7 +128,7 @@ export default function ConversationList({
                   )}
                 </div>
 
-                {/* Content */}
+                {}
                 <div className="conversation-content">
                   <div className="conversation-top-row">
                     <span className="conversation-name">{displayName}</span>

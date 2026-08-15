@@ -38,8 +38,10 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
 import negotiationRoutes from './routes/negotiationRoutes.js';
 import healthRoutes from './routes/healthRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
+
 const __dirname = path.dirname(__filename);
 
 const app = express();
@@ -50,10 +52,8 @@ app.use('/uploads', express.static(getUploadsRoot()));
 
 resetServerStartTime();
 
-
 app.use(requestId);
 
-// Generate random nonce per request for Content Security Policy
 app.use((_req: Request, res: Response, next) => {
   res.locals.nonce = crypto.randomBytes(16).toString('base64');
   next();
@@ -134,7 +134,6 @@ app.use(trimStrings);
 
 app.use(compression({ threshold: 1024 }));
 
-
 if (env.isDev) {
   app.use((req: Request, _res: Response, next) => {
     next();
@@ -182,7 +181,7 @@ app.get('/api/health/detailed', async (_req: Request, res: Response) => {
   });
 });
 
-app.use('/health', healthRoutes); // K8s Liveness & Readiness Probes
+app.use('/health', healthRoutes); 
 app.use('/api/auth', authRoutes);
 app.use('/api/crops', cropRoutes);
 app.use('/api/orders', orderRoutes);
@@ -199,8 +198,10 @@ app.use('/api/data', dataAccessRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/negotiations', negotiationRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.post('/api/upload/presign', (req: Request, res: Response): void => {
+
   const { folder = 'general' } = req.body as { folder?: string };
   const params = generatePresignedUploadParams(folder);
   res.status(200).json({ success: true, ...params });

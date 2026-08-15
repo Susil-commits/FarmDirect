@@ -5,7 +5,6 @@ export const useVoiceSearch = (onResult) => {
   const [supported, setSupported] = useState(false);
   const [recognition, setRecognition] = useState(null);
 
-  // BUG 7 FIX: Store onResult in a ref so the recognition handler always calls
   const onResultRef = useRef(onResult);
   useEffect(() => {
     onResultRef.current = onResult;
@@ -15,7 +14,7 @@ export const useVoiceSearch = (onResult) => {
     if (typeof window !== 'undefined') {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SpeechRecognition) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        
         setSupported(true);
         const recog = new SpeechRecognition();
         recog.continuous = false;

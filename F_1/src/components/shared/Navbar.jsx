@@ -22,7 +22,7 @@ export default function Navbar() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMiniCartOpen, setIsMiniCartOpen] = useState(false);
   const [showEmptyModal, setShowEmptyModal] = useState(false);
-  const [emptyModalType, setEmptyModalType] = useState('cart'); // 'cart' or 'wishlist'
+  const [emptyModalType, setEmptyModalType] = useState('cart'); 
   const [showNotificationEmpty, setShowNotificationEmpty] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -123,7 +123,7 @@ export default function Navbar() {
     <div className="fixed top-0 left-0 w-full z-50 pt-4 px-4 pointer-events-none transition-all duration-300">
       <nav className="max-w-6xl mx-auto bg-[#FBF8F3]/90 backdrop-blur-2xl border border-[#132E20]/15 shadow-lg rounded-full pointer-events-auto transition-all duration-300 hover:shadow-xl text-[#132E20]">
         <div className="flex justify-between items-center h-16 px-6 sm:px-8">
-          {/* Logo & Brand */}
+          {}
           <div 
             className="flex items-center gap-2.5 cursor-pointer shrink-0 group" 
             onClick={() => {
@@ -146,7 +146,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Desktop Menu */}
+          {}
           <div className="hidden md:flex items-center gap-6 flex-1 px-8">
             {navItems?.map((item) => (
               <button
@@ -169,7 +169,7 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Search Bar - Desktop (hidden on verification pages) */}
+          {}
           {user?.role === 'buyer' &&
            currentRoute &&
            !currentRoute.includes('/verification') &&
@@ -179,14 +179,14 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* Right Section - Icons & User */}
+          {}
           <div className="flex items-center gap-1 sm:gap-4">
-            {/* Language Switcher */}
+            {}
             <div className="hidden sm:block">
               <LanguageSwitcher />
             </div>
 
-            {/* Security Session & Realtime indicators (authenticated users only) */}
+            {}
             {user && (
               <div className="hidden md:flex items-center gap-2 mr-2 border-r border-slate-200 pr-3">
                 <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 rounded-full text-xs font-bold text-emerald-700 uppercase tracking-wide">
@@ -206,7 +206,7 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Wishlist Icon - Buyers and Farmers Only */}
+            {}
             {(!user || user.role === 'buyer' || user.role === 'farmer') && (
               <div className="relative">
                 <button
@@ -237,7 +237,7 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Cart Icon - Buyers and Farmers Only */}
+            {}
             {(!user || user.role === 'buyer' || user.role === 'farmer') && (
               <div className="relative">
                 <button
@@ -268,7 +268,7 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Notifications - All authenticated users */}
+            {}
             {user && (
               <button
                 onClick={() => handleNavigate('/messages')}
@@ -285,7 +285,7 @@ export default function Navbar() {
               </button>
             )}
 
-            {/* Notifications - All authenticated users */}
+            {}
             {user && (
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -302,7 +302,7 @@ export default function Navbar() {
               </button>
             )}
 
-            {/* Desktop Auth Buttons - Show when NOT logged in */}
+            {}
             {!user && (
               <div className="hidden md:flex items-center gap-2">
                 <button
@@ -320,7 +320,7 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Home Icon - Show when logged in and NOT on home page */}
+            {}
             {user && currentRoute !== '/' && (
               <button
                 onClick={() => handleNavigate('/')}
@@ -331,7 +331,7 @@ export default function Navbar() {
               </button>
             )}
 
-            {/* Status Icon on Home Page ONLY - Show ONLY when logged in and on home page / */}
+            {}
             {user && currentRoute === '/' && (
               <button
                 onClick={() => {
@@ -345,7 +345,7 @@ export default function Navbar() {
               </button>
             )}
 
-            {/* User Menu - Show when logged in on all pages */}
+            {}
             {user && (
               <div className="relative hidden sm:block">
                 <button
@@ -357,10 +357,10 @@ export default function Navbar() {
                   <Avatar user={user} size="sm" />
                 </button>
 
-                {/* Dropdown Menu */}
+                {}
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                    {/* User Info Header */}
+                    {}
                     <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-3">
                       <Avatar user={user} size="md" />
                       <div className="flex-1 min-w-0">
@@ -415,7 +415,7 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Mobile Menu Button */}
+            {}
             <button
               onClick={toggleMenu}
               className="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition cursor-pointer"
@@ -426,25 +426,25 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Menu - Modern Hamburger Dropdown from Top */}
+        {}
         {isOpen && (
           <div className="md:hidden fixed inset-0 z-50">
-            {/* Overlay */}
+            {}
             <div
               className="absolute inset-0 bg-black/20 backdrop-blur-sm"
               onClick={() => setIsOpen(false)}
             ></div>
 
-            {/* Hamburger Menu Panel - Dropdown from Top */}
+            {}
             <div className="absolute left-0 right-0 top-16 w-full max-h-[90vh] bg-white/70 backdrop-blur-xl border-b-2 border-white/60 shadow-2xl animate-slide-down overflow-y-auto">
-              {/* Header */}
+              {}
               <div className="px-6 py-4 border-b-2 border-white/60 bg-white/60">
                 <h2 className="text-lg font-bold text-gray-900">Menu</h2>
               </div>
 
-              {/* Main Navigation */}
+              {}
               <div className="px-0 py-4 space-y-1">
-                {/* Home */}
+                {}
                 <button
                   onClick={() => handleNavigate('/')}
                   className="w-full px-6 py-3 flex items-center gap-4 text-gray-700 hover:text-green-600 hover:bg-white/10 transition-all duration-200 group cursor-pointer"
@@ -453,7 +453,7 @@ export default function Navbar() {
                   <span className="text-sm font-medium">Home</span>
                 </button>
 
-                {/* Search - hidden on verification pages */}
+                {}
                 {!(currentRoute && (currentRoute.includes('/verification') || currentRoute.startsWith('/verify'))) && (
                   <button
                     onClick={() => handleNavigate('/marketplace')}
@@ -464,7 +464,7 @@ export default function Navbar() {
                   </button>
                 )}
 
-                {/* Categories - hidden on verification pages */}
+                {}
                 {!(currentRoute && (currentRoute.includes('/verification') || currentRoute.startsWith('/verify'))) && (
                   <button
                     onClick={() => handleNavigate('/marketplace')}
@@ -475,7 +475,7 @@ export default function Navbar() {
                   </button>
                 )}
 
-                {/* Marketplace / Browse - hidden on verification pages */}
+                {}
                 {!user && !(currentRoute && (currentRoute.includes('/verification') || currentRoute.startsWith('/verify'))) && (
                   <button
                     onClick={handleMarketplaceAccess}
@@ -506,7 +506,7 @@ export default function Navbar() {
                   </button>
                 )}
 
-                {/* Wishlist */}
+                {}
                 {user && (
                   <button
                     onClick={() => handleNavigate('/wishlist')}
@@ -519,7 +519,7 @@ export default function Navbar() {
                   </button>
                 )}
 
-                {/* Settings / Profile */}
+                {}
                 {user && (
                   <button
                     onClick={() => handleNavigate(user.role === 'admin' ? '/admin/profile' : '/profile')}
@@ -531,12 +531,12 @@ export default function Navbar() {
                 )}
               </div>
 
-              {/* Divider */}
+              {}
               <div className="my-2 border-t-2 border-white/60"></div>
 
-              {/* Secondary Navigation */}
+              {}
               <div className="px-0 py-4 space-y-1">
-                {/* About & Contact */}
+                {}
                 {!user && (
                   <>
                     <button
@@ -581,7 +581,7 @@ export default function Navbar() {
                 )}
               </div>
 
-              {/* Footer - Logout only when logged in */}
+              {}
               {user && (
                 <div className="px-6 py-4 border-t-2 border-white/60 bg-white/60">
                   <button
@@ -600,19 +600,19 @@ export default function Navbar() {
         )}
       </nav>
       
-      {/* Mini Cart Dropdown */}
+      {}
       <MiniCart isOpen={isMiniCartOpen} onClose={() => setIsMiniCartOpen(false)} />
 
-      {/* Empty Cart/Wishlist Modal is now rendered inside the relative button wrappers */}
+      {}
 
-      {/* Empty Notification Modal */}
+      {}
       {showNotificationEmpty && (
         <NotificationEmptyModal
           onClose={() => setShowNotificationEmpty(false)}
         />
       )}
 
-      {/* Logout Confirmation Modal */}
+      {}
       {showLogoutConfirm && (
         <LogoutConfirmationModal
           onConfirm={handleConfirmLogout}
@@ -620,7 +620,7 @@ export default function Navbar() {
         />
       )}
 
-      {/* Notification Panel */}
+      {}
       {user && (
         <NotificationPanel
           isOpen={showNotifications}

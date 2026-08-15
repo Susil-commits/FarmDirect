@@ -1,6 +1,6 @@
-/* SmartStates.css - Empty, loading, error states and help components */
 
-/* Empty State */
+
+
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -86,7 +86,7 @@
   margin-top: 0.5rem;
 }
 
-/* Loading State */
+
 .loading-state {
   display: flex;
   flex-direction: column;
@@ -163,7 +163,7 @@
   }
 }
 
-/* Error State */
+
 .error-state {
   display: flex;
   flex-direction: column;
@@ -252,7 +252,7 @@
   margin-top: 1rem;
 }
 
-/* Contextual Help */
+
 .contextual-help {
   padding: 1rem;
   border-left: 4px solid currentColor;
@@ -359,7 +359,7 @@
   opacity: 1;
 }
 
-/* Pre-emptive Help */
+
 .pre-emptive-help {
   margin-bottom: 1.5rem;
   animation: slideDown 0.3s ease-out;
@@ -416,7 +416,7 @@
   opacity: 0.8;
 }
 
-/* Progress Indicator */
+
 .progress-indicator {
   margin-bottom: 1.5rem;
 }
@@ -477,7 +477,7 @@
   opacity: 0;
 }
 
-/* Onboarding Checklist */
+
 .onboarding-checklist {
   background: white;
   border: 1px solid #e5e7eb;
@@ -597,7 +597,7 @@
   color: #22c55e;
 }
 
-/* Animations */
+
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -609,7 +609,7 @@
   }
 }
 
-/* Accessibility */
+
 @media (prefers-reduced-motion: reduce) {
   .empty-icon,
   .empty-illustration,
@@ -622,7 +622,7 @@
   }
 }
 
-/* Mobile */
+
 @media (max-width: 640px) {
   .empty-state,
   .loading-state {

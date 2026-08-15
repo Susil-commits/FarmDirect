@@ -3,16 +3,6 @@ import { X, ChevronRight, ChevronLeft, Lightbulb } from 'lucide-react';
 import Button from '../common/Button';
 import './GuidedTour.css';
 
-/**
- * GuidedTour - Interactive step-by-step tour
- * Features:
- * - Highlight specific elements
- * - Show contextual tooltips
- * - Progress tracking
- * - Keyboard navigation
- * - Skip option
- * - Completion tracking
- */
 export function GuidedTour({ steps, onComplete, onSkip, startOnMount = false }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isActive, setIsActive] = useState(startOnMount);
@@ -75,7 +65,7 @@ export function GuidedTour({ steps, onComplete, onSkip, startOnMount = false }) 
       clearTimeout(timer);
       window.removeEventListener('resize', updateHighlight);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [currentStepIndex, isActive, steps]);
 
   useEffect(() => {
@@ -88,7 +78,7 @@ export function GuidedTour({ steps, onComplete, onSkip, startOnMount = false }) 
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [isActive, currentStepIndex, steps]);
 
   if (!isActive || !steps[currentStepIndex]) return null;
@@ -97,7 +87,7 @@ export function GuidedTour({ steps, onComplete, onSkip, startOnMount = false }) 
 
   return (
     <>
-      {/* Highlight overlay */}
+      {}
       <div className="guided-tour-overlay" onClick={handleSkip}>
         {highlightRect && (
           <>
@@ -119,7 +109,7 @@ export function GuidedTour({ steps, onComplete, onSkip, startOnMount = false }) 
         )}
       </div>
 
-      {/* Tooltip */}
+      {}
       <div
         ref={tourRef}
         className="guided-tour-tooltip"
@@ -195,9 +185,6 @@ export function GuidedTour({ steps, onComplete, onSkip, startOnMount = false }) 
   );
 }
 
-/**
- * TourTrigger - Button to start a tour
- */
 export function TourTrigger({ label = 'Take a tour', onStart }) {
   const handleStart = () => {
     if (onStart) onStart();
@@ -215,9 +202,6 @@ export function TourTrigger({ label = 'Take a tour', onStart }) {
   );
 }
 
-/**
- * Tooltip - Contextual help tooltip
- */
 export function Tooltip({ content, position = 'top', trigger = 'hover' }) {
   const [isVisible, setIsVisible] = useState(trigger === 'click' ? false : false);
   const tooltipRef = useRef(null);
@@ -261,10 +245,6 @@ export function Tooltip({ content, position = 'top', trigger = 'hover' }) {
   );
 }
 
-/**
- * HelpHint - Inline help hint
- */
-// eslint-disable-next-line no-unused-vars
 export function HelpHint({ children, icon: Icon = Lightbulb }) {
   return (
     <div className="help-hint">

@@ -1,12 +1,8 @@
-/* eslint-disable react-refresh/only-export-components */
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useRouter } from '../context/RouterContext.jsx';
 
-/**
- * Auth Guard - HOC for protecting routes and pages
- * Provides role-based access control, verification requirements, etc.
- */
 const withAuthGuard = (
   Component,
   options = {}
@@ -33,35 +29,31 @@ const withAuthGuard = (
 
     const validateAccess = useCallback(async () => {
       try {
-        // Check session validity
+        
         const session = await checkSession();
         if (!session.active) {
           navigate(redirectTo);
           return;
         }
 
-        // Check authentication
         if (!isAuthenticated) {
           navigate(redirectTo);
           setLoading(false);
           return;
         }
 
-        // Check roles
         if (requiredRoles && !hasRole(requiredRoles)) {
           navigate('/unauthorized');
           setLoading(false);
           return;
         }
 
-        // Check permissions
         if (requiredPermissions && !hasPermission(requiredPermissions)) {
           navigate('/forbidden');
           setLoading(false);
           return;
         }
 
-        // Check verification status
         if (requireVerification && verificationStatus !== 'verified') {
           navigate('/verification/progress');
           setLoading(false);
@@ -76,7 +68,6 @@ const withAuthGuard = (
         setLoading(false);
       }
        
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated, hasRole, hasPermission, checkSession, navigate, requiredRoles, requiredPermissions, requireVerification, verificationStatus, redirectTo]);
 
     useEffect(() => {
@@ -104,9 +95,6 @@ const withAuthGuard = (
 
 export default withAuthGuard;
 
-/**
- * Role Badge Component - Show user's role
- */
 export const RoleBadge = ({ className = '' }) => {
   const { user } = useAuth();
 
@@ -134,9 +122,6 @@ export const RoleBadge = ({ className = '' }) => {
   );
 };
 
-/**
- * Verification Status Badge
- */
 export const VerificationBadge = ({ className = '' }) => {
   const { verificationStatus } = useAuth();
 
@@ -164,9 +149,6 @@ export const VerificationBadge = ({ className = '' }) => {
   );
 };
 
-/**
- * Permission Gate - Conditionally render based on permission
- */
 export const PermissionGate = ({ 
   permission, 
   children, 
@@ -181,9 +163,6 @@ export const PermissionGate = ({
   return children;
 };
 
-/**
- * Role Gate - Conditionally render based on role
- */
 export const RoleGate = ({ 
   role, 
   children, 
@@ -198,9 +177,6 @@ export const RoleGate = ({
   return children;
 };
 
-/**
- * Verification Gate - Show content only if verified
- */
 export const VerificationGate = ({ 
   children, 
   fallback = null,

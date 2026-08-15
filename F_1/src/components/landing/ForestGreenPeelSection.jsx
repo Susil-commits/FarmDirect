@@ -1,5 +1,5 @@
 import React from 'react';
-// eslint-disable-next-line no-unused-vars
+
 import { motion } from 'framer-motion';
 import { ArrowUpRight, ShieldCheck, Truck, Percent, Layers, HeartHandshake, Sparkles } from 'lucide-react';
 
@@ -59,12 +59,12 @@ export default function ForestGreenPeelSection({ onExploreClick }) {
       id="why-direct"
       className="relative bg-[#132E20] text-[#FBF8F3] pt-24 pb-28 md:pt-32 md:pb-36 -mt-16 md:-mt-20 rounded-t-[60px] md:rounded-t-[80px] z-10 shadow-[0_-20px_50px_rgba(0,0,0,0.3)] overflow-hidden"
     >
-      {/* Decorative ambient background blur */}
+      {}
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#D97736]/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#84A98C]/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-6xl mx-auto px-4 md:px-8 relative z-10">
-        {/* Section Header */}
+        {}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -101,7 +101,7 @@ export default function ForestGreenPeelSection({ onExploreClick }) {
           </motion.p>
         </div>
 
-        {/* Comparison Cards Grid */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
           {comparisonItems.map((comp, idx) => (
             <motion.div
@@ -159,7 +159,7 @@ export default function ForestGreenPeelSection({ onExploreClick }) {
           ))}
         </div>
 
-        {/* 4 Core Value Pillars Grid */}
+        {}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {pillarProps.map((pillar, idx) => {
             const Icon = pillar.icon;
@@ -186,7 +186,7 @@ export default function ForestGreenPeelSection({ onExploreClick }) {
           })}
         </div>
 
-        {/* Section Bottom Action */}
+        {}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

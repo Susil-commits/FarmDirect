@@ -45,7 +45,7 @@ export default function AdvancedSearch({ onFilter }) {
 
   return (
     <div className="advanced-search">
-      {/* Search Bar */}
+      {}
       <div className="search-bar card-glass">
         <input
           type="text"
@@ -58,7 +58,7 @@ export default function AdvancedSearch({ onFilter }) {
         <button className="search-btn btn btn-primary">🔍</button>
       </div>
 
-      {/* Filter Toggle */}
+      {}
       <div className="filter-toggle">
         <button
           onClick={() => setShowFilters(!showFilters)}
@@ -68,10 +68,10 @@ export default function AdvancedSearch({ onFilter }) {
         </button>
       </div>
 
-      {/* Filters Panel */}
+      {}
       {showFilters && (
         <div className="filters-panel card-glass animate-slide-in-down">
-          {/* Sort By */}
+          {}
           <div className="filter-section">
             <h4>Sort By</h4>
             <select
@@ -90,7 +90,7 @@ export default function AdvancedSearch({ onFilter }) {
 
           <div className="divider-subtle"></div>
 
-          {/* Category Filter */}
+          {}
           <div className="filter-section">
             <h4>Category</h4>
             <select
@@ -110,7 +110,7 @@ export default function AdvancedSearch({ onFilter }) {
 
           <div className="divider-subtle"></div>
 
-          {/* Price Range */}
+          {}
           <div className="filter-section">
             <h4>Price Range</h4>
             <div className="price-inputs">
@@ -156,7 +156,7 @@ export default function AdvancedSearch({ onFilter }) {
 
           <div className="divider-subtle"></div>
 
-          {/* Rating Filter */}
+          {}
           <div className="filter-section">
             <h4>Minimum Rating</h4>
             <div className="rating-options">
@@ -191,7 +191,7 @@ export default function AdvancedSearch({ onFilter }) {
 
           <div className="divider-subtle"></div>
 
-          {/* Attributes */}
+          {}
           <div className="filter-section">
             <h4>Attributes</h4>
             <div className="checkbox-group">
@@ -220,7 +220,7 @@ export default function AdvancedSearch({ onFilter }) {
 
           <div className="divider-subtle"></div>
 
-          {/* Reset Button */}
+          {}
           <button
             onClick={resetFilters}
             className="btn btn-ghost w-full cursor-pointer"

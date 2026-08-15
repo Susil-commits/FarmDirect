@@ -1,15 +1,9 @@
-/**
- * Password Reset Service
- * Handles password reset and recovery flow
- */
+
 import { API_BASE_URL } from './api.js';
 import { getAccessToken } from '../utils/tokenStore.js';
 
 export const passwordResetService = {
-  /**
-   * Request password reset email
-   * @param {string} email - User email
-   */
+  
   requestReset: async (email) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
@@ -26,11 +20,6 @@ export const passwordResetService = {
     }
   },
 
-  /**
-   * Verify reset token and update password
-   * @param {string} token - Reset token from email
-   * @param {string} newPassword - New password
-   */
   resetPassword: async (token, newPassword) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
@@ -47,10 +36,6 @@ export const passwordResetService = {
     }
   },
 
-  /**
-   * Update password (authenticated user)
-   * @param {object} data - Old and new passwords
-   */
   updatePassword: async (data) => {
     try {
       const token = getAccessToken();

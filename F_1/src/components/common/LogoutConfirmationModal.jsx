@@ -7,7 +7,7 @@ export default function LogoutConfirmationModal({ onConfirm, onCancel }) {
   return (
     <div className="logout-confirmation-overlay" onClick={onCancel}>
       <div className="logout-confirmation-modal" onClick={(e) => e.stopPropagation()}>
-        {/* Close Button */}
+        {}
         <button
           onClick={onCancel}
           className="logout-close-btn"
@@ -16,22 +16,22 @@ export default function LogoutConfirmationModal({ onConfirm, onCancel }) {
           <X size={20} />
         </button>
 
-        {/* Modal Content */}
+        {}
         <div className="logout-modal-content">
-          {/* Icon */}
+          {}
           <div className="logout-modal-icon">
             <AlertTriangle size={48} />
           </div>
 
-          {/* Title */}
+          {}
           <h2 className="logout-modal-title">Confirm Logout</h2>
 
-          {/* Description */}
+          {}
           <p className="logout-modal-description">
             Are you sure you want to logout? You will need to login again to access your account.
           </p>
 
-          {/* Action Buttons */}
+          {}
           <div className="logout-modal-actions">
             <Button
               onClick={onConfirm}

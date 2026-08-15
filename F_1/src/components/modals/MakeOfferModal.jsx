@@ -38,7 +38,7 @@ export default function MakeOfferModal({ isOpen, onClose, crop, onSuccess }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#132E20]/60 backdrop-blur-md animate-fade-in">
       <div className="bg-white/95 backdrop-blur-xl border border-stone-200 rounded-[32px] w-full max-w-md overflow-hidden shadow-2xl animate-scale-in">
-        {/* Header */}
+        {}
         <div className="flex justify-between items-center px-6 py-5 border-b border-stone-100 bg-[#FBF8F3]">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#D97736]/10 text-[#D97736] flex items-center justify-center font-bold">
@@ -58,7 +58,7 @@ export default function MakeOfferModal({ isOpen, onClose, crop, onSuccess }) {
         </div>
         
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Crop Context Card */}
+          {}
           <div className="p-3.5 bg-stone-50 border border-stone-200/80 rounded-2xl text-xs space-y-1">
             <div className="flex justify-between text-stone-800">
               <span className="font-bold">Crop:</span>
@@ -145,4 +145,4 @@ export default function MakeOfferModal({ isOpen, onClose, crop, onSuccess }) {
     </div>
   );
 }
-
+

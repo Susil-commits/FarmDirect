@@ -49,7 +49,6 @@ export default function VerificationProgress() {
     return baseDocuments;
   });
 
-  // Sync documents state when user role changes (ensures farmer docs are added)
   useEffect(() => {
     if (!user?.role) return;
     const expectedKeys = Object.keys(getBaseDocuments(user.role));
@@ -57,8 +56,6 @@ export default function VerificationProgress() {
     const missingKeys = expectedKeys.filter(k => !currentKeys.includes(k));
     if (missingKeys.length > 0) {
        
-       
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDocuments(prev => {
         const updated = { ...prev };
         missingKeys.forEach(key => {
@@ -69,35 +66,33 @@ export default function VerificationProgress() {
       });
        
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [user?.role]);
   
-  // Check if user has NA-marked address fields (farmers who marked address as N/A during registration)
   const hasNAAddress = user?.role === 'farmer' && (
     user?.address === 'NA' || user?.city === 'NA' || user?.state === 'NA' || user?.pincode === 'NA'
   );
 
-  // Personal details state
   const [personalDetails, setPersonalDetails] = useState({
     aadharNumber: '',
     address: (!hasNAAddress && user?.address && user?.address !== 'NA') ? user.address : '',
     city: (!hasNAAddress && user?.city && user?.city !== 'NA') ? user.city : (user?.addresses?.[0]?.city || ''),
     state: (!hasNAAddress && user?.state && user?.state !== 'NA') ? user.state : (user?.addresses?.[0]?.state || ''),
     pincode: (!hasNAAddress && user?.pincode && user?.pincode !== 'NA') ? user.pincode : (user?.addresses?.[0]?.pincode || ''),
-    // Farmer-specific fields
+    
     farmName: user?.farmName || '',
     farmArea: user?.farmArea || '',
     experience: user?.experience || ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedAt, setSubmittedAt] = useState(() => {
-    // Restore submission state from localStorage on page load - user-specific
+    
     if (!user?.id) return null;
     const stored = localStorage.getItem(`verificationSubmittedAt_${user.id}`);
     return stored ? new Date(stored) : null;
   });
   const [showCongratulation, _setShowCongratulation] = useState(() => {
-    // Check if we should show congratulation modal
+    
     if (!user?.id) return false;
     const shouldShow = localStorage.getItem(`showCongratulation_${user.id}`);
     return !!shouldShow;
@@ -106,12 +101,10 @@ export default function VerificationProgress() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
 
-  // Reset scroll position to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Save documents metadata to localStorage whenever they change
   useEffect(() => {
     if (user?.id) {
       const toStore = {};
@@ -120,7 +113,7 @@ export default function VerificationProgress() {
           status: doc.status || 'pending',
           fileName: doc.fileName || '',
           file: doc.file ? doc.file.name : null,
-          url: doc.url || null,        // Preserve URL for PDF/image preview after page reload
+          url: doc.url || null,        
           mimeType: doc.mimeType || null,
         };
       });
@@ -128,12 +121,11 @@ export default function VerificationProgress() {
     }
   }, [documents, user?.id]);
 
-  // Check verification status and load submitted documents on page load
   useEffect(() => {
     const checkStatus = async () => {
       if (user) {
         setIsChecking(true);
-        // Always fetch latest status and submitted documents
+        
         await fetchVerificationStatus();
         setIsChecking(false);
       }
@@ -141,8 +133,6 @@ export default function VerificationProgress() {
     checkStatus();
   }, [user, fetchVerificationStatus]);
 
-  // Pre-populate documents from backend kycDocuments when user data is refreshed
-  // This ensures users who already submitted KYC docs don't see empty upload slots
   useEffect(() => {
     if (!user?.kycDocuments) return;
 
@@ -153,7 +143,6 @@ export default function VerificationProgress() {
 
     if (!hasSubmittedDocs) return;
 
-    // Map backend kycDocuments structure to frontend document state
     const docMappings = ['governmentId', 'profilePhoto', 'addressProof'];
     if (user?.role === 'farmer') {
       docMappings.push('landOwnership', 'farmRegistration');
@@ -166,7 +155,7 @@ export default function VerificationProgress() {
       const backendDoc = kycDocs[docId];
       if (backendDoc && backendDoc.url) {
         restoredDocs[docId] = {
-          file: null, // Cannot restore actual File object from URL
+          file: null, 
           status: 'submitted',
           fileName: backendDoc.fileName || 'Uploaded document',
           url: backendDoc.url,
@@ -177,12 +166,10 @@ export default function VerificationProgress() {
        
     });
 
-       
     if (hasAnyDoc) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      
       setDocuments((prev) => ({ ...prev, ...restoredDocs }));
 
-      // Also restore submission timestamp from backend
       if (user.kycSubmittedAt) {
         setSubmittedAt(new Date(user.kycSubmittedAt));
         localStorage.setItem(
@@ -191,7 +178,6 @@ export default function VerificationProgress() {
         );
       }
 
-      // Restore aadhar number if stored in kycDocuments
       if (kycDocs.aadharNumber) {
         setPersonalDetails((prev) => ({
           ...prev,
@@ -202,9 +188,9 @@ export default function VerificationProgress() {
   }, [user?.kycDocuments, user?.kycSubmittedAt, user?.role, user?.id]);
 
   useEffect(() => {
-    // If already verified, redirect to dashboard and clear submission state
+    
     if (verificationStatus === 'verified') {
-      // Clear user-specific submission state
+      
       if (user?.id) {
         localStorage.removeItem(`verificationSubmittedAt_${user.id}`);
       }
@@ -264,7 +250,7 @@ export default function VerificationProgress() {
   const handleFileChange = (e, documentId) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file size (max 5MB)
+      
       if (file.size > 5 * 1024 * 1024) {
         addToast('File size must be less than 5MB', 'error');
         return;
@@ -276,7 +262,7 @@ export default function VerificationProgress() {
           ...prev[documentId],
           file,
           fileName: file.name,
-          status: 'ready' // Mark as ready for upload
+          status: 'ready' 
         }
       }));
     }
@@ -284,7 +270,6 @@ export default function VerificationProgress() {
 
   const allDocumentsUploaded = Object.values(documents).every(doc => doc.file !== null);
   
-  // Check if all documents have been submitted (persisted status)
   const allDocumentsSubmitted = Object.values(documents).every(doc => doc.status === 'submitted' && doc.fileName);
 
   const handleSubmit = async (e) => {
@@ -295,14 +280,13 @@ export default function VerificationProgress() {
       return;
     }
     
-    // Validate personal details with field-level error tracking
     const errors = {};
     if (!personalDetails.aadharNumber) errors.aadharNumber = true;
     if (!personalDetails.address) errors.address = true;
     if (!personalDetails.city) errors.city = true;
     if (!personalDetails.state) errors.state = true;
     if (!personalDetails.pincode) errors.pincode = true;
-    // Farmer-specific validation
+    
     if (user?.role === 'farmer') {
       if (!personalDetails.farmName) errors.farmName = true;
       if (!personalDetails.farmArea) errors.farmArea = true;
@@ -312,7 +296,7 @@ export default function VerificationProgress() {
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       addToast('Please fill in all required personal details including address', 'error');
-      // Scroll to the personal details section so the user can see the missing fields
+      
       const detailsSection = document.getElementById('personal-details-section');
       if (detailsSection) {
         detailsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -323,7 +307,7 @@ export default function VerificationProgress() {
 
     setIsSubmitting(true);
     try {
-      // Prepare form data with file uploads and personal details
+      
       const formData = new FormData();
       Object.entries(documents).forEach(([key, value]) => {
         if (value.file) {
@@ -331,14 +315,12 @@ export default function VerificationProgress() {
         }
       });
       
-      // Add personal details
       formData.append('aadharNumber', personalDetails.aadharNumber);
       formData.append('address', personalDetails.address || '');
       formData.append('city', personalDetails.city);
       formData.append('state', personalDetails.state);
       formData.append('pincode', personalDetails.pincode);
       
-      // Add farmer-specific fields
       if (user?.role === 'farmer') {
         formData.append('farmName', personalDetails.farmName || '');
         formData.append('farmArea', personalDetails.farmArea || '');
@@ -347,14 +329,11 @@ export default function VerificationProgress() {
 
       const _result = await submitVerificationDocuments(formData);
       
-      // CRITICAL: Refresh user data to get kycDocuments from backend
-      // submitVerificationDocuments already tries to update user, but this ensures it
       await refreshUser();
       
       const now = new Date();
       setSubmittedAt(now);
       
-      // Update document status to submitted and persist
       const updatedDocs = {};
       Object.entries(documents).forEach(([key, doc]) => {
         updatedDocs[key] = {
@@ -390,7 +369,7 @@ export default function VerificationProgress() {
       localStorage.removeItem(`verificationDocuments_${user?.id}`);
       localStorage.removeItem(`verificationSubmittedAt_${user?.id}`);
       localStorage.removeItem(`showCongratulation_${user?.id}`);
-      // Redirect to home
+      
       setTimeout(() => navigate('/'), 1500);
     } catch (error) {
       console.error('Delete account error:', error);
@@ -401,7 +380,6 @@ export default function VerificationProgress() {
     }
   };
 
-  // Helper function to get display status for documents
   const getDocumentStatus = (doc) => {
     if (doc.status === 'submitted') return 'Submitted ✓';
     if (doc.status === 'ready' && doc.fileName) return 'Ready to Submit';
@@ -409,7 +387,6 @@ export default function VerificationProgress() {
     return 'Pending Upload';
   };
 
-  // Helper function to get badge variant
   const getDocumentBadgeVariant = (doc) => {
     if (doc.status === 'submitted') return 'success';
     if (doc.status === 'ready' || doc.file) return 'info';
@@ -451,17 +428,17 @@ export default function VerificationProgress() {
 
   return (
     <PageTransition>
-      {/* Show congratulation modal if verification just got approved */}
+      {}
       {showCongratulation && <CongratulationModal />}
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-cyan-50 px-4 pt-28 pb-12">
         <div className="max-w-3xl mx-auto">
-          {/* Back Button */}
+          {}
           <div className="mb-6">
             <BackButton label="Back" />
           </div>
 
-          {/* Header */}
+          {}
           <div className="text-center mb-12">
             <div className="flex justify-center mb-6">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-500 rounded-full flex items-center justify-center">
@@ -476,11 +453,11 @@ export default function VerificationProgress() {
             </p>
           </div>
 
-          {/* Status Overview */}
+          {}
           <Card className="mb-8 bg-white shadow-lg">
             <div className="p-8">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
-                {/* Current Status */}
+                {}
                 <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg">
                   <div className="flex items-center gap-3 mb-3">
                     {getStatusIcon(verificationStatus)}
@@ -495,7 +472,7 @@ export default function VerificationProgress() {
                   </p>
                 </div>
 
-                {/* Documents Progress */}
+                {}
                 <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
                   <div className="flex items-center gap-3 mb-3">
                     <FileText className="w-5 h-5 text-blue-600" />
@@ -503,7 +480,7 @@ export default function VerificationProgress() {
                   </div>
                   <p className="text-2xl font-bold text-gray-900">
                     {(() => {
-                      // Count documents from live state: either newly uploaded (file) or previously submitted (status === 'submitted')
+                      
                       const uploadedCount = Object.values(documents).filter(
                         d => d.file !== null || d.status === 'submitted'
                       ).length;
@@ -513,7 +490,7 @@ export default function VerificationProgress() {
                   <p className="text-sm text-gray-600 mt-2">Documents uploaded</p>
                 </div>
 
-                {/* Timeline Info */}
+                {}
                 <div className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
                   <div className="flex items-center gap-3 mb-3">
                     <Clock className="w-5 h-5 text-orange-600" />
@@ -524,9 +501,7 @@ export default function VerificationProgress() {
                 </div>
               </div>
 
-
-
-              {/* Timeline Progress */}
+              {}
               <div className="border-t border-gray-200 pt-6">
                 <h3 className="font-semibold text-gray-900 mb-4">Verification Timeline</h3>
                 <div className="space-y-3">
@@ -891,7 +866,7 @@ export default function VerificationProgress() {
                         localStorage.setItem(`verificationSubmittedAt_${user.id}`, now.toISOString());
                       }
                       addToast('Your progress has been saved. You can continue later.', 'success');
-                      // Navigate to appropriate dashboard
+                      
                       if (user?.role === 'farmer') {
                         navigate('/farmer/dashboard');
                       } else if (user?.role === 'buyer') {
@@ -908,7 +883,7 @@ export default function VerificationProgress() {
             </Card>
           )}
 
-          {/* KYC Rejected - Delete Account Option */}
+          {}
           {verificationStatus === 'rejected' && (
             <Card className="bg-red-50 border border-red-200 p-12 text-center mb-8">
               <AlertCircle className="w-16 h-16 text-red-600 mx-auto mb-4" />
@@ -940,7 +915,7 @@ export default function VerificationProgress() {
             </Card>
           )}
 
-          {/* Documents Submitted - Awaiting Review */}
+          {}
           {verificationStatus !== 'verified' && allDocumentsSubmitted && verificationStatus !== 'rejected' && (
             <Card className="bg-blue-50 border border-blue-200 p-12 text-center">
               <Clock className="w-16 h-16 text-blue-600 mx-auto mb-4" />
@@ -984,7 +959,7 @@ export default function VerificationProgress() {
                   variant="secondary"
                   size="md"
                   onClick={() => {
-                    // Reset all document statuses from 'submitted' to 'pending'
+                    
                     const resetDocs = {};
                     Object.entries(documents).forEach(([key, doc]) => {
                       resetDocs[key] = {
@@ -996,7 +971,7 @@ export default function VerificationProgress() {
                     });
                     setDocuments(resetDocs);
                     setSubmittedAt(null);
-                    // Clear localStorage entries for this user
+                    
                     if (user?.id) {
                       localStorage.removeItem(`verificationSubmittedAt_${user.id}`);
                       localStorage.removeItem(`verificationDocuments_${user.id}`);
@@ -1010,7 +985,7 @@ export default function VerificationProgress() {
             </Card>
           )}
 
-          {/* Verified Message */}
+          {}
           {verificationStatus === 'verified' && (
             <Card className="bg-green-50 border border-green-200 text-center p-12">
               <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
@@ -1032,7 +1007,7 @@ export default function VerificationProgress() {
         </div>
       </div>
 
-      {/* Delete Account Confirmation Modal */}
+      {}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <Card className="max-w-md w-full">
@@ -1062,7 +1037,7 @@ export default function VerificationProgress() {
           </Card>
         </div>
       )}
-      {/* Document Preview Modal */}
+      {}
       {selectedDocument && (
         <DocumentPreviewModal
           document={selectedDocument}

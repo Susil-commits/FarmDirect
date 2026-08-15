@@ -30,7 +30,6 @@ export default function AdminCrops() {
 
   useEffect(() => {
        
-      // eslint-disable-next-line react-hooks/immutability
     fetchData();
   }, []);
 
@@ -102,7 +101,6 @@ export default function AdminCrops() {
     }
   };
 
-  // Handle approve crop
   const handleApproveClick = (crop) => {
     setSelectedCrop(crop);
     setShowApproveModal(true);
@@ -123,7 +121,6 @@ export default function AdminCrops() {
     }
   };
 
-  // Handle reject crop
   const handleRejectClick = (crop) => {
     setSelectedCrop(crop);
     setRejectReason('');
@@ -180,9 +177,9 @@ export default function AdminCrops() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gray-100 flex pt-28 pb-12">
-        {/* Mobile Backdrop */}
+        {}
         {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
-        {/* Sidebar */}
+        {}
         <div className={`fixed lg:static inset-y-0 left-0 lg:inset-auto transition-all duration-300 ${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-green-700 to-green-800 text-white flex flex-col z-40 ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
           <div className="p-6 border-b border-green-600">
             <div className="flex items-center justify-between">
@@ -235,9 +232,9 @@ export default function AdminCrops() {
           </div>
         </div>
 
-        {/* Main Content */}
+        {}
         <div className="flex-1 overflow-auto">
-          {/* Top Bar */}
+          {}
           <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-30">
             <div className="flex items-center gap-4">
               <button
@@ -256,7 +253,7 @@ export default function AdminCrops() {
             </button>
           </div>
 
-          {/* Content */}
+          {}
           <div className="p-6">
             <div className="space-y-6">
               <Card className="bg-white">
@@ -400,7 +397,7 @@ export default function AdminCrops() {
         </div>
       </div>
 
-      {/* Freeze Modal */}
+      {}
       {showFreezeModal && selectedCrop && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <Card className="max-w-md w-full">
@@ -453,7 +450,7 @@ export default function AdminCrops() {
         </div>
       )}
 
-      {/* Delete Modal */}
+      {}
       {showDeleteModal && selectedCrop && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <Card className="max-w-md w-full">
@@ -501,7 +498,7 @@ export default function AdminCrops() {
         </div>
       )}
 
-      {/* Approve Crop Modal */}
+      {}
       {showApproveModal && selectedCrop && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <Card className="max-w-md w-full">
@@ -542,7 +539,7 @@ export default function AdminCrops() {
         </div>
       )}
 
-      {/* Reject Crop Modal */}
+      {}
       {showRejectModal && selectedCrop && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <Card className="max-w-md w-full">
@@ -598,7 +595,7 @@ export default function AdminCrops() {
         </div>
       )}
 
-      {/* Logout Confirmation Modal */}
+      {}
       {showLogoutConfirm && (
         <LogoutConfirmationModal
           onConfirm={async () => {

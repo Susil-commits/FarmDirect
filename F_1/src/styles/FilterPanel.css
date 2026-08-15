@@ -1,6 +1,6 @@
-/* Filter Panel Animations */
 
-/* Slider styling with enhanced visual feedback */
+
+
 .slider {
   -webkit-appearance: none;
   width: 100%;
@@ -57,7 +57,7 @@
   border: none;
 }
 
-/* Filter panel transitions */
+
 .filter-panel {
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -73,7 +73,7 @@
   opacity: 1;
 }
 
-/* Filter badge animations */
+
 .filter-badge {
   animation: slideInDown 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
@@ -93,7 +93,7 @@
   animation: filterBadgeRemove 0.3s ease-out forwards;
 }
 
-/* Checkbox animations */
+
 input[type='radio'],
 input[type='checkbox'] {
   transition: all 0.2s ease;
@@ -109,7 +109,7 @@ input[type='checkbox']:checked {
   animation: scaleIn 0.3s ease-out;
 }
 
-/* Filter toggle button on mobile */
+
 .filter-toggle {
   transition: all 0.3s ease;
 }
@@ -118,7 +118,7 @@ input[type='checkbox']:checked {
   transform: scale(0.95);
 }
 
-/* Animated scrollbar for location list */
+
 .filter-panel::-webkit-scrollbar {
   width: 6px;
 }
@@ -138,7 +138,7 @@ input[type='checkbox']:checked {
   background: #1B3B2B;
 }
 
-/* ---- Responsive ---- */
+
 @media (max-width: 768px) {
   .filter-panel {
     padding: 0.75rem;

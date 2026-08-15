@@ -1,23 +1,9 @@
 import { useCallback } from 'react';
 import { useToast } from './useToast';
 
-/**
- * Centralized error handler hook.
- *
- * Maps any backend/network error to a user-facing toast message.
- * All components should use this instead of individual try/catch → console.error patterns.
- *
- * @example
- * const { handleError, formatApiError } = useErrorHandler();
- * try { ... } catch (err) { handleError(err, 'Loading crops'); }
- */
 export function useErrorHandler() {
   const toast = useToast();
 
-  /**
-   * Format an API error into a user-friendly string.
-   * Works with: axios error objects, backend JSON error shapes, raw Error, strings.
-   */
   const formatApiError = useCallback((error, context = '') => {
     if (!error) return 'An unexpected error occurred';
 
@@ -50,10 +36,6 @@ export function useErrorHandler() {
     return message || 'An unexpected error occurred. Please try again.';
   }, []);
 
-  /**
-   * Handle an error: format it and show the appropriate toast.
-   * Returns the formatted message string for inline use.
-   */
   const handleError = useCallback((error, context = '') => {
     if (error?.message === 'Refresh cooldown active') return null;
 
@@ -82,9 +64,6 @@ export function useErrorHandler() {
     return message;
   }, [toast, formatApiError]);
 
-  /**
-   * Handle a network offline error specifically.
-   */
   const handleNetworkError = useCallback(() => {
     toast?.error?.('You appear to be offline. Please check your connection and try again.');
   }, [toast]);

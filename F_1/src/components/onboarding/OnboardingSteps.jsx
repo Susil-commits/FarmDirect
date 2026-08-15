@@ -5,9 +5,6 @@ import Button from '../common/Button';
 import { HelpHint } from './GuidedTour';
 import '../onboarding/OnboardingSteps.css';
 
-/**
- * Welcome Step - Introduce the onboarding process
- */
 export function WelcomeStep({ data, updateData, errors }) {
   const [selectedRole, setSelectedRole] = useState(data.role || null);
 
@@ -171,9 +168,6 @@ export function AccountStep({ data, updateData, errors }) {
   );
 }
 
-/**
- * Profile Step - Complete profile
- */
 export function ProfileStep({ data, updateData, errors }) {
   const handleChange = (field, value) => {
     updateData({ [field]: value });
@@ -257,9 +251,6 @@ export function ProfileStep({ data, updateData, errors }) {
   );
 }
 
-/**
- * Address Step - For buyers (delivery address)
- */
 export function AddressStep({ data, updateData, errors }) {
   const handleChange = (field, value) => {
     updateData({ [field]: value });
@@ -343,9 +334,6 @@ export function AddressStep({ data, updateData, errors }) {
   );
 }
 
-/**
- * Farm Step - For farmers
- */
 export function FarmStep({ data, updateData, errors }) {
   const handleChange = (field, value) => {
     updateData({ [field]: value });
@@ -448,9 +436,6 @@ export function FarmStep({ data, updateData, errors }) {
   );
 }
 
-/**
- * Preferences Step - User preferences
- */
 export function PreferencesStep({ data, updateData, errors }) {
   const handleChange = (field, value) => {
     updateData({ [field]: value });

@@ -13,8 +13,8 @@ export default function Register() {
   const { addToast } = useToast();
   const formRef = useRef(null);
 
-  const [step, setStep] = useState(1); // 1: Role, 2: Personal Details & Password, 3: Address & Location
-  const [role, setRole] = useState('buyer'); // buyer or farmer
+  const [step, setStep] = useState(1); 
+  const [role, setRole] = useState('buyer'); 
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -486,5 +486,4 @@ export default function Register() {
     </PageTransition>
   );
 }
-
-
+

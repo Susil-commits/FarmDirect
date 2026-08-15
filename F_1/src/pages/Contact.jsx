@@ -4,7 +4,7 @@ import PageTransition from '../components/common/PageTransition.jsx';
 import DynamicFloatingNavbar from '../components/landing/DynamicFloatingNavbar';
 import GiantBrandFooter from '../components/common/GiantBrandFooter';
 import { Mail, Phone, MapPin, Send, Sparkles, CheckCircle2 } from 'lucide-react';
-// eslint-disable-next-line no-unused-vars
+
 import { motion } from 'framer-motion';
 
 export default function Contact() {

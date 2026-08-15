@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-// eslint-disable-next-line no-unused-vars
+
 import { motion } from 'framer-motion';
 import { Search, ShoppingBag, ShieldCheck, MapPin, Sparkles, ArrowRight, RefreshCw, Calculator } from 'lucide-react';
 
 export default function CreamValueSection({ onExploreClick, onNavigate }) {
-  const [calculatorQty, setCalculatorQty] = useState(10); // 10 kg
-  const pricePerKgFarmer = 45; // Farmer gets ₹45
-  const logisticsFeePerKg = 12; // Logistics ₹12
+  const [calculatorQty, setCalculatorQty] = useState(10); 
+  const pricePerKgFarmer = 45; 
+  const logisticsFeePerKg = 12; 
   const farmDirectTotal = (pricePerKgFarmer + logisticsFeePerKg) * calculatorQty;
-  const traditionalStoreTotal = 95 * calculatorQty; // Retail store ₹95/kg
+  const traditionalStoreTotal = 95 * calculatorQty; 
   const savings = traditionalStoreTotal - farmDirectTotal;
 
   const handleStepClick = () => {
@@ -49,7 +49,7 @@ export default function CreamValueSection({ onExploreClick, onNavigate }) {
       className="relative bg-[#FBF8F3] text-[#132E20] pt-24 pb-28 md:pt-32 md:pb-36 -mt-16 md:-mt-20 rounded-t-[60px] md:rounded-t-[80px] z-20 shadow-[0_-20px_50px_rgba(0,0,0,0.1)] overflow-hidden"
     >
       <div className="max-w-6xl mx-auto px-4 md:px-8 relative z-10">
-        {/* Header */}
+        {}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -86,7 +86,7 @@ export default function CreamValueSection({ onExploreClick, onNavigate }) {
           </motion.p>
         </div>
 
-        {/* 3 Step Workflow Cards */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
           {steps.map((step, idx) => {
             const Icon = step.icon;
@@ -132,7 +132,7 @@ export default function CreamValueSection({ onExploreClick, onNavigate }) {
           })}
         </div>
 
-        {/* Interactive Direct Savings & Transparency Calculator Widget */}
+        {}
         <motion.div
           initial={{ opacity: 0, y: 35 }}
           whileInView={{ opacity: 1, y: 0 }}

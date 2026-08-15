@@ -2,10 +2,6 @@ import { useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from './/useRouter';
 
-/**
- * Custom hook to handle logout with confirmation modal
- * Usage: const { logout, showConfirmation, handleConfirm, handleCancel } = useLogoutWithConfirmation();
- */
 export const useLogoutWithConfirmation = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const { logout: authLogout } = useAuth();

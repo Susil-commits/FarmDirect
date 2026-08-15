@@ -33,9 +33,8 @@ export async function flagAnomalyAsync(orderId: string, amount: number, userId: 
       });
     }
 
-    // Update Welford stats for the user
     await updateWelfordStats(userId, amount);
-    // Update Welford stats for global
+    
     await updateWelfordStats('global', amount);
 
   } catch (error) {

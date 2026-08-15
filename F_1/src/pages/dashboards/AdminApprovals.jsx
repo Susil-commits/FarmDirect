@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars */
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../hooks/useRouter';
@@ -15,20 +15,14 @@ import api from '../../services/api.js';
 import { getImageUrl } from '../../utils/formatters';
 import { useToast } from '../../hooks/useToast';
 
-// Resolve document URL for display — local /uploads/ paths use getImageUrl
-// to prepend the backend origin in production.
-// cloud URLs (http/https) are used directly. PDFs use the backend proxy endpoint
-// for proper Content-Type headers and inline viewing.
 const resolveDocUrl = (url) => {
   if (!url) return '';
-  // Cloud URLs (DigitalOcean Spaces, Cloudinary, etc.) — use directly
+  
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  // Local upload paths — prefix with backend origin via getImageUrl
+  
   return getImageUrl(url) || url;
 };
 
-// Get the proxy URL for PDF/document inline viewing via the backend proxy endpoint
-// Uses VITE_API_BASE_URL to bypass Vercel's SPA catch-all in production
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 const getProxyUrl = (url) => {
   if (!url) return '';
@@ -36,7 +30,6 @@ const getProxyUrl = (url) => {
   return `${API_BASE}/admin/documents/proxy?url=${encodeURIComponent(url)}`;
 };
 
-// Standalone Document Thumbnail Card (module-level for stable React identity)
 const DocThumbnail = ({ doc, onPreview, formatFileSize, isImageDoc }) => {
   const [imgError, setImgError] = useState(false);
   const isImage = isImageDoc(doc);
@@ -86,13 +79,12 @@ export default function AdminApprovals() {
   const [previewImageError, setPreviewImageError] = useState(false);
   const { addToast } = useToast();
 
-  // Expand/collapse state for user detail rows
   const [expandedUsers, setExpandedUsers] = useState({});
-  // Document loading state per user
+  
   const [docLoadingUsers, setDocLoadingUsers] = useState({});
-  // Fetched documents per user
+  
   const [userDocuments, setUserDocuments] = useState({});
-  // Document preview modal
+  
   const [previewDoc, setPreviewDoc] = useState(null);
 
   useEffect(() => {
@@ -102,22 +94,18 @@ export default function AdminApprovals() {
   useEffect(() => {
     if (statusTab === 'pending') {
        
-      // eslint-disable-next-line react-hooks/immutability
       fetchPendingUsers();
        
     } else {
-      // eslint-disable-next-line react-hooks/immutability
+      
       fetchRejectedUsers();
        
     }
-    // Clear expanded state when tab changes
-       
-       
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+    
     setExpandedUsers({});
        
     setUserDocuments({});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [roleTab, statusTab]);
 
   const fetchPendingUsers = async () => {
@@ -191,8 +179,7 @@ export default function AdminApprovals() {
     if (!userDocuments[userId]) {
       try {
         setDocLoadingUsers(prev => ({ ...prev, [userId]: true }));
-        // BUG 5 FIX: api.js interceptor already returns response.data as the resolved value.
-        // Accessing .data again gives undefined. Use `response` directly.
+        
         const response = await api.get(`/admin/documents/${userId}`);
         setUserDocuments(prev => ({ ...prev, [userId]: response || null }));
       } catch (err) {
@@ -212,7 +199,7 @@ export default function AdminApprovals() {
       await adminService.approveUserKYC(userId, { comments: adminComments });
       addToast(`${userName} KYC approved!`, 'success');
       setAdminComments('');
-      // Remove from expanded/docs state
+      
       setExpandedUsers(prev => { const next = { ...prev }; delete next[userId]; return next; });
       setUserDocuments(prev => { const next = { ...prev }; delete next[userId]; return next; });
       await fetchPendingUsers();
@@ -242,7 +229,7 @@ export default function AdminApprovals() {
       addToast(`${selectedUser.firstName} KYC rejected`, 'success');
       setShowRejectModal(false);
       setRejectionReason('');
-      // Remove from expanded/docs state
+      
       setExpandedUsers(prev => { const next = { ...prev }; delete next[selectedUser._id]; return next; });
       setUserDocuments(prev => { const next = { ...prev }; delete next[selectedUser._id]; return next; });
       await fetchPendingUsers();
@@ -317,7 +304,6 @@ export default function AdminApprovals() {
     return 'from-blue-500 to-indigo-600';
   };
 
-  // KYC Status Badge
   const KYCStatusBadge = ({ status }) => {
     if (status === 'verified') {
       return (
@@ -374,9 +360,9 @@ export default function AdminApprovals() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gray-100 flex pt-28 pb-12">
-        {/* Mobile Backdrop */}
+        {}
         {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
-        {/* Sidebar */}
+        {}
         <div className={`fixed lg:static inset-y-0 left-0 lg:inset-auto transition-all duration-300 ${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-blue-700 to-blue-800 text-white flex flex-col z-40 ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
           <div className="p-6 border-b border-blue-600">
             <div className="flex items-center justify-between">
@@ -423,7 +409,7 @@ export default function AdminApprovals() {
           </div>
         </div>
 
-        {/* Main Content */}
+        {}
         <div className="flex-1 overflow-auto">
           <div className="p-8">
             <div className="max-w-6xl mx-auto">
@@ -450,7 +436,7 @@ export default function AdminApprovals() {
                 </div>
               </div>
 
-              {/* Tabs */}
+              {}
               <div className="mb-8">
                 <div className="flex gap-4 mb-4 flex-wrap items-center">
                   <button
@@ -519,7 +505,7 @@ export default function AdminApprovals() {
                 </div>
               </div>
 
-              {/* Error Banner */}
+              {}
               {error && (
                 <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded">
                   <div className="flex items-start gap-3">
@@ -541,7 +527,7 @@ export default function AdminApprovals() {
                 </div>
               )}
 
-              {/* Content */}
+              {}
               {loading ? (
                 <Card className="text-center py-12">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -612,11 +598,11 @@ export default function AdminApprovals() {
 
                     return (
                       <Card key={userItem._id} className="overflow-hidden hover:shadow-md transition-shadow">
-                        {/* Main Row */}
+                        {}
                         <div className="p-5">
                           <div className="flex flex-col sm:flex-row items-start gap-4">
                             <div className="flex items-start gap-4 min-w-0 flex-1">
-                            {/* Expand Toggle */}
+                            {}
                             <button
                               onClick={() => toggleExpandUser(userItem._id)}
                               className="mt-3 p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
@@ -629,12 +615,12 @@ export default function AdminApprovals() {
                               )}
                             </button>
 
-                            {/* Avatar */}
+                            {}
                             <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${getAvatarGradient(userItem.role)} flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-md`}>
                               {getUserInitials(userItem)}
                             </div>
 
-                            {/* User Info */}
+                            {}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-3 flex-wrap mb-1">
                                 <h3 className="text-lg font-bold text-gray-900">
@@ -651,7 +637,7 @@ export default function AdminApprovals() {
                               </div>
                               <p className="text-gray-600 text-sm">{userItem.email}</p>
 
-                              {/* Quick Info Row */}
+                              {}
                               <div className="flex flex-wrap gap-4 mt-2 text-xs text-gray-500">
                                 {userItem.phone && (
                                   <span className="flex items-center gap-1">
@@ -678,7 +664,7 @@ export default function AdminApprovals() {
                             </div>
                             </div>
 
-                            {/* Actions */}
+                            {}
                             <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
                               {statusTab === 'pending' ? (
                                 <>
@@ -715,7 +701,7 @@ export default function AdminApprovals() {
                           </div>
                         </div>
 
-                        {/* Expanded KYC Details Panel */}
+                        {}
                         {isExpanded && (
                           <div className="border-t-2 border-blue-100 bg-gradient-to-b from-blue-50/50 to-white">
                             {docsLoading ? (
@@ -725,7 +711,7 @@ export default function AdminApprovals() {
                               </div>
                             ) : (
                               <div className="p-6 space-y-6">
-                                {/* KYC Personal Details */}
+                                {}
                                 <div>
                                   <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
                                     <Shield size={16} className="text-blue-600" />
@@ -757,7 +743,7 @@ export default function AdminApprovals() {
                                   </div>
                                 </div>
 
-                                {/* Role-Specific Details */}
+                                {}
                                 {userItem.role === 'farmer' && (
                                   <div>
                                     <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -822,14 +808,14 @@ export default function AdminApprovals() {
                                   </div>
                                 )}
 
-                                {/* KYC Documents Section */}
+                                {}
                                 <div>
                                   <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
                                     <FileText size={16} className="text-indigo-600" />
                                     KYC Documents Uploaded
                                   </h4>
 
-                                  {/* Inline KYC docs from user object */}
+                                  {}
                                   {userItem.kycDocuments && Object.keys(userItem.kycDocuments).length > 0 ? (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                                       {Object.entries(userItem.kycDocuments).map(([docType, docData]) => {
@@ -864,7 +850,7 @@ export default function AdminApprovals() {
                                   )}
                                 </div>
 
-                                {/* Farm Images (farmers only) */}
+                                {}
                                 {userItem.role === 'farmer' && docs && !docs.error && docs.documents?.farmImages?.length > 0 && (
                                   <div>
                                     <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -901,7 +887,7 @@ export default function AdminApprovals() {
                                   </div>
                                 )}
 
-                                {/* Rejection Reason (for rejected users) */}
+                                {}
                                 {statusTab === 'rejected' && userItem.kycRejectionReason && (
                                   <div className="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
                                     <p className="text-sm font-bold text-red-800 mb-1">❌ Rejection Reason:</p>
@@ -909,7 +895,7 @@ export default function AdminApprovals() {
                                   </div>
                                 )}
 
-                                {/* Admin Comments for pending */}
+                                {}
                                 {statusTab === 'pending' && (
                                   <div>
                                     <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -926,7 +912,7 @@ export default function AdminApprovals() {
                                   </div>
                                 )}
 
-                                {/* Action Buttons in expanded view */}
+                                {}
                                 <div className="flex gap-3 pt-2 border-t border-gray-100">
                                   {statusTab === 'pending' ? (
                                     <>
@@ -971,7 +957,7 @@ export default function AdminApprovals() {
           </div>
         </div>
 
-        {/* Document Preview Modal */}
+        {}
         {previewDoc && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" onClick={() => { setPreviewDoc(null); setPreviewImageError(false); }}>
             <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -1024,7 +1010,7 @@ export default function AdminApprovals() {
           </div>
         )}
 
-        {/* Rejection Modal */}
+        {}
         {showRejectModal && selectedUser && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <Card className="max-w-md w-full">
@@ -1073,7 +1059,7 @@ export default function AdminApprovals() {
         )}
       </div>
 
-      {/* Logout Confirmation Modal */}
+      {}
       {showLogoutConfirm && (
         <LogoutConfirmationModal
           onConfirm={async () => {

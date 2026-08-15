@@ -12,11 +12,6 @@ const suspendedAllowedPaths = [
   '/api/contact',
 ];
 
-/** Require a valid JWT; attaches the minimal user object to `req.user`.
- *  B18 FIX: Also attaches the full Mongoose document to `req.userDoc` so
- *  downstream middleware (requireKYC) can reuse it without a second DB hit.
- *  The compound index `{ _id: 1, status: 1 }` on the User collection is
- *  recommended to make this lookup O(log n). */
 export const protect: RequestHandler = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -68,7 +63,6 @@ export const protect: RequestHandler = async (req, res, next) => {
   }
 };
 
-/** Restrict a route to one or more roles. */
 export const authorize = (...roles: UserRole[]): RequestHandler => {
   return (req, _res, next) => {
     if (!req.user) {
@@ -81,9 +75,6 @@ export const authorize = (...roles: UserRole[]): RequestHandler => {
   };
 };
 
-/** Require KYC verification (farmers & buyers; admin is exempt).
- *  B19 FIX: Reuses `req.userDoc` set by the `protect` middleware instead
- *  of making a second `User.findById` DB call on every KYC-protected request. */
 export const requireKYC: RequestHandler = async (req, _res, next) => {
   try {
     if (!req.user) {
@@ -108,7 +99,6 @@ export const requireKYC: RequestHandler = async (req, _res, next) => {
   }
 };
 
-/** Check that the authenticated user owns the resource identified by a field. */
 export const ownershipCheck = (resourceField = 'userId'): RequestHandler => {
   return async (req, _res, next) => {
     try {

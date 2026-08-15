@@ -5,7 +5,7 @@ export default function Timeline({ steps }) {
     <div className="space-y-4">
       {steps.map((step, index) => (
         <div key={index} className="flex gap-4">
-          {/* Timeline circle */}
+          {}
           <div className="flex flex-col items-center">
             <div
               className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white ${
@@ -23,7 +23,7 @@ export default function Timeline({ steps }) {
             )}
           </div>
 
-          {/* Step content */}
+          {}
           <div className="pt-2 pb-4">
             <h4 className="font-semibold text-gray-900">{step.title}</h4>
             {step.description && <p className="text-gray-600 text-sm mt-1">{step.description}</p>}

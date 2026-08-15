@@ -1,4 +1,4 @@
-/* Product Badge Component Styles */
+
 
 .product-badge {
   display: inline-flex;
@@ -21,7 +21,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Badge Colors */
+
 .badge-blue {
   background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
   color: #1e40af;
@@ -52,20 +52,20 @@
   border: 1px solid #fca5a5;
 }
 
-/* Badge Icon */
+
 .badge-icon {
   display: inline-block;
   font-size: 0.875rem;
   line-height: 1;
 }
 
-/* Badge Label */
+
 .badge-label {
   display: inline-block;
   line-height: 1;
 }
 
-/* Responsive */
+
 @media (max-width: 640px) {
   .product-badge {
     padding: 0.25rem 0.5rem;
@@ -78,7 +78,7 @@
   }
 }
 
-/* Animations */
+
 @keyframes badge-appear {
   from {
     opacity: 0;
@@ -94,7 +94,7 @@
   animation: badge-appear 0.3s ease;
 }
 
-/* Badge Container in Card */
+
 .badge-container {
   display: flex;
   flex-wrap: wrap;

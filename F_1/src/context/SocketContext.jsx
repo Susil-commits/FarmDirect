@@ -1,5 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
-/* eslint-disable no-unused-vars */
+
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { getAccessToken } from '../utils/tokenStore.js';
@@ -25,7 +24,7 @@ export const SocketProvider = ({ children }) => {
         socketRef.current.disconnect();
         socketRef.current = null;
       }
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      
       setConnected(false);
       return;
     }

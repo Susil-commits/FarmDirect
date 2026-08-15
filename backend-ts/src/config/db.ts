@@ -4,7 +4,6 @@ import { env } from './env.js';
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 5000;
 
-/** Connect to MongoDB with retry logic and connection pooling. */
 export async function connectDB(retries = MAX_RETRIES): Promise<typeof mongoose> {
   try {
     mongoose.set('strictQuery', true);
@@ -30,7 +29,7 @@ export async function connectDB(retries = MAX_RETRIES): Promise<typeof mongoose>
     }
   }
 }
-/** Gracefully close the Mongoose connection. */
+
 export async function disconnectDB(): Promise<void> {
   try {
     await mongoose.disconnect();

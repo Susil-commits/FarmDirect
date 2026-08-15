@@ -1,4 +1,4 @@
-/* GuidedTour.css - Guided tour styles */
+
 
 .guided-tour-overlay {
   position: fixed;
@@ -60,7 +60,7 @@
   }
 }
 
-/* Tooltip */
+
 .guided-tour-tooltip {
   position: fixed;
   background: white;
@@ -195,7 +195,7 @@
   justify-content: flex-end;
 }
 
-/* Tour trigger */
+
 .tour-trigger {
   display: inline-flex;
   align-items: center;
@@ -220,7 +220,7 @@
   transform: translateY(0);
 }
 
-/* Tooltip component */
+
 .tooltip-wrapper {
   position: relative;
   display: inline-block;
@@ -296,7 +296,7 @@
   }
 }
 
-/* Help hint */
+
 .help-hint {
   display: flex;
   align-items: flex-start;
@@ -319,7 +319,7 @@
   line-height: 1.5;
 }
 
-/* Mobile adjustments */
+
 @media (max-width: 768px) {
   .guided-tour-tooltip {
     max-width: 90vw;
@@ -344,7 +344,7 @@
   }
 }
 
-/* Accessibility */
+
 @media (prefers-reduced-motion: reduce) {
   .guided-tour-highlight-box,
   .guided-tour-pulse,

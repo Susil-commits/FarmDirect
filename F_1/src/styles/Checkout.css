@@ -1,12 +1,10 @@
-/* Checkout Page Styles
-   Premium multi-step checkout experience
-   Keyframes deferred to index.css globals */
+
 
 .checkout-container {
   animation: fadeIn var(--transition-smooth, 0.6s ease-out);
 }
 
-/* Step Indicator Styling */
+
 .step-circle {
   transition: all var(--transition-bounce, 0.3s cubic-bezier(0.4, 0, 0.2, 1));
   box-shadow: var(--shadow-card, 0 2px 8px rgba(0, 0, 0, 0.1));
@@ -21,7 +19,7 @@
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* Custom pulse for step indicator (different from global pulse which uses opacity) */
+
 @keyframes pulse {
   0%, 100% {
     box-shadow: 0 2px 8px rgba(19, 46, 32, 0.3);
@@ -31,12 +29,12 @@
   }
 }
 
-/* Step Line */
+
 .step-line {
   transition: background-color var(--transition-base, 0.3s ease);
 }
 
-/* Form Input Styling */
+
 .form-input {
   transition: all var(--transition-base, 0.3s ease);
   background: white;
@@ -48,7 +46,7 @@
   box-shadow: 0 8px 16px rgba(19, 46, 32, 0.15);
 }
 
-/* Delivery Option Card */
+
 .delivery-card {
   transition: all var(--transition-bounce, 0.3s cubic-bezier(0.4, 0, 0.2, 1));
   animation: slideInUp var(--transition-base, 0.4s ease-out) forwards;
@@ -69,7 +67,7 @@
   border-color: #132E20;
 }
 
-/* Payment Option Card */
+
 .payment-card {
   transition: all var(--transition-bounce, 0.3s cubic-bezier(0.4, 0, 0.2, 1));
   animation: slideInUp var(--transition-base, 0.4s ease-out) forwards;
@@ -97,7 +95,7 @@
   border-color: #132E20;
 }
 
-/* Radio Button Styling */
+
 .radio-btn {
   transition: all var(--transition-fast, 0.2s ease);
 }
@@ -106,7 +104,7 @@
   animation: scaleIn var(--transition-base, 0.3s ease-out);
 }
 
-/* Order Summary Sidebar */
+
 .order-summary {
   background: linear-gradient(135deg, #FBF8F3 0%, #F4EFE6 100%);
   border: 1px solid rgba(19, 46, 32, 0.15);
@@ -118,7 +116,7 @@
   box-shadow: var(--shadow-card-hover, 0 8px 24px rgba(0, 0, 0, 0.08));
 }
 
-/* Summary Item */
+
 .summary-item {
   animation: slideInLeft var(--transition-base, 0.4s ease-out) forwards;
   opacity: 0;
@@ -128,7 +126,7 @@
 .summary-item:nth-child(2) { animation-delay: 0.2s; }
 .summary-item:nth-child(3) { animation-delay: 0.3s; }
 
-/* Price Display */
+
 .price-display {
   animation: slideInRight var(--transition-base, 0.4s ease-out);
 }
@@ -143,7 +141,7 @@
   box-shadow: 0 4px 12px rgba(19, 46, 32, 0.25);
 }
 
-/* Trust Signals */
+
 .trust-badge {
   display: flex;
   align-items: center;
@@ -163,7 +161,7 @@
   color: #D97736;
 }
 
-/* Button Styles */
+
 .btn-place-order {
   position: relative;
   overflow: hidden;
@@ -191,7 +189,7 @@
   cursor: not-allowed;
 }
 
-/* Responsive */
+
 @media (max-width: 1024px) {
   .order-summary {
     position: relative;

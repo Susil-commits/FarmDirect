@@ -16,10 +16,6 @@ import PageTransition from '../../components/common/PageTransition';
 import { useData } from '../../hooks/useData';
 import './OnboardingFlow.css';
 
-/**
- * OnboardingFlow - Main onboarding page
- * Guides new users through account setup based on their role
- */
 export default function OnboardingFlow() {
   const { navigate } = useRouter();
   const { user, _login } = useAuth();
@@ -28,10 +24,9 @@ export default function OnboardingFlow() {
   const [error, setError] = useState(null);
   const [userRole, _setUserRole] = useState(null);
 
-  // Check if user already completed onboarding
   useEffect(() => {
     if (user?.onboardingCompleted) {
-      // Navigate to role-based dashboard
+      
       if (user.role === 'farmer') {
         navigate('/farmer/dashboard');
       } else if (user.role === 'buyer') {
@@ -39,12 +34,11 @@ export default function OnboardingFlow() {
       } else if (user.role === 'admin') {
         navigate('/admin/dashboard');
       } else {
-        navigate('/'); // Fallback to home
+        navigate('/'); 
       }
     }
   }, [user, navigate]);
 
-  // Build steps based on user role
   const buildSteps = () => {
     const commonSteps = [
       {
@@ -106,7 +100,6 @@ export default function OnboardingFlow() {
       },
     ];
 
-    // Add buyer-specific steps
     const role = commonSteps[0]?.role || userRole;
     if (role === 'buyer' || role === 'both') {
       commonSteps.splice(3, 0, {
@@ -134,7 +127,6 @@ export default function OnboardingFlow() {
       });
     }
 
-    // Add farmer-specific steps
     if (role === 'farmer' || role === 'both') {
       commonSteps.push({
         id: 'farm',
@@ -161,7 +153,6 @@ export default function OnboardingFlow() {
       });
     }
 
-    // Add remaining steps
     commonSteps.push(
       {
         id: 'preferences',
@@ -194,10 +185,9 @@ export default function OnboardingFlow() {
     setError(null);
 
     try {
-      // Call API to complete onboarding
+      
       await authServiceExtended.completeOnboarding(formData);
 
-      // Refresh user data and navigate to role-based dashboard
       await refreshAll();
       if (formData.role === 'farmer') {
         navigate('/farmer/dashboard');
@@ -206,7 +196,7 @@ export default function OnboardingFlow() {
       } else if (formData.role === 'admin') {
         navigate('/admin/dashboard');
       } else {
-        navigate('/'); // Fallback to home
+        navigate('/'); 
       }
     } catch (err) {
       console.error('Onboarding error:', err);
@@ -217,7 +207,7 @@ export default function OnboardingFlow() {
   };
 
   const handleSkip = (formData) => {
-    // Navigate to role-based dashboard
+    
     if (formData.role === 'farmer') {
       navigate('/farmer/dashboard');
     } else if (formData.role === 'buyer') {
@@ -225,7 +215,7 @@ export default function OnboardingFlow() {
     } else if (formData.role === 'admin') {
       navigate('/admin/dashboard');
     } else {
-      navigate('/'); // Fallback to home
+      navigate('/'); 
     }
   };
 

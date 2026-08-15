@@ -9,7 +9,7 @@ export default function FarmHeroLanding({ onNavigate, onGetStarted }) {
   const [activeSection, setActiveSection] = useState('cream');
 
   useEffect(() => {
-    // Setup IntersectionObserver for smooth navbar color transitions
+    
     const sectionThemes = [
       { id: 'hero', theme: 'cream' },
       { id: 'why-direct', theme: 'forest' },
@@ -55,19 +55,19 @@ export default function FarmHeroLanding({ onNavigate, onGetStarted }) {
 
   return (
     <div className="font-sans-body min-h-screen bg-[#FBF8F3] text-[#132E20] selection:bg-[#D97736] selection:text-white">
-      {/* Sticky Scroll-Aware Floating Pill Navbar */}
+      {}
       <DynamicFloatingNavbar activeSection={activeSection} onNavigate={onNavigate} />
 
-      {/* Section 1: Hero Warm Cream */}
+      {}
       <HeroCreamSection onExploreClick={handleExploreClick} onGetStarted={onGetStarted} />
 
-      {/* Section 2: Overlapping Dark Forest-Green Peel-Up */}
+      {}
       <ForestGreenPeelSection onExploreClick={handleExploreClick} />
 
-      {/* Section 3: Overlapping Warm Cream Peel-Up */}
+      {}
       <CreamValueSection onExploreClick={handleExploreClick} onNavigate={onNavigate} />
 
-      {/* Section 4: Overlapping Near-Black Peel-Up */}
+      {}
       <DarkImpactSection onExploreClick={handleExploreClick} onNavigate={onNavigate} onGetStarted={onGetStarted} />
     </div>
   );

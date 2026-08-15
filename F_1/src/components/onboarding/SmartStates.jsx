@@ -3,12 +3,8 @@ import { Heart, ShoppingCart, List, Search, TrendingUp, Clock, AlertCircle } fro
 import Button from '../common/Button';
 import './SmartStates.css';
 
-/**
- * EmptyState - Friendly empty state component
- * Shows helpful guidance when no data is available
- */
 export function EmptyState({
-  // eslint-disable-next-line no-unused-vars
+  
   icon: Icon = Heart,
   title,
   description,
@@ -41,9 +37,6 @@ export function EmptyState({
   );
 }
 
-/**
- * LoadingState - Smart loading indicator
- */
 export function LoadingState({ title = 'Loading', messages = [] }) {
   const [messageIndex, setMessageIndex] = React.useState(0);
 
@@ -76,9 +69,6 @@ export function LoadingState({ title = 'Loading', messages = [] }) {
   );
 }
 
-/**
- * ErrorState - Error display with recovery options
- */
 export function ErrorState({
   title = 'Something went wrong',
   description,
@@ -123,15 +113,12 @@ export function ErrorState({
   );
 }
 
-/**
- * ContextualHelp - Help box for specific sections
- */
 export function ContextualHelp({
   title,
   content,
   tips = [],
   relatedLinks = [],
-  level = 'info', // 'info', 'tip', 'warning'
+  level = 'info', 
 }) {
   const [isExpanded, setIsExpanded] = React.useState(false);
 
@@ -192,9 +179,6 @@ export function ContextualHelp({
   );
 }
 
-/**
- * PreEmptiveHelp - Help before user encounters problems
- */
 export function PreEmptiveHelp({
   trigger,
   title,
@@ -229,9 +213,6 @@ export function PreEmptiveHelp({
   );
 }
 
-/**
- * ProgressIndicator - Shows progress through a process
- */
 export function ProgressIndicator({
   current,
   total,
@@ -263,9 +244,6 @@ export function ProgressIndicator({
   );
 }
 
-/**
- * OnboardingChecklist - Track completion of onboarding steps
- */
 export function OnboardingChecklist({
   items,
   completed = [],

@@ -1,11 +1,6 @@
 import React from 'react';
 import { getImageUrl } from '../../utils/formatters';
 
-/**
- * Avatar Component
- * Displays user profile photo or first letter of email as fallback
- * Used throughout app for identity verification
- */
 export default function Avatar({ 
   user, 
   size = 'md', 
@@ -13,7 +8,7 @@ export default function Avatar({
   showBadge = false,
   badge = null 
 }) {
-  // Size mappings
+  
   const sizeClasses = {
     xs: 'w-8 h-8 text-xs',
     sm: 'w-10 h-10 text-sm',
@@ -22,7 +17,6 @@ export default function Avatar({
     xl: 'w-24 h-24 text-2xl',
   };
 
-  // Get user's initial from name (first letter of first name)
   const getInitial = () => {
     if (user?.name) {
       return user.name.charAt(0).toUpperCase();
@@ -36,7 +30,6 @@ export default function Avatar({
     return 'U';
   };
 
-  // Generate color based on user name (consistent color for same user)
   const getColorClass = () => {
     const identifier = user?.name || user?.firstName || user?.email || 'user';
     if (!identifier) return 'bg-gray-500';
@@ -54,12 +47,10 @@ export default function Avatar({
       'bg-red-500',
     ];
     
-    // Use identifier's first character code to pick color
     const charCode = identifier.charCodeAt(0);
     return colors[charCode % colors.length];
   };
 
-  // If user has photo, display it
   if (user?.photo) {
     return (
       <div className={`relative ${className}`}>
@@ -78,7 +69,6 @@ export default function Avatar({
     );
   }
 
-  // Fallback: show initial with email-based color
   return (
     <div className={`relative ${className}`}>
       <div

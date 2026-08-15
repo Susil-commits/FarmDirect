@@ -3,14 +3,10 @@ import { Upload, X, AlertCircle, CheckCircle } from 'lucide-react';
 import directApi from '../../services/directApi.js';
 import '../styles/ImageUpload.css';
 
-/**
- * ImageUpload Component
- * Handles file selection, preview, and upload to DigitalOcean Spaces
- */
 const ImageUpload = ({ 
   onUploadSuccess, 
   folder = 'uploads',
-  maxSize = 5 * 1024 * 1024, // 5MB
+  maxSize = 5 * 1024 * 1024, 
   allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
   label = 'Upload Image',
 }) => {
@@ -21,19 +17,16 @@ const ImageUpload = ({
   const [success, setSuccess] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Handle file selection
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     
     if (!file) return;
 
-    // Validate file type
     if (!allowedTypes.includes(file.type)) {
       setError('Only image files are allowed (JPEG, PNG, GIF, WebP)');
       return;
     }
 
-    // Validate file size
     if (file.size > maxSize) {
       setError(`File size must be less than ${maxSize / 1024 / 1024}MB`);
       return;
@@ -42,13 +35,11 @@ const ImageUpload = ({
     setError(null);
     setFileName(file.name);
 
-    // Show preview
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target.result);
     reader.readAsDataURL(file);
   };
 
-  // Handle upload
   const handleUpload = async (e) => {
     e.preventDefault();
     
@@ -70,7 +61,6 @@ const ImageUpload = ({
       formData.append('file', file);
       formData.append('folder', folder);
 
-      // Upload to backend — use directApi to bypass Vite proxy for file uploads
       const response = await directApi.post(
         '/upload',
         formData,
@@ -84,12 +74,9 @@ const ImageUpload = ({
         }
       );
 
-      // Success
-      // directApi returns raw axios response, so access .data
       setSuccess(true);
       onUploadSuccess(response.data.url);
       
-      // Reset form
       setTimeout(() => {
         setPreview(null);
         setFileName(null);
@@ -108,7 +95,6 @@ const ImageUpload = ({
     }
   };
 
-  // Reset form
   const handleReset = () => {
     setPreview(null);
     setFileName(null);
@@ -120,7 +106,7 @@ const ImageUpload = ({
   return (
     <div className="image-upload-wrapper">
       <form onSubmit={handleUpload} className="image-upload-form">
-        {/* File Input */}
+        {}
         <label className="file-input-label">
           <div className="file-input-content">
             <Upload size={32} className="upload-icon" />
@@ -141,7 +127,7 @@ const ImageUpload = ({
           />
         </label>
 
-        {/* Preview */}
+        {}
         {preview && (
           <div className="preview-container">
             <img loading="lazy" src={preview} alt="preview" className="preview-image" />
@@ -152,7 +138,7 @@ const ImageUpload = ({
           </div>
         )}
 
-        {/* Error Message */}
+        {}
         {error && (
           <div className="error-message">
             <AlertCircle size={20} />
@@ -160,7 +146,7 @@ const ImageUpload = ({
           </div>
         )}
 
-        {/* Success Message */}
+        {}
         {success && (
           <div className="success-message">
             <CheckCircle size={20} />
@@ -168,7 +154,7 @@ const ImageUpload = ({
           </div>
         )}
 
-        {/* Progress Bar */}
+        {}
         {loading && uploadProgress > 0 && (
           <div className="progress-container">
             <div className="progress-bar">
@@ -181,7 +167,7 @@ const ImageUpload = ({
           </div>
         )}
 
-        {/* Button Group */}
+        {}
         <div className="button-group">
           {preview && !success ? (
             <>

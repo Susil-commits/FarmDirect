@@ -17,18 +17,16 @@ export default function AdminUsers() {
   const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterRole, setFilterRole] = useState('all');
-  const [filterVerified, setFilterVerified] = useState('all'); // 'all', 'verified', 'unverified'
+  const [filterVerified, setFilterVerified] = useState('all'); 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showPasswords, setShowPasswords] = useState({});
 
-  // Reset scroll position to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
   useEffect(() => {
        
-      // eslint-disable-next-line react-hooks/immutability
     fetchData();
   }, []);
 
@@ -96,15 +94,14 @@ export default function AdminUsers() {
   };
 
   const filteredUsers = allUsers.filter(u => {
-    // Filter by verification status
+    
     let verificationMatches = true;
     if (filterVerified === 'verified') {
       verificationMatches = u.kycStatus === 'verified' || u.role === 'admin';
     } else if (filterVerified === 'unverified') {
       verificationMatches = u.kycStatus !== 'verified' && u.role !== 'admin';
     }
-    // 'all' shows both verified and unverified
-
+    
     const matchesRole = filterRole === 'all' || u.role === filterRole;
     const matchesSearch = !searchQuery || 
       u.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -116,9 +113,9 @@ export default function AdminUsers() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gray-100 flex pt-28 pb-12">
-        {/* Mobile Backdrop */}
+        {}
         {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
-        {/* Sidebar */}
+        {}
         <div className={`fixed lg:static inset-y-0 left-0 lg:inset-auto transition-all duration-300 ${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-green-700 to-green-800 text-white flex flex-col z-40 ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
           <div className="p-6 border-b border-green-600">
             <div className="flex items-center justify-between">
@@ -172,9 +169,9 @@ export default function AdminUsers() {
           </div>
         </div>
 
-        {/* Main Content */}
+        {}
         <div className="flex-1 overflow-auto">
-          {/* Top Bar */}
+          {}
           <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-30">
             <div className="flex items-center gap-4">
               <button
@@ -193,10 +190,10 @@ export default function AdminUsers() {
             </button>
           </div>
 
-          {/* Content */}
+          {}
           <div className="p-6">
             <div className="space-y-6">
-              {/* Pending KYC Alert */}
+              {}
               {(() => {
                 const pendingCount = allUsers.filter(u => u.kycStatus === 'pending').length;
                 return pendingCount > 0 && (
@@ -311,7 +308,7 @@ export default function AdminUsers() {
                           </div>
                         </div>
 
-                        {/* Password Field */}
+                        {}
                         <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mb-4">
                           <div className="flex items-center justify-between">
                             <div>
@@ -363,7 +360,7 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {/* Logout Confirmation Modal */}
+      {}
       {showLogoutConfirm && (
         <LogoutConfirmationModal
           onConfirm={async () => {

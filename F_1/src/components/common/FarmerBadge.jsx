@@ -2,11 +2,6 @@ import React from 'react';
 import { CheckCircle } from 'lucide-react';
 import Avatar from './Avatar';
 
-/**
- * FarmerBadge Component
- * Compact display of farmer info for crop cards and listings
- * Shows: farmer avatar, name, verified badge
- */
 export default function FarmerBadge({ 
   farmer, 
   compact = true,
@@ -20,13 +15,12 @@ export default function FarmerBadge({
     );
   }
 
-  // Extract farmer data (handle both string and object formats)
   const farmerName = typeof farmer === 'string' ? farmer : (farmer.name || 'Local Farmer');
   const farmerData = typeof farmer === 'object' ? farmer : { name: farmer };
   const isVerified = farmerData.verified || farmerData.farmer_verified;
 
   if (compact) {
-    // Compact version for crop cards
+    
     return (
       <div 
         className="flex items-center gap-2 p-2 rounded bg-green-50 hover:bg-green-100 transition-colors cursor-pointer group"
@@ -52,7 +46,6 @@ export default function FarmerBadge({
     );
   }
 
-  // Full version for detail pages
   return (
     <div 
       className="border border-green-200 rounded-lg p-3 bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-md transition-shadow cursor-pointer"

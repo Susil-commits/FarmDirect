@@ -70,16 +70,13 @@ export default function Login() {
 
       addToast('Login successful!', 'success');
 
-      // Clear form immediately
       setFormData({ email: '', password: '' });
       if (formRef.current) {
         formRef.current.reset();
       }
 
-      // Give auth context time to update state (100ms) then navigate
       const verificationStatus = response.user?.kycStatus || 'not_submitted';
       
-      // Check if this is an existing user who has already interacted with KYC
       const isExistingKYCUser = !!(response.user?.kycSubmittedAt || (response.user?.kycDocuments && Object.keys(response.user.kycDocuments).length > 0));
       
       if (verificationStatus === 'not_submitted' && !isExistingKYCUser) {
@@ -105,7 +102,6 @@ export default function Login() {
       let errorMessage = 'Login failed';
       const statusCode = error?.response?.status;
       
-      // Parse different error formats from backend
       const errorData = error?.response?.data || error;
       
       if (typeof errorData === 'string') {
@@ -116,7 +112,6 @@ export default function Login() {
         errorMessage = error.message;
       }
 
-      // Specific error handling based on status code
       if (statusCode === 404) {
         errorMessage = 'You are not a user. Please register first.';
       } else if (statusCode === 401) {
@@ -137,11 +132,11 @@ export default function Login() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Ambient Glow */}
+        {}
         <div className="absolute top-12 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#D97736]/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="w-full max-w-md bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[36px] shadow-2xl p-6 sm:p-8 relative z-10 my-auto">
-          {/* Header */}
+          {}
           <div className="flex items-center justify-between mb-6">
             <button
               onClick={() => navigate('/')}
@@ -233,7 +228,7 @@ export default function Login() {
                 </Button>
               </form>
 
-              {/* Register Link */}
+              {}
               <div className="text-center mt-6 pt-4 border-t border-stone-100">
                 <p className="text-xs text-stone-600">
                   Don't have an account?{' '}
@@ -253,5 +248,4 @@ export default function Login() {
     </PageTransition>
   );
 }
-
-
+

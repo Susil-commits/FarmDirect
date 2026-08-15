@@ -62,15 +62,13 @@ describe('Anomaly Flagging (z-score) in Order Creation', () => {
       expect(res.status).toBe(201);
     }
 
-    // Wait a bit for background stats update
     await sleep(200);
 
     const stats = await UserOrderStats.findById(buyerId);
     expect(stats).toBeDefined();
     expect(stats?.n).toBe(4);
-    expect(stats?.mean).toBe(100); // 50 * 2 = 100 per order
+    expect(stats?.mean).toBe(100); 
     
-    // Check orders are not flagged
     const orders = await Order.find({ buyerId });
     expect(orders.length).toBe(4);
     orders.forEach(o => {
@@ -80,23 +78,22 @@ describe('Anomaly Flagging (z-score) in Order Creation', () => {
   });
 
   it('should flag the 5th order if it has a wildly different amount', async () => {
-    // Create 4 normal orders manually
+    
     for (let i = 0; i < 4; i++) {
       await request(app)
         .post('/api/orders')
         .set('Authorization', `Bearer ${buyerToken}`)
         .set('Idempotency-Key', randomUUID())
-        .send({ cropId, quantity: 2 }); // 100 amount
+        .send({ cropId, quantity: 2 }); 
     }
     
     await sleep(200);
 
-    // 5th order wildly high amount
     const res = await request(app)
       .post('/api/orders')
       .set('Authorization', `Bearer ${buyerToken}`)
       .set('Idempotency-Key', randomUUID())
-      .send({ cropId, quantity: 50 }); // 2500 amount
+      .send({ cropId, quantity: 50 }); 
     
     expect(res.status).toBe(201);
 
@@ -109,12 +106,12 @@ describe('Anomaly Flagging (z-score) in Order Creation', () => {
   });
 
   it('should flag a new user first order via global fallback if massive', async () => {
-    // Populate global stats with 5 small orders first
+    
     await UserOrderStats.create({
        _id: 'global',
        n: 5,
        mean: 100,
-       m2: 50, // Some variance
+       m2: 50, 
        updatedAt: new Date()
     });
 
@@ -122,7 +119,7 @@ describe('Anomaly Flagging (z-score) in Order Creation', () => {
       .post('/api/orders')
       .set('Authorization', `Bearer ${buyerToken}`)
       .set('Idempotency-Key', randomUUID())
-      .send({ cropId, quantity: 100 }); // 5000 amount
+      .send({ cropId, quantity: 100 }); 
     
     expect(res.status).toBe(201);
     await sleep(200);
@@ -133,7 +130,7 @@ describe('Anomaly Flagging (z-score) in Order Creation', () => {
   });
 
   it('GET /api/admin/orders/flagged should return only flagged orders, correctly sorted', async () => {
-    // Since we need admin endpoint, let's login as admin
+    
     const { hashPassword } = await import('../utils/password.js');
     const hashedPassword = await hashPassword('Password123!');
     await User.create({
@@ -144,7 +141,6 @@ describe('Anomaly Flagging (z-score) in Order Creation', () => {
     const loginRes = await request(app).post('/api/auth/login').send({ email: 'admin@farm.com', password: 'Password123!' });
     const adminToken = loginRes.body.token;
 
-    // Populate some orders
     await Order.create([
       {
         orderNumber: 'ORD-1', buyerId, farmerId: buyerId, cropId, quantity: 1, unitPrice: 50, totalAmount: 50, orderStatus: 'confirmed', paymentMethod: 'cod', paymentStatus: 'pending',
@@ -166,13 +162,12 @@ describe('Anomaly Flagging (z-score) in Order Creation', () => {
     
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBe(2);
-    expect(res.body.data[0].anomalyScore).toBe(6.2); // Sorted descending
+    expect(res.body.data[0].anomalyScore).toBe(6.2); 
     expect(res.body.data[1].anomalyScore).toBe(4.5);
   });
 
   it('should handle 10 concurrent orders for the same user without losing Welford updates', async () => {
-    // We bypass the createOrder idempotency key by using a different idempotency key for each request
-    // This allows 10 actual orders to go through in parallel, triggering the anomaly detection 10 times.
+    
     const promises = Array.from({ length: 10 }).map(() =>
       request(app)
         .post('/api/orders')
@@ -184,15 +179,14 @@ describe('Anomaly Flagging (z-score) in Order Creation', () => {
     const responses = await Promise.all(promises);
     const successes = responses.filter(r => r.status === 201).length;
     
-    // Some might fail due to stock depletion if we run out, but crop has 1000 quantity, so 10 should succeed.
     expect(successes).toBe(10);
 
-    await sleep(500); // give the non-blocking background task time to run 10 times
+    await sleep(500); 
 
     const stats = await UserOrderStats.findById(buyerId);
     expect(stats).toBeDefined();
-    // Since buyerId starts fresh for this test (beforeEach), n should be exactly 10
+    
     expect(stats?.n).toBe(10);
-    expect(stats?.mean).toBe(50); // 50 * 1 = 50
+    expect(stats?.mean).toBe(50); 
   });
 });

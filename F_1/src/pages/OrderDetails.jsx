@@ -51,7 +51,7 @@ export default function OrderDetails() {
   const fetchOrderDetails = useCallback(async () => {
     try {
       setLoading(true);
-      // api.js interceptor unwraps to response.data, so response = { order: {...} }
+      
       const response = await orderService.getOrderDetails(orderId);
       setOrder(response.order);
     } catch {
@@ -64,16 +64,13 @@ export default function OrderDetails() {
   useEffect(() => {
     window.scrollTo(0, 0);
      
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchOrderDetails();
   }, [orderId, fetchOrderDetails]);
 
-  // Live updates: when a socket order:updated arrives for THIS order, patch the
-  // status instantly and re-fetch to reconcile timeline + payment status.
   useEffect(() => {
     if (!orderEvent) return;
     if (String(orderEvent.orderId) !== String(orderId)) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    
     setOrder((prev) =>
       prev
         ? {
@@ -422,7 +419,7 @@ export default function OrderDetails() {
                 </div>
               </Card>
 
-              {/* Contact Information */}
+              {}
               <Card className="p-6 md:p-8">
                 <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                   <Phone className="w-5 h-5 text-green-600" />
@@ -459,7 +456,7 @@ export default function OrderDetails() {
             </div>
           </ScrollAnimation>
 
-          {/* Buyer Action Buttons */}
+          {}
           {isBuyer && !isCancelled && !isCompleted && (
             <ScrollAnimation className="scroll-slide mb-8">
               <Card className="p-6 md:p-8 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200">
@@ -508,7 +505,7 @@ export default function OrderDetails() {
             </ScrollAnimation>
           )}
 
-          {/* Cancelled Notice */}
+          {}
           {isCancelled && (
             <ScrollAnimation className="scroll-slide mb-8">
               <Card className="p-6 md:p-8 bg-red-50 border-2 border-red-200">
@@ -525,7 +522,7 @@ export default function OrderDetails() {
             </ScrollAnimation>
           )}
 
-          {/* Completed Notice */}
+          {}
           {isCompleted && (
             <ScrollAnimation className="scroll-slide mb-8">
               <Card className="p-6 md:p-8 bg-green-50 border-2 border-green-200">
@@ -542,7 +539,7 @@ export default function OrderDetails() {
             </ScrollAnimation>
           )}
 
-          {/* Order Timeline */}
+          {}
           <ScrollAnimation className="scroll-slide">
             <Card className="p-6 md:p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">

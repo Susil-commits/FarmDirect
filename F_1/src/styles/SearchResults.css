@@ -1,8 +1,6 @@
-/* ============================================
-   Search Results - Premium Styles
-   ============================================ */
 
-/* ---- View Mode Toggle ---- */
+
+
 .view-mode-toggle {
   display: flex;
   gap: 0.5rem;
@@ -37,7 +35,7 @@
   background-color: var(--gray-200);
 }
 
-/* ---- Search Bar ---- */
+
 .search-bar-container {
   background: rgba(251, 248, 243, 0.9);
   backdrop-filter: blur(12px);
@@ -80,7 +78,7 @@
   pointer-events: none;
 }
 
-/* ---- Filters Sidebar ---- */
+
 .filters-sidebar {
   position: sticky;
   top: 1rem;
@@ -163,7 +161,7 @@
   color: var(--gray-600);
 }
 
-/* ---- Results Grid ---- */
+
 .results-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -399,7 +397,7 @@
   background-color: #FBF8F3;
 }
 
-/* ---- Pagination ---- */
+
 .pagination {
   display: flex;
   align-items: center;
@@ -434,7 +432,7 @@
   box-shadow: 0 2px 8px rgba(19, 46, 32, 0.3);
 }
 
-/* ---- Empty State ---- */
+
 .empty-state {
   text-align: center;
   padding: 4rem 1.5rem;
@@ -460,7 +458,7 @@
   font-size: 0.95rem;
 }
 
-/* ---- Responsive ---- */
+
 @media (max-width: 1024px) {
   .results-grid {
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));

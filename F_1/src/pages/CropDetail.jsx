@@ -56,12 +56,10 @@ export default function CropDetail() {
     return steps;
   };
 
-  // Reset scroll position to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Fetch crop details
   useEffect(() => {
     const fetchCropDetails = async () => {
       try {
@@ -72,20 +70,16 @@ export default function CropDetail() {
         const cropData = response.crop || response.data?.crop || response.data || response;
         setCrop(cropData);
 
-        // Track this view in recently viewed
         if (cropData) {
           addToRecentlyViewed(cropData);
         }
 
-        // Fetch related products via the dedicated similar-crops endpoint
         try {
           const relatedRes = await cropService.getSimilarCrops(cropId, 8);
           const allRelated = relatedRes.crops || relatedRes.data?.crops || [];
           setRelatedProducts(allRelated.slice(0, 6));
         } catch (e) { console.error(e); }
 
-        // Fetch farmer details if farmerId is available
-        // farmerId from populate() is an object, so extract _id or use the string directly
         const rawFarmerId = cropData?.farmerId;
         const farmerId = (typeof rawFarmerId === 'object' && rawFarmerId !== null)
           ? (rawFarmerId._id || rawFarmerId.id)
@@ -110,7 +104,7 @@ export default function CropDetail() {
             });
           } catch (err) {
             console.error('Could not fetch farmer profile, using populated data:', err);
-            // Fallback: use the already-populated farmer data from the crop response
+            
             const populatedFarmer = (typeof cropData?.farmerId === 'object' && cropData?.farmerId !== null)
               ? cropData.farmerId
               : null;
@@ -141,10 +135,9 @@ export default function CropDetail() {
     };
 
     fetchCropDetails();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [cropId]);
 
-  // Check wishlist status from API
   useEffect(() => {
     const checkWishlistStatus = async () => {
       try {
@@ -157,7 +150,6 @@ export default function CropDetail() {
     if (cropId) checkWishlistStatus();
   }, [cropId]);
 
-  // Check if user is interested in this crop
   useEffect(() => {
     const checkInterestStatus = async () => {
       if (!isAuthenticated || user?.role !== 'buyer') return;
@@ -295,13 +287,11 @@ export default function CropDetail() {
       return;
     }
 
-    // Navigate to Messages page where the conversation will be initiated with the farmer
     navigate(`/messages?receiver=${farmerUserId}&crop=${cropId}&name=${encodeURIComponent(farmer?.name || 'Farmer')}`);
   };
 
-  // Derived values from crop data
   const cropName = crop?.cropName || crop?.name || 'Unknown Crop';
-  // eslint-disable-next-line no-unused-vars
+  
   const rawCropImage = crop?.images?.[0] || crop?.image || null;
   const cropPrice = crop?.price || 0;
   const cropQuantity = crop?.quantity || 0;
@@ -312,14 +302,13 @@ export default function CropDetail() {
   const availability = crop?.availability || 'available';
   const isAvailable = availability === 'available';
 
-  // Calculate Mock Eco-Score (Out of 100)
   const isOrganic = crop?.certifications?.includes('Organic') || crop?.category === 'Organic';
   const calculateEcoScore = () => {
-    let baseScore = 75; // Default good score
+    let baseScore = 75; 
     if (isOrganic) baseScore += 15;
     if (farmer?.verified) baseScore += 5;
     if (crop?.totalReviews > 10) baseScore += 3;
-    return Math.min(baseScore, 99); // Max 99
+    return Math.min(baseScore, 99); 
   };
   const ecoScore = calculateEcoScore();
   const ecoColor = ecoScore > 90 ? 'text-green-500' : ecoScore > 80 ? 'text-emerald-500' : 'text-amber-500';
@@ -361,15 +350,13 @@ export default function CropDetail() {
 
   const cropImages = crop?.images || (crop?.image ? [crop.image] : []);
 
-  // ... (keep existing return statement)
-
   return (
     <ErrorBoundary>
     <PageTransition>
       <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body px-4 relative pt-28 pb-28 lg:pb-16">
         <div className="max-w-6xl mx-auto relative z-10">
           
-          {/* Back Button */}
+          {}
           <button
             onClick={() => navigate('/marketplace')}
             className="mb-6 text-green-600 hover:text-green-700 font-semibold flex items-center gap-2 transition cursor-pointer"
@@ -378,9 +365,9 @@ export default function CropDetail() {
           </button>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Product Images & Info */}
+            {}
             <div className="lg:col-span-2">
-              {/* Image Gallery */}
+              {}
               <Card className="mb-6 animate-slide-in-left overflow-hidden">
                 <div className="bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center relative min-h-[400px]">
                   <img
@@ -473,7 +460,7 @@ export default function CropDetail() {
                     )}
                   </div>
 
-                  {/* Eco-Score / Freshness Index */}
+                  {}
                   <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-gray-50 to-white border border-gray-100 shadow-sm mb-6 animate-slide-in-down" style={{ animationDelay: '0.15s' }}>
                     <div className="relative w-14 h-14 flex items-center justify-center rounded-full bg-white shadow-inner">
                       <svg className="w-full h-full transform -rotate-90 absolute inset-0" viewBox="0 0 36 36">
@@ -517,7 +504,7 @@ export default function CropDetail() {
                     </div>
                   </div>
 
-                  {/* Location & Contact */}
+                  {}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 animate-slide-in-down" style={{ animationDelay: '0.3s' }}>
                     <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
                       <MapPin size={18} className="text-blue-600 shrink-0" />
@@ -537,7 +524,7 @@ export default function CropDetail() {
                     )}
                   </div>
 
-                  {/* Chat with Farmer Button - visible after marking interest */}
+                  {}
                   {isAvailable && farmerUserId && (
                     <div className="mb-6 animate-slide-in-down" style={{ animationDelay: '0.35s' }}>
                       {isAuthenticated && isInterested ? (
@@ -580,7 +567,7 @@ export default function CropDetail() {
                     {crop.description || 'No description provided.'}
                   </p>
 
-                  {/* Specifications */}
+                  {}
                   {crop.specifications && Object.keys(crop.specifications).length > 0 && (
                     <ScrollAnimation className="scroll-slide mb-6 pb-6 border-b">
                       <p className="font-semibold text-gray-900 mb-3">📋 Specifications</p>
@@ -595,7 +582,7 @@ export default function CropDetail() {
                     </ScrollAnimation>
                   )}
 
-                  {/* Availability Timeline */}
+                  {}
                   <ScrollAnimation className="scroll-slide">
                     <p className="font-semibold text-gray-900 mb-4">📦 Crop Status</p>
                     <Timeline steps={getTimeline(crop)} />
@@ -603,7 +590,7 @@ export default function CropDetail() {
                 </div>
               </Card>
 
-              {/* Reviews Section */}
+              {}
               {crop.reviews_list && crop.reviews_list.length > 0 && (
                 <ScrollAnimation className="scroll-slide">
                   <Card variant="light" animated={false}>
@@ -630,7 +617,7 @@ export default function CropDetail() {
                 </ScrollAnimation>
               )}
 
-              {/* Related Products */}
+              {}
               <ScrollAnimation className="scroll-slide">
                 <RelatedProducts
                   products={relatedProducts}
@@ -641,9 +628,9 @@ export default function CropDetail() {
 
             </div>
 
-            {/* Sidebar - Interest & Farmer Info */}
+            {}
             <div className="space-y-6 lg:sticky lg:top-24">
-              {/* Interest Card */}
+              {}
               <Card variant="deep" animated={false} className="animate-slide-in-right">
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-6 animate-fade-in">
@@ -704,7 +691,7 @@ export default function CropDetail() {
                     </div>
                   )}
 
-                  {/* Mark Interested Button */}
+                  {}
                   <Button
                     variant={isInterested ? 'outline' : 'primary'}
                     size="lg"
@@ -866,4 +853,4 @@ export default function CropDetail() {
     </ErrorBoundary>
   );
 }
-
+

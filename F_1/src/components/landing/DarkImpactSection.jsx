@@ -1,5 +1,5 @@
 import React from 'react';
-// eslint-disable-next-line no-unused-vars
+
 import { motion } from 'framer-motion';
 import { Sprout, ArrowRight, Quote, Award, Users, TrendingUp, ShieldCheck, Heart } from 'lucide-react';
 
@@ -33,12 +33,12 @@ export default function DarkImpactSection({ onExploreClick, onNavigate }) {
       id="impact"
       className="relative bg-[#0E1712] text-[#FBF8F3] pt-24 pb-24 md:pt-32 md:pb-32 -mt-16 md:-mt-20 rounded-t-[60px] md:rounded-t-[80px] z-30 shadow-[0_-25px_60px_rgba(0,0,0,0.5)] overflow-hidden"
     >
-      {/* Decorative background glows */}
+      {}
       <div className="absolute top-1/3 left-0 w-96 h-96 bg-[#1B3B2B] rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#D97736]/15 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="max-w-6xl mx-auto px-4 md:px-8 relative z-10">
-        {/* Section Header */}
+        {}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -75,7 +75,7 @@ export default function DarkImpactSection({ onExploreClick, onNavigate }) {
           </motion.p>
         </div>
 
-        {/* Impact Stats Grid */}
+        {}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
           {stats.map((stat, idx) => {
             const Icon = stat.icon;
@@ -105,7 +105,7 @@ export default function DarkImpactSection({ onExploreClick, onNavigate }) {
           })}
         </div>
 
-        {/* Testimonials Cards */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
           {testimonials.map((t, idx) => (
             <motion.div
@@ -143,7 +143,7 @@ export default function DarkImpactSection({ onExploreClick, onNavigate }) {
           ))}
         </div>
 
-        {/* Final Big CTA Banner */}
+        {}
         <motion.div
           initial={{ opacity: 0, y: 35 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -170,7 +170,7 @@ export default function DarkImpactSection({ onExploreClick, onNavigate }) {
           </div>
         </motion.div>
 
-        {/* Footer Credit & Copyright */}
+        {}
         <div className="mt-20 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-xs text-[#FBF8F3]/50 font-sans-body gap-4">
           <div className="flex items-center gap-2">
             <Sprout className="w-4 h-4 text-[#D97736]" />

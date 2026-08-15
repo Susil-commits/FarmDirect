@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-// eslint-disable-next-line no-unused-vars
+
 import { motion } from 'framer-motion';
 import { CheckCircle2, Play, Volume2, Sparkles, ArrowRight, ShieldCheck, MapPin, Clock, Leaf } from 'lucide-react';
 
@@ -7,7 +7,6 @@ export default function HeroCreamSection({ onExploreClick, onGetStarted }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioActive, setAudioActive] = useState(true);
 
-  // Marquee partner farms
   const farmPartners = [
     { name: 'Green Valley Organics', location: 'Nashik, MH' },
     { name: 'Sunrise Heritage Orchards', location: 'Shimla, HP' },
@@ -23,7 +22,7 @@ export default function HeroCreamSection({ onExploreClick, onGetStarted }) {
       id="hero"
       className="relative bg-[#FBF8F3] text-[#132E20] pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden min-h-screen flex flex-col justify-between"
     >
-      {/* Decorative SVG TextPath Arc behind headline */}
+      {}
       <div className="absolute top-12 left-0 right-0 pointer-events-none z-0 opacity-40 md:opacity-50">
         <svg
           className="w-full max-w-5xl mx-auto h-48 overflow-visible"
@@ -45,13 +44,13 @@ export default function HeroCreamSection({ onExploreClick, onGetStarted }) {
         </svg>
       </div>
 
-      {/* Subtle Background Glow Gradients */}
+      {}
       <div className="absolute top-1/4 left-10 w-72 h-72 bg-[#D97736]/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/3 right-10 w-96 h-96 bg-[#132E20]/5 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Main Container */}
+      {}
       <div className="max-w-6xl mx-auto px-4 md:px-8 relative z-10 w-full">
-        {/* Top Tagline Badge */}
+        {}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -62,9 +61,9 @@ export default function HeroCreamSection({ onExploreClick, onGetStarted }) {
           <span>FarmDirect 2.0 • Direct Farm-to-Buyer Protocol</span>
         </motion.div>
 
-        {/* Hero Main Grid: Headline & Floating Cards Area */}
+        {}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-14">
-          {/* Left Column: Display Serif Headline & CTAs */}
+          {}
           <div className="lg:col-span-8 space-y-6">
             <motion.h1
               initial={{ opacity: 0, y: 25 }}

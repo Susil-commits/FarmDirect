@@ -1,8 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
 
-/**
- * A wrapper component that adds a premium 3D tilt effect on hover.
- */
 export default function TiltCard({ children, className = '', maxTilt = 15, scale = 1.02 }) {
   const cardRef = useRef(null);
   const [style, setStyle] = useState({});

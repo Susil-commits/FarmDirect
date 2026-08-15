@@ -2,15 +2,8 @@ import api, { refreshAuthToken } from './api.js';
 import { isTokenExpired } from '../utils/jwtUtils.js';
 import { getAccessToken, clearAccessToken } from '../utils/tokenStore.js';
 
-/**
- * Enhanced Authentication Service
- * Integrates with JWT token refresh and session management
- */
 class AuthServiceEnhanced {
-  /**
-   * Refresh authentication token
-   * Endpoint: POST /auth/refresh-token
-   */
+  
   async refreshToken() {
     try {
       const newToken = await refreshAuthToken();
@@ -22,11 +15,6 @@ class AuthServiceEnhanced {
     }
   }
 
-  /**
-   * Validate session with backend
-   * Endpoint: GET /auth/validate-session
-   * Returns current user data if valid
-   */
   async validateSession() {
     try {
       const token = getAccessToken();
@@ -51,10 +39,6 @@ class AuthServiceEnhanced {
     }
   }
 
-  /**
-   * Get current user with latest data
-   * Endpoint: GET /auth/me
-   */
   async getCurrentUser() {
     try {
       const response = await api.get('/auth/me');
@@ -65,10 +49,6 @@ class AuthServiceEnhanced {
     }
   }
 
-  /**
-   * Update user permissions/roles (admin only)
-   * Endpoint: PUT /auth/users/:userId/permissions
-   */
   async updateUserPermissions(userId, permissions) {
     try {
       const response = await api.put(`/auth/users/${userId}/permissions`, {
@@ -81,10 +61,6 @@ class AuthServiceEnhanced {
     }
   }
 
-  /**
-   * Get user roles
-   * Endpoint: GET /auth/roles
-   */
   async getUserRoles() {
     try {
       const response = await api.get('/auth/roles');
@@ -95,11 +71,6 @@ class AuthServiceEnhanced {
     }
   }
 
-  /**
-   * Check if user can perform action
-   * Endpoint: POST /auth/check-permission
-   * Returns: { allowed: boolean }
-   */
   async checkPermission(action, resourceId = null) {
     try {
       const response = await api.post('/auth/check-permission', {
@@ -113,10 +84,6 @@ class AuthServiceEnhanced {
     }
   }
 
-  /**
-   * Revoke token/logout from all devices
-   * Endpoint: POST /auth/logout-all
-   */
   async logoutAllDevices() {
     try {
       const response = await api.post('/auth/logout-all');
@@ -129,10 +96,6 @@ class AuthServiceEnhanced {
     }
   }
 
-  /**
-   * Get login history
-   * Endpoint: GET /auth/login-history
-   */
   async getLoginHistory() {
     try {
       const response = await api.get('/auth/login-history');
@@ -143,11 +106,6 @@ class AuthServiceEnhanced {
     }
   }
 
-  /**
-   * Verify email
-   * Endpoint: POST /auth/verify-email
-   * Body: { code }
-   */
   async verifyEmail(code) {
     try {
       const response = await api.post('/auth/verify-email', { code });
@@ -158,10 +116,6 @@ class AuthServiceEnhanced {
     }
   }
 
-  /**
-   * Enable two-factor authentication
-   * Endpoint: POST /auth/2fa/enable
-   */
   async enable2FA() {
     try {
       const response = await api.post('/auth/2fa/enable');
@@ -172,10 +126,6 @@ class AuthServiceEnhanced {
     }
   }
 
-  /**
-   * Verify two-factor authentication
-   * Endpoint: POST /auth/2fa/verify
-   */
   async verify2FA(code) {
     try {
       const response = await api.post('/auth/2fa/verify', { code });
@@ -186,10 +136,6 @@ class AuthServiceEnhanced {
     }
   }
 
-  /**
-   * Disable two-factor authentication
-   * Endpoint: POST /auth/2fa/disable
-   */
   async disable2FA(code) {
     try {
       const response = await api.post('/auth/2fa/disable', { code });
@@ -201,7 +147,6 @@ class AuthServiceEnhanced {
   }
 }
 
-// Export singleton instance
 export const authServiceEnhanced = new AuthServiceEnhanced();
 
 export default authServiceEnhanced;

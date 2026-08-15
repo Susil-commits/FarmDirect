@@ -72,13 +72,12 @@ export default function BulkUploadForm({ onUploadSuccess, onDownloadTemplate }) 
       });
 
       if (result.success && result.summary.inserted > 0) {
-        // Refresh parent data after 2 seconds
+        
         setTimeout(() => {
           onUploadSuccess();
         }, 2000);
       }
 
-      // Clear file input
       setFile(null);
     } catch (err) {
       setError(err.message || 'Upload failed. Please try again.');
@@ -89,7 +88,7 @@ export default function BulkUploadForm({ onUploadSuccess, onDownloadTemplate }) 
 
   return (
     <div className="space-y-6 font-sans-body text-[#132E20]">
-      {/* Instructions Card */}
+      {}
       <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] p-6 shadow-xl relative overflow-hidden">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-2xl bg-[#D97736]/10 text-[#D97736] flex items-center justify-center font-bold">
@@ -115,7 +114,7 @@ export default function BulkUploadForm({ onUploadSuccess, onDownloadTemplate }) 
         </button>
       </div>
 
-      {/* Upload Area */}
+      {}
       <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] p-6 shadow-xl">
         <h3 className="font-serif-display text-2xl font-normal text-[#132E20] mb-4">Upload Crop CSV Batch</h3>
         
@@ -198,7 +197,7 @@ export default function BulkUploadForm({ onUploadSuccess, onDownloadTemplate }) 
           </form>
         </div>
 
-      {/* Upload Result */}
+      {}
       {result && (
         <Card>
           <div className={`p-6 border-l-4 ${
@@ -220,7 +219,7 @@ export default function BulkUploadForm({ onUploadSuccess, onDownloadTemplate }) 
               )}
             </h3>
 
-            {/* Summary Stats */}
+            {}
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="text-center">
                 <p className="text-gray-600 text-sm">Total Rows</p>
@@ -236,7 +235,7 @@ export default function BulkUploadForm({ onUploadSuccess, onDownloadTemplate }) 
               </div>
             </div>
 
-            {/* Error Details */}
+            {}
             {result.errors && result.errors.length > 0 && (
               <div>
                 <p className="font-semibold text-gray-900 mb-3">
@@ -264,7 +263,7 @@ export default function BulkUploadForm({ onUploadSuccess, onDownloadTemplate }) 
         </Card>
       )}
 
-      {/* CSV Format Example */}
+      {}
       <Card>
         <div className="p-6">
           <h3 className="font-bold mb-4">CSV Format Example</h3>

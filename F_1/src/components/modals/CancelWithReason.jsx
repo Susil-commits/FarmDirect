@@ -41,7 +41,7 @@ export default function CancelWithReason({ isOpen, onClose, onConfirm, loading, 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#132E20]/60 backdrop-blur-md animate-fade-in">
       <div className="relative bg-white/95 backdrop-blur-xl border border-stone-200 rounded-[32px] shadow-2xl w-full max-w-md animate-scale-in overflow-hidden max-h-[90vh] flex flex-col">
-        {/* Header */}
+        {}
         <div className="flex items-center justify-between p-6 border-b border-stone-100 bg-[#FBF8F3]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold">
@@ -62,7 +62,7 @@ export default function CancelWithReason({ isOpen, onClose, onConfirm, loading, 
           </button>
         </div>
 
-        {/* Body */}
+        {}
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-6 space-y-3 overflow-y-auto max-h-[50vh] scrollbar-none">
             <div className="space-y-2">
@@ -105,7 +105,7 @@ export default function CancelWithReason({ isOpen, onClose, onConfirm, loading, 
             )}
           </div>
 
-          {/* Footer */}
+          {}
           <div className="p-6 border-t border-stone-100 bg-[#FBF8F3] flex gap-3 mt-auto">
             <button
               type="button"

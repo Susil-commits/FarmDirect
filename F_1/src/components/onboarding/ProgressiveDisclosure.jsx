@@ -2,10 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, HelpCircle, Zap } from 'lucide-react';
 import './ProgressiveDisclosure.css';
 
-/**
- * ProgressiveDisclosure - Reveal content gradually
- * Helps reduce cognitive load by showing only relevant information
- */
 export function ProgressiveDisclosure({ title, children, defaultOpen = false, level = 0 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const contentRef = useRef(null);
@@ -41,17 +37,11 @@ export function ProgressiveDisclosure({ title, children, defaultOpen = false, le
   );
 }
 
-/**
- * ConditionalFields - Show/hide fields based on conditions
- * Implements smart progressive disclosure for forms
- */
 export function ConditionalFields({ condition, children, label, hint }) {
   const [isVisible, setIsVisible] = useState(condition);
 
   useEffect(() => {
        
-       
-      // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsVisible(condition);
   }, [condition]);
 
@@ -75,9 +65,6 @@ export function ConditionalFields({ condition, children, label, hint }) {
   );
 }
 
-/**
- * CollapsibleSection - Group related content with expand/collapse
- */
 export function CollapsibleSection({
   title,
   children,
@@ -115,10 +102,6 @@ export function CollapsibleSection({
   );
 }
 
-/**
- * SmartReveal - Progressively reveal content with interaction
- * Tracks user engagement before showing advanced options
- */
 export function SmartReveal({ basicContent, advancedContent, revealLabel = 'Show more options' }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -147,9 +130,6 @@ export function SmartReveal({ basicContent, advancedContent, revealLabel = 'Show
   );
 }
 
-/**
- * ExpandableField - Individual field with expand functionality
- */
 export function ExpandableField({
   label,
   description,

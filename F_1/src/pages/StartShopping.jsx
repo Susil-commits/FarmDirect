@@ -26,12 +26,10 @@ export default function StartShopping() {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
-  // Reset scroll position to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Safe navigation handler with error handling
   const handleNavigation = useCallback((path) => {
     try {
       if (!path || typeof path !== 'string') {
@@ -44,8 +42,6 @@ export default function StartShopping() {
     }
   }, [navigate]);
 
-  // Check marketplace access based on verification status
-  // eslint-disable-next-line no-unused-vars
   const handleMarketplaceAccess = useCallback(() => {
     try {
       if (!user) {
@@ -64,7 +60,6 @@ export default function StartShopping() {
     }
   }, [user, handleNavigation]);
 
-  // Handle hero image error with fallback
   const handleImageError = useCallback(() => {
     setImageError(true);
     setImageLoading(false);
@@ -73,7 +68,7 @@ export default function StartShopping() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-white pt-20 pb-12">
-        {/* Back Button */}
+        {}
         <div className="sticky top-16 z-40 bg-white/80 backdrop-blur-sm border-b border-gray-200/50 pt-3 pb-2 px-4">
           <div className="max-w-6xl mx-auto">
             <button
@@ -88,7 +83,7 @@ export default function StartShopping() {
           </div>
         </div>
 
-        {/* Hero Section */}
+        {}
         <section
           className="py-24 px-4 relative overflow-hidden"
           aria-label="Hero section - Fresh Produce Marketplace"
@@ -105,7 +100,7 @@ export default function StartShopping() {
               </div>
             </ScrollAnimation>
 
-            {/* Hero Image Banner */}
+            {}
             <ScrollAnimation className="scroll-slide mt-16">
               <div className="rounded-2xl h-64 md:h-80 flex items-center justify-center shadow-2xl transform hover:scale-105 transition-transform duration-300 overflow-hidden relative group bg-gray-200">
                 {imageError ? (
@@ -127,7 +122,7 @@ export default function StartShopping() {
                       onError={handleImageError}
                       decoding="async"
                     />
-                    {/* Animated glow overlay on hover */}
+                    {}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
                   </>
                 )}
@@ -136,7 +131,7 @@ export default function StartShopping() {
           </div>
         </section>
 
-        {/* Why Shop With Us */}
+        {}
         <section 
           className="py-20 px-4 relative"
           aria-labelledby="benefits-heading"
@@ -314,7 +309,7 @@ export default function StartShopping() {
               ))}
             </div>
 
-            {/* Verification Timeline */}
+            {}
             <div className="mt-16">
               <ScrollAnimation className="scroll-slide">
                 <Card 
@@ -328,13 +323,13 @@ export default function StartShopping() {
                       <p className="text-gray-600 text-lg">Quick, secure, and transparent process</p>
                     </div>
                     <div className="relative">
-                      {/* Enhanced Timeline Background */}
+                      {}
                       <div className="hidden md:block absolute top-12 left-0 right-0 h-1 bg-gradient-to-r from-green-300 via-emerald-400 to-green-300" aria-hidden="true"></div>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 relative z-10">
                         {VERIFICATION_TIMELINE.map((timeline, i) => (
                           <div key={i} className="text-center relative group">
-                            {/* Timeline dot - Enhanced */}
+                            {}
                             <div className="flex justify-center mb-8 relative">
                               <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 opacity-20 blur-lg group-hover:opacity-30 transition-opacity"></div>
@@ -344,7 +339,7 @@ export default function StartShopping() {
                               </div>
                             </div>
                             
-                            {/* Card for timeline item */}
+                            {}
                             <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-green-100 group-hover:border-green-300 group-hover:-translate-y-1">
                               <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-3">{timeline.time}</div>
                               <p className="text-gray-800 font-bold mb-2 text-lg">{timeline.milestone}</p>
@@ -355,7 +350,7 @@ export default function StartShopping() {
                       </div>
                     </div>
                     
-                    {/* Enhanced CTA Box */}
+                    {}
                     <div className="text-center mt-14 p-8 bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl shadow-lg shadow-green-500/30 border-2 border-green-400 transform hover:scale-105 transition-transform duration-300 group">
                       <div className="flex items-center justify-center gap-3 mb-3">
                         <span className="text-4xl animate-pulse">✓</span>
@@ -370,12 +365,12 @@ export default function StartShopping() {
           </div>
         </section>
 
-        {/* CTA Section */}
+        {}
         <section 
           className="py-24 px-4 bg-gradient-to-br from-green-50 via-emerald-50 to-cyan-50 relative overflow-hidden"
           aria-labelledby="cta-heading"
         >
-          {/* Decorative background elements */}
+          {}
           <div className="absolute top-10 right-10 w-72 h-72 bg-gradient-to-br from-green-200 to-emerald-200 rounded-full blur-3xl opacity-20" aria-hidden="true"></div>
           <div className="absolute bottom-10 left-10 w-72 h-72 bg-gradient-to-br from-emerald-200 to-cyan-200 rounded-full blur-3xl opacity-20" aria-hidden="true"></div>
           

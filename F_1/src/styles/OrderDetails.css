@@ -1,6 +1,4 @@
-/* OrderDetails Page Styles
-   Premium order detail experience
-   Unique keyframes kept (pulse-status, draw-timeline, loading) — globals used for scale-in, slide-up */
+
 
 .order-details-container {
   min-height: 100vh;
@@ -8,12 +6,12 @@
   padding: 3rem 1rem;
 }
 
-/* Animation for modal entrance — uses global scaleIn */
+
 .animate-scale-in {
   animation: scaleIn 0.3s ease-out;
 }
 
-/* Payment status badge animations */
+
 @keyframes pulse-status {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.8; }
@@ -23,7 +21,7 @@
   animation: pulse-status 2s ease-in-out infinite;
 }
 
-/* Timeline line animation */
+
 @keyframes draw-timeline {
   from {
     height: 0;
@@ -39,7 +37,7 @@
   animation: draw-timeline 0.6s ease-out;
 }
 
-/* Price breakdown smooth reveal — uses global slideInUp */
+
 .price-breakdown-item {
   animation: slideInUp 0.4s ease-out;
   animation-fill-mode: both;
@@ -50,7 +48,7 @@
 .price-breakdown-item:nth-child(3) { animation-delay: 0.3s; }
 .price-breakdown-item:nth-child(4) { animation-delay: 0.4s; }
 
-/* Item card hover effect */
+
 .order-item-card {
   transition: all var(--transition-base, 0.3s ease);
   border-radius: 0.75rem;
@@ -62,7 +60,7 @@
   box-shadow: 0 10px 25px rgba(19, 46, 32, 0.12);
 }
 
-/* Payment modal styles */
+
 .payment-modal-overlay {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -76,7 +74,7 @@
   box-shadow: 0 0 0 3px rgba(19, 46, 32, 0.15);
 }
 
-/* Responsive design */
+
 @media (max-width: 768px) {
   .order-details-container {
     padding: 1.5rem 1rem;
@@ -147,7 +145,7 @@
   }
 }
 
-/* Status badge colors */
+
 .status-pending {
   background-color: var(--warning-light, #fef3c7);
   color: var(--warning-dark, #92400e);
@@ -166,7 +164,7 @@
   border-color: var(--danger-border, #fca5a5);
 }
 
-/* COD info card gradient */
+
 .cod-info-card {
   background: linear-gradient(135deg, var(--info-light, #dbeafe) 0%, var(--info-100, #a5f3fc) 100%);
   border: 2px solid var(--info-dark, #0284c7);
@@ -184,7 +182,7 @@
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
-/* Timeline styling */
+
 .timeline-dot {
   width: 0.75rem;
   height: 0.75rem;
@@ -211,7 +209,7 @@
   border-bottom: none;
 }
 
-/* Loading skeleton */
+
 .skeleton-loader {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
@@ -223,7 +221,7 @@
   100% { background-position: -200% 0; }
 }
 
-/* Back button styling */
+
 .back-button {
   display: inline-flex;
   align-items: center;
@@ -239,7 +237,7 @@
   color: var(--gray-800, #1f2937);
 }
 
-/* Print-friendly styles */
+
 @media print {
   .back-button,
   .payment-modal-overlay {

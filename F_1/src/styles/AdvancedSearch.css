@@ -1,12 +1,10 @@
-/* ============================================
-   ADVANCED SEARCH & FILTER STYLES
-   ============================================ */
+
 
 .advanced-search {
   margin-bottom: var(--spacing-2xl);
 }
 
-/* Search Bar */
+
 .search-bar {
   display: flex;
   gap: var(--spacing-md);
@@ -44,7 +42,7 @@
   min-width: 50px;
 }
 
-/* Filter Toggle */
+
 .filter-toggle {
   margin-bottom: var(--spacing-lg);
 }
@@ -69,7 +67,7 @@
   font-weight: bold;
 }
 
-/* Filters Panel */
+
 .filters-panel {
   padding: var(--spacing-xl);
   background: rgba(251, 248, 243, 0.9);
@@ -81,7 +79,7 @@
   box-shadow: 0 12px 40px rgba(19, 46, 32, 0.1);
 }
 
-/* Filter Section */
+
 .filter-section {
   margin-bottom: var(--spacing-lg);
 }
@@ -122,7 +120,7 @@
   box-shadow: 0 0 0 3px rgba(19, 46, 32, 0.15);
 }
 
-/* Price Inputs */
+
 .price-inputs {
   display: flex;
   gap: var(--spacing-md);
@@ -150,7 +148,7 @@
   font-weight: 600;
 }
 
-/* Price Slider */
+
 .price-slider {
   position: relative;
   height: 6px;
@@ -213,7 +211,7 @@
   z-index: 3;
 }
 
-/* Rating Options */
+
 .rating-options {
   display: flex;
   flex-direction: column;
@@ -250,7 +248,7 @@
   flex: 1;
 }
 
-/* Checkbox Group */
+
 .checkbox-group {
   display: flex;
   flex-direction: column;
@@ -310,21 +308,19 @@
   flex: 1;
 }
 
-/* Divider */
+
 .divider-subtle {
   height: 1px;
   background: rgba(19, 46, 32, 0.1);
   margin: var(--spacing-lg) 0;
 }
 
-/* Utility */
+
 .w-full {
   width: 100%;
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
+
 
 @media (max-width: 768px) {
   .search-bar {

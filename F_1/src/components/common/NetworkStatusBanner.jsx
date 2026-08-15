@@ -2,13 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Wifi, WifiOff, X } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 
-/**
- * NetworkStatusBanner
- *
- * Listens to the browser's online/offline events and displays a sticky
- * top banner when the user's connection drops. Automatically dismisses
- * when connection is restored and shows a success toast.
- */
 export default function NetworkStatusBanner() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [dismissed, setDismissed] = useState(false);

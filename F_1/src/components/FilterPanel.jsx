@@ -4,9 +4,6 @@ import Button from './common/Button';
 import Card from './common/Card';
 import '../styles/FilterPanel.css';
 
-/**
- * 3D Enhanced Filter Panel Component with glassmorphism & responsive drawer
- */
 export default function FilterPanel({
   cropTypes = [],
   locations = [],
@@ -23,9 +20,8 @@ export default function FilterPanel({
     organicOnly: currentFilters.organicOnly || false,
   });
 
-  // Sync with parent filters changes
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    
     setLocalFilters({
       cropType: currentFilters.cropType || '',
       priceRange: currentFilters.priceRange || [0, 1000],
@@ -80,7 +76,7 @@ export default function FilterPanel({
 
   return (
     <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 shadow-2xl rounded-[32px] p-6 space-y-6 transition-all duration-300">
-      {/* Header */}
+      {}
       <div className="flex items-center justify-between pb-4 border-b border-stone-100">
         <div className="flex items-center gap-2.5">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#132E20] to-[#1B3B2B] text-white flex items-center justify-center shadow-lg shadow-[#132E20]/20 transform hover:scale-105 transition-transform">
@@ -121,7 +117,7 @@ export default function FilterPanel({
         </div>
       </div>
 
-      {/* Crop Type Chips Grid */}
+      {}
       <div>
         <label className="block text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-3 flex items-center gap-1.5">
           <span className="text-base">🥬</span> Crop Category
@@ -155,7 +151,7 @@ export default function FilterPanel({
         </div>
       </div>
 
-      {/* Price Range Dual Badge Filter */}
+      {}
       <div>
         <div className="flex items-center justify-between mb-2">
           <label className="block text-[11px] font-bold uppercase tracking-widest text-stone-400 flex items-center gap-1.5">
@@ -184,7 +180,7 @@ export default function FilterPanel({
         </div>
       </div>
 
-      {/* Location Pills Filter */}
+      {}
       <div>
         <label className="block text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-3 flex items-center gap-1.5">
           <span className="text-base">📍</span> Region / State
@@ -218,7 +214,7 @@ export default function FilterPanel({
         </div>
       </div>
 
-      {/* 3D Quality Badges Toggles */}
+      {}
       <div className="border-t border-stone-100 pt-5 space-y-3">
         <label className="block text-[11px] font-bold uppercase tracking-widest text-stone-400 mb-2">
           Quality Guarantees
@@ -279,7 +275,7 @@ export default function FilterPanel({
         </button>
       </div>
 
-      {/* Reset & Apply Actions */}
+      {}
       <div className="space-y-2 pt-2">
         {onCloseMobile ? (
           <Button
@@ -302,5 +298,4 @@ export default function FilterPanel({
     </div>
   );
 }
-
-
+

@@ -10,10 +10,6 @@ import ErrorBoundary from '../components/common/ErrorBoundary.jsx';
 import { AlertCircle, CheckCircle, ArrowLeft, Edit2, Upload, X } from 'lucide-react';
 import { cropService } from '../services/appService.js';
 
-/**
- * Edit Crop Listing Page
- * Allows farmers to edit their existing crop listings
- */
 export default function EditCrop() {
   const { navigate, params } = useRouter();
   const cropId = params?.cropId;
@@ -39,9 +35,8 @@ export default function EditCrop() {
   const [submitting, setSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState([]);
   const [newImages, setNewImages] = useState([]);
-  const [existingImageUrls, setExistingImageUrls] = useState([]); // track existing URLs kept
+  const [existingImageUrls, setExistingImageUrls] = useState([]); 
 
-  // Fetch existing crop data
   useEffect(() => {
     const fetchCrop = async () => {
       try {
@@ -51,7 +46,6 @@ export default function EditCrop() {
 
         setCrop(cropData);
 
-        // Populate form with existing data
         setFormData({
           cropName: cropData.cropName || '',
           cropType: cropData.cropType || 'vegetables',
@@ -68,7 +62,6 @@ export default function EditCrop() {
           availability: cropData.availability || 'available',
         });
 
-        // Set existing image previews and track existing URLs for sync
         if (cropData.images && cropData.images.length > 0) {
           const urls = cropData.images.map(img =>
             typeof img === 'string' ? img : img.url || img
@@ -117,7 +110,7 @@ export default function EditCrop() {
 
   const removeImage = (index) => {
     const removedUrl = imagePreview[index];
-    // If it's a new image (beyond existing URLs), revoke blob URL
+    
     const existingCount = existingImageUrls.length;
     if (index >= existingCount) {
       if (removedUrl && removedUrl.startsWith('blob:')) {
@@ -126,7 +119,7 @@ export default function EditCrop() {
       const newIndex = index - existingCount;
       setNewImages(prev => prev.filter((_, i) => i !== newIndex));
     } else {
-      // This was an existing image URL — remove from kept list
+      
       setExistingImageUrls(prev => prev.filter((_, i) => i !== index));
     }
     setImagePreview(prev => prev.filter((_, i) => i !== index));
@@ -155,11 +148,10 @@ export default function EditCrop() {
         availability: formData.availability,
       };
 
-      // Always send existing image URLs so backend knows which were kept/removed
       updateData.existingImageUrls = existingImageUrls;
 
       let response;
-      // If there are new images, use FormData
+      
       if (newImages.length > 0) {
         const formDataObj = new FormData();
         Object.keys(updateData).forEach(key => {
@@ -172,11 +164,10 @@ export default function EditCrop() {
         newImages.forEach(file => formDataObj.append('images', file));
         response = await cropService.updateCropWithFiles(cropId, formDataObj);
       } else {
-        // JSON edit (no new images) — use regular api (not directApi) for token refresh support
+        
         response = await cropService.updateCrop(cropId, updateData);
       }
 
-      // Dispatch global event so cart & wishlist contexts refresh their cached data
       const updatedCrop = (response?.crop) || { _id: cropId, ...updateData };
       window.dispatchEvent(new CustomEvent('crop-updated', { detail: { crop: updatedCrop } }));
 
@@ -227,7 +218,7 @@ export default function EditCrop() {
       <PageTransition>
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white px-4 pt-28 pb-8">
           <div className="max-w-2xl mx-auto">
-            {/* Back Button */}
+            {}
             <ScrollAnimation className="scroll-slide mb-6">
               <button
                 onClick={() => navigate('/farmer/dashboard')}
@@ -237,7 +228,7 @@ export default function EditCrop() {
               </button>
             </ScrollAnimation>
 
-            {/* Hero Section */}
+            {}
             <ScrollAnimation className="scroll-slide mb-8">
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl p-8 flex items-center gap-4">
                 <Edit2 size={40} className="text-blue-200" />
@@ -248,7 +239,7 @@ export default function EditCrop() {
               </div>
             </ScrollAnimation>
 
-            {/* Success Message */}
+            {}
             {success && (
               <ScrollAnimation className="scroll-slide mb-6">
                 <div className="p-4 bg-green-50 border-l-4 border-green-500 rounded-lg flex items-center gap-3">
@@ -258,12 +249,12 @@ export default function EditCrop() {
               </ScrollAnimation>
             )}
 
-            {/* Crop Form */}
+            {}
             <ScrollAnimation className="scroll-slide mb-8">
               <Card className="p-8">
                 <h2 className="text-2xl font-bold mb-6 text-gray-900">Crop Details</h2>
 
-                {/* Error Message */}
+                {}
                 {error && (
                   <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded">
                     <div className="flex items-start gap-3">
@@ -274,7 +265,7 @@ export default function EditCrop() {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Crop Type */}
+                  {}
                   <div>
                     <label className="block text-gray-900 font-semibold mb-2">
                       Crop Type *
@@ -291,7 +282,7 @@ export default function EditCrop() {
                     </select>
                   </div>
 
-                  {/* Crop Name */}
+                  {}
                   <div>
                     <label className="block text-gray-900 font-semibold mb-2">
                       Crop Name *
@@ -307,7 +298,7 @@ export default function EditCrop() {
                     />
                   </div>
 
-                  {/* Category */}
+                  {}
                   <div>
                     <label className="block text-gray-900 font-semibold mb-2">
                       Category
@@ -327,7 +318,7 @@ export default function EditCrop() {
                     </select>
                   </div>
 
-                  {/* Price, Quantity, Unit */}
+                  {}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-gray-900 font-semibold mb-2">
@@ -380,7 +371,7 @@ export default function EditCrop() {
                     </div>
                   </div>
 
-                  {/* Pickup Location */}
+                  {}
                   <div>
                     <label className="block text-gray-900 font-semibold mb-2">
                       Pickup Location *
@@ -396,7 +387,7 @@ export default function EditCrop() {
                     />
                   </div>
 
-                  {/* Contact Number */}
+                  {}
                   <div>
                     <label className="block text-gray-900 font-semibold mb-2">
                       Contact Number *
@@ -412,7 +403,7 @@ export default function EditCrop() {
                     />
                   </div>
 
-                  {/* Description */}
+                  {}
                   <div>
                     <label className="block text-gray-900 font-semibold mb-2">
                       Description *
@@ -428,7 +419,7 @@ export default function EditCrop() {
                     />
                   </div>
 
-                  {/* Image Upload */}
+                  {}
                   <div>
                     <label className="block text-gray-900 font-semibold mb-2">
                       Crop Images
@@ -449,7 +440,7 @@ export default function EditCrop() {
                       </label>
                     </div>
 
-                    {/* Image Previews */}
+                    {}
                     {imagePreview.length > 0 && (
                       <div className="grid grid-cols-3 gap-3 mt-4">
                         {imagePreview.map((preview, index) => (
@@ -472,7 +463,7 @@ export default function EditCrop() {
                     )}
                   </div>
 
-                  {/* Availability */}
+                  {}
                   <div>
                     <label className="block text-gray-900 font-semibold mb-2">
                       Availability
@@ -488,7 +479,7 @@ export default function EditCrop() {
                     </select>
                   </div>
 
-                  {/* Specifications */}
+                  {}
                   <div>
                     <label className="block text-gray-900 font-semibold mb-2">
                       Specifications (optional)
@@ -503,7 +494,7 @@ export default function EditCrop() {
                     />
                   </div>
 
-                  {/* Submit Buttons */}
+                  {}
                   <div className="flex gap-4 pt-4">
                     <Button
                       variant="outline"

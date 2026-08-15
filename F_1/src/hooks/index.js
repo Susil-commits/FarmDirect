@@ -22,7 +22,7 @@ export const useFetch = (fetchFunction, dependencies = []) => {
 
   useEffect(() => {
     if (dependencies.length === 0 && fetchFunction) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      
       executeRequest();
     }
   }, [executeRequest, dependencies, fetchFunction]);
@@ -150,7 +150,6 @@ export const usePagination = (items, itemsPerPage = 10) => {
   };
 };
 
-// Re-export all 12 React Context hooks for unified access
 export { useAuth } from './useAuth';
 export { useCart } from './useCart';
 export { useChat } from '../context/ChatContext';

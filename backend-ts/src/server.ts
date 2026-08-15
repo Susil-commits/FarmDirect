@@ -56,7 +56,6 @@ process.on('uncaughtException', (error) => {
   gracefulShutdown('uncaughtException');
 });
 
-// B24 FIX: Wrap server startup in an async function
 async function start(): Promise<void> {
   await connectRedis();
   await connectDB();
@@ -100,4 +99,3 @@ if (cluster.isPrimary) {
     process.exit(1);
   });
 }
-

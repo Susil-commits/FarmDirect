@@ -72,26 +72,22 @@ export default function ChatPanel({
   const inputRef = useRef(null);
   const menuRef = useRef(null);
 
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Mark conversation as read when viewing
   useEffect(() => {
     if (receiverId) {
       markConversationAsRead(receiverId);
     }
   }, [receiverId, markConversationAsRead]);
 
-  // Focus input when receiver changes
   useEffect(() => {
     if (receiverId) {
       inputRef.current?.focus();
     }
   }, [receiverId]);
 
-  // Close menu on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -175,7 +171,6 @@ export default function ChatPanel({
     }
   };
 
-  // Get display info from receiverData or fallback
   const displayName =
     receiverData?.name ||
     [receiverData?.firstName, receiverData?.lastName].filter(Boolean).join(' ') ||
@@ -189,7 +184,6 @@ export default function ChatPanel({
     receiverData?.avatar ||
     null;
 
-  // Empty state - no chat selected
   if (!receiverId) {
     return (
       <div className={`chat-panel-empty ${className}`}>
@@ -208,16 +202,16 @@ export default function ChatPanel({
 
   return (
     <div className={`chat-panel ${className}`}>
-      {/* Header */}
+      {}
       <div className="chat-header">
         <div className="chat-header-user">
-          {/* Mobile back button */}
+          {}
           {onBack && (
             <button onClick={onBack} className="chat-mobile-back">
               <ArrowLeft size={20} />
             </button>
           )}
-          {/* Avatar */}
+          {}
           {photoUrl ? (
             <img loading="lazy" src={getImageUrl(photoUrl)} alt={displayName} className="chat-header-avatar" />
           ) : (
@@ -225,7 +219,7 @@ export default function ChatPanel({
               {getInitial(receiverData?.firstName || receiverData?.name)}
             </div>
           )}
-          {/* Info */}
+          {}
           <div className="chat-header-info">
             <div className="chat-header-name">
               {displayName}
@@ -249,7 +243,7 @@ export default function ChatPanel({
           </div>
         </div>
 
-        {/* Actions Menu */}
+        {}
         <div className="chat-header-actions" ref={menuRef}>
           <button
             onClick={() => setShowMenu(!showMenu)}
@@ -280,7 +274,7 @@ export default function ChatPanel({
         </div>
       </div>
 
-      {/* Messages */}
+      {}
       <div className={`chat-messages ${loading && messages.length === 0 ? 'chat-messages-loading' : ''} ${!loading && messages.length === 0 ? 'chat-messages-empty' : ''}`}>
         {loading && messages.length === 0 ? (
           <Loader size={32} className="chat-spinner" />
@@ -311,7 +305,7 @@ export default function ChatPanel({
         )}
       </div>
 
-      {/* Input */}
+      {}
       <div className="chat-input-area">
         <form onSubmit={handleSendMessage} className="chat-input-form">
           <input

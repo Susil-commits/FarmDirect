@@ -137,19 +137,16 @@ export default function ShoppingCart() {
         couponCode: appliedCoupon?.code || undefined,
       };
 
-      // Generate a unique idempotency key for this checkout attempt
       const idempotencyKey = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
       const result = await orderService.checkoutCart(payload, idempotencyKey);
       const createdOrderIds = result.orderIds || [];
       const successCount = createdOrderIds.length;
 
-      // Save the last successfully created order ID for OrderConfirmation page
       if (createdOrderIds.length > 0) {
         localStorage.setItem('lastOrderId', createdOrderIds[createdOrderIds.length - 1]);
       }
 
-      // Online payment: collect payment for all created orders at once.
       if (paymentMethod === 'razorpay' && createdOrderIds.length > 0) {
         if (successCount > 0) {
           addToast(
@@ -161,7 +158,6 @@ export default function ShoppingCart() {
         return;
       }
 
-      // COD path
       if (successCount > 0) {
         addToast(
           `${successCount} order(s) placed successfully! The farmer(s) will be notified.`,
@@ -195,7 +191,7 @@ export default function ShoppingCart() {
       <div className="cart-page">
         <div className="cart-bg-gradient"></div>
         <div className="cart-container">
-          {/* Header */}
+          {}
           <div className="cart-header-section">
             <div className="cart-header-content">
               <div className="cart-title-row">
@@ -217,7 +213,7 @@ export default function ShoppingCart() {
             )}
           </div>
 
-          {/* Empty State */}
+          {}
           {cart.length === 0 && (
             <div className="cart-empty">
               <div className="cart-empty-icon">
@@ -234,10 +230,10 @@ export default function ShoppingCart() {
             </div>
           )}
 
-          {/* Cart Content */}
+          {}
           {cart.length > 0 && (
             <div className="cart-content-grid">
-              {/* Cart Items List - Left Column */}
+              {}
               <div className="cart-items-column">
                 {cart.map((item, idx) => (
                   <CartItemCard
@@ -252,7 +248,7 @@ export default function ShoppingCart() {
                   />
                 ))}
 
-                {/* Clear Cart */}
+                {}
                 <div className="cart-clear-row">
                   <button
                     onClick={() => {
@@ -269,7 +265,7 @@ export default function ShoppingCart() {
                 </div>
               </div>
 
-              {/* Order Summary - Right Column */}
+              {}
               <div className="cart-summary-column">
                 <div className="cart-summary-card">
                   <h2>Order Summary</h2>
@@ -281,7 +277,7 @@ export default function ShoppingCart() {
                     <span>₹{totalPrice.toFixed(2)}</span>
                   </div>
 
-                  {/* Promo code */}
+                  {}
                   <div className="cart-coupon-section">
                     <CouponInput amount={totalPrice} />
                   </div>
@@ -343,7 +339,7 @@ export default function ShoppingCart() {
                     </p>
                   )}
 
-                  {/* Payment Method Selector */}
+                  {}
                   <div className="cart-payment-selector">
                     <p className="cart-payment-label">Payment Method</p>
                     <div className="cart-payment-options">
@@ -371,7 +367,7 @@ export default function ShoppingCart() {
                       </button>
                     </div>
                   </div>
-                  {/* Secure Checkout Banner */}
+                  {}
                   <div className="mt-6 mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-center gap-2">
                     <Lock size={16} className="text-emerald-700" />
                     <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-widest">End-to-End Encrypted</span>
@@ -401,7 +397,7 @@ export default function ShoppingCart() {
                     Continue Shopping
                   </button>
 
-                  {/* Trust Badges */}
+                  {}
                   <div className="cart-trust-row flex justify-center gap-4 mt-6 pt-32 border-t border-gray-100 text-xs text-slate-500 font-medium">
                     <span className="flex items-center gap-1"><Lock size={14} className="text-emerald-500"/> SSL Secured</span>
                     <span className="flex items-center gap-1"><Check size={14} className="text-emerald-500"/> Quality Assured</span>
@@ -411,7 +407,7 @@ export default function ShoppingCart() {
             </div>
           )}
 
-          {/* Footer Navigation */}
+          {}
           {cart.length > 0 && (
             <div className="cart-footer">
               <div className="cart-footer-inner">
@@ -432,7 +428,6 @@ export default function ShoppingCart() {
   );
 }
 
-// Individual Cart Item Card - Redesigned with Marketplace-level details
 function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuantityChange, onNavigate }) {
   const staggerDelay = index * 0.08;
   const rawItemImage = item.image || item.images?.[0];
@@ -504,7 +499,7 @@ function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuant
       className={`cart-item-card ${staggerDelay > 0 ? 'cart-stagger-item' : ''} ${isOutOfStock ? 'cart-item-out-of-stock' : ''}`}
       style={{ animationDelay: `${staggerDelay}s`, '--card-delay': staggerDelay }}
     >
-      {/* Image */}
+      {}
       <div
         className="cart-item-image"
         onClick={() => onNavigate(`/crop/${item.id || item._id}`)}
@@ -519,7 +514,7 @@ function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuant
             e.target.src = getCropFallbackImage(item.category || item.name);
           }}
         />
-        {/* Top-left stacked badges */}
+        {}
         <div className="cart-item-badges">
           {isOrganic && (
             <span className="cart-badge-organic">
@@ -533,13 +528,13 @@ function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuant
           )}
         </div>
 
-        {/* Stock overlay for out-of-stock */}
+        {}
         {isOutOfStock && (
           <div className="cart-item-out-of-stock-overlay">Sold Out</div>
         )}
       </div>
 
-      {/* Details */}
+      {}
       <div className="cart-item-details">
         <div className="cart-item-name-row">
           <h3
@@ -555,7 +550,7 @@ function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuant
           )}
         </div>
 
-        {/* Farmer Info */}
+        {}
         <div className="cart-item-farmer">
           <div className="cart-farmer-avatar">
             {item.farmerName?.[0]?.toUpperCase() || 'F'}
@@ -569,7 +564,7 @@ function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuant
           </div>
         </div>
 
-        {/* Rating */}
+        {}
         <div className="cart-item-rating">
           <div className="cart-item-stars">
             {renderStars(item.rating)}
@@ -579,14 +574,14 @@ function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuant
           </span>
         </div>
 
-        {/* Stock badge */}
+        {}
         <div className={`cart-stock-badge ${stockStatus}`}>
           <span className="cart-stock-dot"></span>
           {stockLabel[stockStatus]}
           {stockStatus === 'low-stock' && ` — only ${item.quantity ?? item.stock ?? 0} left`}
         </div>
 
-        {/* Extra detail chips: harvest date, freshness, shelf life */}
+        {}
         <div className="cart-item-extra-details">
           {harvestRelative && (
             <span className="cart-detail-chip">
@@ -609,7 +604,7 @@ function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuant
         </div>
       </div>
 
-      {/* Price per unit with original price & savings */}
+      {}
       <div className="cart-item-unit-price">
         <span className="cart-unit-label">Price/{item.unit || 'kg'}</span>
         <span className="cart-unit-value">₹{Math.floor(item.price || 0)}</span>
@@ -623,7 +618,7 @@ function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuant
         )}
       </div>
 
-      {/* Quantity + Subtotal (grouped) */}
+      {}
       <div className="cart-item-quantity-group">
         <div className="cart-item-quantity">
           <span className="cart-qty-label">Qty</span>
@@ -659,7 +654,7 @@ function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuant
         </div>
       </div>
 
-      {/* Actions: Remove + Save for Later */}
+      {}
       <div className="cart-item-actions">
         <button
           className="cart-item-remove"
@@ -672,7 +667,7 @@ function CartItemCard({ item, index, onRemove, onIncrement, onDecrement, onQuant
           className="cart-item-save-later"
           onClick={() => {
             onRemove(item.id || item._id, item.name);
-            // Could be extended to move to wishlist instead
+            
           }}
           title="Save for later"
         >

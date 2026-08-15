@@ -13,11 +13,11 @@ export default function KYCCongrats() {
   const isFarmer = user?.role === 'farmer';
 
   useEffect(() => {
-    // Mark KYC result as seen so this page doesn't show again
+    
     if (!markedRef.current && user) {
       markedRef.current = true;
       adminService.markKYCResultSeen().then(() => {
-        // Update local user state to reflect kycResultSeen = true
+        
         if (setUser) {
           setUser({ ...user, kycResultSeen: true });
         }
@@ -43,9 +43,9 @@ export default function KYCCongrats() {
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-[#FBF8F3] via-[#F4EFE6] to-[#FBF8F3] flex items-center justify-center px-4 pt-28 pb-12">
         <div className="max-w-2xl w-full">
-          {/* Main Card */}
+          {}
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-[#132E20]/10">
-            {/* Top Celebration Bar */}
+            {}
             <div className="bg-gradient-to-r from-[#132E20] via-[#1B3B2B] to-[#D97736] px-5 sm:px-8 py-10 sm:py-12 text-center">
               <div className="inline-flex items-center justify-center w-24 h-24 bg-white/20 rounded-full mb-6 backdrop-blur-sm">
                 <CheckCircle size={56} className="text-white" />
@@ -58,9 +58,9 @@ export default function KYCCongrats() {
               </p>
             </div>
 
-            {/* Content */}
+            {}
             <div className="px-5 sm:px-8 py-8 sm:py-10">
-              {/* Role-specific message */}
+              {}
               <div className="bg-gradient-to-r from-[#FBF8F3] to-[#F4EFE6] rounded-2xl p-6 mb-8 border border-[#132E20]/10">
                 {isFarmer ? (
                   <div className="flex items-start gap-4">
@@ -97,7 +97,7 @@ export default function KYCCongrats() {
                 )}
               </div>
 
-              {/* What's Next */}
+              {}
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">
                   {isFarmer ? "Here's what you can do now:" : "Here's what you can do now:"}
@@ -149,7 +149,7 @@ export default function KYCCongrats() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {}
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={handleContinue}
@@ -169,7 +169,7 @@ export default function KYCCongrats() {
             </div>
           </div>
 
-          {/* Footer note */}
+          {}
           <p className="text-center text-gray-500 text-sm mt-6">
             Welcome to the FarmConnect community! We're excited to have you on board.
           </p>

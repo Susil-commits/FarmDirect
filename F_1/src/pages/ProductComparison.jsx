@@ -29,7 +29,7 @@ export default function ProductComparison() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    
     fetchAvailableCrops();
   }, []);
 
@@ -91,7 +91,7 @@ export default function ProductComparison() {
           </div>
           <p className="text-gray-600 mb-8">Select and compare crops side-by-side to make informed decisions</p>
 
-          {/* Crop Selection */}
+          {}
           <div className="bg-white rounded-lg shadow p-6 mb-8">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Select Products to Compare</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
@@ -136,7 +136,7 @@ export default function ProductComparison() {
             </div>
           </div>
 
-          {/* Comparison Table */}
+          {}
           {comparisonData && (
             <div className="bg-white rounded-lg shadow overflow-hidden mb-8">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 p-6 border-b bg-gray-50">
@@ -244,7 +244,7 @@ export default function ProductComparison() {
             </div>
           )}
 
-          {/* Empty State */}
+          {}
           {!comparisonData && selectedCrops.length > 0 && (
             <div className="text-center py-12 bg-white rounded-lg shadow">
               <p className="text-gray-600">Click "Compare" to view detailed comparison</p>
@@ -257,4 +257,4 @@ export default function ProductComparison() {
     </PageTransition>
   );
 }
-
+

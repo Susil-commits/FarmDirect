@@ -4,16 +4,6 @@ import Button from '../common/Button';
 import PageTransition from '../common/PageTransition';
 import './OnboardingWizard.css';
 
-/**
- * OnboardingWizard - Multi-step wizard component
- * Features:
- * - Step-by-step progression with validation
- * - Progress tracking and visual indicators
- * - Smooth transitions between steps
- * - Custom step components
- * - Auto-save functionality
- * - Keyboard navigation support
- */
 export default function OnboardingWizard({
   steps,
   onComplete,
@@ -23,7 +13,7 @@ export default function OnboardingWizard({
   showStepIndicator = true,
   allowSkip = false,
   autoSave = true,
-  saveInterval = 30000, // 30 seconds
+  saveInterval = 30000, 
 }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState(initialData);
@@ -31,7 +21,6 @@ export default function OnboardingWizard({
   const [loading, setLoading] = useState(false);
   const [completed, setCompleted] = useState(new Array(steps.length).fill(false));
 
-  // Auto-save functionality
   React.useEffect(() => {
     if (!autoSave) return;
     
@@ -42,7 +31,6 @@ export default function OnboardingWizard({
     return () => clearInterval(saveTimer);
   }, [formData, currentStep, autoSave, saveInterval, steps]);
 
-  // Validate current step
   const validateStep = useCallback(async () => {
     if (steps[currentStep]?.validate) {
       try {
@@ -60,7 +48,6 @@ export default function OnboardingWizard({
     return true;
   }, [currentStep, formData, steps]);
 
-  // Handle next step
   const handleNext = async () => {
     const isValid = await validateStep();
     if (!isValid) return;
@@ -72,7 +59,7 @@ export default function OnboardingWizard({
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Wizard complete
+      
       setLoading(true);
       try {
         if (onComplete) {
@@ -86,26 +73,22 @@ export default function OnboardingWizard({
     }
   };
 
-  // Handle previous step
   const handlePrevious = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
   };
 
-  // Handle skip
   const handleSkip = () => {
     if (allowSkip && onSkip) {
       onSkip(formData);
     }
   };
 
-  // Update form data
   const updateFormData = useCallback((updates) => {
     setFormData(prev => ({ ...prev, ...updates }));
   }, []);
 
-  // Jump to step
   const jumpToStep = (stepIndex) => {
     if (stepIndex < completed.length && completed[stepIndex]) {
       setCurrentStep(stepIndex);
@@ -119,7 +102,7 @@ export default function OnboardingWizard({
   return (
     <PageTransition>
       <div className="onboarding-wizard min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
-        {/* Progress Bar */}
+        {}
         {showProgressBar && (
           <div className="sticky top-0 z-40 bg-white shadow-sm">
             <div className="max-w-4xl mx-auto px-4 py-4">
@@ -142,7 +125,7 @@ export default function OnboardingWizard({
         )}
 
         <div className="max-w-4xl mx-auto px-4 py-8">
-          {/* Step Indicator */}
+          {}
           {showStepIndicator && (
             <div className="mb-12">
               <div className="flex items-center gap-2 overflow-x-auto pb-4">
@@ -175,7 +158,7 @@ export default function OnboardingWizard({
             </div>
           )}
 
-          {/* Step Content */}
+          {}
           <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 min-h-96">
             {step?.component ? (
               <step.component
@@ -191,7 +174,7 @@ export default function OnboardingWizard({
             )}
           </div>
 
-          {/* Navigation Controls */}
+          {}
           <div className="flex items-center justify-between gap-4">
             <div className="flex gap-3">
               <Button
@@ -227,7 +210,7 @@ export default function OnboardingWizard({
             </Button>
           </div>
 
-          {/* Step Description */}
+          {}
           {step?.description && (
             <p className="text-center text-gray-600 mt-6 text-sm">
               {step.description}

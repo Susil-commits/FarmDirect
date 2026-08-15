@@ -40,10 +40,10 @@ export const idempotency = async (req: Request, res: Response, next: NextFunctio
       }
 
       if (existingKey.status === 'pending') {
-        // If it's been pending for more than 2 minutes, assume it died and take over
+        
         if (now.getTime() - existingKey.createdAt.getTime() > 2 * 60 * 1000) {
            await IdempotencyKey.updateOne({ _id: existingKey._id }, { $set: { createdAt: now } });
-           // Fall through to process request
+           
         } else {
            sendError(res, 'Request is currently processing', 409);
            return;
@@ -51,10 +51,9 @@ export const idempotency = async (req: Request, res: Response, next: NextFunctio
       }
     }
 
-    // Intercept res.json to cache the response
     const originalJson = res.json.bind(res);
     res.json = (body: any) => {
-      // Determine if it was a success based on status code
+      
       const isSuccess = res.statusCode >= 200 && res.statusCode < 300;
       
       IdempotencyKey.updateOne(
@@ -64,7 +63,7 @@ export const idempotency = async (req: Request, res: Response, next: NextFunctio
             status: isSuccess ? 'completed' : 'failed',
             responseStatus: res.statusCode,
             responseBody: body,
-            // If body has data._id, it might be the orderId. Let's try to grab it if it exists.
+            
             orderId: isSuccess && body?.data?._id ? body.data._id : null
           }
         }

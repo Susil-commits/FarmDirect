@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars */
+
 import { useState, useEffect } from 'react';
 import { Upload, CheckCircle, Clock, AlertCircle, Loader, Eye } from 'lucide-react';
 import { useToast } from '../../hooks/useToast';
@@ -23,13 +23,12 @@ export default function BuyerVerification() {
     addressProof: { file: null, status: 'pending', fileName: '' },
   });
 
-  const [userType, setUserType] = useState('individual'); // individual or business
+  const [userType, setUserType] = useState('individual'); 
   const [submittedAt, setSubmittedAt] = useState(null);
   const [allSubmitted, setAllSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
 
-  // Pre-populate documents from backend kycDocuments when user data is available
   useEffect(() => {
     if (!user?.kycDocuments) return;
 
@@ -60,8 +59,6 @@ export default function BuyerVerification() {
 
     if (hasAnyDoc) {
        
-       
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDocuments((prev) => ({ ...prev, ...restoredDocs }));
       if (user.kycSubmittedAt) {
         setSubmittedAt(new Date(user.kycSubmittedAt));
@@ -69,7 +66,6 @@ export default function BuyerVerification() {
     }
   }, [user?.kycDocuments, user?.kycSubmittedAt]);
 
-  // Redirect non-buyers
   if (!user || user.role !== 'buyer') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 pt-28 pb-12">
@@ -86,7 +82,6 @@ export default function BuyerVerification() {
     );
   }
 
-  // If already verified
   if (user?.kycStatus === 'verified') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 pt-28 pb-12">
@@ -158,7 +153,6 @@ export default function BuyerVerification() {
   const handleSubmit = async () => {
     const requiredDocsToCheck = requiredDocs.filter(doc => doc.required);
 
-    // Allow docs that are either newly uploaded (have File object) OR already submitted on backend with a file URL
     const allReady = requiredDocsToCheck.every(
       doc => documents[doc.id].file || (documents[doc.id].status === 'submitted' && documents[doc.id].url)
     );
@@ -172,9 +166,6 @@ export default function BuyerVerification() {
       return;
     }
 
-    // Check if there are any new files to actually upload
-    // IMPORTANT: Also allow re-upload if docs are marked "submitted" but have no file URL
-    // (this happens when a previous upload failed silently — kycStatus is "pending" but no docs stored)
     const hasNewFiles = requiredDocsToCheck.some(
       doc => documents[doc.id].file || (documents[doc.id].status === 'submitted' && !documents[doc.id].url)
     );
@@ -192,8 +183,7 @@ export default function BuyerVerification() {
 
     try {
       setSubmitting(true);
-      // Build file map - include docs with actual File objects (newly uploaded ones)
-      // AND docs that were marked "submitted" but have no file URL (failed previous upload)
+      
       const fileMap = {};
       requiredDocsToCheck.forEach(doc => {
         if (documents[doc.id].file) {
@@ -201,11 +191,8 @@ export default function BuyerVerification() {
         }
       });
 
-
       await uploadService.uploadKYCDocuments(fileMap, 'buyer_kyc');
 
-      // CRITICAL: Refresh user data to get kycDocuments from backend
-      // This ensures the pre-populate useEffect can find the docs on next page load
       const refreshedUser = await refreshUser();
 
       setSubmittedAt(new Date().toLocaleDateString());
@@ -235,13 +222,13 @@ export default function BuyerVerification() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 pt-28 pb-12">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
+        {}
         <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Buyer Account Verification</h1>
           <p className="text-gray-600">Complete your profile verification to unlock full shopping features</p>
         </div>
 
-        {/* User Type Selection */}
+        {}
         {!allSubmitted && (
           <Card className="mb-8">
             <div className="p-6">
@@ -276,7 +263,7 @@ export default function BuyerVerification() {
           </Card>
         )}
 
-        {/* Verification Status - After Submission */}
+        {}
         {allSubmitted && (
           <>
             <Card className="mb-8 bg-blue-50 border-l-4 border-blue-600">
@@ -326,7 +313,7 @@ export default function BuyerVerification() {
                   onClick={() => {
                     setAllSubmitted(false);
                     setSubmittedAt(null);
-                    // Reset all document states to pending
+                    
                     const resetDocs = {};
                     Object.keys(documents).forEach((key) => {
                       resetDocs[key] = { file: null, status: 'pending', fileName: '' };
@@ -341,7 +328,7 @@ export default function BuyerVerification() {
           </>
         )}
 
-        {/* Upload Form - Only show before submission */}
+        {}
         {!allSubmitted && (
           <>
         <Card className="mb-8">
@@ -379,7 +366,7 @@ export default function BuyerVerification() {
           </div>
         </Card>
 
-        {/* Document Upload Section */}
+        {}
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-gray-900">Upload Required Documents</h2>
 
@@ -486,7 +473,7 @@ export default function BuyerVerification() {
           ))}
         </div>
 
-        {/* Terms & Conditions */}
+        {}
         <Card className="mt-8 bg-yellow-50 border-l-4 border-yellow-600">
           <div className="p-6">
             <h3 className="font-bold text-gray-900 mb-3">Important Information</h3>
@@ -506,7 +493,7 @@ export default function BuyerVerification() {
           </div>
         </Card>
 
-        {/* Submit Button */}
+        {}
         <div className="mt-8">
           <Button
             onClick={handleSubmit}
@@ -528,7 +515,7 @@ export default function BuyerVerification() {
         )}
       </div>
 
-      {/* Document Preview Modal */}
+      {}
       {selectedDocument && (
         <DocumentPreviewModal
           document={selectedDocument}

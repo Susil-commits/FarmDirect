@@ -63,7 +63,6 @@ export default function AdminOrders() {
     window.scrollTo(0, 0);
     if (user?.role === 'admin') {
        
-      // eslint-disable-next-line react-hooks/immutability
       fetchOrders();
     }
   }, [user]);
@@ -76,7 +75,6 @@ export default function AdminOrders() {
       const ordersData = response.orders || response.data?.orders || [];
       setOrders(ordersData);
 
-      // Calculate stats
       const newStats = {
         total: ordersData.length,
         confirmed: ordersData.filter(o => o.orderStatus === 'confirmed').length,
@@ -133,7 +131,7 @@ export default function AdminOrders() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pt-28 pb-12">
-        {/* Top Navigation Bar */}
+        {}
         <div className="sticky top-0 bg-white border-b border-slate-200 px-3 sm:px-6 py-4 flex items-center justify-between shadow-sm z-30">
           <div className="flex items-center gap-3 min-w-0">
             <button onClick={() => navigate('/admin/dashboard')} className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition flex-shrink-0">
@@ -148,7 +146,7 @@ export default function AdminOrders() {
         </div>
 
         <div className="p-6 max-w-7xl mx-auto">
-          {/* Stats Cards */}
+          {}
           <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-3 mb-6">
             <Card className="p-4 bg-gradient-to-br from-slate-50 to-white text-center">
               <p className="text-xs font-semibold text-gray-600 mb-1">Total</p>
@@ -166,7 +164,7 @@ export default function AdminOrders() {
             </Card>
           </div>
 
-          {/* Filters */}
+          {}
           <div className="flex flex-wrap items-center gap-4 mb-6">
             <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 px-3 py-2 flex-1 max-w-md">
               <Search size={18} className="text-gray-400" />
@@ -194,7 +192,7 @@ export default function AdminOrders() {
             </div>
           </div>
 
-          {/* Orders List */}
+          {}
           {loading ? (
             <Card className="p-12 text-center">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
@@ -224,7 +222,7 @@ export default function AdminOrders() {
 
                 return (
                   <Card key={order._id} className="overflow-hidden">
-                    {/* Order Header */}
+                    {}
                     <div 
                       className="p-6 cursor-pointer hover:bg-gray-50 transition"
                       onClick={() => setExpandedOrder(isExpanded ? null : order._id)}
@@ -282,10 +280,10 @@ export default function AdminOrders() {
                       </div>
                     </div>
 
-                    {/* Expanded Details */}
+                    {}
                     {isExpanded && (
                       <div className="px-6 pb-6 border-t border-gray-200 pt-4">
-                        {/* Order Progress Bar */}
+                        {}
                         <div className="mb-6">
                           <p className="text-sm font-semibold text-gray-700 mb-3">Order Progress</p>
                           <div className="flex items-center">
@@ -325,7 +323,7 @@ export default function AdminOrders() {
                           </div>
                         </div>
 
-                        {/* Order Details Grid */}
+                        {}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                           <div className="p-4 bg-gray-50 rounded-lg">
                             <p className="text-xs text-gray-500 font-semibold mb-1">Crop</p>
@@ -347,7 +345,7 @@ export default function AdminOrders() {
                           </div>
                         </div>
 
-                        {/* Farmer & Buyer Details */}
+                        {}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                           <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                             <p className="text-xs text-green-600 font-semibold mb-2">👨‍🌾 Farmer</p>
@@ -389,7 +387,7 @@ export default function AdminOrders() {
                           </div>
                         </div>
 
-                        {/* Cancellation / Denial Details */}
+                        {}
                         {order.orderStatus === 'cancelled' && (
                           <div className={`mb-4 p-4 rounded-lg border-2 ${
                             order.cancelledBy === 'farmer' ? 'bg-orange-50 border-orange-400' :
@@ -421,7 +419,7 @@ export default function AdminOrders() {
                           </div>
                         )}
 
-                        {/* Denied indicator for non-cancelled orders that were denied at cart stage */}
+                        {}
                         {order.orderStatus === 'cancelled' && order.timeline?.some(t => t.event === 'denied') && !order.cancellationReason && (
                           <div className="mb-4 p-4 rounded-lg border-2 bg-orange-50 border-orange-400">
                             <p className="text-sm font-bold text-gray-900 mb-1">🛑 Order Denied by Farmer</p>
@@ -429,7 +427,7 @@ export default function AdminOrders() {
                           </div>
                         )}
 
-                        {/* Order Timeline */}
+                        {}
                         {order.timeline && order.timeline.length > 0 && (
                           <div className="mb-4">
                             <p className="text-sm font-semibold text-gray-700 mb-3">Order Timeline</p>
@@ -455,7 +453,7 @@ export default function AdminOrders() {
                           </div>
                         )}
 
-                        {/* Action Buttons */}
+                        {}
                         <div className="flex gap-2 pt-2 border-t border-gray-200">
                           <button
                             onClick={() => navigate(`/order/${order._id}`)}

@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 
 export const ToastContext = createContext();
@@ -57,21 +57,15 @@ export function ToastProvider({ children }) {
     };
   }, [addToast, removeToast]);
 
-
   const success = useCallback((msg, duration) => addToast(msg, 'success', duration), [addToast]);
   const error = useCallback((msg, duration) => addToast(msg, 'error', duration ?? 6000), [addToast]);
   const warning = useCallback((msg, duration) => addToast(msg, 'warning', duration ?? 6000), [addToast]);
   const info = useCallback((msg, duration) => addToast(msg, 'info', duration), [addToast]);
 
-  /** Show a network-offline toast. */
   const networkError = useCallback(() => {
     addToast('You appear to be offline. Please check your connection.', 'error', 8000);
   }, [addToast]);
 
-  /**
-   * Show field-level validation errors as a single toast.
-   * Accepts: object { field: message } or array of message strings.
-   */
   const validationErrors = useCallback((errors) => {
     if (!errors) return;
     let messages;

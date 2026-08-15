@@ -12,7 +12,6 @@ import { createCircuitBreaker } from '../utils/circuitBreaker.js';
 
 export const VALID_PAYMENT_METHODS = [PaymentMethod.Cod, PaymentMethod.Razorpay];
 
-// Wrap the Razorpay API call in a Circuit Breaker
 const razorpayCreateOrder = (razorpayInstance: any, options: any) => {
   return razorpayInstance.orders.create(options);
 };
@@ -44,7 +43,6 @@ export async function createRazorpayOrder(req: Request, res: Response, next: Nex
     const targetIds = unpaidOrders.map((o) => o._id);
     const receipt = `rcpt_${String(targetIds[0]).slice(-12)}`;
 
-    // Use Circuit Breaker to prevent hanging threads if Razorpay is down
     const razorpayOrder = await razorpayBreaker.fire(razorpay, {
       amount: Math.round(totalAmount * 100),
       currency: 'INR',

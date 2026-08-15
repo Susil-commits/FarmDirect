@@ -41,7 +41,6 @@ export default function OrderTrackingNew() {
   useEffect(() => {
     window.scrollTo(0, 0);
        
-      // eslint-disable-next-line react-hooks/immutability
     fetchOrders();
     let active = true;
     const interval = setInterval(() => { if (active) fetchOrders(); }, 30000);
@@ -50,17 +49,11 @@ export default function OrderTrackingNew() {
        
     return () => { clearInterval(interval); document.removeEventListener('visibilitychange', onVis); };
        
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Live order updates via WebSocket: patch the selected order instantly and
-  // reconcile the list (debounced). Toasts/browser-push are handled centrally
-  // by RealtimeProvider; this just keeps the UI in sync without a full refresh.
-       
   useEffect(() => {
     if (!orderEvent) return;
        
-      // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedOrder((prev) => {
       if (prev && String(prev._id) === String(orderEvent.orderId)) {
         return {
@@ -75,7 +68,7 @@ export default function OrderTrackingNew() {
     const t = setTimeout(() => fetchOrders(), 400);
        
     return () => clearTimeout(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   }, [orderEvent]);
 
   const fetchOrders = async () => {
@@ -83,7 +76,6 @@ export default function OrderTrackingNew() {
       const data = await orderService.getOrders();
       const allOrders = data.data || [];
 
-      // Filter out completed/cancelled for active tracking
       const activeOrders = allOrders.filter(o => !['completed', 'cancelled'].includes(o.orderStatus));
       setOrders(activeOrders);
 
@@ -187,7 +179,7 @@ export default function OrderTrackingNew() {
             </ScrollAnimation>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              {/* Orders List */}
+              {}
               <div className="lg:col-span-1">
                 <ScrollAnimation className="scroll-slide">
                   <Card className="p-4">
@@ -227,19 +219,19 @@ export default function OrderTrackingNew() {
                 </ScrollAnimation>
               </div>
 
-              {/* Order Details */}
+              {}
               <div className="lg:col-span-3">
                 <ScrollAnimation className="scroll-slide space-y-6">
                   {selectedOrder && (
                     <>
-                      {/* Status Timeline */}
+                      {}
                       <Card className="p-8">
                         <h3 className="font-bold text-gray-900 mb-6 text-lg">Order Status</h3>
                         <div className="space-y-8">
                           {getStatusTimeline(selectedOrder).map((status, idx, arr) => (
                             <div key={status.status} className="relative">
                               <div className="flex items-start gap-4">
-                                {/* Status Indicator */}
+                                {}
                                 <div className="relative z-10">
                                   <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition ${
                                     status.completed ? 'bg-green-600 text-white' :
@@ -248,7 +240,7 @@ export default function OrderTrackingNew() {
                                   }`}>
                                     {status.icon}
                                   </div>
-                                  {/* Timeline Line */}
+                                  {}
                                   {idx < arr.length - 1 && (
                                     <div className={`absolute left-6 top-12 w-0.5 h-20 transition ${
                                       status.completed ? 'bg-green-600' : 'bg-gray-300'
@@ -256,7 +248,7 @@ export default function OrderTrackingNew() {
                                   )}
                                 </div>
 
-                                {/* Status Info */}
+                                {}
                                 <div className="flex-1 pt-1">
                                   <h4 className={`font-bold ${
                                     status.completed ? 'text-green-600' :
@@ -282,9 +274,9 @@ export default function OrderTrackingNew() {
                         </div>
                       </Card>
 
-                      {/* Order Summary */}
+                      {}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {/* Crop Item */}
+                        {}
                         <Card className="p-6">
                           <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <Leaf className="w-5 h-5 text-green-600" />Order Item
@@ -307,7 +299,7 @@ export default function OrderTrackingNew() {
                           </div>
                         </Card>
 
-                        {/* Pricing */}
+                        {}
                         <Card className="p-6">
                           <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <IndianRupee className="w-5 h-5 text-green-600" />Price Details
@@ -333,7 +325,7 @@ export default function OrderTrackingNew() {
                         </Card>
                       </div>
 
-                      {/* Pickup Location */}
+                      {}
                       <Card className="p-6">
                         <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                           <MapPin className="w-5 h-5 text-blue-600" />Pickup Location

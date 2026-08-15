@@ -4,7 +4,6 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { Truck, MapPin } from 'lucide-react';
 
-// Fix for default marker icons in Leaflet with Webpack/Vite
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -51,7 +50,7 @@ export default function OrderMap({ order }) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        {/* Farmer Marker */}
+        {}
         <Marker position={farmerCoords} icon={farmerIcon}>
           <Popup>
             <div className="font-bold flex items-center gap-2 text-[#132E20]">
@@ -61,7 +60,7 @@ export default function OrderMap({ order }) {
           </Popup>
         </Marker>
 
-        {/* Buyer Marker */}
+        {}
         <Marker position={buyerCoords} icon={buyerIcon}>
           <Popup>
              <div className="font-bold flex items-center gap-2 text-[#D97736]">
@@ -71,7 +70,7 @@ export default function OrderMap({ order }) {
           </Popup>
         </Marker>
 
-        {/* Route Line */}
+        {}
         <Polyline 
           positions={[farmerCoords, buyerCoords]} 
           color="#D97736" 
@@ -80,7 +79,7 @@ export default function OrderMap({ order }) {
         />
       </MapContainer>
       
-      {/* Overlay Status Badge */}
+      {}
       <div className="absolute top-4 left-4 z-[400] bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-stone-200 flex items-center gap-2 font-sans-body">
          <Truck className="w-4 h-4 text-[#D97736]" />
          <span className="font-bold text-[#132E20] text-xs uppercase tracking-wider">Live Route Tracking</span>
@@ -88,4 +87,4 @@ export default function OrderMap({ order }) {
     </div>
   );
 }
-
+

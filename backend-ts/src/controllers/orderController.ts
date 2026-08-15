@@ -45,7 +45,6 @@ async function recordCropCompletion(order: OrderLike): Promise<void> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // B6 FIX: read the crop after the stat increment so quantity reflects the
   const todaySalesEntry = await CropListing.findOne(
     { _id: order.cropId, 'dailySales.date': { $gte: today, $lt: new Date(today.getTime() + 86400000) } },
   ).lean().select('quantity dailySales');
@@ -71,7 +70,6 @@ async function recordCropCompletion(order: OrderLike): Promise<void> {
     });
   }
 
-  // Re-read the final quantity to set sold-out status accurately (B6 FIX)
   const updatedCrop = await CropListing.findById(order.cropId).lean().select('quantity');
   if (updatedCrop && updatedCrop.quantity <= 0) {
     await CropListing.findByIdAndUpdate(order.cropId, {
@@ -184,7 +182,6 @@ export async function startOrder(req: Request, res: Response, next: NextFunction
 
 export async function createOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-
 
     const session = await mongoose.startSession();
     let order: any;
@@ -375,7 +372,6 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
     const totalDiscountAmount = volumeDiscountAmount + totalCouponDiscount;
     const createdOrderIds: string[] = [];
 
-    // B1 FIX: Wrap the entire multi-item checkout loop in a MongoDB session +
     await session.withTransaction(async () => {
       createdOrderIds.length = 0;
 
@@ -445,7 +441,6 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
       }
     });
 
-    // Redeem coupon only after all stock decrements committed successfully (B2 pattern)
     if (appliedCouponCode) {
       await redeemCoupon(appliedCouponCode, buyerId);
     }
@@ -670,7 +665,7 @@ export async function cancelOrder(req: Request, res: Response, next: NextFunctio
 
 export async function getOrderStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    // B3 FIX: Fetch the full order (not lean-selected) so we can verify ownership
+    
     const order = await Order.findById(req.params.id).lean().select('orderStatus orderNumber timeline buyerId farmerId');
     if (!order) {
       sendError(res, 'Order not found', 404);
@@ -691,7 +686,7 @@ export async function getOrderStatus(req: Request, res: Response, next: NextFunc
 
 export async function trackOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    // B5 FIX: Load the raw order first to verify caller ownership before
+    
     const raw = await Order.findById(req.params.id).lean().select('buyerId farmerId');
     if (!raw) {
       sendError(res, 'Order not found', 404);
@@ -840,7 +835,6 @@ export async function markOrderReceived(req: Request, res: Response, next: NextF
   }
 }
 
-
 export async function markCODPaymentReceived(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
@@ -859,7 +853,6 @@ export async function markCODPaymentReceived(req: Request, res: Response, next: 
       return;
     }
 
-    // B4 FIX: Payment can only be collected after the buyer has actually picked
     const allowedStatuses: OrderStatus[] = [OrderStatus.PickedUp, OrderStatus.Completed];
     if (!allowedStatuses.includes(order.orderStatus)) {
       sendError(

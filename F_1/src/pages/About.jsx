@@ -4,7 +4,7 @@ import PageTransition from '../components/common/PageTransition.jsx';
 import DynamicFloatingNavbar from '../components/landing/DynamicFloatingNavbar';
 import GiantBrandFooter from '../components/common/GiantBrandFooter';
 import { HeartHandshake, ShieldCheck, Zap, Shield, Sparkles, Sprout, ArrowRight } from 'lucide-react';
-// eslint-disable-next-line no-unused-vars
+
 import { motion } from 'framer-motion';
 
 export default function About() {
@@ -53,7 +53,7 @@ export default function About() {
       <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body selection:bg-[#D97736] selection:text-white">
         <DynamicFloatingNavbar activeSection="cream" onNavigate={navigate} />
 
-        {/* Hero Section */}
+        {}
         <section className="pt-32 pb-20 px-4 md:px-8 max-w-6xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -86,7 +86,7 @@ export default function About() {
           </motion.p>
         </section>
 
-        {/* Core Values Peel Section */}
+        {}
         <section className="relative bg-[#132E20] text-[#FBF8F3] py-20 px-4 md:px-8 -mt-6 rounded-t-[60px] md:rounded-t-[80px] z-10 shadow-2xl">
           <div className="max-w-6xl mx-auto">
             <div className="text-center max-w-3xl mx-auto mb-14">
@@ -124,7 +124,7 @@ export default function About() {
           </div>
         </section>
 
-        {/* Founders / Team Section */}
+        {}
         <section className="bg-[#FBF8F3] py-20 px-4 md:px-8 border-t border-[#132E20]/10">
           <div className="max-w-6xl mx-auto">
             <div className="text-center max-w-3xl mx-auto mb-14">

@@ -76,7 +76,6 @@ export function getRefreshTokenCookieOptions() {
   };
 }
 
-
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const body = req.body as RegisterDto & {
@@ -135,7 +134,6 @@ export async function register(req: Request, res: Response, next: NextFunction):
   }
 }
 
-
 export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { email, password } = req.body as LoginDto;
@@ -175,7 +173,6 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
   }
 }
 
-
 export async function getCurrentUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const user = (await User.findById(req.user!._id)) as unknown as PublicUserDoc | null;
@@ -193,7 +190,6 @@ export async function getCurrentUser(req: Request, res: Response, next: NextFunc
   }
 }
 
-
 export async function updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const {
@@ -201,7 +197,6 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
       address, city, state, pincode,
     } = req.body as Record<string, unknown>;
 
-    // BUG 4 FIX: Only include profilePicture in the update when at least one
     const updateDoc: Record<string, unknown> = {
       name, phone, location, bio, avatar,
       address, city, state, pincode,
@@ -232,7 +227,6 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
   }
 }
 
-
 export async function logout(req: Request, res: Response): Promise<void> {
   const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
   if (refreshToken) {
@@ -244,7 +238,6 @@ export async function logout(req: Request, res: Response): Promise<void> {
   res.clearCookie('refreshToken', getRefreshTokenCookieOptions());
   res.status(200).json({ message: 'Logged out successfully' });
 }
-
 
 export async function forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -356,7 +349,6 @@ export async function updatePassword(req: Request, res: Response, next: NextFunc
   }
 }
 
-
 export async function refreshTokenHandler(req: Request, res: Response): Promise<void> {
   try {
     const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
@@ -392,7 +384,6 @@ export async function refreshTokenHandler(req: Request, res: Response): Promise<
     res.status(401).json({ message: 'Failed to refresh token', error: message });
   }
 }
-
 
 interface KycDocEntry {
   fileName?: string;
@@ -537,7 +528,6 @@ export async function submitKYCDocuments(req: Request, res: Response, next: Next
   }
 }
 
-
 export async function deleteAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const userId = req.user!._id;
@@ -574,13 +564,6 @@ export async function deleteAccount(req: Request, res: Response, next: NextFunct
   }
 }
 
-
-/**
- * POST /auth/complete-onboarding
- * Allows a newly registered user to supply additional profile details
- * (role-specific fields like farmName, farmArea, etc.) that were not
- * collected at registration. Idempotent — safe to call multiple times.
- */
 export async function completeOnboarding(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const userId = req.user!._id;

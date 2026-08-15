@@ -1,6 +1,4 @@
-/* LoginPrompt Modal Styles
-   Premium authentication prompt
-   Keyframes deferred to index.css globals */
+
 
 .login-prompt-overlay {
   position: fixed;
@@ -98,14 +96,14 @@
   border-top: 1px solid rgba(19, 46, 32, 0.12);
 }
 
-/* Trust signals styling */
+
 .login-prompt-footer p {
   margin: 0;
   color: #132E20;
   font-weight: var(--font-weight-medium, 500);
 }
 
-/* Responsive adjustments */
+
 @media (max-width: 640px) {
   .login-prompt-modal {
     width: 95%;

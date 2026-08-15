@@ -11,7 +11,7 @@ export default function RevenueChart({ data }) {
 
   return (
     <div className="grid gap-6 font-sans-body text-[#132E20]">
-      {/* Revenue Trend Line Chart */}
+      {}
       <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] p-6 shadow-xl">
         <div className="mb-4">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736]">SALES ANALYTICS</span>
@@ -29,7 +29,7 @@ export default function RevenueChart({ data }) {
         </ResponsiveContainer>
       </div>
 
-      {/* Orders & Units Sold Bar Chart */}
+      {}
       <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] p-6 shadow-xl">
         <div className="mb-4">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736]">QUANTITY METRICS</span>
@@ -48,7 +48,7 @@ export default function RevenueChart({ data }) {
         </ResponsiveContainer>
       </div>
 
-      {/* Summary Stats */}
+      {}
       <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[28px] p-6 shadow-xl">
         <div className="mb-4">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#D97736]">PERFORMANCE SUMMARY</span>

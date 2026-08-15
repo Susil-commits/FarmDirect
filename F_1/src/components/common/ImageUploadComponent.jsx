@@ -1,7 +1,3 @@
-/**
- * Example: Image Upload Component using Local Storage via Backend
- * Shows how to handle file uploads in your React components
- */
 
 import { useState } from 'react';
 import { Upload, X, Check, AlertCircle } from 'lucide-react';
@@ -16,13 +12,9 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  /**
-   * Handle file selection
-   */
   const handleFileSelect = (e) => {
     const selectedFiles = Array.from(e.target.files);
     
-    // Validation
     if (selectedFiles.length > maxFiles) {
       setError(`Maximum ${maxFiles} files allowed`);
       return;
@@ -37,7 +29,6 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
     setFiles(selectedFiles);
     setError(null);
 
-    // Generate previews
     const newPreviews = selectedFiles.map(file => {
       return new Promise(resolve => {
         const reader = new FileReader();
@@ -56,9 +47,6 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
     Promise.all(newPreviews).then(setPreviews);
   };
 
-  /**
-   * Handle upload to server (via backend)
-   */
   const handleUpload = async () => {
     if (files.length === 0) {
       setError('Please select files first');
@@ -75,12 +63,10 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
       setFiles([]);
       setPreviews([]);
 
-      // Call parent component callback with uploaded URLs
       if (onUploadSuccess) {
         onUploadSuccess(result.data.images);
       }
 
-      // Auto-hide success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       setError(err.message || 'Upload failed');
@@ -90,9 +76,6 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
     }
   };
 
-  /**
-   * Remove file from selection
-   */
   const removeFile = (index) => {
     setFiles(files.filter((_, i) => i !== index));
     setPreviews(previews.filter((_, i) => i !== index));
@@ -103,7 +86,7 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
       <div className="p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">Upload Images</h3>
 
-        {/* Error Message */}
+        {}
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
             <AlertCircle size={20} className="text-red-600" />
@@ -111,7 +94,7 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
           </div>
         )}
 
-        {/* Success Message */}
+        {}
         {success && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
             <Check size={20} className="text-green-600" />
@@ -119,7 +102,7 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
           </div>
         )}
 
-        {/* File Input */}
+        {}
         <div className="mb-6">
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Select Images (Max {maxFiles}, 50MB total)
@@ -137,7 +120,7 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
           </p>
         </div>
 
-        {/* Selected Files Preview */}
+        {}
         {previews.length > 0 && (
           <div className="mb-6">
             <h4 className="font-semibold text-gray-700 mb-3">Selected Files ({previews.length})</h4>
@@ -148,7 +131,7 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
                   className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
                 >
                   <div className="flex items-center gap-3 flex-1">
-                    {/* Image Preview */}
+                    {}
                     {preview.type.startsWith('image/') && (
                       <img
                         src={preview.preview}
@@ -156,7 +139,7 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
                         className="w-12 h-12 object-cover rounded"
                       />
                     )}
-                    {/* File Info */}
+                    {}
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900 truncate">
                         {preview.name}
@@ -165,7 +148,7 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
                     </div>
                   </div>
 
-                  {/* Remove Button */}
+                  {}
                   <button
                     onClick={() => removeFile(index)}
                     disabled={uploading}
@@ -177,7 +160,7 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
               ))}
             </div>
 
-            {/* Upload Button */}
+            {}
             <Button
               onClick={handleUpload}
               disabled={uploading || previews.length === 0}
@@ -203,7 +186,7 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
           </div>
         )}
 
-        {/* Empty State */}
+        {}
         {previews.length === 0 && (
           <div className="text-center py-8 border border-dashed border-gray-300 rounded-lg bg-gray-50">
             <Upload size={32} className="mx-auto text-gray-400 mb-2" />
@@ -214,18 +197,4 @@ export default function ImageUploadComponent({ onUploadSuccess, maxFiles = 5 }) 
     </Card>
   );
 }
-
-/**
- * Usage in your component:
- * 
- * import ImageUploadComponent from './ImageUploadComponent';
- * 
- * <ImageUploadComponent 
- *   onUploadSuccess={(urls) => {
- *     console.log('Uploaded files:', urls);
- *     // Store URLs in your form state
- *     setFormData(prev => ({ ...prev, images: urls }));
- *   }}
- *   maxFiles={5}
- * />
- */
+

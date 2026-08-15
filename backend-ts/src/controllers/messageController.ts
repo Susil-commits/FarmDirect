@@ -21,7 +21,6 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
 
   const conversationId = (Message as unknown as MessageModel).generateConversationId(senderId.toString(), receiverId);
 
-  // B23 FIX: Use Message.create() directly — Message is already a Mongoose Model.
   const message = await Message.create({
     senderId, receiverId, content: content.trim(),
     cropId: cropId || null, orderId: orderId || null, type, attachments, conversationId,
@@ -161,7 +160,7 @@ export const searchMessages = asyncHandler(async (req: Request, res: Response) =
   const { q, receiverId } = req.query as { q?: string; receiverId?: string };
   const userId = req.user!._id;
   if (!q || q.trim().length === 0) return sendError(res, 'Search query is required', 400);
-  // B8 FIX: receiverId is required — without it String(undefined) creates a broken conversationId
+  
   if (!receiverId) return sendError(res, 'receiverId is required', 400);
   const conversationId = (Message as unknown as MessageModel).generateConversationId(userId.toString(), receiverId);
   const results = await Message.find({ conversationId, content: { $regex: q, $options: 'i' }, isDeleted: false })

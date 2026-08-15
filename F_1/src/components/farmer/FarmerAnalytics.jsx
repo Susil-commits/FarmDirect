@@ -28,7 +28,6 @@ export default function FarmerAnalytics() {
       setLoading(true);
       setError(null);
 
-      // Parallel API calls
       const [stats, analytics, revenue, lowStock] = await Promise.all([
         farmerService.getDashboardStats(),
         farmerService.getCropAnalytics(period),
@@ -48,11 +47,10 @@ export default function FarmerAnalytics() {
     }
   };
 
-  // Load dashboard data on mount and when period changes
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    
     loadAllData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [period]);
 
   const handleRefresh = async () => {
@@ -83,7 +81,7 @@ export default function FarmerAnalytics() {
   return (
     <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body py-8 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
@@ -107,7 +105,7 @@ export default function FarmerAnalytics() {
             </div>
           )}
 
-          {/* Alert for low stock items */}
+          {}
           {lowStockItems.length > 0 && (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
@@ -118,7 +116,7 @@ export default function FarmerAnalytics() {
             </div>
           )}
 
-          {/* Period selector */}
+          {}
           <div className="flex gap-2">
             {['week', 'month', 'year'].map(p => (
               <button
@@ -134,7 +132,7 @@ export default function FarmerAnalytics() {
           </div>
         </div>
 
-        {/* Overview Stats */}
+        {}
         {dashboardStats && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatCard
@@ -172,7 +170,7 @@ export default function FarmerAnalytics() {
           </div>
         )}
 
-        {/* Tab Navigation */}
+        {}
         <div className="mb-6 border-b border-gray-200">
           <div className="flex gap-8 overflow-x-auto">
             {[
@@ -201,9 +199,9 @@ export default function FarmerAnalytics() {
           </div>
         </div>
 
-        {/* Tab Content */}
+        {}
         <div className="space-y-6">
-          {/* Overview Tab */}
+          {}
           {activeTab === 'overview' && cropAnalytics && (
             <div className="grid gap-6">
               <Card>
@@ -235,7 +233,7 @@ export default function FarmerAnalytics() {
                 </div>
               </Card>
 
-              {/* Top Performing Crops */}
+              {}
               <Card>
                 <div className="p-6">
                   <h3 className="text-lg font-bold mb-4">Top Performing Crops</h3>
@@ -272,22 +270,22 @@ export default function FarmerAnalytics() {
             </div>
           )}
 
-          {/* Revenue Tab */}
+          {}
           {activeTab === 'revenue' && revenueData && (
             <RevenueChart data={revenueData} />
           )}
 
-          {/* Crops Tab */}
+          {}
           {activeTab === 'crops' && cropAnalytics && (
             <CropPerformanceTable data={cropAnalytics.data} />
           )}
 
-          {/* Inventory Tab */}
+          {}
           {activeTab === 'inventory' && (
             <InventoryManager items={lowStockItems} onRefresh={handleRefresh} />
           )}
 
-          {/* Upload Tab */}
+          {}
           {activeTab === 'upload' && (
             <BulkUploadForm 
               onUploadSuccess={handleRefresh}
@@ -300,7 +298,6 @@ export default function FarmerAnalytics() {
   );
 }
 
-// Stat Card Component
 function StatCard({ label, value, icon, color, bg, subtext }) {
   return (
     <Card>

@@ -1,16 +1,5 @@
 import React, { useState } from 'react';
 
-/**
- * OptimizedImage Component
- * Designed to improve Lighthouse scores (LCP and CLS).
- * 
- * Features:
- * - Prevents CLS by reserving space using aspect-ratio or explicit width/height
- * - Prioritizes LCP images with fetchpriority="high" and eager loading
- * - Native lazy loading for below-the-fold images
- * - Smooth fade-in animation once the image loads
- * - Fallback background color while loading
- */
 const OptimizedImage = ({
   src,
   alt,

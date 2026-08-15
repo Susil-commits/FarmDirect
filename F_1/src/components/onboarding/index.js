@@ -1,7 +1,3 @@
-/**
- * Onboarding Component Exports
- * Central hub for all onboarding-related components
- */
 
 export { default as OnboardingWizard } from './OnboardingWizard';
 export { default as OnboardingWizardCSS } from './OnboardingWizard.css';

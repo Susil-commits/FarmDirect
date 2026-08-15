@@ -1,4 +1,4 @@
-/* OnboardingFlow.css - Main onboarding flow page styles */
+
 
 .onboarding-flow {
   position: relative;
@@ -35,7 +35,7 @@
   }
 }
 
-/* Responsive adjustments */
+
 @media (max-width: 768px) {
   .onboarding-error {
     bottom: 1rem;
@@ -53,7 +53,7 @@
   }
 }
 
-/* Dark mode support */
+
 @media (prefers-color-scheme: dark) {
   .onboarding-flow {
     background: #0f172a;
@@ -66,7 +66,7 @@
   }
 }
 
-/* Print styles */
+
 @media print {
   .onboarding-flow {
     display: none;

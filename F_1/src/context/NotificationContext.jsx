@@ -1,10 +1,8 @@
-/* eslint-disable react-refresh/only-export-components */
+
 import React, { createContext, useState, useCallback, useEffect } from 'react';
 import { notificationService } from '../services/appService.js';
 import { useSocket } from './SocketContext';
 
-
-// Notification system context
 export const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
@@ -83,8 +81,6 @@ export const NotificationProvider = ({ children }) => {
       console.error('Failed to delete notification:', err);
     }
   }, []);
-
-
 
   return (
     <NotificationContext.Provider

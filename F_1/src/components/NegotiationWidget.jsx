@@ -56,8 +56,6 @@ export default function NegotiationWidget({ negotiation, userRole, onUpdate }) {
   const isPending = negotiation.status === 'pending';
   const isCountered = negotiation.status === 'counter_offered';
 
-  // Can action be taken?
-  // Farmer can act if pending. Buyer can act if countered.
   const canAct = (isFarmer && isPending) || (!isFarmer && isCountered);
 
   return (

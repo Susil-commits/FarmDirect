@@ -30,7 +30,6 @@ export async function makeOffer(req: Request, res: Response, next: NextFunction)
       if (crop.availability !== CropAvailability.Available) throw { status: 400, message: 'Crop is no longer available' };
       if (crop.quantity < quantity) throw { status: 400, message: `Insufficient quantity. Available: ${crop.quantity}` };
 
-      // Ensure buyer has interest
       const interestEntry = crop.interestedBuyers.find((ib) => ib.buyerId.toString() === buyerId.toString());
       if (!interestEntry) {
         crop.interestedBuyers.push({
@@ -41,7 +40,6 @@ export async function makeOffer(req: Request, res: Response, next: NextFunction)
         await crop.save({ session });
       }
 
-      // Check if a pending negotiation already exists for this buyer & crop
       const existing = await Negotiation.findOne({ cropId, buyerId, status: NegotiationStatus.Pending }).session(session);
       if (existing) {
         throw { status: 400, message: 'You already have a pending offer for this crop. Wait for the farmer to respond.' };
@@ -158,8 +156,8 @@ export async function respondToOffer(req: Request, res: Response, next: NextFunc
           originalAmount: totalAmount,
           pickupLocation: crop.pickupLocation,
           farmerContact: crop.contactNumber,
-          buyerContact: '', // would need to populate buyer
-          paymentMethod: PaymentMethod.Cod, // Default to COD for negotiated orders for simplicity
+          buyerContact: '', 
+          paymentMethod: PaymentMethod.Cod, 
           paymentStatus: PaymentStatus.Pending,
           orderStatus: OrderStatus.Confirmed,
           timeline: [{ event: 'ORDER_CONFIRMED', description: 'Offer accepted. Order confirmed.', timestamp: new Date() }],
@@ -200,7 +198,6 @@ export async function respondToOffer(req: Request, res: Response, next: NextFunc
       notifyOrderUpdate(orderToNotify, 'order:created');
     }
     
-    // Notify about the negotiation update
     const neg = await Negotiation.findById(req.params.id);
     if (neg) {
       notifyNegotiationUpdate(

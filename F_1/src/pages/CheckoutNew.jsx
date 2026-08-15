@@ -35,11 +35,8 @@ export default function CheckoutNew() {
     termsAccepted: false
   });
 
-  // Get cropId from URL params
   const params = new URLSearchParams(window.location.search);
   const cropId = params.get('cropId');
-
-
 
   const fetchCropDetails = useCallback(async () => {
     try {
@@ -60,14 +57,14 @@ export default function CheckoutNew() {
   }, [cropId, addToast, navigate]);
 
   useEffect(() => {
-    // B4 FIX: Route is /auth/login not /login
+    
     if (!user) navigate('/auth/login');
     if (!cropId) {
       addToast('No crop selected for checkout', 'error');
       navigate('/marketplace');
       return;
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    
     fetchCropDetails();
   }, [user, cropId, addToast, navigate, fetchCropDetails]);
 
@@ -136,10 +133,8 @@ export default function CheckoutNew() {
     try {
       const total = calculateTotal();
 
-      // Generate a unique idempotency key for this checkout attempt
       const idempotencyKey = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-      // api.js interceptor unwraps to response.data, so result = { message, order }
       const result = await orderService.createOrder({
         cropId: crop._id,
         quantity: formData.quantity,
@@ -154,19 +149,19 @@ export default function CheckoutNew() {
       localStorage.setItem('lastOrderId', createdOrder._id);
 
       if (formData.paymentMethod === 'razorpay') {
-        // Keep loading spinner visible while the payment modal is open.
+        
         await processRazorpayPayment(createdOrder);
         return;
       }
 
-      setStep(3); // Go to confirmation
+      setStep(3); 
       addToast(result.message || 'Order placed successfully!', 'success');
     } catch (err) {
-      // Error is already unwrapped by api.js interceptor: err = { message: '...' }
+      
       addToast(err?.message || 'Error placing order', 'error');
       setLoading(false);
     } finally {
-      // Only clear loading for the COD path; Razorpay clears it inside callbacks.
+      
       if (formData.paymentMethod !== 'razorpay') {
         setLoading(false);
       }
@@ -204,11 +199,11 @@ export default function CheckoutNew() {
     <PageTransition>
       {loading && <PageLoader message="Processing your order..." />}
       <div className="min-h-screen premium-gradient px-4 relative overflow-hidden pt-28 pb-12">
-        {/* Decorative elements */}
+        {}
         <div className="absolute top-[5%] right-[-10%] w-[40%] h-[40%] bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-[5%] left-[-10%] w-[30%] h-[30%] bg-green-400/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="max-w-3xl mx-auto relative z-10">
-          {/* Step Indicator */}
+          {}
           <ScrollAnimation className="scroll-slide mb-8">
             <div className="flex items-center justify-center gap-4 mb-12">
               {[
@@ -239,7 +234,7 @@ export default function CheckoutNew() {
             </div>
           </ScrollAnimation>
 
-          {/* STEP 1: REVIEW CROP */}
+          {}
           {step === 1 && (
             <ScrollAnimation className="scroll-slide">
               <Card className="p-8 glass-deep border border-white/60 shadow-xl">
@@ -248,7 +243,7 @@ export default function CheckoutNew() {
                   <h2 className="text-2xl font-bold text-gray-900">Review Your Order</h2>
                 </div>
 
-                {/* Crop Details */}
+                {}
                 <div className="glass-light rounded-xl p-6 mb-6 border border-white/50">
                   <div className="flex items-start gap-4">
                     {crop.images?.[0] && (
@@ -271,7 +266,7 @@ export default function CheckoutNew() {
                   </div>
                 </div>
 
-                {/* Pickup Location */}
+                {}
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <MapPin className="w-5 h-5 text-blue-600" /> Pickup Location
@@ -289,7 +284,7 @@ export default function CheckoutNew() {
                   </div>
                 </div>
 
-                {/* Quantity */}
+                {}
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <Package className="w-5 h-5 text-blue-600" /> Quantity
@@ -319,7 +314,7 @@ export default function CheckoutNew() {
                   )}
                 </div>
 
-                {/* Price Summary */}
+                {}
                 <div className="bg-gray-50 rounded-lg p-4 mb-6">
                   <div className="flex justify-between text-gray-700 mb-2">
                     <span>Price per kg</span>
@@ -343,12 +338,12 @@ export default function CheckoutNew() {
                   </div>
                 </div>
 
-                {/* Promo code */}
+                {}
                 <div className="mb-6">
                   <CouponInput amount={total} variant="checkout" />
                 </div>
 
-                {/* Payment Method */}
+                {}
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <DollarSign className="w-5 h-5 text-blue-600" /> Payment Method

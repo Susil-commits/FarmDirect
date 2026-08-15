@@ -4,15 +4,13 @@ import { redisClient } from '../config/redis.js';
 
 const router = Router();
 
-// Liveness probe: Is the node process running?
 router.get('/liveness', (req: Request, res: Response) => {
   res.status(200).json({ status: 'OK', uptime: process.uptime() });
 });
 
-// Readiness probe: Are dependencies (Mongo, Redis) healthy?
 router.get('/readiness', async (req: Request, res: Response) => {
   try {
-    const mongoStatus = mongoose.connection.readyState === 1; // 1 = connected
+    const mongoStatus = mongoose.connection.readyState === 1; 
     const redisStatus = redisClient.isReady;
 
     if (!mongoStatus || !redisStatus) {

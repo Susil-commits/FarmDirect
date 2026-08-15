@@ -68,7 +68,7 @@ export default function Marketplace() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    // Fetch trending crops once on mount (independent of active filters)
+    
     cropService.getTrendingCrops(4).then((res) => {
       setTrendingCrops(res.crops || res.data?.crops || []);
     }).catch(() => {});
@@ -203,7 +203,7 @@ export default function Marketplace() {
               </div>
             </div>
 
-            {/* Smart Search Bar */}
+            {}
             <div className="mb-8 relative max-w-2xl">
               <div className="relative group">
                 <div className={`absolute inset-0 bg-emerald-500/20 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity ${isListening ? 'animate-pulse opacity-70' : ''}`}></div>
@@ -235,7 +235,7 @@ export default function Marketplace() {
             </div>
           </ScrollAnimation>
 
-          {/* 3D Quick Category & Instant Filter Scroll */}
+          {}
           <ScrollAnimation className="scroll-slide">
             <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-3 pt-1 scrollbar-none">
               <button
@@ -264,7 +264,7 @@ export default function Marketplace() {
 
               <div className="h-6 w-[1px] bg-stone-300 mx-1 shrink-0"></div>
 
-              {/* Instant Quick Filter Badges */}
+              {}
               <button
                 onClick={() => setFilters(prev => ({ ...prev, verifiedFarmersOnly: !prev.verifiedFarmersOnly }))}
                 className={`px-4 py-2.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center gap-1.5 shrink-0 cursor-pointer min-h-[44px] border ${
@@ -299,7 +299,7 @@ export default function Marketplace() {
           </ScrollAnimation>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Desktop Filters Sidebar */}
+            {}
             <div className="hidden lg:block">
               <FilterPanel
                 cropTypes={cropTypes}
@@ -310,7 +310,7 @@ export default function Marketplace() {
               />
             </div>
 
-            {/* Mobile Filter Slide-up Drawer Overlay */}
+            {}
             {showMobileFilters && (
               <div
                 className="fixed inset-0 z-50 lg:hidden flex flex-col justify-end bg-black/60 backdrop-blur-sm animate-fade-in"
@@ -333,7 +333,7 @@ export default function Marketplace() {
               </div>
             )}
 
-            {/* Marketplace Main Grid */}
+            {}
             <div className="lg:col-span-3">
               <RecentlyViewedCarousel />
 
@@ -432,7 +432,7 @@ export default function Marketplace() {
           </div>
         </div>
 
-        {/* Quick View Modal */}
+        {}
         {quickViewCrop && (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs" onClick={() => setQuickViewCrop(null)}>
             <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-100" onClick={e => e.stopPropagation()}>

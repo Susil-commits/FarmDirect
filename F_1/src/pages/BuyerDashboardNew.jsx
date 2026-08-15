@@ -118,7 +118,7 @@ export default function BuyerDashboardNew() {
   useEffect(() => {
     window.scrollTo(0, 0);
     if (user?.role === 'buyer') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      
       fetchBuyerData();
     }
   }, [user, fetchBuyerData]);
@@ -219,7 +219,7 @@ export default function BuyerDashboardNew() {
             <p className="text-stone-600 text-sm mt-1">Track your active farm orders, direct crop negotiations, and wishlist.</p>
           </ScrollAnimation>
 
-          {/* Stats Grid */}
+          {}
           <ScrollAnimation className="scroll-slide mb-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-gradient-to-tr from-[#132E20] to-[#1B3B2B] text-white p-6 rounded-3xl shadow-xl border border-white/10">
@@ -260,7 +260,7 @@ export default function BuyerDashboardNew() {
             </div>
           </ScrollAnimation>
 
-          {/* Quick Actions */}
+          {}
           <ScrollAnimation className="scroll-slide mb-8">
             <Card className="p-6 glass-deep border border-white/50">
               <h3 className="text-lg font-bold mb-4 text-gray-900">Quick Actions</h3>
@@ -284,7 +284,7 @@ export default function BuyerDashboardNew() {
             </Card>
           </ScrollAnimation>
 
-          {/* Tabs */}
+          {}
           <ScrollAnimation className="scroll-slide mb-8">
             <div className="flex gap-2 border-b border-gray-200/50 overflow-x-auto pb-1 no-scrollbar">
               {['overview', 'orders', 'negotiations', 'interested', 'history', 'wishlist'].map(tab => (
@@ -308,10 +308,10 @@ export default function BuyerDashboardNew() {
             </div>
           </ScrollAnimation>
 
-          {/* OVERVIEW */}
+          {}
           {activeTab === 'overview' && (
             <ScrollAnimation className="scroll-slide space-y-6">
-              {/* Recent Orders */}
+              {}
               <Card className="p-6 glass-deep border border-white/60 shadow-xl">
                 <h3 className="text-lg font-bold mb-4 text-gray-900">Recent Orders</h3>
                 {orders.length === 0 ? (
@@ -356,7 +356,7 @@ export default function BuyerDashboardNew() {
                 )}
               </Card>
 
-              {/* Interested Crops Preview */}
+              {}
               {interestedCrops.length > 0 && (
                 <Card className="p-6">
                   <h3 className="text-lg font-bold mb-4 text-gray-900">Crops You're Interested In</h3>
@@ -679,7 +679,7 @@ export default function BuyerDashboardNew() {
                     const cropId = crop._id || crop.id;
                     return (
                       <Card key={cropId} className="p-4 hover:shadow-lg transition-shadow">
-                        {/* Image */}
+                        {}
                         {crop.images?.[0] ? (
                           <div className="relative mb-4 rounded-lg overflow-hidden h-40">
                             <img
@@ -701,7 +701,7 @@ export default function BuyerDashboardNew() {
                           </div>
                         )}
 
-                        {/* Details */}
+                        {}
                         <div className="mb-3">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded capitalize">
@@ -765,10 +765,10 @@ export default function BuyerDashboardNew() {
             </ScrollAnimation>
           )}
 
-          {/* ORDER HISTORY */}
+          {}
           {activeTab === 'history' && (
             <ScrollAnimation className="scroll-slide space-y-6">
-              {/* Completed Orders */}
+              {}
               <div>
                 <h3 className="text-lg font-bold mb-4 text-gray-900">Completed Orders</h3>
                 {completedOrders.length === 0 ? (
@@ -833,7 +833,7 @@ export default function BuyerDashboardNew() {
                 )}
               </div>
 
-              {/* Cancelled Orders */}
+              {}
               {cancelledOrders.length > 0 && (
                 <div>
                   <h3 className="text-lg font-bold mb-4 text-gray-900">Cancelled Orders</h3>
@@ -868,7 +868,7 @@ export default function BuyerDashboardNew() {
             </ScrollAnimation>
           )}
 
-          {/* WISHLIST */}
+          {}
           {activeTab === 'wishlist' && (
             <ScrollAnimation className="scroll-slide">
               {wishlist.length === 0 ? (
@@ -924,7 +924,7 @@ export default function BuyerDashboardNew() {
         </div>
       </div>
 
-      {/* Cancel Order Modal */}
+      {}
       <CancelWithReason
         isOpen={cancelModalOpen}
         onClose={() => { setCancelModalOpen(false); setCancelTargetOrder(null); }}

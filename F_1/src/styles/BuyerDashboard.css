@@ -1,8 +1,6 @@
-/* ============================================
-   Buyer Dashboard - Premium Styles
-   ============================================ */
 
-/* ---- Tabs ---- */
+
+
 .tabs-container {
   display: flex;
   gap: 0.5rem;
@@ -39,7 +37,7 @@
   border-bottom-color: var(--gray-300);
 }
 
-/* ---- Stats Cards ---- */
+
 .stats-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -96,7 +94,7 @@
   z-index: 1;
 }
 
-/* ---- Quick Actions ---- */
+
 .quick-actions {
   display: flex;
   gap: 1rem;
@@ -137,7 +135,7 @@
   box-shadow: var(--shadow-md);
 }
 
-/* ---- Order List ---- */
+
 .order-list {
   display: flex;
   flex-direction: column;
@@ -218,7 +216,7 @@
   color: var(--gray-800);
 }
 
-/* ---- Wishlist Grid ---- */
+
 .wishlist-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -288,7 +286,7 @@
   -webkit-box-orient: vertical;
 }
 
-/* ---- Empty State ---- */
+
 .empty-state {
   text-align: center;
   padding: 4rem 1.5rem;
@@ -313,7 +311,7 @@
   margin-bottom: 1.5rem;
 }
 
-/* ---- Responsive ---- */
+
 @media (max-width: 768px) {
   .wishlist-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

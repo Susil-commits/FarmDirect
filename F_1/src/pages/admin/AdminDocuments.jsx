@@ -10,13 +10,6 @@ import { useRouter } from '../../context/RouterContext.jsx';
 import { getImageUrl } from '../../utils/formatters';
 import ImageWithFallback from '../../components/common/ImageWithFallback.jsx';
 
-/**
- * AdminDocuments - Document and Image Viewer for Admin
- * View all KYC documents, farm images, and crop images uploaded by farmers and buyers
- * 
- * Role-based filtering: Admins can filter documents by role (farmer/buyer) and KYC status
- * Real data only: All documents must have valid URLs (no placeholder images)
- */
 export default function AdminDocuments() {
   const { currentRoute, navigate } = useRouter();
   const [loading, setLoading] = useState(false);
@@ -26,7 +19,6 @@ export default function AdminDocuments() {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [error, setError] = useState(null);
 
-  // Filters
   const [filters, setFilters] = useState({
     role: '',
     kycStatus: '',
@@ -35,7 +27,6 @@ export default function AdminDocuments() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({});
 
-  // Fetch users with documents
   const fetchUsers = async (pageNum = 1) => {
     try {
       setSearchLoading(true);
@@ -50,7 +41,7 @@ export default function AdminDocuments() {
       if (filters.kycStatus) params.append('kycStatus', filters.kycStatus);
 
       const response = await api.get(`/admin/documents/search?${params}`);
-      // api interceptor already unwraps response.data, so response is { success, users, pagination }
+      
       setUsers(response.users || []);
       setPagination(response.pagination || {});
     } catch (err) {
@@ -61,12 +52,11 @@ export default function AdminDocuments() {
     }
   };
 
-  // Fetch user details with documents
   const fetchUserDetails = async (userId) => {
     try {
       setLoading(true);
       const response = await api.get(`/admin/documents/${userId}`);
-      // api interceptor already unwraps response.data, so response is { success, data: { user, documents } }
+      
       setSelectedUser(response.data || null);
     } catch (err) {
       console.error('Failed to fetch user documents:', err);
@@ -77,22 +67,21 @@ export default function AdminDocuments() {
   };
 
   useEffect(() => {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      
     fetchUsers(1);
     setPage(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [filters]);
 
-  // Check if userId is in route params and load user documents
   useEffect(() => {
-    // Parse userId from the RouterContext currentRoute (e.g., /admin/documents?userId=abc123)
+    
     const queryString = currentRoute.includes('?') ? currentRoute.split('?')[1] : '';
        
     const urlParams = new URLSearchParams(queryString);
     const userId = urlParams.get('userId');
        
     if (userId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      
       fetchUserDetails(userId);
     }
   }, [currentRoute]);
@@ -189,7 +178,7 @@ export default function AdminDocuments() {
       <PageTransition>
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white px-4 pt-28 pb-8">
           <div className="max-w-7xl mx-auto">
-            {/* Header */}
+            {}
             <ScrollAnimation className="scroll-slide mb-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
@@ -210,7 +199,7 @@ export default function AdminDocuments() {
             </ScrollAnimation>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              {/* Sidebar Filters */}
+              {}
               <ScrollAnimation className="scroll-slide">
                 <Card className="p-6 h-fit">
                   <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
@@ -218,7 +207,7 @@ export default function AdminDocuments() {
                   </h3>
 
                   <div className="space-y-4">
-                    {/* Role Filter */}
+                    {}
                     <div>
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
                         Role
@@ -235,7 +224,7 @@ export default function AdminDocuments() {
                       </select>
                     </div>
 
-                    {/* KYC Status Filter */}
+                    {}
                     <div>
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
                         KYC Status
@@ -253,7 +242,7 @@ export default function AdminDocuments() {
                       </select>
                     </div>
 
-                    {/* Results Info */}
+                    {}
                     <div className="pt-4 border-t-2 border-gray-200">
                       <p className="text-sm text-gray-600">
                         <span className="font-bold text-gray-900">{pagination.total || 0}</span> total users
@@ -269,7 +258,7 @@ export default function AdminDocuments() {
                 </Card>
               </ScrollAnimation>
 
-              {/* Main Content */}
+              {}
               <div className="lg:col-span-3">
                 {error && (
                   <ScrollAnimation className="scroll-slide mb-6">
@@ -279,7 +268,7 @@ export default function AdminDocuments() {
                   </ScrollAnimation>
                 )}
 
-                {/* Users List */}
+                {}
                 {searchLoading ? (
                   <div className="flex items-center justify-center h-64">
                     <div className="text-center">
@@ -343,7 +332,7 @@ export default function AdminDocuments() {
                       </Card>
                     ))}
 
-                    {/* Pagination */}
+                    {}
                     {pagination.pages > 1 && (
                       <div className="flex flex-wrap justify-center gap-2 mt-8 pt-6 border-t-2 border-gray-200">
                         <button
@@ -380,7 +369,7 @@ export default function AdminDocuments() {
               </div>
             </div>
 
-            {/* Document Details */}
+            {}
             {selectedUser && (
               <ScrollAnimation className="scroll-slide mt-8">
                 <Card className="p-6">
@@ -405,7 +394,7 @@ export default function AdminDocuments() {
                     </div>
                   ) : (
                     <div className="space-y-8">
-                      {/* KYC Documents */}
+                      {}
                       {selectedUser.documents?.kycDocuments && selectedUser.documents.kycDocuments.length > 0 && (
                         <div>
                           <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-900">
@@ -419,7 +408,7 @@ export default function AdminDocuments() {
                         </div>
                       )}
 
-                      {/* Farm Images */}
+                      {}
                       {selectedUser.documents?.farmImages && selectedUser.documents.farmImages.length > 0 && (
                         <div>
                           <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-900">
@@ -458,7 +447,7 @@ export default function AdminDocuments() {
                         </div>
                       )}
 
-                      {/* Crop Images */}
+                      {}
                       {selectedUser.documents?.cropImages && selectedUser.documents.cropImages.length > 0 && (
                         <div>
                           <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-900">
@@ -516,7 +505,7 @@ export default function AdminDocuments() {
             )}
           </div>
 
-          {/* Document Preview Modal - Clean inline preview, no download */}
+          {}
           {selectedDocument && (
             <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" onClick={() => setSelectedDocument(null)}>
               <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>

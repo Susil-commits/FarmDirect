@@ -14,7 +14,9 @@ import PageLoader from './components/common/PageLoader';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import NetworkStatusBanner from './components/common/NetworkStatusBanner';
 import PwaBadge from './components/common/PwaBadge';
+import AgriBotWidget from './components/ai/AgriBotWidget';
 import { Suspense, useEffect, useRef } from 'react';
+
 import { lazyWithRetry as lazy } from './utils/lazyWithRetry';
 
 const Home = lazy(() => import('./pages/Home'));
@@ -73,8 +75,6 @@ function App() {
   const { currentRoute, navigate } = useRouter();
   const { user, loading, redirectPath, clearRedirectPath } = useAuth();
 
-  // Handle redirects (e.g., when auth fails on server restart)
-  // Use a ref to track if we've already handled this redirect to prevent loops
   const redirectHandledRef = useRef(false);
 
   useEffect(() => {
@@ -82,18 +82,15 @@ function App() {
       redirectHandledRef.current = true;
       navigate(redirectPath);
       clearRedirectPath();
-      // Reset the flag after a small delay so it can handle new redirects
       setTimeout(() => {
         redirectHandledRef.current = false;
       }, 100);
     }
        
-      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [redirectPath]);
 
   const renderPage = () => {
-    // Don't render anything while loading auth state on initial mount/refresh
-    // Also suppress render when a redirect is pending to prevent page flash/wipe
+
     if (loading || redirectPath) {
       return (
         <div className="min-h-screen flex items-center justify-center">
@@ -105,9 +102,6 @@ function App() {
       );
     }
 
-    
-    // Helper function to get user role - checks both state and localStorage
-    // This handles async state updates after login to prevent race conditions
     const getUserRole = () => {
       if (user?.role) return user.role;
       try {
@@ -119,39 +113,24 @@ function App() {
     };
 
     const currentUserRole = getUserRole();
-    
-    // Get verification status from localStorage or user object
     const verificationStatus = localStorage.getItem('verificationStatus') || user?.kycStatus;
-    
-    // Redirect unverified users to verification page (except for auth routes and specific routes)
-    // NOTE: Admin users do NOT need verification - they verify others
     const publicRoutes = ['/auth/login', '/auth/register', '/auth/google/callback', '/auth/github/callback', '/', '/about', '/contact'];
     const isPublicRoute = publicRoutes.includes(currentRoute);
     
-    // Only require verification for farmers and buyers, NOT for admin
     if (user && user.role !== 'admin' && verificationStatus !== 'verified' && !isPublicRoute) {
-      // Check if this is an existing user who has already interacted with KYC
-      // (has kycSubmittedAt or existing kycDocuments) - preserve old behavior for them
       const isExistingKYCUser = !!(user?.kycSubmittedAt || (user?.kycDocuments && Object.keys(user.kycDocuments).length > 0));
       
-      // kycStatus 'not_submitted': Show hello/welcome page with "Submit Documents" button
-      // ONLY for brand new users who have never interacted with KYC before
       if (verificationStatus === 'not_submitted' && !isExistingKYCUser && currentRoute !== '/pending-verification' && currentRoute !== '/verification/progress' && currentRoute !== '/buyer/verification' && currentRoute !== '/profile' && currentRoute !== '/auth/logout') {
         return <PendingVerification />;
       }
-      // kycStatus 'not_submitted' but existing KYC user: route by role
       if (verificationStatus === 'not_submitted' && isExistingKYCUser && currentRoute !== '/verification/progress' && currentRoute !== '/buyer/verification' && currentRoute !== '/profile' && currentRoute !== '/auth/logout') {
         return currentUserRole === 'buyer' ? <BuyerVerification /> : <VerificationProgress />;
       }
-      // kycStatus 'pending' or 'rejected': Show document submission page matching role
       if ((verificationStatus === 'pending' || verificationStatus === 'rejected') && currentRoute !== '/verification/progress' && currentRoute !== '/buyer/verification' && currentRoute !== '/profile' && currentRoute !== '/auth/logout') {
         return currentUserRole === 'buyer' ? <BuyerVerification /> : <VerificationProgress />;
       }
     }
 
-    // First-login KYC result pages: show congrats/sorry page if kycResultSeen is false
-    // This runs AFTER the verification check above, so it only triggers for verified/rejected users
-    // who haven't seen their result yet
     if (user && user.role !== 'admin' && user.kycResultSeen === false && !isPublicRoute) {
       const kycResultRoutes = ['/kyc-congrats', '/kyc-sorry', '/verification/progress', '/buyer/verification', '/profile', '/auth/logout'];
       if (!kycResultRoutes.includes(currentRoute)) {
@@ -164,10 +143,8 @@ function App() {
       }
     }
 
-    // Strip query strings for route matching (e.g., /admin/documents?userId=123 → /admin/documents)
     const routePath = typeof currentRoute === 'string' ? currentRoute.split('?')[0] : '/';
 
-    // Exact-match routes
     switch (routePath) {
       case '/':
         return <Home />;
@@ -267,7 +244,6 @@ function App() {
         break;
     }
 
-    // Pattern-matched routes (dynamic segments like /crop/:id)
     if (routePath.startsWith('/crop/')) {
       return <CropDetail />;
     }
@@ -281,11 +257,8 @@ function App() {
       return user ? <OrderDetails /> : <Login />;
     }
 
-    // Fallback
     return <Home />;
   };
-
-  // Navigation and logout handled via useRouter and useAuth contexts
 
   return (
     <CartProvider>
@@ -309,9 +282,11 @@ function App() {
                       </Suspense>
                     </main>
                     <Footer />
+                    <AgriBotWidget />
                   </div>
                 </ErrorBoundary>
               </RealtimeProvider>
+
             </RecentlyViewedProvider>
             </ChatProvider>
           </NotificationProvider>

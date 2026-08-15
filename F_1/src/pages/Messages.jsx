@@ -84,7 +84,7 @@ export default function Messages() {
 
         <div className="pt-28 pb-8 px-4 max-w-7xl mx-auto">
           <div className="messages-page bg-white/95 backdrop-blur-xl border border-stone-200 rounded-[32px] shadow-2xl overflow-hidden min-h-[75vh]">
-            {/* Sidebar - Conversations List */}
+            {}
             <div className={`chat-sidebar ${showPanel ? 'hidden-on-mobile' : ''}`}>
               <ConversationList
                 conversations={conversations}
@@ -94,7 +94,7 @@ export default function Messages() {
               />
             </div>
 
-            {/* Main Chat Panel */}
+            {}
             <div className={`chat-panel-wrapper ${!showPanel ? 'hidden-on-mobile' : ''}`}>
               <ChatPanel
                 receiverId={currentChat}
@@ -109,4 +109,4 @@ export default function Messages() {
     </PageTransition>
   );
 }
-
+

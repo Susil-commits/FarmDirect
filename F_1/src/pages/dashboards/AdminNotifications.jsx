@@ -15,7 +15,6 @@ import {
 
 const ITEMS_PER_PAGE = 10;
 
-// ─── Admin Notifications Page ───
 export default function AdminNotifications() {
   const { logout } = useAuth();
   const { navigate } = useRouter();
@@ -28,25 +27,22 @@ export default function AdminNotifications() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [filter, setFilter] = useState('all'); // 'all', 'unread', 'read'
+  const [filter, setFilter] = useState('all'); 
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Create notification modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({
     title: '',
     message: '',
-    recipientType: 'all', // 'all', 'farmers', 'buyers', 'specific'
+    recipientType: 'all', 
     recipientId: ''
   });
   const [createSuccess, setCreateSuccess] = useState(false);
 
-  // Reset scroll position
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Fetch notifications
   const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
@@ -65,12 +61,9 @@ export default function AdminNotifications() {
 
   useEffect(() => {
        
-       
-      // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchNotifications();
   }, [fetchNotifications]);
 
-  // Mark single notification as read
   const markAsRead = async (id) => {
     try {
       setActionLoading(true);
@@ -86,7 +79,6 @@ export default function AdminNotifications() {
     }
   };
 
-  // Mark all as read
   const markAllAsRead = async () => {
     try {
       setActionLoading(true);
@@ -102,7 +94,6 @@ export default function AdminNotifications() {
     }
   };
 
-  // Delete notification
   const deleteNotification = async (id) => {
     try {
       setActionLoading(true);
@@ -120,7 +111,6 @@ export default function AdminNotifications() {
     }
   };
 
-  // Delete all notifications
   const deleteAllNotifications = async () => {
     if (!window.confirm('Are you sure you want to delete ALL notifications?')) return;
     try {
@@ -137,7 +127,6 @@ export default function AdminNotifications() {
     }
   };
 
-  // Create notification (admin-only)
   const createNotification = async () => {
     if (!createForm.title.trim() || !createForm.message.trim()) return;
     try {
@@ -156,7 +145,6 @@ export default function AdminNotifications() {
     }
   };
 
-  // Format date
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
@@ -173,7 +161,6 @@ export default function AdminNotifications() {
     return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
-  // Filter notifications
   const filteredNotifications = notifications.filter(n => {
     if (filter === 'unread' && n.isRead) return false;
     if (filter === 'read' && !n.isRead) return false;
@@ -184,7 +171,6 @@ export default function AdminNotifications() {
     return true;
   });
 
-  // Get icon for notification type
   const getNotificationIcon = (notification) => {
     const title = notification.title || '';
     if (title.includes('Approved') || title.includes('approved')) return <CheckCircle size={18} className="text-green-500" />;
@@ -197,9 +183,9 @@ export default function AdminNotifications() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gray-50 flex pt-28 pb-12">
-        {/* Mobile Backdrop */}
+        {}
         {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
-        {/* ─── Sidebar ─── */}
+        {}
         <aside className={`fixed lg:static inset-y-0 left-0 transition-all duration-300 z-40 ${sidebarOpen ? 'w-72' : 'w-20'} bg-gradient-to-b from-indigo-700 via-indigo-800 to-purple-900 text-white flex flex-col shadow-2xl ${sidebarOpen ? '' : 'hidden lg:flex'}`}>
           <div className="p-6 border-b border-indigo-600/50">
             <div className="flex items-center justify-between">
@@ -249,11 +235,11 @@ export default function AdminNotifications() {
           </div>
         </aside>
 
-        {/* ─── Main Content ─── */}
+        {}
         <div className="flex-1 overflow-auto">
           <div className="p-4 lg:p-8">
             <div className="max-w-6xl mx-auto">
-              {/* Header */}
+              {}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                 <div className="flex items-center gap-3">
                   <button
@@ -294,7 +280,7 @@ export default function AdminNotifications() {
                 </div>
               </div>
 
-              {/* Success Banner */}
+              {}
               {createSuccess && (
                 <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3 animate-fadeIn">
                   <CheckCircle size={20} className="text-green-600 shrink-0" />
@@ -305,10 +291,10 @@ export default function AdminNotifications() {
                 </div>
               )}
 
-              {/* Action Bar */}
+              {}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-2 flex-wrap">
-                  {/* Search */}
+                  {}
                   <div className="relative">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -319,7 +305,7 @@ export default function AdminNotifications() {
                       className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-56"
                     />
                   </div>
-                  {/* Filter */}
+                  {}
                   <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
                     <Filter size={14} className="text-gray-500 ml-1" />
                     {[
@@ -343,7 +329,7 @@ export default function AdminNotifications() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* Create Notification Button */}
+                  {}
                   <button
                     onClick={() => setShowCreateModal(true)}
                     className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition text-sm font-medium flex items-center gap-2 shadow-sm"
@@ -351,7 +337,7 @@ export default function AdminNotifications() {
                     <PlusCircle size={16} />
                     Create
                   </button>
-                  {/* Mark All Read */}
+                  {}
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllAsRead}
@@ -362,7 +348,7 @@ export default function AdminNotifications() {
                       Mark All Read
                     </button>
                   )}
-                  {/* Delete All */}
+                  {}
                   {notifications.length > 0 && (
                     <button
                       onClick={deleteAllNotifications}
@@ -376,7 +362,7 @@ export default function AdminNotifications() {
                 </div>
               </div>
 
-              {/* Notifications List */}
+              {}
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20">
                   <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-indigo-600 animate-spin mb-4"></div>
@@ -412,13 +398,13 @@ export default function AdminNotifications() {
                       }`}
                     >
                       <div className="flex items-start gap-4">
-                        {/* Icon */}
+                        {}
                         <div className={`p-2 rounded-lg shrink-0 ${
                           notification.isRead ? 'bg-gray-100' : 'bg-white'
                         }`}>
                           {getNotificationIcon(notification)}
                         </div>
-                        {/* Content */}
+                        {}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <div>
@@ -436,7 +422,7 @@ export default function AdminNotifications() {
                               {formatDate(notification.createdAt)}
                             </span>
                           </div>
-                          {/* Actions */}
+                          {}
                           <div className="flex items-center gap-3 mt-3">
                             {!notification.isRead && (
                               <button
@@ -462,7 +448,7 @@ export default function AdminNotifications() {
                     </Card>
                   ))}
 
-                  {/* Pagination */}
+                  {}
                   {totalPages > 1 && (
                     <div className="flex items-center justify-center gap-2 pt-4">
                       <button
@@ -491,7 +477,7 @@ export default function AdminNotifications() {
         </div>
       </div>
 
-      {/* ─── Create Notification Modal ─── */}
+      {}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowCreateModal(false)}>
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 animate-fadeIn" onClick={(e) => e.stopPropagation()}>
@@ -585,7 +571,7 @@ export default function AdminNotifications() {
         </div>
       )}
 
-      {/* ─── Logout Confirmation ─── */}
+      {}
       {showLogoutConfirm && (
         <LogoutConfirmationModal
           onConfirm={() => {

@@ -20,7 +20,7 @@ export default function HowItWorksSection() {
           </p>
         </ScrollAnimation>
 
-        {/* For Buyers */}
+        {}
         <div className="mb-20">
           <ScrollAnimation className="mb-8">
             <h3 className="font-serif-display text-2xl md:text-3xl font-bold text-[#132E20] flex items-center justify-center gap-3">
@@ -30,7 +30,7 @@ export default function HowItWorksSection() {
           </ScrollAnimation>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Step 1 */}
+            {}
             <ScrollAnimation className="h-full">
               <div className="h-full bg-white/90 border border-[#132E20]/12 rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between">
                 <div>
@@ -58,7 +58,7 @@ export default function HowItWorksSection() {
               </div>
             </ScrollAnimation>
 
-            {/* Step 2 */}
+            {}
             <ScrollAnimation className="h-full" style={{ animationDelay: '0.1s' }}>
               <div className="h-full bg-white/90 border border-[#132E20]/12 rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between">
                 <div>
@@ -86,7 +86,7 @@ export default function HowItWorksSection() {
               </div>
             </ScrollAnimation>
 
-            {/* Step 3 */}
+            {}
             <ScrollAnimation className="h-full" style={{ animationDelay: '0.2s' }}>
               <div className="h-full bg-white/90 border border-[#132E20]/12 rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between">
                 <div>
@@ -126,7 +126,7 @@ export default function HowItWorksSection() {
           </div>
         </div>
 
-        {/* For Farmers */}
+        {}
         <div>
           <ScrollAnimation className="mb-8">
             <h3 className="font-serif-display text-2xl md:text-3xl font-bold text-[#132E20] flex items-center justify-center gap-3">
@@ -136,7 +136,7 @@ export default function HowItWorksSection() {
           </ScrollAnimation>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Farmer Step 1 */}
+            {}
             <ScrollAnimation className="h-full">
               <div className="h-full bg-[#132E20] text-[#FBF8F3] border border-white/10 rounded-3xl p-8 shadow-md hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between">
                 <div>
@@ -164,7 +164,7 @@ export default function HowItWorksSection() {
               </div>
             </ScrollAnimation>
 
-            {/* Farmer Step 2 */}
+            {}
             <ScrollAnimation className="h-full" style={{ animationDelay: '0.1s' }}>
               <div className="h-full bg-[#132E20] text-[#FBF8F3] border border-white/10 rounded-3xl p-8 shadow-md hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between">
                 <div>
@@ -192,7 +192,7 @@ export default function HowItWorksSection() {
               </div>
             </ScrollAnimation>
 
-            {/* Farmer Step 3 */}
+            {}
             <ScrollAnimation className="h-full" style={{ animationDelay: '0.2s' }}>
               <div className="h-full bg-[#132E20] text-[#FBF8F3] border border-white/10 rounded-3xl p-8 shadow-md hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between">
                 <div>

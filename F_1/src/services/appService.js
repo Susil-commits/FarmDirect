@@ -7,23 +7,22 @@ export const authService = {
   login: (credentials) => api.post('/auth/login', credentials),
   logout: async () => {
     try {
-      // Call backend to clear the HttpOnly refreshToken cookie
+      
       await api.post('/auth/logout');
     } catch {
-      // Ignore errors — even if the backend is unreachable, clear local state
+      
     } finally {
       clearAccessToken();
     }
   },
   getCurrentUser: () => api.get('/auth/me'),
-  // B12 FIX: Route is PUT /auth/update-password, not /auth/password
+  
   updatePassword: (passwordData) => api.put('/auth/update-password', passwordData),
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-  // Token is sent in the request body — matches backend POST /auth/reset-password
+  
   resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
   submitKYC: (documents) => api.post('/auth/submit-kyc', { documents }),
-  // Send KYC documents as FormData with actual files (multipart/form-data)
-  // Uses directApi to bypass Vite proxy which corrupts multipart boundaries
+  
   submitKYCFormData: (formData) => directApi.post('/auth/submit-kyc', formData).then(r => r.data),
 };
 
@@ -39,23 +38,23 @@ export const userService = {
 export const cropService = {
   getAllCrops: (params) => api.get('/crops', { params }),
   getCropById: (id) => api.get(`/crops/${id}`),
-  // Use directApi for create/update with FormData to avoid Vite proxy corrupting multipart boundaries
+  
   createCrop: (data) => directApi.post('/crops', data).then(r => r.data),
-  // JSON update (no files) uses regular api which supports token refresh
+  
   updateCrop: (id, data) => api.put(`/crops/${id}`, data),
-  // FormData update (with file uploads) uses directApi to bypass Vite proxy
+  
   updateCropWithFiles: (id, formData) => directApi.put(`/crops/${id}`, formData).then(r => r.data),
   deleteCrop: (id) => api.delete(`/crops/${id}`),
   searchCrops: (query, filters) => api.get('/data/crops/search', { params: { q: query, ...filters } }),
   getFarmerCrops: (farmerId, params) => api.get(`/crops/farmer/${farmerId}`, { params }),
   updateCropStatus: (id, status) => api.patch(`/crops/${id}/status`, { status }),
-  // Farmer's own listings
+  
   getMyListings: () => api.get('/crops/my-listings'),
-  // Interest workflow
+  
   toggleInterest: (cropId) => api.post(`/crops/${cropId}/interest`),
   getInterestedBuyers: (cropId) => api.get(`/crops/${cropId}/interested-buyers`),
   getMyInterestedCrops: () => api.get('/crops/buyer/interested'),
-  // Recommendations
+  
   getTrendingCrops: (limit = 8) => api.get('/crops/trending', { params: { limit } }),
   getSimilarCrops: (cropId, limit = 6) => api.get(`/crops/${cropId}/similar`, { params: { limit } }),
   getRecommendedCrops: (limit = 8) => api.get('/crops/buyer/recommended', { params: { limit } }),
@@ -123,7 +122,7 @@ export const adminService = {
   deleteUser: (userId, reason) => api.delete(`/admin/users/${userId}`, { data: { reason } }),
   getPendingKYC: (params) => api.get('/admin/kyc/pending', { params }),
   getRejectedKYC: (params) => api.get('/admin/kyc/rejected', { params }),
-  // Test endpoints (no auth required — for debugging when no admin user exists)
+  
   getPendingKYCTest: (params) => api.get('/admin/test/pending-kyc', { params }),
   getRejectedKYCTest: (params) => api.get('/admin/test/rejected-kyc', { params }),
   approveUserKYC: (userId, data) => api.patch(`/admin/kyc/${userId}/approve`, data),
@@ -137,12 +136,12 @@ export const adminService = {
   getAllOrders: (params) => api.get('/admin/orders', { params }),
   updateOrderStatus: (orderId, status) => api.patch(`/admin/orders/${orderId}/status`, { orderStatus: status }),
   debugKYCStatus: () => api.get('/admin/debug/users-kyc-status'),
-  // Document viewing (admin visibility of user KYC docs, farm images, crop images)
+  
   searchDocuments: (params) => api.get('/admin/documents/search', { params }),
   getUserDocuments: (userId) => api.get(`/admin/documents/${userId}`),
-  // Audit logs
+  
   getAuditLogs: (params) => api.get('/admin/audit-logs', { params }),
-  // Coupons management
+  
   getCoupons: (params) => api.get('/admin/coupons', { params }),
   createCoupon: (data) => api.post('/admin/coupons', data),
   updateCoupon: (id, data) => api.patch(`/admin/coupons/${id}`, data),
