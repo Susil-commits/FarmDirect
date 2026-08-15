@@ -7,7 +7,12 @@ export const createRateLimitStore = (prefix: string) => {
     return undefined;
   }
   return new RedisStore({
-    sendCommand: (...args: string[]) => redisClient.sendCommand(args),
+    sendCommand: async (...args: string[]) => {
+      if (!redisClient.isReady) {
+        throw new Error('Redis not ready, fallback to in-memory store');
+      }
+      return redisClient.sendCommand(args);
+    },
     prefix: prefix,
   });
 };

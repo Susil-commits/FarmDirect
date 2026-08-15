@@ -5,30 +5,47 @@ dotenv.config();
 
 const redisUrl = process.env.REDIS_URI || process.env.REDIS_URL;
 
+let isInitialErrorLogged = false;
+
 export const redisClient = createClient({
-  url: redisUrl
+  url: redisUrl,
+  socket: {
+    connectTimeout: 5000,
+    reconnectStrategy: (retries) => {
+      if (retries > 2) {
+        if (!isInitialErrorLogged) {
+          console.log('[Redis] Remote cache unreachable. Operating with in-memory & direct DB queries.');
+          isInitialErrorLogged = true;
+        }
+        return false;
+      }
+      return 1000;
+    },
+  },
 });
 
 redisClient.on('error', (err) => {
-  console.warn('Redis Client Error. Caching will be disabled and fallback to direct queries.', err);
+  if (!isInitialErrorLogged) {
+    console.log(`[Redis] Notice: ${err?.message || 'Connection timeout'}. Running with in-memory / direct DB fallback.`);
+    isInitialErrorLogged = true;
+  }
 });
 
 redisClient.on('connect', () => {
-  console.log('Connected to Redis');
+  console.log('[Redis] Connected successfully');
+  isInitialErrorLogged = false;
 });
 
 let connectPromise: Promise<void> | null = null;
 
 if (redisUrl) {
-  connectPromise = redisClient.connect().catch((error) => {
-    console.warn('Failed to connect to Redis, application will run without caching.', error);
-  }) as Promise<void>;
+  connectPromise = redisClient.connect().catch(() => {}) as Promise<void>;
 }
 
 export const connectRedis = async (): Promise<void> => {
   if (connectPromise) {
-    await connectPromise;
-  } else if (!redisUrl) {
-    console.warn('REDIS_URI or REDIS_URL not provided. Running without caching layer.');
+    try {
+      await connectPromise;
+    } catch {}
   }
 };
