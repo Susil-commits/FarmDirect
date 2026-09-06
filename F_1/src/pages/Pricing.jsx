@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 
 import { motion } from 'framer-motion';
 import { Check, ArrowRight, Sparkles, Calculator } from 'lucide-react';
-import GiantBrandFooter from '../components/common/GiantBrandFooter';
-import DynamicFloatingNavbar from '../components/landing/DynamicFloatingNavbar';
 import { useRouter } from '../hooks/useRouter';
 
 export default function Pricing() {
@@ -75,8 +73,6 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body">
-      <DynamicFloatingNavbar activeSection="cream" onNavigate={navigate} />
-
       <section className="pt-32 pb-20 px-4 md:px-8 max-w-6xl mx-auto">
         {}
         <div className="text-center max-w-3xl mx-auto mb-12">
@@ -273,8 +269,6 @@ export default function Pricing() {
           </div>
         </div>
       </section>
-
-      <GiantBrandFooter onNavigate={navigate} />
     </div>
   );
 }

@@ -5,7 +5,6 @@ import { useChat } from '../context/ChatContext';
 import ConversationList from '../components/chat/ConversationList';
 import ChatPanel from '../components/chat/ChatPanel';
 import PageTransition from '../components/common/PageTransition';
-import DynamicFloatingNavbar from '../components/landing/DynamicFloatingNavbar';
 import '../styles/Messages.css';
 
 export default function Messages() {
@@ -80,8 +79,6 @@ export default function Messages() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body">
-        <DynamicFloatingNavbar activeSection="cream" onNavigate={navigate} />
-
         <div className="pt-28 pb-8 px-4 max-w-7xl mx-auto">
           <div className="messages-page bg-white/95 backdrop-blur-xl border border-stone-200 rounded-[32px] shadow-2xl overflow-hidden min-h-[75vh]">
             {}

@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Download, Share2, Star, Sparkles, Check, ShoppingCart } from 'lucide-react';
 import PageTransition from '../components/common/PageTransition';
-import DynamicFloatingNavbar from '../components/landing/DynamicFloatingNavbar';
-import GiantBrandFooter from '../components/common/GiantBrandFooter';
 import { useToast } from '../hooks/useToast';
 import { useCart } from '../hooks/useCart';
 import { useRouter } from '../hooks/useRouter';
@@ -77,8 +75,6 @@ export default function ProductComparison() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body">
-        <DynamicFloatingNavbar activeSection="cream" onNavigate={navigate} />
-
         <div className="pt-32 pb-20 px-4 md:px-8 max-w-6xl mx-auto">
           <div className="mb-8">
             <span className="font-sans-body text-xs font-bold uppercase tracking-widest text-[#132E20]/60 bg-[#F4EFE6] px-3.5 py-1.5 rounded-full border border-[#132E20]/10">
@@ -251,8 +247,6 @@ export default function ProductComparison() {
             </div>
           )}
         </div>
-
-        <GiantBrandFooter onNavigate={navigate} />
       </div>
     </PageTransition>
   );

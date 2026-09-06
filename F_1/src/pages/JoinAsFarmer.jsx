@@ -3,8 +3,6 @@ import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
-import DynamicFloatingNavbar from '../components/landing/DynamicFloatingNavbar';
-import GiantBrandFooter from '../components/common/GiantBrandFooter';
 import { useRouter } from '../hooks/useRouter';
 import { useAuth } from '../context/AuthContext';
 
@@ -98,9 +96,6 @@ export default function JoinAsFarmer() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body">
-        <DynamicFloatingNavbar activeSection="cream" onNavigate={navigate} />
-
-        {}
         <section className="pt-32 pb-16 px-4 md:px-8 max-w-6xl mx-auto text-center">
           <ScrollAnimation className="scroll-slide">
             <div className="inline-flex items-center gap-2 bg-[#F4EFE6] border border-[#132E20]/15 px-3.5 py-1.5 rounded-full text-xs font-bold text-[#132E20] mb-6">
@@ -337,8 +332,6 @@ export default function JoinAsFarmer() {
             </div>
           </ScrollAnimation>
         </section>
-
-        <GiantBrandFooter onNavigate={navigate} />
       </div>
     </PageTransition>
   );

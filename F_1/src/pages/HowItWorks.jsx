@@ -4,11 +4,9 @@ import { CheckCircle2, Users, TrendingUp, Award, Zap, Shield, Sparkles, ArrowRig
 import { motion } from 'framer-motion';
 import { useRouter } from '../hooks/useRouter';
 import PageTransition from '../components/common/PageTransition';
-import DynamicFloatingNavbar from '../components/landing/DynamicFloatingNavbar';
-import GiantBrandFooter from '../components/common/GiantBrandFooter';
 
 export default function HowItWorks() {
-  const { navigate } = useRouter();
+  const { navigate: _navigate } = useRouter();
   const [activeTab, setActiveTab] = useState('farmer'); 
 
   const farmerSteps = [
@@ -30,9 +28,6 @@ export default function HowItWorks() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body selection:bg-[#D97736] selection:text-white">
-        <DynamicFloatingNavbar activeSection="cream" onNavigate={navigate} />
-
-        {}
         <section className="pt-32 pb-16 px-4 md:px-8 max-w-6xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -190,8 +185,6 @@ export default function HowItWorks() {
             </div>
           </div>
         </section>
-
-        <GiantBrandFooter onNavigate={navigate} />
       </div>
     </PageTransition>
   );
