@@ -75,25 +75,26 @@ export default function Login() {
         formRef.current.reset();
       }
 
-      const verificationStatus = response.user?.kycStatus || 'not_submitted';
-      
-      const isExistingKYCUser = !!(response.user?.kycSubmittedAt || (response.user?.kycDocuments && Object.keys(response.user.kycDocuments).length > 0));
-      
-      if (verificationStatus === 'not_submitted' && !isExistingKYCUser) {
-        navigate('/pending-verification');
-      } else if (verificationStatus === 'not_submitted' && isExistingKYCUser) {
-        navigate('/verification/progress');
-      } else if (verificationStatus === 'pending' || verificationStatus === 'rejected') {
-        navigate('/verification/progress');
+      if (response.user?.role === 'admin') {
+        navigate('/admin/dashboard');
       } else if (redirectPath) {
         clearRedirectPath();
         navigate(redirectPath);
-      } else if (response.user?.role === 'farmer') {
-        navigate('/farmer/dashboard');
-      } else if (response.user?.role === 'admin') {
-        navigate('/admin/dashboard');
       } else {
-        navigate('/marketplace');
+        const verificationStatus = response.user?.kycStatus || 'not_submitted';
+        const isExistingKYCUser = !!(response.user?.kycSubmittedAt || (response.user?.kycDocuments && Object.keys(response.user.kycDocuments).length > 0));
+        
+        if (verificationStatus === 'not_submitted' && !isExistingKYCUser) {
+          navigate('/pending-verification');
+        } else if (verificationStatus === 'not_submitted' && isExistingKYCUser) {
+          navigate('/verification/progress');
+        } else if (verificationStatus === 'pending' || verificationStatus === 'rejected') {
+          navigate('/verification/progress');
+        } else if (response.user?.role === 'farmer') {
+          navigate('/farmer/dashboard');
+        } else {
+          navigate('/marketplace');
+        }
       }
     } catch (error) {
       console.error('❌ Login error:', error);

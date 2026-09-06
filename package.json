@@ -11,6 +11,7 @@
     "build:frontend": "cd F_1 && npm run build",
     "build:backend:ts": "cd backend-ts && npm run build",
     "typecheck:backend:ts": "cd backend-ts && npm run typecheck",
+    "admin:create:ts": "cd backend-ts && npm run admin:create",
     "seed": "cd backend && npm run seed",
     "start:backend": "cd backend && npm start",
     "start:backend:ts": "cd backend-ts && npm start"
