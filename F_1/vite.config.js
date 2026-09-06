@@ -2,13 +2,13 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
+      disable: true,
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       includeAssets: ['favicon.svg', 'icon.svg'],
@@ -96,12 +96,6 @@ export default defineConfig({
         enabled: false,
       },
     }),
-    visualizer({
-      filename: 'dist/stats.html',
-      open: false,
-      gzipSize: true,
-      brotliSize: true,
-    }),
   ],
   server: {
     port: 5173,
@@ -117,8 +111,11 @@ export default defineConfig({
     }
   },
   build: {
-    sourcemap: true,
+    sourcemap: false,
     rollupOptions: {
+      checks: {
+        pluginTimings: false,
+      },
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
