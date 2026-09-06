@@ -36,13 +36,11 @@ export default function About() {
       name: 'Susil Kumar Nayak',
       role: 'Lead Architect & Full Stack Engineer',
       bio: 'Pioneering direct agritech protocols, backend microservices, and fair pricing algorithms.',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
     },
     {
       name: 'Dibesh Ranjan Das',
       role: 'Full Stack & Product Engineer',
       bio: 'Building real-time traceability systems, UI components, and farmer voice log dictation.',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
     }
   ];
 
@@ -135,21 +133,16 @@ export default function About() {
               {team.map((member) => (
                 <div
                   key={member.name}
-                  className="bg-white/90 border border-[#132E20]/12 rounded-3xl p-8 shadow-lg flex items-center gap-6"
+                  className="bg-white/90 border border-[#132E20]/12 rounded-3xl p-8 shadow-lg flex flex-col justify-between hover:border-[#D97736]/40 transition-colors"
                 >
-                  <img
-                    src={member.avatar}
-                    alt={member.name}
-                    className="w-20 h-20 rounded-full object-cover border-2 border-[#D97736] flex-shrink-0"
-                  />
                   <div>
-                    <h3 className="font-serif-display text-2xl font-bold text-[#132E20]">
-                      {member.name}
-                    </h3>
-                    <span className="font-sans-body text-xs font-bold text-[#D97736] block mb-2">
+                    <span className="inline-block font-sans-body text-xs font-bold uppercase tracking-wider text-[#D97736] bg-[#D97736]/10 px-3 py-1 rounded-full border border-[#D97736]/25 mb-4">
                       {member.role}
                     </span>
-                    <p className="font-sans-body text-xs text-[#132E20]/75 leading-relaxed">
+                    <h3 className="font-serif-display text-2xl font-bold text-[#132E20] mb-2">
+                      {member.name}
+                    </h3>
+                    <p className="font-sans-body text-sm text-[#132E20]/75 leading-relaxed">
                       {member.bio}
                     </p>
                   </div>
