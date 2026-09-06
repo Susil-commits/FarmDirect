@@ -11,7 +11,6 @@ import { useParticleEffect, useRippleEffect } from '../hooks/useParticleEffect';
 import api from '../services/api';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import OptimizedImage from '../components/common/OptimizedImage';
-import LiveActivityTicker from '../components/common/LiveActivityTicker';
 import FarmHeroLanding from '../components/landing/FarmHeroLanding';
 import GetStartedModal from '../components/modals/GetStartedModal';
 
@@ -204,7 +203,6 @@ export default function Home() {
             <TestimonialsSection />
           </Suspense>
         </LazySection>
-        <LiveActivityTicker />
       </div>
     </PageTransition>
     </ErrorBoundary>
