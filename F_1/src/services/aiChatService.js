@@ -2,19 +2,30 @@ import api from './api';
 
 export async function sendAiChatMessage(message, context = {}) {
   try {
-    const response = await api.post('/ai/chat', {
-      message,
-      context,
-    });
+    const response = await api.post(
+      '/ai/chat',
+      {
+        message,
+        context,
+      },
+      {
+        timeout: 45_000,
+      }
+    );
     // api interceptor in api.js already returns response.data
     return response?.data ?? response;
   } catch (error) {
-    console.error('Error contacting AgriBot AI:', error);
+    console.error('Error contacting AgriBot AI:', error?.message || error);
     
-    const messageText =
-      error?.response?.data?.message ||
-      error?.message ||
-      'I am currently having trouble reaching the AI server. Please try again in a few moments.';
+    let messageText = 'I am currently having trouble reaching the AI server. Please try again in a few moments.';
+    if (error?.code === 'REQUEST_TIMEOUT' || error?.status === 408) {
+      messageText = 'The response took longer than expected. Please ask your question again!';
+    } else if (error?.response?.data?.message) {
+      messageText = error.response.data.message;
+    } else if (error?.message && !error.message.includes('status code')) {
+      messageText = error.message;
+    }
+
     return {
       success: false,
       reply: messageText,

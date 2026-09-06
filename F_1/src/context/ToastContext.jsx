@@ -35,16 +35,27 @@ export function ToastProvider({ children }) {
 
   useEffect(() => {
     const handleWaking = () => {
+      // If server is already marked awake in session, never show waking toast again
+      try {
+        if (sessionStorage.getItem('farm_server_awake') === 'true') {
+          return;
+        }
+      } catch {}
+
       if (!wakingToastIdRef.current) {
-        wakingToastIdRef.current = addToast('Waking up the server — this can take up to 30s on first load…', 'info', 0);
+        wakingToastIdRef.current = addToast('Connecting to server…', 'info', 0);
       }
     };
 
     const handleReady = () => {
+      try {
+        sessionStorage.setItem('farm_server_awake', 'true');
+      } catch {}
+
       if (wakingToastIdRef.current) {
         removeToast(wakingToastIdRef.current);
         wakingToastIdRef.current = null;
-        addToast('Connected!', 'success', 3000);
+        addToast('Connected!', 'success', 2500);
       }
     };
 

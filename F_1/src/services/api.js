@@ -85,6 +85,19 @@ const api = axios.create({
   
 });
 
+let isServerAwake = typeof window !== 'undefined' && sessionStorage.getItem('farm_server_awake') === 'true';
+
+export const markServerAwake = () => {
+  if (!isServerAwake) {
+    isServerAwake = true;
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('farm_server_awake', 'true');
+      } catch {}
+    }
+  }
+};
+
 api.interceptors.request.use(
   async (config) => {
     let token = getAccessToken();
@@ -92,11 +105,21 @@ api.interceptors.request.use(
     const requestId = Math.random().toString(36).substring(2, 9);
     config._requestId = requestId;
 
-    if (typeof window !== 'undefined' && !config.url?.includes('/health')) {
+    const isAiRequest = config.url?.includes('/ai/');
+    const isHealthRequest = config.url?.includes('/health');
+
+    // Only start waking timer on initial cold load before server is confirmed awake
+    if (
+      typeof window !== 'undefined' &&
+      !isServerAwake &&
+      !isAiRequest &&
+      !isHealthRequest
+    ) {
       config._wakingTimer = setTimeout(() => {
+        if (isServerAwake) return;
         config._wakingTriggered = true;
         window.dispatchEvent(new CustomEvent('farm-server-waking', { detail: { requestId } }));
-      }, 3000);
+      }, 4000);
     }
 
     if (import.meta.env.DEV && config.data instanceof FormData) {
@@ -151,12 +174,17 @@ const clearWakingTimer = (config) => {
 
 api.interceptors.response.use(
   (response) => {
+    markServerAwake();
     clearWakingTimer(response.config);
     return response.data;
   },
   async (error) => {
     const originalRequest = error.config;
     clearWakingTimer(originalRequest);
+
+    if (error.response?.status) {
+      markServerAwake();
+    }
 
     if (error.response?.status === 429) {
       const payload = {
