@@ -10,7 +10,6 @@ import ScrollAnimation from '../components/common/ScrollAnimation';
 import SkeletonLoader from '../components/common/SkeletonLoader';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import TiltCard from '../components/common/TiltCard';
-import LiveActivityTicker from '../components/common/LiveActivityTicker';
 import { useRouter } from '../context/RouterContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useToast } from '../context/ToastContext';
@@ -473,7 +472,6 @@ export default function Marketplace() {
           </div>
         )}
       </div>
-      <LiveActivityTicker />
     </PageTransition>
     </ErrorBoundary>
   );

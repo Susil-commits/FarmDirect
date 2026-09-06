@@ -1,4 +1,4 @@
-import { Sprout, ArrowUpRight, MapPin, Globe, MessageCircle, Share2, Mail } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 
 export default function GiantBrandFooter({ onNavigate }) {
   const products = [
@@ -67,7 +67,7 @@ export default function GiantBrandFooter({ onNavigate }) {
         </div>
 
         {}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pb-16 border-b border-[#132E20]/10">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pb-16 border-b border-[#132E20]/10">
           <div>
             <h4 className="font-sans-body text-xs font-bold uppercase tracking-wider text-[#132E20]/50 mb-4">
               Get Started
@@ -138,30 +138,6 @@ export default function GiantBrandFooter({ onNavigate }) {
                 </li>
               ))}
             </ul>
-          </div>
-
-          <div>
-            <h4 className="font-sans-body text-xs font-bold uppercase tracking-wider text-[#132E20]/50 mb-4">
-              Origin Headquarters
-            </h4>
-            <div className="space-y-3 text-xs text-[#132E20]/75">
-              <p className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-[#D97736] flex-shrink-0 mt-0.5" />
-                <span>FarmDirect Agritech Hub, Nashik Valley, Maharashtra 422003</span>
-              </p>
-              <p>Direct support: support@farmdirect.org</p>
-              <div className="flex items-center gap-3 pt-2 text-[#132E20]">
-                <a href="#hero" className="w-8 h-8 rounded-full bg-[#132E20]/10 flex items-center justify-center hover:bg-[#D97736] hover:text-white transition-colors">
-                  <Globe className="w-4 h-4" />
-                </a>
-                <a href="#hero" className="w-8 h-8 rounded-full bg-[#132E20]/10 flex items-center justify-center hover:bg-[#D97736] hover:text-white transition-colors">
-                  <MessageCircle className="w-4 h-4" />
-                </a>
-                <a href="#hero" className="w-8 h-8 rounded-full bg-[#132E20]/10 flex items-center justify-center hover:bg-[#D97736] hover:text-white transition-colors">
-                  <Share2 className="w-4 h-4" />
-                </a>
-              </div>
-            </div>
           </div>
         </div>
 
