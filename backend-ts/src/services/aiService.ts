@@ -138,7 +138,7 @@ const FALLBACK_KNOWLEDGE: Array<{ keywords: string[]; reply: string; topic: 'far
 
 class AiService {
   private client: GoogleGenAI | null = null;
-  private candidateModels = ['gemini-3.5-flash', 'gemini-3.7-flash', 'gemini-flash-latest'];
+  private candidateModels = ['gemini-3.6-flash', 'gemini-flash-latest'];
 
   constructor() {
     this.initializeClient();
