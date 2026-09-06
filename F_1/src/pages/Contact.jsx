@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter } from '../hooks/useRouter';
 import PageTransition from '../components/common/PageTransition.jsx';
-import DynamicFloatingNavbar from '../components/landing/DynamicFloatingNavbar';
-import GiantBrandFooter from '../components/common/GiantBrandFooter';
 import { Mail, Phone, MapPin, Send, Sparkles, CheckCircle2 } from 'lucide-react';
 
 import { motion } from 'framer-motion';
@@ -20,8 +18,6 @@ export default function Contact() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#FBF8F3] text-[#132E20] font-sans-body">
-        <DynamicFloatingNavbar activeSection="cream" onNavigate={navigate} />
-
         <section className="pt-32 pb-20 px-4 md:px-8 max-w-6xl mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-14">
             <span className="font-sans-body text-xs font-bold uppercase tracking-widest text-[#132E20]/60 bg-[#F4EFE6] px-3.5 py-1.5 rounded-full border border-[#132E20]/10">
@@ -145,8 +141,6 @@ export default function Contact() {
             </div>
           </div>
         </section>
-
-        <GiantBrandFooter onNavigate={navigate} />
       </div>
     </PageTransition>
   );
