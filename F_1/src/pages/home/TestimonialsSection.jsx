@@ -24,7 +24,7 @@ export default function TestimonialsSection() {
       author: "Siddharth Malhotra",
       role: "Agriculture Economist",
       badge: "AgriTech Review",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
+      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80",
     },
   ];
 
