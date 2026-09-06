@@ -1,4 +1,4 @@
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Sprout } from 'lucide-react';
 
 export default function GiantBrandFooter({ onNavigate }) {
   const products = [
