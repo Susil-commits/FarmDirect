@@ -118,18 +118,18 @@ export default function AgriBotWidget() {
       const botReply = {
         id: Date.now() + 1,
         sender: 'bot',
-        text: response.reply,
-        topic: response.topic,
-        suggestions: response.suggestions || [],
-        actionLinks: response.actionLinks || [],
+        text: response?.reply || 'I received your question, but could not generate a response. Please try again.',
+        topic: response?.topic,
+        suggestions: response?.suggestions || [],
+        actionLinks: response?.actionLinks || [],
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, botReply]);
 
-      if (soundEnabled && 'speechSynthesis' in window && response.reply) {
+      if (soundEnabled && 'speechSynthesis' in window && botReply.text) {
         window.speechSynthesis.cancel();
-        const plainText = response.reply.replace(/[#*_`[\]()]/g, '');
+        const plainText = botReply.text.replace(/[#*_`[\]()]/g, '');
         const utterance = new SpeechSynthesisUtterance(plainText);
         utterance.onstart = () => setIsSpeaking(true);
         utterance.onend = () => setIsSpeaking(false);

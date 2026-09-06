@@ -6,12 +6,14 @@ export async function sendAiChatMessage(message, context = {}) {
       message,
       context,
     });
-    return response.data;
+    // api interceptor in api.js already returns response.data
+    return response?.data ?? response;
   } catch (error) {
     console.error('Error contacting AgriBot AI:', error);
     
     const messageText =
       error?.response?.data?.message ||
+      error?.message ||
       'I am currently having trouble reaching the AI server. Please try again in a few moments.';
     return {
       success: false,
@@ -32,7 +34,8 @@ export async function sendAiChatMessage(message, context = {}) {
 export async function getAiStarterSuggestions(role = 'guest') {
   try {
     const response = await api.get(`/ai/suggestions?role=${encodeURIComponent(role)}`);
-    return response.data?.suggestions || [];
+    const payload = response?.data ?? response;
+    return payload?.suggestions || [];
   } catch (error) {
     console.warn('Failed to fetch AI starter prompts:', error);
     return [
