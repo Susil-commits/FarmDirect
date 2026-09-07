@@ -4,7 +4,7 @@ import PageTransition from '../components/common/PageTransition.jsx';
 import { HelpCircle, ShieldCheck, Truck, RefreshCw, MessageSquare } from 'lucide-react';
 
 export default function Support() {
-  const { navigate: _navigate } = useRouter();
+  const { navigate } = useRouter();
   const [selectedFaqIndex, setSelectedFaqIndex] = useState(0);
 
   const topics = [

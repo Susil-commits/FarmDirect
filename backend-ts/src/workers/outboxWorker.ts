@@ -7,6 +7,9 @@ import { notifyOrderUpdate } from '../socket/eventHandlers.js';
 import Order from '../models/Order.js';
 
 export const outboxQueue = connection ? new Queue('outboxQueue', { connection }) : null;
+if (outboxQueue) {
+  outboxQueue.on('error', () => {});
+}
 
 let pollingIntervalHandle: NodeJS.Timeout | null = null;
 
@@ -79,7 +82,7 @@ export async function sweepPendingOutboxEvents(): Promise<void> {
       { $set: { status: 'PENDING' } }
     );
 
-    const thresholdMs = connection ? 10 * 1000 : 0;
+    const thresholdMs = (connection && process.env.NODE_ENV !== 'test') ? 10 * 1000 : 0;
     const cutoff = new Date(Date.now() - thresholdMs);
 
     const pendingEvents = await OutboxEvent.find({

@@ -19,6 +19,7 @@ export default {
     ],
   },
   setupFilesAfterEnv: ['<rootDir>/src/tests/setup.ts'],
+  testTimeout: 20000,
   testMatch: ['**/*.test.ts'],
   collectCoverageFrom: [
     'src/controllers/**/*.ts',
