@@ -137,8 +137,6 @@ export const optionalProtect: RequestHandler = async (req, _res, next) => {
       if (parts.length === 2 && parts[1]) {
         token = parts[1];
       }
-    } else if (typeof req.query?.token === 'string' && req.query.token.trim()) {
-      token = req.query.token.trim();
     }
 
     if (token) {
