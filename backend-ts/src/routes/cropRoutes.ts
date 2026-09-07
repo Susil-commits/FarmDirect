@@ -4,7 +4,7 @@ import {
   getMyListings, toggleInterest, getInterestedBuyers, getMyInterestedCrops,
   getTrendingCrops, getSimilarCrops, getRecommendedCrops, uploadImagesHandler,
 } from '../controllers/cropController.js';
-import { protect, authorize, requireKYC } from '../middleware/auth.js';
+import { protect, authorize, requireKYC, optionalProtect } from '../middleware/auth.js';
 import { uploadCropImages } from '../middleware/localUpload.js';
 import { validateObjectId } from '../middleware/validator.js';
 import { UserRole } from '../types/enums.js';
@@ -24,7 +24,7 @@ router.get('/my-listings', protect, authorize(UserRole.Farmer), getMyListings);
 router.get('/buyer/interested', protect, authorize(UserRole.Buyer), getMyInterestedCrops);
 
 router.get('/farmer/:farmerId', getCropsByFarmer);
-router.get('/:id', validateObjectId(), getCropById);
+router.get('/:id', validateObjectId(), optionalProtect, getCropById);
 router.get('/:id/similar', validateObjectId(), getSimilarCrops);
 router.get('/:id/interested-buyers', validateObjectId(), protect, authorize(UserRole.Farmer, UserRole.Admin), getInterestedBuyers);
 

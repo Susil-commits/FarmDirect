@@ -10,14 +10,22 @@ export const idempotency = async (req: Request, res: Response, next: NextFunctio
     return;
   }
 
+  const userId = req.user?._id;
+  if (!userId) {
+    sendError(res, 'Authentication required for idempotent requests', 401);
+    return;
+  }
+
   const requestHash = createHash('sha256').update(JSON.stringify(req.body)).digest('hex');
   const now = new Date();
   
   try {
     const existingKey = await IdempotencyKey.findOneAndUpdate(
-      { key },
+      { key, userId },
       {
         $setOnInsert: {
+          key,
+          userId,
           status: 'pending',
           requestHash,
           createdAt: now,
@@ -29,7 +37,7 @@ export const idempotency = async (req: Request, res: Response, next: NextFunctio
 
     if (existingKey) {
       if (existingKey.requestHash !== requestHash) {
-        sendError(res, 'Idempotency-Key used with different request body', 422);
+        sendError(res, 'Idempotency-Key reused with different request body', 422);
         return;
       }
 
@@ -40,31 +48,30 @@ export const idempotency = async (req: Request, res: Response, next: NextFunctio
       }
 
       if (existingKey.status === 'pending') {
-        
         if (now.getTime() - existingKey.createdAt.getTime() > 2 * 60 * 1000) {
-           await IdempotencyKey.updateOne({ _id: existingKey._id }, { $set: { createdAt: now } });
-           
+          await IdempotencyKey.updateOne({ _id: existingKey._id }, { $set: { createdAt: now } });
         } else {
-           sendError(res, 'Request is currently processing', 409);
-           return;
+          sendError(res, 'Request is currently processing', 409);
+          return;
         }
       }
     }
 
     const originalJson = res.json.bind(res);
     res.json = (body: any) => {
-      
       const isSuccess = res.statusCode >= 200 && res.statusCode < 300;
+      const orderId = isSuccess && (body?.order?._id || body?.data?._id || null)
+        ? (body?.order?._id || body?.data?._id)
+        : null;
       
       IdempotencyKey.updateOne(
-        { key },
+        { key, userId },
         {
           $set: {
             status: isSuccess ? 'completed' : 'failed',
             responseStatus: res.statusCode,
             responseBody: body,
-            
-            orderId: isSuccess && body?.data?._id ? body.data._id : null
+            orderId
           }
         }
       ).catch(err => console.error('Error saving idempotency key', err));
@@ -74,6 +81,26 @@ export const idempotency = async (req: Request, res: Response, next: NextFunctio
 
     next();
   } catch (error: any) {
+    if (error.code === 11000) {
+      try {
+        const racedKey = await IdempotencyKey.findOne({ key, userId });
+        if (racedKey) {
+          if (racedKey.requestHash !== requestHash) {
+            sendError(res, 'Idempotency-Key reused with different request body', 422);
+            return;
+          }
+          if (racedKey.status === 'completed') {
+            res.setHeader('X-Idempotent-Replay', 'true');
+            res.status(racedKey.responseStatus || 200).json(racedKey.responseBody);
+            return;
+          }
+          sendError(res, 'Request is currently processing', 409);
+          return;
+        }
+      } catch (raceErr) {
+        console.error('Error handling idempotency race condition:', raceErr);
+      }
+    }
     console.error('Idempotency error:', error);
     sendError(res, 'Internal server error processing idempotency', 500);
   }

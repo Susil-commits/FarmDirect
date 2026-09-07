@@ -126,3 +126,39 @@ export const ownershipCheck = (resourceField = 'userId'): RequestHandler => {
     }
   };
 };
+
+export const optionalProtect: RequestHandler = async (req, _res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    let token: string | undefined;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const parts = authHeader.split(' ');
+      if (parts.length === 2 && parts[1]) {
+        token = parts[1];
+      }
+    } else if (typeof req.query?.token === 'string' && req.query.token.trim()) {
+      token = req.query.token.trim();
+    }
+
+    if (token) {
+      const decoded = verifyToken(token);
+      if (decoded) {
+        const user = await User.findById(decoded.id);
+        if (user && user.status !== UserStatus.Banned && user.status !== UserStatus.Suspended) {
+          req.user = {
+            _id: user._id,
+            role: user.role,
+            email: user.email,
+            status: user.status,
+          };
+          req.userDoc = user;
+        }
+      }
+    }
+    next();
+  } catch {
+    next();
+  }
+};
+

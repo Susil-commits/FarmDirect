@@ -13,6 +13,7 @@ import { createOutboxEvent } from '../workers/outboxPublisher.js';
 import { enqueueAnomalyDetection } from '../workers/queue.js';
 import {
   OrderStatus, PaymentMethod, PaymentStatus, CropAvailability, CropStatus, CancelledBy, UserRole,
+  ListingApprovalStatus,
 } from '../types/enums.js';
 import type { OrderTransitionMap, OrderLike } from '../types/index.js';
 import type { Request, Response, NextFunction } from 'express';
@@ -95,6 +96,9 @@ export async function startOrder(req: Request, res: Response, next: NextFunction
         const crop = await CropListing.findById(cropId).session(session);
         if (!crop) {
           throw { status: 404, message: 'Crop not found' };
+        }
+        if (crop.listingApprovalStatus !== ListingApprovalStatus.Approved) {
+          throw { status: 400, message: 'This crop listing is pending admin approval' };
         }
         if (crop.farmerId.toString() !== req.user!._id.toString()) {
           throw { status: 403, message: 'Only the crop owner can start an order' };
@@ -231,6 +235,9 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
 
         const crop = await CropListing.findById(cropId).session(session);
         if (!crop) throw { status: 404, message: 'Crop not found' };
+        if (crop.listingApprovalStatus !== ListingApprovalStatus.Approved) {
+          throw { status: 400, message: 'This crop listing is pending admin approval' };
+        }
         if (crop.availability !== CropAvailability.Available) throw { status: 400, message: 'This crop is no longer available' };
         
         const orderQty = quantity || 1;
@@ -365,6 +372,9 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
       const crop = crops.find((c) => String(c._id) === item.cropId);
       if (!crop) throw new Error('Crop not found');
 
+      if (crop.listingApprovalStatus !== ListingApprovalStatus.Approved) {
+        throw new Error(`Crop "${crop.cropName}" is pending admin approval`);
+      }
       if (crop.availability !== CropAvailability.Available) {
         throw new Error(`Crop ${crop.cropName} is no longer available`);
       }

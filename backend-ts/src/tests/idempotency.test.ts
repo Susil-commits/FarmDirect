@@ -59,7 +59,7 @@ describe('Idempotency Keys in Order Creation', () => {
       .send({ cropId, quantity: 2 });
     
     expect(res.status).toBe(400);
-    expect(res.body.message).toBe('Idempotency-Key header required');
+    expect(res.body.message).toBe('Idempotency-Key header is required');
   });
 
   it('should process a single request with a fresh key', async () => {
@@ -73,7 +73,7 @@ describe('Idempotency Keys in Order Creation', () => {
     expect(res.status).toBe(201);
     expect(res.body.message).toMatch(/successfully/i);
 
-    const doc = await IdempotencyKey.findOne({ key });
+    const doc = await IdempotencyKey.findOne({ key, userId: buyerId });
     expect(doc).toBeDefined();
     expect(doc?.status).toBe('completed');
   });
@@ -155,9 +155,10 @@ describe('Idempotency Keys in Order Creation', () => {
 
     await IdempotencyKey.create({
       key,
+      userId: buyerId,
       status: 'pending',
       requestHash: hash,
-      createdAt: new Date(Date.now() - 60000),
+      createdAt: new Date(Date.now() - 3 * 60 * 1000),
       expiresAt: new Date(Date.now() + 86400000)
     });
 
@@ -168,5 +169,47 @@ describe('Idempotency Keys in Order Creation', () => {
       .send({ cropId, quantity: 2 });
 
     expect(res.status).toBe(201);
+  });
+
+  it('should isolate idempotency keys between different users', async () => {
+    const { hashPassword } = await import('../utils/password.js');
+    const hashedPassword = await hashPassword('Password123!');
+
+    const buyer2 = await User.create({
+      firstName: 'Second', lastName: 'Buyer', email: 'buyer2@farm.com',
+      password: hashedPassword, role: 'buyer', phone: '1122334455', status: 'active', kycStatus: 'verified'
+    });
+
+    // Add buyer2 interest in crop
+    await CropListing.findByIdAndUpdate(cropId, {
+      $push: { interestedBuyers: { buyerId: buyer2._id, status: 'interested', interestedAt: new Date() } }
+    });
+
+    const loginRes2 = await request(app).post('/api/auth/login').send({ email: 'buyer2@farm.com', password: 'Password123!' });
+    const buyer2Token = loginRes2.body.token;
+
+    const sharedKey = 'shared-key-12345';
+
+    // Buyer 1 places order with sharedKey
+    const res1 = await request(app)
+      .post('/api/orders')
+      .set('Authorization', `Bearer ${buyerToken}`)
+      .set('Idempotency-Key', sharedKey)
+      .send({ cropId, quantity: 1 });
+    expect(res1.status).toBe(201);
+
+    // Buyer 2 places order with SAME sharedKey but different body or same body
+    const res2 = await request(app)
+      .post('/api/orders')
+      .set('Authorization', `Bearer ${buyer2Token}`)
+      .set('Idempotency-Key', sharedKey)
+      .send({ cropId, quantity: 3 });
+    expect(res2.status).toBe(201);
+    expect(res2.body.order._id).not.toBe(res1.body.order._id);
+    expect(res2.body.order.buyerId.toString()).toBe(buyer2._id.toString());
+
+    // Both keys stored independently in DB
+    const keysCount = await IdempotencyKey.countDocuments({ key: sharedKey });
+    expect(keysCount).toBe(2);
   });
 });
