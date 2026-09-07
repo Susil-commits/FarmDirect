@@ -10,7 +10,7 @@ const storage = multer.memoryStorage();
 
 const ALLOWED_MIMES = [
   'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/tiff',
-  'image/bmp', 'image/svg+xml',
+  'image/bmp',
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

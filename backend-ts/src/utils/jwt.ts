@@ -5,11 +5,14 @@ import type { Types } from 'mongoose';
 
 export interface TokenPayload extends JwtPayload {
   id: string;
+  role?: string;
   jti?: string;
 }
 
-export function generateToken(id: Types.ObjectId | string): string {
-  return jwt.sign({ id: String(id) }, env.jwtSecret, {
+export function generateToken(id: Types.ObjectId | string, role?: string): string {
+  const payload: { id: string; role?: string } = { id: String(id) };
+  if (role) payload.role = role;
+  return jwt.sign(payload, env.jwtSecret, {
     expiresIn: env.jwtExpire,
   } as SignOptions);
 }

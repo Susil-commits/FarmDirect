@@ -118,7 +118,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
     if (pincode !== undefined) userData.pincode = pincode;
 
     const user = (await User.create(userData)) as unknown as PublicUserDoc;
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.role);
     const refreshToken = generateRefreshToken(user._id);
 
     res.cookie('refreshToken', refreshToken, getRefreshTokenCookieOptions());
@@ -157,7 +157,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
       return;
     }
 
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.role);
     const refreshToken = generateRefreshToken(user._id);
 
     res.cookie('refreshToken', refreshToken, getRefreshTokenCookieOptions());
@@ -219,7 +219,7 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
 
     res.status(200).json({
       message: 'Profile updated successfully',
-      token: generateToken(user._id),
+      token: generateToken(user._id, user.role),
       user: { ...user.toObject(), photo: user.profilePicture, id: user._id },
     });
   } catch (error) {
@@ -369,12 +369,15 @@ export async function refreshTokenHandler(req: Request, res: Response): Promise<
       return;
     }
 
-    if (decoded.jti) {
-      await revokeToken(decoded.jti);
+    const user = await User.findById(decoded.id).select('role status');
+    if (!user || user.status === 'banned') {
+      res.clearCookie('refreshToken', getRefreshTokenCookieOptions());
+      sendError(res, 'User no longer active', 401);
+      return;
     }
 
-    const newToken = generateToken(decoded.id);
-    const newRefreshToken = generateRefreshToken(decoded.id);
+    const newToken = generateToken(user._id, user.role);
+    const newRefreshToken = generateRefreshToken(user._id);
     
     res.cookie('refreshToken', newRefreshToken, getRefreshTokenCookieOptions());
 

@@ -77,62 +77,65 @@ VITE_API_DIRECT_URL=https://your-backend.onrender.com/api
 
 ---
 
-### Backend → Render (FREE)
+### Backend → Render (TypeScript Backend Recommended)
 
-**Why Render:** Free HTTPS, auto-deploy from GitHub, no cold-start config needed.
+**Why Render:** Native Node.js deployment, automatic HTTPS, Git-based CI/CD.
 
-1. Go to **[render.com](https://render.com)** → Sign up with GitHub
+1. Go to **[render.com](https://render.com)** → Sign up / Log in
 2. Click **New +** → **Web Service**
 3. Connect your GitHub repo
-4. Configure:
+4. Configure service:
 
 | Setting | Value |
 |---------|-------|
-| **Name** | `farm-marketplace-api` |
-| **Root Directory** | `backend` |
+| **Name** | `farmdirect-api` |
+| **Root Directory** | `backend-ts` |
 | **Runtime** | Node |
-| **Build Command** | `npm install` |
-| **Start Command** | `node server.js` |
+| **Build Command** | `npm install && npm run build` |
+| **Start Command** | `npm start` |
 
-5. Add **Environment Variables** (copy from your `backend/.env`):
+5. Add **Environment Variables**:
 
-```
-PORT=10000
+```env
 NODE_ENV=production
-MONGODB_URI=<your-mongodb-uri>
-JWT_SECRET=<your-jwt-secret>
+PORT=10000
+MONGODB_URI=<your-mongodb-atlas-replica-set-uri>
+JWT_SECRET=<strong-random-secret>
+JWT_REFRESH_SECRET=<strong-random-refresh-secret>
+JWT_EXPIRE=15m
+JWT_REFRESH_EXPIRE=30d
 CORS_ORIGIN=https://your-app.vercel.app
+
+# Cloud Storage (MANDATORY in production to avoid ephemeral disk loss)
+CLOUDINARY_CLOUD_NAME=<your-cloud-name>
+CLOUDINARY_API_KEY=<your-api-key>
+CLOUDINARY_API_SECRET=<your-api-secret>
+
+# Payments (Razorpay)
+RAZORPAY_KEY_ID=<your-razorpay-key-id>
+RAZORPAY_KEY_SECRET=<your-razorpay-key-secret>
+RAZORPAY_WEBHOOK_SECRET=<your-razorpay-webhook-secret>
+
+# Keep-alive & Diagnostics
+RENDER_EXTERNAL_URL=https://your-backend.onrender.com
 ```
 
-6. Click **Create Web Service**
+> [!WARNING]
+> **Render Free Tier Constraints & Production Advice:**
+> - **Cold Starts:** Free instances spin down after 15 minutes of inactivity, resulting in a ~30-50s latency delay on cold requests. The backend includes a self-ping mechanism in `server.ts` utilizing `RENDER_EXTERNAL_URL` to keep instances warm while active.
+> - **Ephemeral Storage:** Containers lose local filesystem state upon restart or deploy. Local disk storage is disabled in production; Cloudinary credentials are strictly required at boot.
+> - **Background Queues & Workers:** Periodic reconciliation and Redis outbox workers run continuously in the Node process. For mission-critical high-traffic environments, upgrading to the Render Starter plan ($7/mo) guarantees uninterrupted 24/7 uptime without spinning down.
 
 ---
 
-### Database → MongoDB Atlas (FREE)
+### Database → MongoDB Atlas (FREE M0 or Replica Set)
 
 1. Go to **[mongodb.com/atlas](https://www.mongodb.com/atlas)** → Sign up
-2. Create a **FREE shared cluster** (M0)
-3. In **Database Access**, create a user (username + password)
-4. In **Network Access**, add `0.0.0.0/0` (allow all IPs)
-5. Click **Connect** → **Drivers** → Copy the connection string
-6. Replace `<username>` and `<password>` in the URI
-7. Paste into your `backend/.env` as `MONGODB_URI`
-
----
-
-### Image Storage → DigitalOcean Spaces ($5/month)
-
-**Skip this if you don't need image uploads yet.** The app falls back to local storage.
-
-1. Create a Space at [cloud.digitalocean.com](https://cloud.digitalocean.com)
-2. Generate API keys (Spaces access key + secret)
-3. Add to `backend/.env`:
-```
-DIGITALOCEAN_SPACES_KEY=your_key
-DIGITALOCEAN_SPACES_SECRET=your_secret
-DIGITALOCEAN_SPACES_NAME=your-space-name
-DIGITALOCEAN_SPACES_ENDPOINT=https://nyc3.digitaloceanspaces.com
-```
+2. Create a **FREE shared cluster** (M0 or higher)
+3. Under **Database Access**, create a user with read/write privileges
+4. Under **Network Access**, allow access from anywhere (`0.0.0.0/0`)
+5. Click **Connect** → **Drivers** → Copy the connection URI
+6. Set `MONGODB_URI` in your backend environment variables (MongoDB Atlas clusters are replica sets by default, enabling ACID order transactions).
 
 ---
 

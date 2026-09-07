@@ -1,6 +1,7 @@
 import { Server, type Socket } from 'socket.io';
 import type { Server as HttpServer } from 'http';
 import { verifyToken } from '../utils/jwt.js';
+import User from '../models/User.js';
 import type { UserRole } from '../types/enums.js';
 
 interface ConnectedUser {
@@ -27,7 +28,7 @@ export function initSocket(httpServer: HttpServer, corsOptions: CorsConfig): Ser
     transports: ['websocket', 'polling'],
   });
 
-  io.use((socket: Socket, next) => {
+  io.use(async (socket: Socket, next) => {
     try {
       const token = (socket.handshake.auth.token as string) || (socket.handshake.query.token as string);
       if (!token) {
@@ -38,7 +39,15 @@ export function initSocket(httpServer: HttpServer, corsOptions: CorsConfig): Ser
         return next(new Error('Invalid or expired token'));
       }
       socket.data.userId = decoded.id;
-      socket.data.userRole = (socket.handshake.auth.role as UserRole) || 'buyer';
+
+      // Extract role securely from verified JWT payload; fallback to DB lookup if legacy token
+      let role = decoded.role as UserRole | undefined;
+      if (!role) {
+        const user = await User.findById(decoded.id).select('role').lean();
+        role = user?.role as UserRole | undefined;
+      }
+
+      socket.data.userRole = role || 'buyer';
       next();
     } catch {
       next(new Error('Authentication failed'));

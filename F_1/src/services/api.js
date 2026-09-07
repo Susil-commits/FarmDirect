@@ -39,13 +39,18 @@ const processQueue = (error, token = null) => {
 };
 
 export const refreshAuthToken = async () => {
-  
   if (refreshPromise) {
     return refreshPromise;
   }
 
+  const currentToken = getAccessToken();
+  if (currentToken && !isTokenExpired(currentToken, 30)) {
+    return currentToken;
+  }
+
   const now = Date.now();
   if (now - lastRefreshAttempt < REFRESH_COOLDOWN_MS) {
+    if (currentToken) return currentToken;
     throw new Error('Refresh cooldown active');
   }
   lastRefreshAttempt = now;
@@ -65,10 +70,11 @@ export const refreshAuthToken = async () => {
 
       return newToken;
     } catch (error) {
-      
-      clearAccessToken();
-      safeStorage.removeItem('userData');
-      safeStorage.removeItem('verificationStatus');
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        clearAccessToken();
+        safeStorage.removeItem('userData');
+        safeStorage.removeItem('verificationStatus');
+      }
       throw error;
     } finally {
       refreshPromise = null;
