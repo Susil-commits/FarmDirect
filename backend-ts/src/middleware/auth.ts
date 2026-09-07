@@ -15,17 +15,22 @@ const suspendedAllowedPaths = [
 export const protect: RequestHandler = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
+    let token: string | undefined;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const parts = authHeader.split(' ');
+      if (parts.length === 2 && parts[1]) {
+        token = parts[1];
+      } else {
+        return next(ApiError.unauthorized('Malformed authorization header'));
+      }
+    } else if (typeof req.query?.token === 'string' && req.query.token.trim()) {
+      token = req.query.token.trim();
+    }
+
+    if (!token) {
       return next(ApiError.unauthorized('No authentication token provided'));
     }
-
-    const parts = authHeader.split(' ');
-    if (parts.length !== 2 || !parts[1]) {
-      return next(ApiError.unauthorized('Malformed authorization header'));
-    }
-
-    const token = parts[1];
     const decoded = verifyToken(token);
     if (!decoded) {
       return next(ApiError.unauthorized('Invalid or expired token'));

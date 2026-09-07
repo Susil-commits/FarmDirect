@@ -255,9 +255,15 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
 
           const result = computeDiscount(coupon, baseAmount);
           if (!result) throw { status: 400, message: `Minimum order amount of ₹${coupon.minOrderAmount} required for this coupon` };
+
+          const redeemed = await redeemCoupon(coupon.code, req.user!._id, session);
+          if (!redeemed) {
+            throw { status: 400, message: 'Coupon usage limit reached or already used by you' };
+          }
+
           discountAmount = result.discountAmount;
           totalAmount = result.finalAmount;
-          appliedCouponCode = coupon.code;
+          appliedCouponCode = redeemed.code;
         }
 
         const [createdOrder] = await Order.create([{
@@ -317,10 +323,6 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
       return;
     } finally {
       await session.endSession();
-    }
-    
-    if (appliedCouponCode) {
-      await redeemCoupon(appliedCouponCode, req.user!._id);
     }
 
     if (order) {
@@ -403,9 +405,25 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
 
     const totalDiscountAmount = volumeDiscountAmount + totalCouponDiscount;
     const createdOrderIds: string[] = [];
+    const ordersToNotify: Array<{
+      order: any;
+      farmerId: any;
+      orderQty: number;
+      unit: string;
+      cropName: string;
+      cropId: any;
+    }> = [];
 
     await session.withTransaction(async () => {
       createdOrderIds.length = 0;
+      ordersToNotify.length = 0;
+
+      if (appliedCouponCode) {
+        const redeemed = await redeemCoupon(appliedCouponCode, buyerId, session);
+        if (!redeemed) {
+          throw new Error('Coupon usage limit reached or already used by you');
+        }
+      }
 
       for (const item of validatedItems) {
         const itemShareRatio = item.itemBaseAmount / totalBaseAmount;
@@ -457,24 +475,30 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
         }
 
         createdOrderIds.push(String(order._id));
-
-        Notification.create({
-          userId: item.crop.farmerId,
-          title: 'New Order Received',
-          message: `You have a new order for ${item.orderQty} ${item.crop.unit} of ${item.crop.cropName}.`,
-          type: 'order',
-          relatedId: String(order._id),
-          priority: 'high',
-          actionUrl: `/farmer/orders/${order._id}`,
-          data: { orderId: order._id, cropId: item.crop._id, orderNumber: order.orderNumber, buyerId },
-        }).catch((notifErr: unknown) => console.error('Failed to create order notification:', notifErr));
-
-        notifyOrderUpdate(order, 'order:created');
+        ordersToNotify.push({
+          order,
+          farmerId: item.crop.farmerId,
+          orderQty: item.orderQty,
+          unit: item.crop.unit,
+          cropName: item.crop.cropName,
+          cropId: item.crop._id,
+        });
       }
     });
 
-    if (appliedCouponCode) {
-      await redeemCoupon(appliedCouponCode, buyerId);
+    for (const info of ordersToNotify) {
+      Notification.create({
+        userId: info.farmerId,
+        title: 'New Order Received',
+        message: `You have a new order for ${info.orderQty} ${info.unit} of ${info.cropName}.`,
+        type: 'order',
+        relatedId: String(info.order._id),
+        priority: 'high',
+        actionUrl: `/farmer/orders/${info.order._id}`,
+        data: { orderId: info.order._id, cropId: info.cropId, orderNumber: info.order.orderNumber, buyerId },
+      }).catch((notifErr: unknown) => console.error('Failed to create order notification:', notifErr));
+
+      notifyOrderUpdate(info.order, 'order:created');
     }
 
     res.status(201).json({
@@ -483,7 +507,7 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
     });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : '';
-    if (msg && (msg.includes('Crop not found') || msg.includes('no longer available') || msg.includes('Insufficient stock') || msg.includes('Insufficient quantity'))) {
+    if (msg && (msg.includes('Crop not found') || msg.includes('no longer available') || msg.includes('Insufficient stock') || msg.includes('Insufficient quantity') || msg.includes('Coupon usage limit reached'))) {
       sendError(res, msg, 400);
       return;
     }

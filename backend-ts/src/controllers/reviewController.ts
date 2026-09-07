@@ -6,11 +6,12 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendError } from '../utils/apiResponse.js';
 import { OrderStatus, UserRole } from '../types/enums.js';
 import type { Request, Response } from 'express';
-import type { Types } from 'mongoose';
+import mongoose, { type Types } from 'mongoose';
 
 async function updateCropRating(cropId: Types.ObjectId | string): Promise<void> {
+  const targetCropId = typeof cropId === 'string' ? new mongoose.Types.ObjectId(cropId) : cropId;
   const result = await Review.aggregate([
-    { $match: { cropId: typeof cropId === 'string' ? { $oid: cropId } : cropId } },
+    { $match: { cropId: targetCropId } },
     { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } },
   ]);
   const { avg = 0, count = 0 } = result[0] ?? {};
@@ -21,6 +22,7 @@ async function updateCropRating(cropId: Types.ObjectId | string): Promise<void> 
 }
 
 async function updateFarmerRating(farmerId: Types.ObjectId | string): Promise<void> {
+  const targetFarmerId = typeof farmerId === 'string' ? new mongoose.Types.ObjectId(farmerId) : farmerId;
   const result = await Review.aggregate([
     {
       $lookup: {
@@ -28,7 +30,7 @@ async function updateFarmerRating(farmerId: Types.ObjectId | string): Promise<vo
         localField: 'cropId',
         foreignField: '_id',
         as: 'crop',
-        pipeline: [{ $match: { farmerId: typeof farmerId === 'string' ? { $oid: farmerId } : farmerId } }, { $project: { _id: 1 } }],
+        pipeline: [{ $match: { farmerId: targetFarmerId } }, { $project: { _id: 1 } }],
       },
     },
     { $match: { 'crop.0': { $exists: true } } },

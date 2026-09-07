@@ -239,6 +239,7 @@ export interface INegotiation extends Timestamps, Document {
   status: Enums.NegotiationStatus;
   timeline: INegotiationTimelineEntry[];
   orderId?: Types.ObjectId | null;
+  lastActionBy?: Types.ObjectId | null;
 }
 
 export interface IReviewReport {

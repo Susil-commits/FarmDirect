@@ -16,6 +16,7 @@ export async function makeOffer(req: Request, res: Response, next: NextFunction)
     let negotiationId: mongoose.Types.ObjectId | undefined;
     let farmerIdStr = '';
     let cropName = '';
+    let notifPayload: any = null;
 
     await session.withTransaction(async () => {
       const { cropId, offeredPrice, quantity, message } = req.body as MakeOfferDto;
@@ -35,7 +36,7 @@ export async function makeOffer(req: Request, res: Response, next: NextFunction)
         crop.interestedBuyers.push({
           buyerId,
           status: InterestedBuyerStatus.Interested,
-          interestedAt: new Date()
+          interestedAt: new Date(),
         });
         await crop.save({ session });
       }
@@ -53,28 +54,33 @@ export async function makeOffer(req: Request, res: Response, next: NextFunction)
         offeredPrice,
         quantity,
         status: NegotiationStatus.Pending,
+        lastActionBy: buyerId,
         timeline: [{
           status: NegotiationStatus.Pending,
           offeredPrice,
           message: message || 'New offer placed',
-          timestamp: new Date()
-        }]
+          timestamp: new Date(),
+        }],
       }], { session });
 
       negotiationId = negotiation._id as mongoose.Types.ObjectId;
       farmerIdStr = crop.farmerId.toString();
       cropName = crop.cropName;
 
-      await Notification.create([{
+      notifPayload = {
         userId: crop.farmerId,
         title: 'New Offer Received',
         message: `You received an offer of ₹${offeredPrice} for ${quantity} ${crop.unit} of ${crop.cropName}.`,
         type: 'order',
         relatedId: String(negotiation._id),
         priority: 'high',
-        actionUrl: `/farmer/negotiations`
-      }], { session });
+        actionUrl: `/farmer/negotiations`,
+      };
     });
+
+    if (notifPayload) {
+      await Notification.create([notifPayload]).catch((err) => console.error('Failed to create offer notification:', err));
+    }
 
     if (negotiationId) {
       notifyNegotiationUpdate(
@@ -82,7 +88,7 @@ export async function makeOffer(req: Request, res: Response, next: NextFunction)
         farmerIdStr,
         req.user!._id.toString(),
         'negotiation:new',
-        { status: NegotiationStatus.Pending, cropName }
+        { status: NegotiationStatus.Pending, cropName },
       );
     }
 
@@ -100,11 +106,17 @@ export async function respondToOffer(req: Request, res: Response, next: NextFunc
   try {
     let responseData: any;
     let orderToNotify: any = null;
+    let notifPayload: any = null;
+    let socketNegData: any = null;
 
     await session.withTransaction(async () => {
       const { id } = req.params;
       const { action, offeredPrice, message } = req.body as RespondOfferDto;
       const userId = req.user!._id.toString();
+
+      if (!action || !['accept', 'reject', 'counter'].includes(action)) {
+        throw { status: 400, message: 'Invalid action. Must be accept, reject, or counter.' };
+      }
 
       const negotiation = await Negotiation.findById(id).session(session);
       if (!negotiation) throw { status: 404, message: 'Negotiation not found' };
@@ -117,19 +129,37 @@ export async function respondToOffer(req: Request, res: Response, next: NextFunc
         throw { status: 400, message: `Negotiation is already ${negotiation.status}` };
       }
 
+      // Turn enforcement:
+      // When Pending, offer was created by buyer -> only farmer can respond
+      if (negotiation.status === NegotiationStatus.Pending) {
+        if (!isFarmer) {
+          throw { status: 403, message: "It is the farmer's turn to respond to this offer." };
+        }
+      } else if (negotiation.status === NegotiationStatus.CounterOffered) {
+        // When CounterOffered, cannot respond to your own counter offer
+        const lastActor = negotiation.lastActionBy
+          ? negotiation.lastActionBy.toString()
+          : (isFarmer ? negotiation.farmerId.toString() : '');
+        if (lastActor && lastActor === userId) {
+          throw { status: 403, message: 'You cannot respond to your own counter offer. Wait for the other party to respond.' };
+        }
+      }
+
       const crop = await CropListing.findById(negotiation.cropId).session(session);
       if (!crop) throw { status: 404, message: 'Crop not found' };
 
       if (action === 'reject') {
         negotiation.status = NegotiationStatus.Rejected;
+        negotiation.lastActionBy = req.user!._id;
         negotiation.timeline.push({ status: NegotiationStatus.Rejected, message: message || 'Offer rejected', timestamp: new Date() });
         await negotiation.save({ session });
         responseData = { message: 'Offer rejected' };
         
       } else if (action === 'counter') {
-        if (!offeredPrice) throw { status: 400, message: 'Counter offer requires an offeredPrice' };
+        if (!offeredPrice || offeredPrice <= 0) throw { status: 400, message: 'Counter offer requires a valid positive offeredPrice' };
         negotiation.status = NegotiationStatus.CounterOffered;
         negotiation.offeredPrice = offeredPrice;
+        negotiation.lastActionBy = req.user!._id;
         negotiation.timeline.push({ status: NegotiationStatus.CounterOffered, offeredPrice, message: message || 'Counter offer made', timestamp: new Date() });
         await negotiation.save({ session });
         responseData = { message: 'Counter offer sent' };
@@ -140,6 +170,7 @@ export async function respondToOffer(req: Request, res: Response, next: NextFunc
         }
 
         negotiation.status = NegotiationStatus.Accepted;
+        negotiation.lastActionBy = req.user!._id;
         negotiation.timeline.push({ status: NegotiationStatus.Accepted, message: message || 'Offer accepted', timestamp: new Date() });
         
         const totalAmount = negotiation.offeredPrice * negotiation.quantity;
@@ -184,28 +215,39 @@ export async function respondToOffer(req: Request, res: Response, next: NextFunc
         responseData = { message: 'Offer accepted and order created', orderId: order._id };
       }
 
-      await Notification.create([{
+      notifPayload = {
         userId: isFarmer ? negotiation.buyerId : negotiation.farmerId,
         title: `Negotiation ${action === 'accept' ? 'Accepted' : action === 'reject' ? 'Rejected' : 'Countered'}`,
         message: `Your negotiation for ${crop.cropName} was ${action}ed.`,
         type: 'order',
         relatedId: String(negotiation._id),
         priority: 'high',
-      }], { session });
+      };
+
+      socketNegData = {
+        id: negotiation._id.toString(),
+        farmerId: negotiation.farmerId.toString(),
+        buyerId: negotiation.buyerId.toString(),
+        status: negotiation.status,
+        action,
+      };
     });
+
+    if (notifPayload) {
+      await Notification.create([notifPayload]).catch((err) => console.error('Failed to create response notification:', err));
+    }
 
     if (orderToNotify) {
       notifyOrderUpdate(orderToNotify, 'order:created');
     }
     
-    const neg = await Negotiation.findById(req.params.id);
-    if (neg) {
+    if (socketNegData) {
       notifyNegotiationUpdate(
-        neg._id.toString(),
-        neg.farmerId.toString(),
-        neg.buyerId.toString(),
+        socketNegData.id,
+        socketNegData.farmerId,
+        socketNegData.buyerId,
         'negotiation:updated',
-        { status: neg.status, action: req.body.action }
+        { status: socketNegData.status, action: socketNegData.action },
       );
     }
 

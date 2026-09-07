@@ -27,7 +27,9 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 const getProxyUrl = (url) => {
   if (!url) return '';
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  return `${API_BASE}/admin/documents/proxy?url=${encodeURIComponent(url)}`;
+  const token = localStorage.getItem('token');
+  const tokenParam = token ? `&token=${encodeURIComponent(token)}` : '';
+  return `${API_BASE}/admin/documents/proxy?url=${encodeURIComponent(url)}${tokenParam}`;
 };
 
 const DocThumbnail = ({ doc, onPreview, formatFileSize, isImageDoc }) => {

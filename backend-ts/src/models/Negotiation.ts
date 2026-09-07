@@ -16,6 +16,7 @@ const negotiationSchema = new Schema<INegotiation>(
       default: NegotiationStatus.Pending,
     },
     orderId: { type: Schema.Types.ObjectId, ref: 'Order', default: null },
+    lastActionBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     timeline: [
       {
         status: { type: String, enum: Object.values(NegotiationStatus), required: true },
