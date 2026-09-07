@@ -38,18 +38,18 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-export const refreshAuthToken = async () => {
+export const refreshAuthToken = async (force = false) => {
   if (refreshPromise) {
     return refreshPromise;
   }
 
   const currentToken = getAccessToken();
-  if (currentToken && !isTokenExpired(currentToken, 30)) {
+  if (!force && currentToken && !isTokenExpired(currentToken, 120)) {
     return currentToken;
   }
 
   const now = Date.now();
-  if (now - lastRefreshAttempt < REFRESH_COOLDOWN_MS) {
+  if (!force && now - lastRefreshAttempt < REFRESH_COOLDOWN_MS) {
     if (currentToken) return currentToken;
     throw new Error('Refresh cooldown active');
   }
@@ -133,7 +133,7 @@ api.interceptors.request.use(
       }
     }
 
-    if (token && isTokenExpired(token, 300)) {
+    if (token && isTokenExpired(token, 120)) {
       try {
         if (!isRefreshing) {
           isRefreshing = true;
@@ -205,7 +205,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const token = await refreshAuthToken();
+        const token = await refreshAuthToken(true);
         originalRequest.headers.Authorization = `Bearer ${token}`;
         return api(originalRequest);
       } catch (refreshError) {

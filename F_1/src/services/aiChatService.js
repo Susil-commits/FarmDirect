@@ -1,8 +1,9 @@
 import api from './api';
+import { getAccessToken } from '../utils/tokenStore.js';
 
 export async function sendAiChatMessage(message, context = {}) {
   try {
-    const hasAuthToken = Boolean(localStorage.getItem('token') || sessionStorage.getItem('token'));
+    const hasAuthToken = Boolean(getAccessToken() || localStorage.getItem('token') || sessionStorage.getItem('token'));
     const endpoint = hasAuthToken ? '/ai/chat' : '/ai/try';
     const payloadMessage = hasAuthToken ? message : message.slice(0, 250);
 

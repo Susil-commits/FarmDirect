@@ -70,7 +70,14 @@ export default function ShoppingCart() {
             addToast('Payment successful! Orders confirmed.', 'success');
             navigate('/order-confirmation');
           } catch (verr) {
-            addToast(verr?.message || 'Payment verification failed. You can retry from your orders.', 'error');
+            const firstOrderId = orderIds[0];
+            const poll = firstOrderId ? await paymentService.pollPaymentStatus(firstOrderId, 3, 1500) : { success: false };
+            clearCart();
+            if (poll.success) {
+              addToast('Payment confirmed! Orders placed.', 'success');
+            } else {
+              addToast('Payment processing. You can check status in your orders.', 'warning');
+            }
             navigate('/order-confirmation');
           } finally {
             setCheckoutLoading(false);

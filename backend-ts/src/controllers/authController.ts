@@ -101,13 +101,16 @@ export async function register(req: Request, res: Response, next: NextFunction):
     const hashedPassword = await hashPassword(password);
     const fullName = `${firstName} ${lastName}`.trim();
 
+    // Defense-in-depth: controller-level whitelist strictly permits Farmer or defaults to Buyer
+    const assignedRole = role === UserRole.Farmer ? UserRole.Farmer : UserRole.Buyer;
+
     const userData: Record<string, unknown> = {
       name: fullName,
       firstName,
       lastName,
       email,
       password: hashedPassword,
-      role: role || UserRole.Buyer,
+      role: assignedRole,
       phone,
       location,
       profilePicture: photo || null,

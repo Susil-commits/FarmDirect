@@ -99,8 +99,15 @@ export default function CheckoutNew() {
             setStep(3);
             addToast('Payment successful! Order confirmed.', 'success');
           } catch (verr) {
-            addToast(verr?.message || 'Payment verification failed. You can retry from order details.', 'error');
-            navigate(`/order/${createdOrder._id}`);
+            const poll = await paymentService.pollPaymentStatus(createdOrder._id, 3, 1500);
+            if (poll.success) {
+              setOrderData((prev) => ({ ...prev, paymentStatus: 'completed' }));
+              setStep(3);
+              addToast('Payment verified successfully! Order confirmed.', 'success');
+            } else {
+              addToast(verr?.message || 'Payment is processing. Check your order details for updates.', 'warning');
+              navigate(`/order/${createdOrder._id}`);
+            }
           } finally {
             setLoading(false);
           }

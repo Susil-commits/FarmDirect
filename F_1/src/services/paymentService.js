@@ -62,12 +62,30 @@ const paymentService = {
     return api.post('/payments/razorpay/init', payload);
   },
 
-  verifyRazorpayPayment: async ({ razorpayOrderId, razorpayPaymentId, razorpaySignature }) => {
+   verifyRazorpayPayment: async ({ razorpayOrderId, razorpayPaymentId, razorpaySignature }) => {
     return api.post('/payments/razorpay/verify', {
       razorpayOrderId,
       razorpayPaymentId,
       razorpaySignature,
     });
+  },
+
+  pollPaymentStatus: async (orderId, maxAttempts = 5, intervalMs = 1500) => {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const response = await api.get(`/orders/${orderId}`);
+        const order = response?.order || response?.data || response;
+        if (order && order.paymentStatus === 'completed') {
+          return { success: true, order, paymentStatus: 'completed' };
+        }
+      } catch (err) {
+        console.warn(`[pollPaymentStatus] attempt ${attempt + 1} failed:`, err);
+      }
+      if (attempt < maxAttempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, intervalMs));
+      }
+    }
+    return { success: false, paymentStatus: 'pending' };
   },
 
   reportRazorpayFailure: async (razorpayOrderId, reason) => {

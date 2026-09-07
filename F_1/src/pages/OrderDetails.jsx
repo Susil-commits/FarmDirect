@@ -143,7 +143,14 @@ export default function OrderDetails() {
             addToast('Payment successful! Order is now confirmed.', 'success');
             await fetchOrderDetails();
           } catch (verr) {
-            addToast(verr?.message || 'Payment verification failed.', 'error');
+            const poll = await paymentService.pollPaymentStatus(order._id, 3, 1500);
+            if (poll.success) {
+              addToast('Payment confirmed! Order updated.', 'success');
+              await fetchOrderDetails();
+            } else {
+              addToast(verr?.message || 'Payment is processing. Refresh in a few moments.', 'warning');
+              await fetchOrderDetails();
+            }
           } finally {
             setActionLoading(false);
           }

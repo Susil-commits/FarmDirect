@@ -611,17 +611,19 @@ export const proxyDocument = asyncHandler(async (req: Request, res: Response) =>
   if (!fs.existsSync(filePath)) return sendError(res, 'File not found', 404);
 
   const ext = path.extname(filePath).toLowerCase();
+  if (ext === '.svg') {
+    return sendError(res, 'SVG files cannot be viewed through document proxy', 400);
+  }
+
   const mimeTypes: Record<string, string> = {
     '.pdf': 'application/pdf', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
-    '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml',
+    '.gif': 'image/gif', '.webp': 'image/webp',
   };
   const contentType = mimeTypes[ext] || 'application/octet-stream';
 
-  const isSvg = ext === '.svg';
-
   res.set({
     'Content-Type': contentType,
-    'Content-Disposition': isSvg ? 'attachment; filename="document.svg"' : 'inline',
+    'Content-Disposition': 'inline',
     'Cache-Control': 'private, no-cache, no-store, must-revalidate',
     'X-Content-Type-Options': 'nosniff',
   });

@@ -26,6 +26,10 @@ function fileFilter(
   file: Express.Multer.File,
   cb: FileFilterCallback,
 ): void {
+  const ext = file.originalname.split('.').pop()?.toLowerCase();
+  if (ext === 'svg' || file.mimetype === 'image/svg+xml') {
+    return cb(new Error('SVG files are not allowed for security reasons.'));
+  }
   if (ALLOWED_MIMES.includes(file.mimetype)) {
     cb(null, true);
   } else {
