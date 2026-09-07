@@ -617,11 +617,13 @@ export const proxyDocument = asyncHandler(async (req: Request, res: Response) =>
   };
   const contentType = mimeTypes[ext] || 'application/octet-stream';
 
+  const isSvg = ext === '.svg';
+
   res.set({
     'Content-Type': contentType,
-    'Content-Disposition': 'inline',
-    'Cache-Control': 'public, max-age=3600',
-    'Access-Control-Allow-Origin': '*',
+    'Content-Disposition': isSvg ? 'attachment; filename="document.svg"' : 'inline',
+    'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+    'X-Content-Type-Options': 'nosniff',
   });
   res.sendFile(filePath, (err) => {
     if (err && !res.headersSent) {

@@ -6,11 +6,11 @@ import { UserRole } from '../types/enums.js';
 
 const router = Router();
 
-router.get('/documents/proxy', adminController.proxyDocument);
-
 router.patch('/kyc/result-seen', protect, adminController.markKYCResultSeen);
 
 router.use(protect, authorize(UserRole.Admin));
+
+router.get('/documents/proxy', adminController.proxyDocument);
 
 router.get('/dashboard/stats', adminController.getDashboardStats);
 router.get('/users', adminController.getAllUsers);

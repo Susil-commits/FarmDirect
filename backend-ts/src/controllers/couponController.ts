@@ -3,7 +3,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendError } from '../utils/apiResponse.js';
 import { CouponType } from '../types/enums.js';
 import type { ICoupon, DiscountResult } from '../types/index.js';
-import type { Types } from 'mongoose';
+import mongoose, { type Types, type ClientSession } from 'mongoose';
 import type { Request, Response } from 'express';
 
 export function computeDiscount(coupon: ICoupon | null, subtotal: number): DiscountResult | null {
@@ -73,31 +73,54 @@ export const validateCoupon = asyncHandler(async (req: Request, res: Response) =
   });
 });
 
-export async function redeemCoupon(code: string, userId: Types.ObjectId | string): Promise<ICoupon | null> {
+export async function redeemCoupon(
+  code: string,
+  userId: Types.ObjectId | string,
+  session?: ClientSession,
+): Promise<ICoupon | null> {
   if (!code) return null;
-  try {
-    
-    const coupon = await Coupon.findOneAndUpdate(
-      {
-        code: code.toUpperCase().trim(),
-        isActive: true,
-        $or: [
-          { usageLimit: null },
-          { usageLimit: { $exists: false } },
-          { $expr: { $lt: ['$usedCount', '$usageLimit'] } },
-        ],
-      },
-      {
-        $inc: { usedCount: 1 },
-        $push: { usedBy: userId },
-      },
-      { new: true },
-    );
-    return coupon;
-  } catch (err) {
-    console.error('Failed to redeem coupon:', err);
-    return null;
-  }
+  const userObjId = typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId;
+  const now = new Date();
+
+  const coupon = await Coupon.findOneAndUpdate(
+    {
+      code: code.toUpperCase().trim(),
+      isActive: true,
+      $and: [
+        { $or: [{ validFrom: null }, { validFrom: { $exists: false } }, { validFrom: { $lte: now } }] },
+        { $or: [{ validUntil: null }, { validUntil: { $exists: false } }, { validUntil: { $gte: now } }] },
+        {
+          $or: [
+            { usageLimit: null },
+            { usageLimit: { $exists: false } },
+            { $expr: { $lt: ['$usedCount', '$usageLimit'] } },
+          ],
+        },
+        {
+          $expr: {
+            $lt: [
+              {
+                $size: {
+                  $filter: {
+                    input: { $ifNull: ['$usedBy', []] },
+                    as: 'u',
+                    cond: { $eq: ['$$u', userObjId] },
+                  },
+                },
+              },
+              { $ifNull: ['$perUserLimit', 1] },
+            ],
+          },
+        },
+      ],
+    },
+    {
+      $inc: { usedCount: 1 },
+      $push: { usedBy: userObjId },
+    },
+    { new: true, session },
+  );
+  return coupon;
 }
 
 export const getAllCoupons = asyncHandler(async (req: Request, res: Response) => {
