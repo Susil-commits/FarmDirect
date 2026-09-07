@@ -28,7 +28,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 const getProxyUrl = (url) => {
   if (!url) return '';
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  const token = getAccessToken() || localStorage.getItem('token');
+  const token = getAccessToken();
   const tokenParam = token ? `&token=${encodeURIComponent(token)}` : '';
   return `${API_BASE}/admin/documents/proxy?url=${encodeURIComponent(url)}${tokenParam}`;
 };

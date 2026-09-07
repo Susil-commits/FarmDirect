@@ -7,7 +7,7 @@ import { notifyCropInterest } from '../socket/eventHandlers.js';
 import { sendError } from '../utils/apiResponse.js';
 import {
   CropStatus, CropAvailability, CropType, InterestedBuyerStatus, UserRole, KycStatus,
-  OrderStatus, CancelledBy,
+  OrderStatus, CancelledBy, ListingApprovalStatus,
 } from '../types/enums.js';
 import type { Request, Response, NextFunction } from 'express';
 import type { ICropSpecifications } from '../types/index.js';
@@ -70,6 +70,9 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
       return;
     }
 
+    const isAutoApproved = req.user?.role === UserRole.Admin;
+    const listingApprovalStatus = isAutoApproved ? ListingApprovalStatus.Approved : ListingApprovalStatus.Pending;
+
     const crop = await CropListing.create({
       farmerId: req.user!._id,
       cropName,
@@ -84,12 +87,15 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
       specifications,
       images: imageUrls,
       status: CropStatus.Active,
-      listingApprovalStatus: 'approved',
+      listingApprovalStatus,
       availability: CropAvailability.Available,
     });
     await clearPrefix('crops:');
 
-    res.status(201).json({ message: 'Crop listing created successfully', crop });
+    const message = isAutoApproved
+      ? 'Crop listing created and approved successfully'
+      : 'Crop listing created and submitted for admin approval';
+    res.status(201).json({ message, crop });
   } catch (error) {
     next(error);
   }
@@ -109,7 +115,11 @@ export async function getCrops(req: Request, res: Response, next: NextFunction):
       page = '1', limit = '12', sortBy = 'createdAt', sortOrder = 'desc',
     } = req.query as Record<string, string>;
 
-    const query: Record<string, unknown> = { status: CropStatus.Active, availability: CropAvailability.Available };
+    const query: Record<string, unknown> = {
+      status: CropStatus.Active,
+      availability: CropAvailability.Available,
+      listingApprovalStatus: ListingApprovalStatus.Approved,
+    };
 
     if (category && category !== 'all') query.category = category;
     if (cropType && cropType !== 'all') query.cropType = cropType;
@@ -171,7 +181,11 @@ export async function getCrops(req: Request, res: Response, next: NextFunction):
 export async function getTrendingCrops(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { limit = '8' } = req.query as Record<string, string>;
-    const crops = await CropListing.find({ status: CropStatus.Active, availability: CropAvailability.Available })
+    const crops = await CropListing.find({
+      status: CropStatus.Active,
+      availability: CropAvailability.Available,
+      listingApprovalStatus: ListingApprovalStatus.Approved,
+    })
       .lean()
       .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
       .limit(Number(limit))
@@ -195,6 +209,7 @@ export async function getSimilarCrops(req: Request, res: Response, next: NextFun
       _id: { $ne: id },
       status: CropStatus.Active,
       availability: CropAvailability.Available,
+      listingApprovalStatus: ListingApprovalStatus.Approved,
       $or: [{ category: crop.category }, { cropType: crop.cropType }],
     })
       .lean()
@@ -234,6 +249,7 @@ export async function getRecommendedCrops(req: Request, res: Response, next: Nex
       const q: Record<string, unknown> = {
         status: CropStatus.Active,
         availability: CropAvailability.Available,
+        listingApprovalStatus: ListingApprovalStatus.Approved,
         category: { $in: uniqueCategories },
       };
       if (purchasedCropIds.length) q._id = { $nin: purchasedCropIds };
@@ -250,6 +266,7 @@ export async function getRecommendedCrops(req: Request, res: Response, next: Nex
       const fallback = await CropListing.find({
         status: CropStatus.Active,
         availability: CropAvailability.Available,
+        listingApprovalStatus: ListingApprovalStatus.Approved,
         _id: existingIds.length ? { $nin: existingIds } : { $exists: true },
       })
         .lean()
@@ -267,7 +284,7 @@ export async function getRecommendedCrops(req: Request, res: Response, next: Nex
 
 export async function getCropById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const crop = await CropListing.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }, { new: true })
+    const crop = await CropListing.findById(req.params.id)
       .populate([
         { path: 'farmerId', select: 'firstName lastName name avatar rating farmName location city state phone' },
         { path: 'interestedBuyers.buyerId', select: 'firstName lastName name phone email city state' },
@@ -276,6 +293,20 @@ export async function getCropById(req: Request, res: Response, next: NextFunctio
       sendError(res, 'Crop not found', 404);
       return;
     }
+
+    if (crop.listingApprovalStatus !== ListingApprovalStatus.Approved) {
+      const farmerIdStr = ((crop.farmerId as any)?._id || crop.farmerId)?.toString();
+      const isOwner = Boolean(req.user && farmerIdStr === req.user._id.toString());
+      const isAdmin = Boolean(req.user && req.user.role === UserRole.Admin);
+      if (!isOwner && !isAdmin) {
+        sendError(res, 'Crop listing is pending approval', 404);
+        return;
+      }
+    }
+
+    await CropListing.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
+    crop.views = (crop.views || 0) + 1;
+
     res.status(200).json({ crop });
   } catch (error) {
     next(error);
@@ -409,7 +440,11 @@ export async function getCropsByFarmer(req: Request, res: Response, next: NextFu
       sendError(res, 'Valid farmer ID is required', 400);
       return;
     }
-    const crops = await CropListing.find({ farmerId, status: CropStatus.Active }).lean().sort({ createdAt: -1 }).limit(100);
+    const crops = await CropListing.find({
+      farmerId,
+      status: CropStatus.Active,
+      listingApprovalStatus: ListingApprovalStatus.Approved,
+    }).lean().sort({ createdAt: -1 }).limit(100);
     res.status(200).json({ crops });
   } catch (error) {
     next(error);
@@ -442,6 +477,10 @@ export async function toggleInterest(req: Request, res: Response, next: NextFunc
     }
     if (req.user!.role !== UserRole.Buyer) {
       sendError(res, 'Only buyers can mark interest in crops', 403);
+      return;
+    }
+    if (crop.listingApprovalStatus !== ListingApprovalStatus.Approved) {
+      sendError(res, 'Crop listing is pending admin approval', 400);
       return;
     }
     if (crop.availability !== CropAvailability.Available) {

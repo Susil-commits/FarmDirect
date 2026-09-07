@@ -144,7 +144,9 @@ export default function ShoppingCart() {
         couponCode: appliedCoupon?.code || undefined,
       };
 
-      const idempotencyKey = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const idempotencyKey = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
 
       const result = await orderService.checkoutCart(payload, idempotencyKey);
       const createdOrderIds = result.orderIds || [];

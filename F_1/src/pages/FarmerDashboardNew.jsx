@@ -334,6 +334,21 @@ export default function FarmerDashboardNew() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+                            {crop.listingApprovalStatus === 'pending' && (
+                              <span className="px-3 py-1 bg-amber-100 text-amber-800 border border-amber-300 rounded-full text-xs font-semibold flex items-center gap-1">
+                                <Clock className="w-3.5 h-3.5 text-amber-600" /> Pending Admin Review
+                              </span>
+                            )}
+                            {crop.listingApprovalStatus === 'approved' && (
+                              <span className="px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full text-xs font-semibold flex items-center gap-1">
+                                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Live / Approved
+                              </span>
+                            )}
+                            {crop.listingApprovalStatus === 'rejected' && (
+                              <span className="px-3 py-1 bg-red-100 text-red-800 border border-red-300 rounded-full text-xs font-semibold flex items-center gap-1" title={crop.rejectionReason || 'Rejected by admin'}>
+                                <AlertCircle className="w-3.5 h-3.5 text-red-600" /> Rejected
+                              </span>
+                            )}
                             {interestedCount > 0 && (
                               <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold flex items-center gap-1">
                                 <Users className="w-4 h-4" /> {interestedCount} interested
@@ -344,6 +359,23 @@ export default function FarmerDashboardNew() {
                             </span>
                           </div>
                         </div>
+
+                        {crop.listingApprovalStatus === 'rejected' && (
+                          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 flex items-start gap-2">
+                            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-600" />
+                            <div>
+                              <span className="font-semibold">Listing Rejected by Admin:</span> {crop.rejectionReason || 'Please review our produce guidelines and update the listing.'}
+                            </div>
+                          </div>
+                        )}
+
+                        {crop.listingApprovalStatus === 'pending' && (
+                          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2">
+                            <Clock className="w-4 h-4 flex-shrink-0 text-amber-600" />
+                            <span>This listing is pending admin review and will be visible in the marketplace once approved.</span>
+                          </div>
+                        )}
+
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4 pb-4 border-b border-gray-200">
                           <div><p className="text-xs text-gray-600 mb-1">Price</p><p className="text-lg font-bold">₹{crop.price}/{crop.unit || 'kg'}</p></div>
                           <div><p className="text-xs text-gray-600 mb-1">Quantity</p><p className="text-lg font-bold">{crop.quantity} {crop.unit || 'kg'}</p></div>

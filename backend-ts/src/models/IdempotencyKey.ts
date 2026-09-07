@@ -2,6 +2,7 @@ import mongoose, { Schema, type Model, type Document } from 'mongoose';
 
 export interface IIdempotencyKey extends Document {
   key: string;
+  userId: mongoose.Types.ObjectId;
   status: 'pending' | 'completed' | 'failed';
   requestHash: string;
   responseBody: any | null;
@@ -12,7 +13,8 @@ export interface IIdempotencyKey extends Document {
 }
 
 const idempotencyKeySchema = new Schema<IIdempotencyKey>({
-  key: { type: String, required: true, unique: true },
+  key: { type: String, required: true },
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   status: { type: String, enum: ['pending', 'completed', 'failed'], required: true },
   requestHash: { type: String, required: true },
   responseBody: { type: Schema.Types.Mixed, default: null },
@@ -22,6 +24,7 @@ const idempotencyKeySchema = new Schema<IIdempotencyKey>({
   expiresAt: { type: Date, required: true }
 });
 
+idempotencyKeySchema.index({ key: 1, userId: 1 }, { unique: true });
 idempotencyKeySchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 const IdempotencyKey: Model<IIdempotencyKey> = mongoose.model<IIdempotencyKey>('IdempotencyKey', idempotencyKeySchema);

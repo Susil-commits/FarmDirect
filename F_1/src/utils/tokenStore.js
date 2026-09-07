@@ -1,26 +1,32 @@
-import { safeStorage } from './storage.js';
+// Pure in-memory access token storage to prevent XSS token theft.
+// Rehydration happens via httpOnly refresh cookie on app boot (AuthContext.jsx)
+// and silent refresh interceptors (api.js).
+let accessToken = null;
 
-let accessToken = safeStorage.getItem('token') || null;
+// Defensive cleanup of any legacy persisted token from previous sessions
+if (typeof window !== 'undefined') {
+  try {
+    window.localStorage?.removeItem('token');
+    window.sessionStorage?.removeItem('token');
+  } catch {}
+}
 
 export const getAccessToken = () => {
-  if (!accessToken) {
-    accessToken = safeStorage.getItem('token') || null;
-  }
   return accessToken;
 };
 
 export const setAccessToken = (token) => {
   accessToken = token || null;
-  if (token) {
-    safeStorage.setItem('token', token);
-  } else {
-    safeStorage.removeItem('token');
-  }
 };
 
 export const clearAccessToken = () => {
   accessToken = null;
-  safeStorage.removeItem('token');
+  if (typeof window !== 'undefined') {
+    try {
+      window.localStorage?.removeItem('token');
+      window.sessionStorage?.removeItem('token');
+    } catch {}
+  }
 };
 
 export default {

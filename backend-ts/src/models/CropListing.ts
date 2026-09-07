@@ -60,7 +60,7 @@ const cropListingSchema = new Schema<ICropListing>(
     listingApprovalStatus: {
       type: String,
       enum: Object.values(ListingApprovalStatus),
-      default: ListingApprovalStatus.Approved,
+      default: ListingApprovalStatus.Pending,
     },
     rejectionReason: String,
     interestedBuyers: [

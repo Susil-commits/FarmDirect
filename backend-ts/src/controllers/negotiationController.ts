@@ -7,7 +7,7 @@ import Order from '../models/Order.js';
 import Notification from '../models/Notification.js';
 import { sendError } from '../utils/apiResponse.js';
 import { notifyNegotiationUpdate, notifyOrderUpdate } from '../socket/eventHandlers.js';
-import { NegotiationStatus, OrderStatus, PaymentMethod, PaymentStatus, CropAvailability, CancelledBy, InterestedBuyerStatus } from '../types/enums.js';
+import { NegotiationStatus, OrderStatus, PaymentMethod, PaymentStatus, CropAvailability, CancelledBy, InterestedBuyerStatus, ListingApprovalStatus } from '../types/enums.js';
 import type { MakeOfferDto, RespondOfferDto } from '../types/index.js';
 
 export async function makeOffer(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -28,6 +28,7 @@ export async function makeOffer(req: Request, res: Response, next: NextFunction)
 
       const crop = await CropListing.findById(cropId).session(session);
       if (!crop) throw { status: 404, message: 'Crop not found' };
+      if (crop.listingApprovalStatus !== ListingApprovalStatus.Approved) throw { status: 400, message: 'Crop is pending admin approval' };
       if (crop.availability !== CropAvailability.Available) throw { status: 400, message: 'Crop is no longer available' };
       if (crop.quantity < quantity) throw { status: 400, message: `Insufficient quantity. Available: ${crop.quantity}` };
 
