@@ -2,6 +2,7 @@ import type { ErrorRequestHandler } from 'express';
 import mongoose from 'mongoose';
 import { env } from '../config/env.js';
 import { ApiError } from '../utils/apiError.js';
+import { logger } from '../utils/logger.js';
 
 interface MongooseValidationError extends Error {
   errors: Record<string, { message: string }>;
@@ -13,9 +14,11 @@ interface MongooseDuplicateKeyError extends Error {
 }
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, _next): void => {
+  const reqLog = req.log || logger;
+
   if (err instanceof ApiError) {
     if (!err.isOperational) {
-      console.error(`[${req.headers['x-request-id'] ?? 'no-id'}] Non-operational ApiError:`, err);
+      reqLog.error({ err, code: err.code }, 'Non-operational ApiError');
     }
     res.status(err.statusCode).json({
       success: false,
@@ -79,11 +82,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next): void =>
     return;
   }
 
-  const reqId = req.headers['x-request-id'] ?? 'no-id';
-  console.error(`[${reqId}] Unhandled Error: ${err.message ?? err}`);
-  if (err.stack) {
-    console.error(err.stack);
-  }
+  reqLog.error({ err, stack: err.stack }, `Unhandled Error: ${err.message ?? err}`);
 
   const statusCode = typeof err.status === 'number' ? err.status :
     typeof err.statusCode === 'number' ? err.statusCode : 500;

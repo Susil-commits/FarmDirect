@@ -15,8 +15,6 @@ import { env } from './config/env.js';
 import errorHandler from './middleware/errorHandler.js';
 import { requestId } from './middleware/requestId.js';
 import { resetServerStartTime, getServerStartTime } from './utils/serverTime.js';
-import { uploadSingleFile } from './middleware/localUpload.js';
-import { generatePresignedUploadParams } from './utils/cloudinaryService.js';
 import { trimStrings } from './middleware/sanitizer.js';
 
 import { getUploadsRoot } from './config/localStorage.js';
@@ -39,6 +37,7 @@ import cartRoutes from './routes/cartRoutes.js';
 import negotiationRoutes from './routes/negotiationRoutes.js';
 import healthRoutes from './routes/healthRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 
@@ -48,7 +47,14 @@ const app = express();
 
 app.set('trust proxy', 1);
 
-app.use('/uploads', express.static(getUploadsRoot()));
+app.use('/uploads', express.static(getUploadsRoot(), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.svg')) {
+      res.setHeader('Content-Disposition', 'attachment; filename="file.svg"');
+      res.setHeader('Content-Type', 'image/svg+xml');
+    }
+  },
+}));
 
 resetServerStartTime();
 
@@ -125,7 +131,14 @@ const pollingLimiter = rateLimit({
 app.use('/api/messages/unread', pollingLimiter);
 app.use('/api/notifications/unread', pollingLimiter);
 
-app.use(express.json({ limit: '10kb' }));
+app.use(
+  express.json({
+    limit: '100kb',
+    verify: (req: Request, _res: Response, buf: Buffer) => {
+      req.rawBody = buf;
+    },
+  }),
+);
 app.use(express.urlencoded({ limit: '10kb', extended: true }));
 app.use(cookieParser());
 app.use(mongoSanitize());
@@ -200,26 +213,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/negotiations', negotiationRoutes);
 app.use('/api/ai', aiRoutes);
 
-app.post('/api/upload/presign', (req: Request, res: Response): void => {
-
-  const { folder = 'general' } = req.body as { folder?: string };
-  const params = generatePresignedUploadParams(folder);
-  res.status(200).json({ success: true, ...params });
-});
-
-app.post('/api/upload', uploadSingleFile('general'), (req: Request, res: Response): void => {
-  if (!req.uploadedFile) {
-    res.status(400).json({ success: false, message: 'No file uploaded' });
-    return;
-  }
-  res.status(200).json({
-    message: 'File uploaded successfully',
-    url: req.uploadedFile.url,
-    fileName: req.uploadedFile.fileName,
-    fileSize: req.uploadedFile.fileSize,
-    mimeType: req.uploadedFile.mimeType,
-  });
-});
+app.use('/api/upload', uploadRoutes);
 
 app.use('*', (req: Request, res: Response) => {
   res.status(404).json({ success: false, message: `Route not found: ${req.method} ${req.originalUrl}` });

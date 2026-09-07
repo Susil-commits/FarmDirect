@@ -232,8 +232,13 @@ export default function HeroCreamSection({ onExploreClick, onGetStarted }) {
         >
           {/* Farm Media Image */}
           <img
-            src="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=2000&q=80"
+            src="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1200&q=75"
+            srcSet="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=640&q=75 640w, https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1200&q=75 1200w"
+            sizes="(max-width: 768px) 100vw, 1200px"
             alt="Lush green organic farm field at sunrise"
+            fetchPriority="high"
+            loading="eager"
+            decoding="async"
             className="w-full h-full object-cover filter brightness-[0.92] contrast-[1.05] transition-transform duration-700 hover:scale-105"
           />
 

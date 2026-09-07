@@ -13,6 +13,8 @@ export async function connectDB(retries = MAX_RETRIES): Promise<typeof mongoose>
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
+
+    await verifyTransactionSupport(conn);
     
     return conn;
   } catch (error) {
@@ -35,6 +37,28 @@ export async function disconnectDB(): Promise<void> {
     await mongoose.disconnect();
   } catch (error) {
     console.error('Error disconnecting MongoDB:', error);
+  }
+}
+
+async function verifyTransactionSupport(conn: typeof mongoose): Promise<void> {
+  try {
+    const session = await conn.startSession();
+    try {
+      await session.withTransaction(async () => {
+        // Trivial no-op to verify replica set / ACID transaction support
+      });
+      console.log('MongoDB replica set and transaction support verified.');
+    } finally {
+      await session.endSession();
+    }
+  } catch (err: any) {
+    const msg = `MongoDB deployment does not support transactions: ${err?.message || err}. A replica set or MongoDB Atlas is required for ACID transactions (orders, checkout).`;
+    if (env.isProd) {
+      console.error(`FATAL STARTUP ERROR: ${msg}`);
+      throw new Error(msg);
+    } else {
+      console.warn(`[WARNING] ${msg} In development mode, transactions may fail if not connected to a replica set.`);
+    }
   }
 }
 

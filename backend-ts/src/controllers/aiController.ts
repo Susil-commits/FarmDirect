@@ -21,12 +21,48 @@ export const handleAiChat = asyncHandler(async (req: Request, res: Response) => 
     return sendError(res, 'Message is too long. Please limit your question to 1200 characters.', 400);
   }
 
+  const authenticatedRole = (req.user?.role as 'farmer' | 'buyer' | 'admin') || context?.role;
+
   const result = await aiService.processMessage({
     message: message.trim(),
-    context,
+    context: {
+      ...context,
+      role: authenticatedRole,
+    },
   });
 
   return res.status(200).json(result);
+});
+
+export const handleGuestAiChat = asyncHandler(async (req: Request, res: Response) => {
+  const { message, context } = req.body as {
+    message?: string;
+    context?: {
+      currentPath?: string;
+      cropName?: string;
+    };
+  };
+
+  if (!message || typeof message !== 'string' || !message.trim()) {
+    return sendError(res, 'Please provide a valid question or message.', 400);
+  }
+
+  if (message.trim().length > 250) {
+    return sendError(res, 'Guest message preview is limited to 250 characters. Please sign in for full chat.', 400);
+  }
+
+  const result = await aiService.processMessage({
+    message: message.trim(),
+    context: {
+      ...context,
+      role: 'guest',
+    },
+  });
+
+  return res.status(200).json({
+    ...result,
+    isDemo: true,
+  });
 });
 
 export const getPromptSuggestions = asyncHandler(async (req: Request, res: Response) => {

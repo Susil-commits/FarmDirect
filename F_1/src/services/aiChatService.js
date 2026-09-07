@@ -2,10 +2,14 @@ import api from './api';
 
 export async function sendAiChatMessage(message, context = {}) {
   try {
+    const hasAuthToken = Boolean(localStorage.getItem('token') || sessionStorage.getItem('token'));
+    const endpoint = hasAuthToken ? '/ai/chat' : '/ai/try';
+    const payloadMessage = hasAuthToken ? message : message.slice(0, 250);
+
     const response = await api.post(
-      '/ai/chat',
+      endpoint,
       {
-        message,
+        message: payloadMessage,
         context,
       },
       {

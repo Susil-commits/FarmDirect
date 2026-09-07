@@ -45,11 +45,13 @@ export interface EnvConfig {
   uploadDir: string;
   razorpayKeyId?: string;
   razorpayKeySecret?: string;
+  razorpayWebhookSecret?: string;
   googleClientId?: string;
   googleClientSecret?: string;
   githubClientId?: string;
   githubClientSecret?: string;
   geminiApiKey?: string;
+  sentryDsn?: string;
 }
 
 function loadEnv(): EnvConfig {
@@ -59,6 +61,19 @@ function loadEnv(): EnvConfig {
     required.push(['MONGODB_URI', process.env.MONGODB_URI]);
     required.push(['JWT_SECRET', process.env.JWT_SECRET]);
     required.push(['JWT_REFRESH_SECRET', process.env.JWT_REFRESH_SECRET]);
+
+    // Force Cloudinary in production to prevent silent data loss on ephemeral disks
+    const hasCloudinaryUrl = Boolean(process.env.CLOUDINARY_URL);
+    const hasCloudinaryKeys = Boolean(
+      process.env.CLOUDINARY_CLOUD_NAME &&
+      process.env.CLOUDINARY_API_KEY &&
+      process.env.CLOUDINARY_API_SECRET
+    );
+    if (!hasCloudinaryUrl && !hasCloudinaryKeys) {
+      throw new Error(
+        'Missing required Cloudinary credentials in production: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET (or CLOUDINARY_URL). Local disk storage is forbidden in production to prevent silent data loss on container restarts.'
+      );
+    }
   }
 
   const missing = required.filter(([, v]) => !v).map(([k]) => k);
@@ -85,7 +100,7 @@ function loadEnv(): EnvConfig {
     port: parseInt(process.env.PORT || '5000', 10),
     mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/farmdirect',
     jwtSecret: process.env.JWT_SECRET || 'dev_secret_change_me',
-    jwtExpire: process.env.JWT_EXPIRE || '7d',
+    jwtExpire: process.env.JWT_EXPIRE || '15m',
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'dev_refresh_secret_change_me',
     jwtRefreshExpire: process.env.JWT_REFRESH_EXPIRE || '30d',
     corsOrigins: parseStringList(
@@ -107,11 +122,13 @@ function loadEnv(): EnvConfig {
     uploadDir: process.env.UPLOAD_DIR || './uploads',
     razorpayKeyId: process.env.RAZORPAY_KEY_ID,
     razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET,
+    razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
     googleClientId: process.env.GOOGLE_CLIENT_ID,
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
     githubClientId: process.env.GITHUB_CLIENT_ID,
     githubClientSecret: process.env.GITHUB_CLIENT_SECRET,
     geminiApiKey: process.env.GEMINI_API_KEY,
+    sentryDsn: process.env.SENTRY_DSN,
   };
 }
 

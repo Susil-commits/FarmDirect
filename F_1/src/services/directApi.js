@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { getAccessToken, clearAccessToken } from '../utils/tokenStore.js';
 import { safeStorage } from '../utils/storage.js';
+import { refreshAuthToken } from './api.js';
 
 const BACKEND_URL = import.meta.env.VITE_API_DIRECT_URL || 'http://localhost:10000/api';
 
@@ -28,11 +29,24 @@ directApi.interceptors.request.use((config) => {
 
 directApi.interceptors.response.use(
   (response) => {
-    if (import.meta.env.DEV) {
-    }
     return response;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest?._retry) {
+      originalRequest._retry = true;
+      try {
+        const token = await refreshAuthToken();
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return directApi(originalRequest);
+      } catch (refreshErr) {
+        clearAccessToken();
+        safeStorage.removeItem('userData');
+        return Promise.reject(refreshErr);
+      }
+    }
+
     if (import.meta.env.DEV) {
       console.error(`❌ [directApi] Error from ${error.config?.url}:`, error.message);
       if (error.response) {
@@ -40,10 +54,6 @@ directApi.interceptors.response.use(
       }
     }
     
-    if (error.response?.status === 401) {
-      clearAccessToken();
-      safeStorage.removeItem('userData');
-    }
     return Promise.reject(error);
   }
 );

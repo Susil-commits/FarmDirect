@@ -11,6 +11,9 @@ declare module 'express-serve-static-core' {
     uploadedFile?: UploadedFileMeta;
     uploadedFiles?: UploadedFileMetaWithField[];
     uploadError?: string;
+    rawBody?: Buffer;
+    requestId?: string;
+    log?: import('pino').Logger;
   }
 }
 
@@ -23,6 +26,9 @@ declare global {
       uploadedFile?: UploadedFileMeta;
       uploadedFiles?: UploadedFileMetaWithField[];
       uploadError?: string;
+      rawBody?: Buffer;
+      requestId?: string;
+      log?: import('pino').Logger;
     }
   }
 }

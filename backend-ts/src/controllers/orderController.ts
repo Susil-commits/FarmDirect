@@ -81,99 +81,131 @@ async function recordCropCompletion(order: OrderLike): Promise<void> {
 
 export async function startOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { cropId, buyerId } = req.body as { cropId?: string; buyerId?: string };
-    if (!cropId || !buyerId) {
-      sendError(res, 'Crop ID and Buyer ID are required', 400);
-      return;
-    }
-
-    const crop = await CropListing.findById(cropId);
-    if (!crop) {
-      sendError(res, 'Crop not found', 404);
-      return;
-    }
-    if (crop.farmerId.toString() !== req.user!._id.toString()) {
-      sendError(res, 'Only the crop owner can start an order', 403);
-      return;
-    }
-    if (crop.availability !== CropAvailability.Available) {
-      sendError(res, 'This crop is no longer available', 400);
-      return;
-    }
-    if (!crop.quantity || crop.quantity <= 0) {
-      sendError(res, 'Insufficient quantity available for this crop', 400);
-      return;
-    }
-
-    const interestEntry = crop.interestedBuyers.find(
-      (ib) => ib.buyerId.toString() === buyerId && ib.status === 'interested',
-    );
-    if (!interestEntry) {
-      sendError(res, 'This buyer has not marked interest in this crop', 400);
-      return;
-    }
-
-    const existingOrder = await Order.findOne({ cropId, buyerId, orderStatus: { $nin: ['cancelled', 'completed'] } });
-    if (existingOrder) {
-      sendError(res, 'An active order already exists for this buyer and crop', 400);
-      return;
-    }
-
-    const buyer = await User.findById(buyerId).select('firstName lastName name phone email city state');
-    if (!buyer) {
-      sendError(res, 'Buyer not found', 404);
-      return;
-    }
-
-    const orderQty = 1;
-    const totalAmount = crop.price * orderQty;
-
-    const order = await Order.create({
-      orderNumber: 'ORD-' + randomUUID().replace(/-/g, '').substring(0, 12).toUpperCase(),
-      buyerId,
-      farmerId: req.user!._id,
-      cropId: crop._id,
-      cropName: crop.cropName,
-      quantity: orderQty,
-      unitPrice: crop.price,
-      totalAmount,
-      pickupLocation: crop.pickupLocation,
-      farmerContact: crop.contactNumber,
-      buyerContact: buyer.phone || '',
-      paymentMethod: PaymentMethod.Cod,
-      paymentStatus: PaymentStatus.Pending,
-      orderStatus: OrderStatus.Confirmed,
-      timeline: [{ event: 'ORDER_STARTED', description: 'Farmer has started the order.', timestamp: new Date() }],
-    });
-
-    const updatedCrop = await CropListing.findOneAndUpdate(
-      { _id: cropId, quantity: { $gte: orderQty } },
-      {
-        $inc: { quantity: -orderQty, sold: orderQty },
-        $set: { 'interestedBuyers.$[elem].status': 'ordered', 'interestedBuyers.$[elem].orderId': order._id },
-      },
-      { arrayFilters: [{ 'elem.buyerId': buyerId }], new: true },
-    );
-    if (!updatedCrop) {
-      await Order.findByIdAndDelete(order._id);
-      sendError(res, 'Insufficient stock — the crop quantity changed before your order was confirmed', 400);
-      return;
-    }
-    if (updatedCrop.quantity <= 0) {
-      await CropListing.findByIdAndUpdate(cropId, { availability: CropAvailability.NotAvailable });
-    }
+    const session = await mongoose.startSession();
+    let order: any;
+    let cropName = '';
 
     try {
-      await Notification.create({
-        userId: buyerId, title: 'Order Started by Farmer', message: `Farmer has started order #${order.orderNumber} for "${crop.cropName}".`,
-        type: 'order', relatedId: String(order._id), priority: 'high', actionUrl: `/buyer/orders/${order._id}`,
-        data: { orderId: order._id, orderNumber: order.orderNumber, cropName: crop.cropName, farmerId: req.user!._id },
+      await session.withTransaction(async () => {
+        const { cropId, buyerId } = req.body as { cropId?: string; buyerId?: string };
+        if (!cropId || !buyerId) {
+          throw { status: 400, message: 'Crop ID and Buyer ID are required' };
+        }
+
+        const crop = await CropListing.findById(cropId).session(session);
+        if (!crop) {
+          throw { status: 404, message: 'Crop not found' };
+        }
+        if (crop.farmerId.toString() !== req.user!._id.toString()) {
+          throw { status: 403, message: 'Only the crop owner can start an order' };
+        }
+        if (crop.availability !== CropAvailability.Available) {
+          throw { status: 400, message: 'This crop is no longer available' };
+        }
+        if (!crop.quantity || crop.quantity <= 0) {
+          throw { status: 400, message: 'Insufficient quantity available for this crop' };
+        }
+
+        const interestEntry = crop.interestedBuyers.find(
+          (ib) => ib.buyerId.toString() === buyerId && ib.status === 'interested',
+        );
+        if (!interestEntry) {
+          throw { status: 400, message: 'This buyer has not marked interest in this crop' };
+        }
+
+        const existingOrder = await Order.findOne({
+          cropId,
+          buyerId,
+          orderStatus: { $nin: ['cancelled', 'completed'] },
+        }).session(session);
+
+        if (existingOrder) {
+          throw { status: 400, message: 'An active order already exists for this buyer and crop' };
+        }
+
+        const buyer = await User.findById(buyerId)
+          .select('firstName lastName name phone email city state')
+          .session(session);
+        if (!buyer) {
+          throw { status: 404, message: 'Buyer not found' };
+        }
+
+        const orderQty = 1;
+        const totalAmount = crop.price * orderQty;
+
+        const [createdOrder] = await Order.create(
+          [
+            {
+              orderNumber: 'ORD-' + randomUUID().replace(/-/g, '').substring(0, 12).toUpperCase(),
+              buyerId,
+              farmerId: req.user!._id,
+              cropId: crop._id,
+              cropName: crop.cropName,
+              quantity: orderQty,
+              unitPrice: crop.price,
+              totalAmount,
+              pickupLocation: crop.pickupLocation,
+              farmerContact: crop.contactNumber,
+              buyerContact: buyer.phone || '',
+              paymentMethod: PaymentMethod.Cod,
+              paymentStatus: PaymentStatus.Pending,
+              orderStatus: OrderStatus.Confirmed,
+              timeline: [{ event: 'ORDER_STARTED', description: 'Farmer has started the order.', timestamp: new Date() }],
+            },
+          ],
+          { session },
+        );
+
+        const updatedCrop = await CropListing.findOneAndUpdate(
+          { _id: cropId, quantity: { $gte: orderQty } },
+          {
+            $inc: { quantity: -orderQty, sold: orderQty },
+            $set: { 'interestedBuyers.$[elem].status': 'ordered', 'interestedBuyers.$[elem].orderId': createdOrder._id },
+          },
+          { arrayFilters: [{ 'elem.buyerId': buyerId }], new: true, session },
+        );
+
+        if (!updatedCrop) {
+          throw { status: 400, message: 'Insufficient stock — the crop quantity changed before your order was confirmed' };
+        }
+
+        if (updatedCrop.quantity <= 0) {
+          await CropListing.findByIdAndUpdate(cropId, { availability: CropAvailability.NotAvailable }, { session });
+        }
+
+        order = createdOrder;
+        cropName = crop.cropName;
       });
-    } catch (notifErr) {
-      console.error('Failed to create start order notification:', notifErr);
+    } catch (err: any) {
+      if (err.status) {
+        sendError(res, err.message, err.status);
+      } else {
+        next(err);
+      }
+      return;
+    } finally {
+      await session.endSession();
     }
 
-    notifyOrderUpdate(order, 'order:created');
+    if (order) {
+      try {
+        await Notification.create({
+          userId: req.body.buyerId,
+          title: 'Order Started by Farmer',
+          message: `Farmer has started order #${order.orderNumber} for "${cropName}".`,
+          type: 'order',
+          relatedId: String(order._id),
+          priority: 'high',
+          actionUrl: `/buyer/orders/${order._id}`,
+          data: { orderId: order._id, orderNumber: order.orderNumber, cropName, farmerId: req.user!._id },
+        });
+      } catch (notifErr) {
+        console.error('Failed to create start order notification:', notifErr);
+      }
+
+      notifyOrderUpdate(order, 'order:created');
+    }
+
     res.status(201).json({ message: 'Order started successfully! Buyer has been notified.', order });
   } catch (error) {
     next(error);

@@ -220,12 +220,31 @@ export const getCropFallbackImage = (categoryOrName = '') => {
   return CROP_FALLBACK_IMAGES.default;
 };
 
-export const getImageUrl = (url, categoryOrName = '') => {
+export const getImageUrl = (url, categoryOrName = '', options = {}) => {
   if (!url || typeof url !== 'string' || url.trim() === '') {
     return getCropFallbackImage(categoryOrName);
   }
 
   const cleanUrl = url.trim();
+
+  // Automatically apply WebP/AVIF and compression transformations to Cloudinary assets
+  if (cleanUrl.includes('res.cloudinary.com') && cleanUrl.includes('/upload/')) {
+    if (!cleanUrl.includes('/upload/f_auto') && !cleanUrl.includes('/upload/q_auto')) {
+      const width = options.width || 800;
+      const transform = `f_auto,q_auto,w_${width},c_limit`;
+      return cleanUrl.replace('/upload/', `/upload/${transform}/`);
+    }
+    return cleanUrl;
+  }
+
+  // Optimize Unsplash images with auto format & quality
+  if (cleanUrl.includes('images.unsplash.com')) {
+    if (!cleanUrl.includes('auto=format')) {
+      const sep = cleanUrl.includes('?') ? '&' : '?';
+      return `${cleanUrl}${sep}auto=format&fit=crop&q=75`;
+    }
+    return cleanUrl;
+  }
 
   if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://') || cleanUrl.startsWith('data:')) {
     return cleanUrl;

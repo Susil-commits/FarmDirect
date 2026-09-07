@@ -9,6 +9,7 @@ import { initSocket } from './socket/socketManager.js';
 import { connectRedis, redisClient } from './config/redis.js';
 import { startAnomalyWorker } from './workers/anomalyWorker.js';
 import { startOutboxWorker } from './workers/outboxWorker.js';
+import { startPaymentReconciliationWorker, stopPaymentReconciliationWorker } from './workers/paymentReconciliationWorker.js';
 
 const httpServer: HttpServer = createServer(app);
 
@@ -19,6 +20,7 @@ let outboxWorkerInstance: any = null;
 
 function gracefulShutdown(signal: string): void {
   console.log(`Received ${signal}, shutting down gracefully...`);
+  stopPaymentReconciliationWorker();
   
   if (workerInstance) {
     workerInstance.close().then(() => {
@@ -62,6 +64,7 @@ async function start(): Promise<void> {
   
   workerInstance = startAnomalyWorker();
   outboxWorkerInstance = startOutboxWorker();
+  startPaymentReconciliationWorker();
   
   const PORT = env.port;
   httpServer.listen(PORT, () => {
@@ -88,7 +91,11 @@ if (cluster.isPrimary) {
   });
 
   setInterval(() => {
-    fetch(`http://localhost:${env.port}/api/health`)
+    const pingUrl = process.env.RENDER_EXTERNAL_URL
+      ? `${process.env.RENDER_EXTERNAL_URL.replace(/\/$/, '')}/api/health`
+      : `http://localhost:${env.port}/api/health`;
+
+    fetch(pingUrl)
       .then(() => console.log('Self-ping successful (Keeping instance warm)'))
       .catch((err) => console.error('Self-ping failed:', err.message));
   }, 10 * 60 * 1000);
