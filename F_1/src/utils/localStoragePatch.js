@@ -1,7 +1,7 @@
 
 try {
   const originalSetItem = window.localStorage.setItem;
-  window.localStorage.setItem = function(key, value) {
+  window.localStorage.setItem = function(key, _value) {
     try {
       originalSetItem.apply(this, arguments);
     } catch (e) {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, X, Clock, Zap } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useRouter } from '../hooks/useRouter';
 import { useSearch } from '../hooks/useSearch';
 import { cropService } from '../services/appService';
@@ -7,6 +8,7 @@ import './SearchBar.css';
 import { getImageUrl } from '../utils/formatters';
 
 export default function SearchBar() {
+  const { t } = useTranslation();
   const [crops, setCrops] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const searchInputRef = useRef(null);
@@ -90,13 +92,13 @@ export default function SearchBar() {
           <input
             ref={searchInputRef}
             type="text"
-            placeholder="Search crops, farmers..."
+            placeholder={t('navbar.search_placeholder', 'Search crops, farmers...')}
             value={query}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onFocus={() => setIsOpen(true)}
             className="search-input"
-            aria-label="Search for crops and farmers"
+            aria-label={t('navbar.search_placeholder', 'Search crops, farmers...')}
             aria-autocomplete="list"
             role="combobox"
             aria-expanded={isOpen}
@@ -105,8 +107,8 @@ export default function SearchBar() {
             <button
               onClick={clearQuery}
               className="search-clear"
-              title="Clear search"
-              aria-label="Clear search"
+              title={t('navbar.clear_search', 'Clear search')}
+              aria-label={t('navbar.clear_search', 'Clear search')}
             >
               <X size={18} />
             </button>
@@ -121,7 +123,7 @@ export default function SearchBar() {
               <div className="dropdown-section">
                 <div className="dropdown-section-header">
                   <Clock size={14} />
-                  <span>Recent Searches</span>
+                  <span>{t('navbar.search_recent', 'Recent Searches')}</span>
                 </div>
                 <div className="dropdown-list">
                   {recentSearches.map((search, index) => (
@@ -143,7 +145,7 @@ export default function SearchBar() {
                   onClick={clearRecentSearches}
                   className="dropdown-action"
                 >
-                  Clear recent searches
+                  {t('navbar.search_clear_recent', 'Clear recent searches')}
                 </button>
               </div>
             )}
@@ -155,7 +157,7 @@ export default function SearchBar() {
                   <div className="dropdown-section">
                     <div className="dropdown-section-header">
                       <Zap size={14} />
-                      <span>Search Results ({searchResults.length})</span>
+                      <span>{t('navbar.search_results_count', { count: searchResults.length, defaultValue: `Search Results (${searchResults.length})` })}</span>
                     </div>
                     <div className="dropdown-list">
                       {searchResults.map((crop) => {
@@ -198,8 +200,8 @@ export default function SearchBar() {
                 ) : (
                   <div className="dropdown-empty">
                     <div className="empty-icon">🔍</div>
-                    <p className="empty-text">No results for "{query}"</p>
-                    <p className="empty-hint">Try searching with different keywords</p>
+                    <p className="empty-text">{t('navbar.search_no_results', { query, defaultValue: `No results for "${query}"` })}</p>
+                    <p className="empty-hint">{t('navbar.search_try_different', 'Try searching with different keywords')}</p>
                   </div>
                 )}
 
@@ -209,7 +211,7 @@ export default function SearchBar() {
                     onClick={() => handleSearch(query)}
                     className="search-all-btn"
                   >
-                    Search "{query}" in marketplace
+                    {t('navbar.search_in_marketplace', { query, defaultValue: `Search "${query}" in marketplace` })}
                   </button>
                 </div>
               </>
@@ -219,8 +221,8 @@ export default function SearchBar() {
             {!hasQuery && recentSearches.length === 0 && (
               <div className="dropdown-empty">
                 <div className="empty-icon">💡</div>
-                <p className="empty-text">Start typing to search</p>
-                <p className="empty-hint">Search crops, farmers, or categories</p>
+                <p className="empty-text">{t('navbar.search_start_typing', 'Start typing to search')}</p>
+                <p className="empty-hint">{t('navbar.search_hint', 'Search crops, farmers, or categories')}</p>
               </div>
             )}
           </div>

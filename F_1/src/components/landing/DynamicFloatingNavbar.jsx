@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Sprout, ArrowRight, Menu, X, ShoppingBag } from 'lucide-react';
 
 export default function DynamicFloatingNavbar({ activeSection = 'cream', onNavigate }) {

@@ -7,6 +7,7 @@ import { sendError } from '../utils/apiResponse.js';
 import { OrderStatus, UserRole } from '../types/enums.js';
 import type { Request, Response } from 'express';
 import mongoose, { type Types } from 'mongoose';
+import { parsePagination } from '../utils/pagination.js';
 
 async function updateCropRating(cropId: Types.ObjectId | string): Promise<void> {
   const targetCropId = typeof cropId === 'string' ? new mongoose.Types.ObjectId(cropId) : cropId;
@@ -76,24 +77,24 @@ export const addReview = asyncHandler(async (req: Request, res: Response) => {
 
 export const getReviews = asyncHandler(async (req: Request, res: Response) => {
   const { cropId } = req.params;
-  const { page = '1', limit = '10', sortBy = 'newest' } = req.query as Record<string, string>;
+  const { sortBy = 'newest' } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 10, maxLimit: 50 });
   const crop = await CropListing.findById(cropId);
   if (!crop) return sendError(res, 'Crop not found', 404);
 
-  const skip = (Number(page) - 1) * Number(limit);
   let sortOption: Record<string, 1 | -1> = {};
   if (sortBy === 'newest') sortOption = { createdAt: -1 };
   else if (sortBy === 'highest') sortOption = { rating: -1 };
   else if (sortBy === 'lowest') sortOption = { rating: 1 };
 
   const [reviews, total] = await Promise.all([
-    Review.find({ cropId }).lean().populate('userId', 'firstName lastName profilePicture').skip(skip).limit(Number(limit)).sort(sortOption),
+    Review.find({ cropId }).lean().populate('userId', 'firstName lastName profilePicture').skip(skip).limit(limit).sort(sortOption),
     Review.countDocuments({ cropId }),
   ]);
 
   res.status(200).json({
     success: true, data: reviews,
-    pagination: { page: Number(page), limit: Number(limit), total, pages: Math.ceil(total / Number(limit)) },
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   });
 });
 
@@ -116,19 +117,18 @@ export const deleteReview = asyncHandler(async (req: Request, res: Response) => 
 
 export const getFarmerReviews = asyncHandler(async (req: Request, res: Response) => {
   const { farmerId } = req.params;
-  const { page = '1', limit = '10' } = req.query as Record<string, string>;
-  const skip = (Number(page) - 1) * Number(limit);
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 10, maxLimit: 50 });
   const crops = await CropListing.find({ farmerId }).lean();
   const cropIds = crops.map((crop) => crop._id);
 
   const [reviews, total] = await Promise.all([
-    Review.find({ cropId: { $in: cropIds } }).lean().populate('userId', 'firstName lastName profilePicture').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+    Review.find({ cropId: { $in: cropIds } }).lean().populate('userId', 'firstName lastName profilePicture').skip(skip).limit(limit).sort({ createdAt: -1 }),
     Review.countDocuments({ cropId: { $in: cropIds } }),
   ]);
 
   res.status(200).json({
     success: true, data: reviews,
-    pagination: { page: Number(page), limit: Number(limit), total, pages: Math.ceil(total / Number(limit)) },
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   });
 });
 

@@ -5,6 +5,7 @@ import Order from '../models/Order.js';
 import User from '../models/User.js';
 import Wishlist from '../models/Wishlist.js';
 import type { Request, Response } from 'express';
+import { parsePagination } from '../utils/pagination.js';
 
 interface CacheEntry<T> {
   data: T;
@@ -72,12 +73,13 @@ export const getBuyerWishlist = asyncHandler(async (req: Request, res: Response)
 });
 
 export const getPublicApprovedCrops = asyncHandler(async (req: Request, res: Response) => {
-  const { page = '1', limit = '20', search = '', category = '' } = req.query as Record<string, string>;
+  const { search = '', category = '' } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 50 });
   const query: Record<string, unknown> = { listingApprovalStatus: 'approved' };
   if (search) query.$or = [{ cropName: { $regex: search, $options: 'i' } }, { description: { $regex: search, $options: 'i' } }];
   if (category) query.category = category;
 
-  const isCacheable = !search && !category && page === '1';
+  const isCacheable = !search && !category && page === 1;
   if (isCacheable && publicCropsCache && (Date.now() - publicCropsCache.timestamp < CACHE_TTL)) {
     return res.status(200).json(publicCropsCache.data);
   }
@@ -85,11 +87,11 @@ export const getPublicApprovedCrops = asyncHandler(async (req: Request, res: Res
   try {
     const crops = await CropListing.find(query).lean()
       .populate({ path: 'farmerId', match: { kycStatus: 'verified' }, select: 'name email phone address rating' })
-      .limit(Number(limit) * 1).skip((Number(page) - 1) * Number(limit)).sort({ createdAt: -1 });
+      .limit(limit).skip(skip).sort({ createdAt: -1 });
     const validCrops = crops.filter((c) => c.farmerId !== null);
     const total = await CropListing.countDocuments(query);
     
-    const responseData = { success: true, count: validCrops.length, total, pages: Math.ceil(total / Number(limit)), currentPage: Number(page), data: validCrops };
+    const responseData = { success: true, count: validCrops.length, total, pages: Math.ceil(total / limit), currentPage: page, data: validCrops };
     
     if (isCacheable) {
       publicCropsCache = { data: responseData, timestamp: Date.now() };
@@ -116,7 +118,7 @@ export const getPublicFarmerProfile = asyncHandler(async (req: Request, res: Res
 export const searchCrops = asyncHandler(async (req: Request, res: Response) => {
   const { q, sortBy = 'newest', priceMin = '0', priceMax = '10000' } = req.query as Record<string, string>;
   const query: Record<string, unknown> = { listingApprovalStatus: 'approved', price: { $gte: Number(priceMin), $lte: Number(priceMax) } };
-  if (q) query.$or = [{ cropName: { $regex: q, $options: 'i' } }, { description: { $regex: q, $options: 'i' } }];
+  if (q) query.$or = [{ cropName: { $regex: searchRegex(q), $options: 'i' } }, { description: { $regex: searchRegex(q), $options: 'i' } }];
   let sort: Record<string, 1 | -1> = { createdAt: -1 };
   if (sortBy === 'price-low') sort = { price: 1 };
   if (sortBy === 'price-high') sort = { price: -1 };
@@ -126,11 +128,15 @@ export const searchCrops = asyncHandler(async (req: Request, res: Response) => {
   res.status(200).json({ success: true, count: validCrops.length, data: validCrops });
 });
 
+function searchRegex(term: string): string {
+  return term;
+}
+
 export const getAdminAllCrops = asyncHandler(async (req: Request, res: Response) => {
   const { status = 'all' } = req.query as Record<string, string>;
   const query: Record<string, unknown> = {};
   if (status !== 'all') query.listingApprovalStatus = status;
-  const crops = await CropListing.find(query).lean().populate('farmerId', 'name email kycStatus').sort({ createdAt: -1 });
+  const crops = await CropListing.find(query).lean().populate('farmerId', 'name email kycStatus').sort({ createdAt: -1 }).limit(250);
   res.status(200).json({
     success: true,
     stats: {
@@ -144,7 +150,7 @@ export const getAdminAllCrops = asyncHandler(async (req: Request, res: Response)
 });
 
 export const getAdminAllOrders = asyncHandler(async (_req: Request, res: Response) => {
-  const orders = await Order.find().lean().populate('buyerId', 'name email phone').populate('farmerId', 'name email').populate('cropId', 'cropName price').sort({ createdAt: -1 });
+  const orders = await Order.find().lean().populate('buyerId', 'name email phone').populate('farmerId', 'name email').populate('cropId', 'cropName price').sort({ createdAt: -1 }).limit(250);
   res.status(200).json({
     success: true,
     stats: {
@@ -161,7 +167,7 @@ export const getAdminAllOrders = asyncHandler(async (_req: Request, res: Respons
 export const getAdminUsersByRole = asyncHandler(async (req: Request, res: Response) => {
   const { role } = req.params;
   if (!['farmer', 'buyer', 'admin'].includes(role)) return sendError(res, 'Invalid role', 400);
-  const users = await User.find({ role }).lean().select('-password').sort({ createdAt: -1 });
+  const users = await User.find({ role }).lean().select('-password').sort({ createdAt: -1 }).limit(250);
   res.status(200).json({
     success: true, role,
     stats: {

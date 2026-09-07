@@ -7,7 +7,7 @@ function isStorageAvailable() {
     window.localStorage.setItem(test, test);
     window.localStorage.removeItem(test);
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }

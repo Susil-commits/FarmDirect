@@ -5,7 +5,6 @@ import Card from '../components/common/Card';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation';
 import { useRouter } from '../context/RouterContext';
-import { useAuth } from '../context/AuthContext';
 import {
   ANIMATION_DELAYS,
   HERO_IMAGE,
@@ -22,7 +21,6 @@ import { ICON_MAP } from '../constants/iconMap';
 
 export default function StartShopping() {
   const { navigate } = useRouter();
-  const { user } = useAuth();
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
@@ -42,23 +40,6 @@ export default function StartShopping() {
     }
   }, [navigate]);
 
-  const handleMarketplaceAccess = useCallback(() => {
-    try {
-      if (!user) {
-        handleNavigation('/auth/login?next=/marketplace');
-        return;
-      }
-      
-      if (user.kycStatus !== VERIFICATION_STATUS.VERIFIED) {
-        handleNavigation('/verification/progress');
-        return;
-      }
-      
-      handleNavigation('/marketplace');
-    } catch (error) {
-      console.error('Marketplace access error:', error);
-    }
-  }, [user, handleNavigation]);
 
   const handleImageError = useCallback(() => {
     setImageError(true);

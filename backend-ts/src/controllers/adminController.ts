@@ -11,12 +11,13 @@ import AuditLog from '../models/AuditLog.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendError } from '../utils/apiResponse.js';
 import { invalidationStrategies } from '../utils/cache.js';
-import { notifyKYCUpdate, notifyUserStatusChange } from '../socket/eventHandlers.js';
+import { notifyKYCUpdate } from '../socket/eventHandlers.js';
 import { UserRole, UserStatus, KycStatus, OrderStatus, CancelledBy, PaymentStatus, CropStatus, CropAvailability } from '../types/enums.js';
 import type { Request, Response } from 'express';
 import type { Types, PipelineStage } from 'mongoose';
 import { AdminService } from '../services/adminService.js';
 import { getUploadsRoot } from '../config/localStorage.js';
+import { parsePagination } from '../utils/pagination.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -110,14 +111,13 @@ export const getDashboardStats = asyncHandler(async (_req: Request, res: Respons
 });
 
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
-  const { page = '1', limit = '20' } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query = buildQuery(req);
-  const skip = (Number(page) - 1) * Number(limit);
   const [users, total] = await Promise.all([
-    User.find(query).select('-password').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }).lean(),
+    User.find(query).select('-password').skip(skip).limit(limit).sort({ createdAt: -1 }).lean(),
     User.countDocuments(query),
   ]);
-  paginated(res, users, total, Number(page), Number(limit));
+  paginated(res, users, total, page, limit);
 });
 
 export const toggleUserStatus = asyncHandler(async (req: Request, res: Response) => {
@@ -225,8 +225,8 @@ export const debugGetAllUsersKYCStatus = asyncHandler(async (_req: Request, res:
 });
 
 export const getPendingKYC = asyncHandler(async (req: Request, res: Response) => {
-  const { page = '1', limit = '20', role } = req.query as Record<string, string>;
-  const skip = (Number(page) - 1) * Number(limit);
+  const { role } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = { kycStatus: KycStatus.Pending };
 
   if (role && role.toLowerCase() !== 'all' && role.toLowerCase() !== 'all_roles') {
@@ -237,15 +237,15 @@ export const getPendingKYC = asyncHandler(async (req: Request, res: Response) =>
   }
 
   const [users, total] = await Promise.all([
-    User.find(query).select('-password').skip(skip).limit(Number(limit)).sort({ kycSubmittedAt: -1, createdAt: -1 }).lean(),
+    User.find(query).select('-password').skip(skip).limit(limit).sort({ kycSubmittedAt: -1, createdAt: -1 }).lean(),
     User.countDocuments(query),
   ]);
-  paginated(res, users, total, Number(page), Number(limit));
+  paginated(res, users, total, page, limit);
 });
 
 export const getRejectedKYC = asyncHandler(async (req: Request, res: Response) => {
-  const { page = '1', limit = '20', role } = req.query as Record<string, string>;
-  const skip = (Number(page) - 1) * Number(limit);
+  const { role } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = { kycStatus: KycStatus.Rejected };
 
   if (role && role.toLowerCase() !== 'all' && role.toLowerCase() !== 'all_roles') {
@@ -256,23 +256,23 @@ export const getRejectedKYC = asyncHandler(async (req: Request, res: Response) =
   }
 
   const [users, total] = await Promise.all([
-    User.find(query).select('-password').skip(skip).limit(Number(limit)).sort({ updatedAt: -1, createdAt: -1 }).lean(),
+    User.find(query).select('-password').skip(skip).limit(limit).sort({ updatedAt: -1, createdAt: -1 }).lean(),
     User.countDocuments(query),
   ]);
-  paginated(res, users, total, Number(page), Number(limit));
+  paginated(res, users, total, page, limit);
 });
 
 export const getAllCrops = asyncHandler(async (req: Request, res: Response) => {
-  const { page = '1', limit = '20', status, search } = req.query as Record<string, string>;
-  const skip = (Number(page) - 1) * Number(limit);
+  const { status, search } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = {};
   if (status) query.status = status;
   if (search) query.$or = [{ cropName: { $regex: search, $options: 'i' } }, { category: { $regex: search, $options: 'i' } }];
   const [crops, total] = await Promise.all([
-    CropListing.find(query).lean().populate('farmerId', 'firstName lastName farmName').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+    CropListing.find(query).lean().populate('farmerId', 'firstName lastName farmName').skip(skip).limit(limit).sort({ createdAt: -1 }),
     CropListing.countDocuments(query),
   ]);
-  paginated(res, crops, total, Number(page), Number(limit));
+  paginated(res, crops, total, page, limit);
 });
 
 export const approveCrop = asyncHandler(async (req: Request, res: Response) => {
@@ -318,17 +318,17 @@ export const deleteCrop = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const getAllOrders = asyncHandler(async (req: Request, res: Response) => {
-  const { page = '1', limit = '20', status, search } = req.query as Record<string, string>;
-  const skip = (Number(page) - 1) * Number(limit);
+  const { status, search } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = {};
   if (status) query.orderStatus = status;
   
   if (search) query.orderNumber = { $regex: search, $options: 'i' };
   const [orders, total] = await Promise.all([
-    Order.find(query).lean().populate('buyerId', 'firstName lastName email phone city state').populate('farmerId', 'firstName lastName name farmName phone city state').populate('cropId', 'cropName images price unit').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+    Order.find(query).lean().populate('buyerId', 'firstName lastName email phone city state').populate('farmerId', 'firstName lastName name farmName phone city state').populate('cropId', 'cropName images price unit').skip(skip).limit(limit).sort({ createdAt: -1 }),
     Order.countDocuments(query),
   ]);
-  paginated(res, orders, total, Number(page), Number(limit));
+  paginated(res, orders, total, page, limit);
 });
 
 export const updateOrderStatus = asyncHandler(async (req: Request, res: Response) => {
@@ -501,16 +501,16 @@ export async function logAdminAction(adminId: Types.ObjectId, action: string, re
 }
 
 export const getAuditLogs = asyncHandler(async (req: Request, res: Response) => {
-  const { action, adminId, page = '1', limit = '50' } = req.query as Record<string, string>;
+  const { action, adminId } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 50, maxLimit: 100 });
   const query: Record<string, unknown> = {};
   if (action && action !== 'all') query.action = action;
   if (adminId) query.adminId = adminId;
-  const skip = (Number(page) - 1) * Number(limit);
   const [logs, total] = await Promise.all([
-    AuditLog.find(query).lean().populate('adminId', 'name email').skip(skip).limit(Number(limit)).sort({ timestamp: -1 }),
+    AuditLog.find(query).lean().populate('adminId', 'name email').skip(skip).limit(limit).sort({ timestamp: -1 }),
     AuditLog.countDocuments(query),
   ]);
-  res.status(200).json({ success: true, logs, pagination: { total, page: Number(page), pages: Math.ceil(total / Number(limit)) } });
+  res.status(200).json({ success: true, logs, pagination: { total, page, limit, pages: Math.ceil(total / limit) } });
 });
 
 export const changeUserRole = asyncHandler(async (req: Request, res: Response) => {
@@ -527,39 +527,39 @@ export const changeUserRole = asyncHandler(async (req: Request, res: Response) =
 });
 
 export const getApprovedFarmers = asyncHandler(async (req: Request, res: Response) => {
-  const { page = '1', limit = '20', search } = req.query as Record<string, string>;
+  const { search } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = { role: UserRole.Farmer, kycStatus: KycStatus.Verified, status: UserStatus.Active };
   if (search) query.$or = [{ firstName: { $regex: search, $options: 'i' } }, { lastName: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }, { farmName: { $regex: search, $options: 'i' } }];
-  const skip = (Number(page) - 1) * Number(limit);
   const [farmers, total] = await Promise.all([
-    User.find(query).lean().select('-password').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+    User.find(query).lean().select('-password').skip(skip).limit(limit).sort({ createdAt: -1 }),
     User.countDocuments(query),
   ]);
-  paginated(res, farmers, total, Number(page), Number(limit));
+  paginated(res, farmers, total, page, limit);
 });
 
 export const getApprovedBuyers = asyncHandler(async (req: Request, res: Response) => {
-  const { page = '1', limit = '20', search } = req.query as Record<string, string>;
+  const { search } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = { role: UserRole.Buyer, kycStatus: KycStatus.Verified, status: UserStatus.Active };
   if (search) query.$or = [{ firstName: { $regex: search, $options: 'i' } }, { lastName: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }];
-  const skip = (Number(page) - 1) * Number(limit);
   const [buyers, total] = await Promise.all([
-    User.find(query).lean().select('-password').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+    User.find(query).lean().select('-password').skip(skip).limit(limit).sort({ createdAt: -1 }),
     User.countDocuments(query),
   ]);
-  paginated(res, buyers, total, Number(page), Number(limit));
+  paginated(res, buyers, total, page, limit);
 });
 
 export const getSuspendedUsers = asyncHandler(async (req: Request, res: Response) => {
-  const { page = '1', limit = '20', search } = req.query as Record<string, string>;
+  const { search } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = { status: { $in: [UserStatus.Suspended, UserStatus.Banned] } };
   if (search) query.$or = [{ firstName: { $regex: search, $options: 'i' } }, { lastName: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }];
-  const skip = (Number(page) - 1) * Number(limit);
   const [users, total] = await Promise.all([
-    User.find(query).lean().select('-password').skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+    User.find(query).lean().select('-password').skip(skip).limit(limit).sort({ createdAt: -1 }),
     User.countDocuments(query),
   ]);
-  paginated(res, users, total, Number(page), Number(limit));
+  paginated(res, users, total, page, limit);
 });
 
 export const getUserDocuments = asyncHandler(async (req: Request, res: Response) => {
@@ -585,16 +585,16 @@ export const getUserDocuments = asyncHandler(async (req: Request, res: Response)
 });
 
 export const searchDocuments = asyncHandler(async (req: Request, res: Response) => {
-  const { role, kycStatus, page = '1', limit = '20' } = req.query as Record<string, string>;
+  const { role, kycStatus } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = {};
   if (role) query.role = role;
   if (kycStatus) query.kycStatus = kycStatus;
-  const skip = (Number(page) - 1) * Number(limit);
   const [users, total] = await Promise.all([
-    User.find(query).lean().select('firstName lastName email role kycStatus kycSubmittedAt kycDocuments farmImages').skip(skip).limit(Number(limit)).sort({ kycSubmittedAt: -1 }),
+    User.find(query).lean().select('firstName lastName email role kycStatus kycSubmittedAt kycDocuments farmImages').skip(skip).limit(limit).sort({ kycSubmittedAt: -1 }),
     User.countDocuments(query),
   ]);
-  res.status(200).json({ success: true, users, pagination: { total, page: Number(page), pages: Math.ceil(total / Number(limit)) } });
+  res.status(200).json({ success: true, users, pagination: { total, page, limit, pages: Math.ceil(total / limit) } });
 });
 
 export const proxyDocument = asyncHandler(async (req: Request, res: Response) => {
@@ -635,14 +635,13 @@ export const proxyDocument = asyncHandler(async (req: Request, res: Response) =>
 });
 
 export const getFlaggedOrders = asyncHandler(async (req: Request, res: Response) => {
-  const page = parseInt(req.query.page as string, 10) || 1;
-  const limit = parseInt(req.query.limit as string, 10) || 20;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
 
   const query = { flaggedAsAnomaly: true };
   const total = await Order.countDocuments(query);
   const orders = await Order.find(query)
     .sort({ anomalyScore: -1, createdAt: -1 })
-    .skip((page - 1) * limit)
+    .skip(skip)
     .limit(limit)
     .populate('buyerId', 'firstName lastName email phone')
     .populate('farmerId', 'firstName lastName email farmName phone')

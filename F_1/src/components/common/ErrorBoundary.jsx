@@ -40,6 +40,12 @@ export default class ErrorBoundary extends Component {
     }
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.state.hasError && this.props.resetKey !== undefined && prevProps.resetKey !== this.props.resetKey) {
+      this.handleReset();
+    }
+  }
+
   handleReset = () => {
     this.setState({ hasError: false, error: null, errorInfo: null, errorId: null });
   };

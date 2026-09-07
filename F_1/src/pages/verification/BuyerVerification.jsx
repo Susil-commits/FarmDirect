@@ -193,7 +193,7 @@ export default function BuyerVerification() {
 
       await uploadService.uploadKYCDocuments(fileMap, 'buyer_kyc');
 
-      const refreshedUser = await refreshUser();
+      await refreshUser();
 
       setSubmittedAt(new Date().toLocaleDateString());
       setAllSubmitted(true);

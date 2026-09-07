@@ -76,9 +76,6 @@ export async function sendEmail(mailOptions: EmailOptions): Promise<EmailResult>
       return { success: true, message: 'Email logged to console (dev mode)' };
     }
 
-    if (env.isDev) {
-    }
-
     const result = await attemptSend(mailOptions as nodemailer.SendMailOptions);
     if (env.isDev) console.log(`Email sent successfully to ${mailOptions.to}`);
     return { success: true, message: 'Email sent successfully', messageId: result.messageId };

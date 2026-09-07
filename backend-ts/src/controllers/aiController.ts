@@ -68,7 +68,7 @@ export const handleGuestAiChat = asyncHandler(async (req: Request, res: Response
 export const getPromptSuggestions = asyncHandler(async (req: Request, res: Response) => {
   const role = (req.query.role as string) || 'guest';
 
-  let starterPrompts: Array<{ label: string; query: string; icon: string; category: string }> = [];
+  let starterPrompts: Array<{ label: string; query: string; icon: string; category: string }>;
 
   if (role === 'farmer') {
     starterPrompts = [

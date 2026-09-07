@@ -1,12 +1,8 @@
 import React from 'react';
-import { useRouter } from '../hooks/useRouter';
 import PageTransition from '../components/common/PageTransition.jsx';
 import { HeartHandshake, ShieldCheck, Zap, Shield, Sparkles, Sprout, ArrowRight } from 'lucide-react';
 
-import { motion } from 'framer-motion';
-
 export default function About() {
-  const { navigate } = useRouter();
 
   const values = [
     {

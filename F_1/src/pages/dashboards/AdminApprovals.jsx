@@ -561,6 +561,7 @@ export default function AdminApprovals() {
                           onClick={async () => {
                             try {
                               const data = await adminService.debugKYCStatus();
+                              console.log('KYC Debug Info:', data);
                               addToast('Check Console (F12) for detailed breakdown', 'info');
                             } catch {
                               addToast('Debug endpoint failed. Is the backend running?', 'error');

@@ -81,7 +81,8 @@ function loadEnv(): EnvConfig {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
 
-  let { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_URL } = process.env;
+  const CLOUDINARY_URL = process.env.CLOUDINARY_URL;
+  let { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } = process.env;
   if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
     if (CLOUDINARY_URL) {
       const match = CLOUDINARY_URL.match(/^cloudinary:\/\/([^:]+):([^@]+)@(.+)$/);

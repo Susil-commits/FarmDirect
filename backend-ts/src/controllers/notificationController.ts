@@ -5,23 +5,24 @@ import { sendError } from '../utils/apiResponse.js';
 import { notifyNewNotification, notifyBulkNotification } from '../socket/eventHandlers.js';
 import type { Request, Response } from 'express';
 import type { Types } from 'mongoose';
+import { parsePagination } from '../utils/pagination.js';
 
 export const getNotifications = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!._id;
-  const { page = '1', limit = '20', isRead } = req.query as Record<string, string>;
-  const skip = (Number(page) - 1) * Number(limit);
+  const { isRead } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 50 });
   const query: Record<string, unknown> = { userId };
   if (isRead !== undefined) query.isRead = isRead === 'true';
 
   const [notifications, total, unreadCount] = await Promise.all([
-    Notification.find(query).lean().skip(skip).limit(Number(limit)).sort({ createdAt: -1 }),
+    Notification.find(query).lean().skip(skip).limit(limit).sort({ createdAt: -1 }),
     Notification.countDocuments(query),
     Notification.countDocuments({ userId, isRead: false }),
   ]);
 
   res.status(200).json({
     success: true, data: notifications, unreadCount,
-    pagination: { page: Number(page), limit: Number(limit), total, pages: Math.ceil(total / Number(limit)) },
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   });
 });
 

@@ -6,7 +6,7 @@ import { sendError } from '../utils/apiResponse.js';
 import { OrderStatus } from '../types/enums.js';
 import type { Request, Response, NextFunction } from 'express';
 
-function calculatePerformanceScore(crop: { rating?: number; views?: number; sold?: number }, orderCount: number): number {
+function calculatePerformanceScore(crop: { rating?: number; views?: number; sold?: number }, _orderCount: number): number {
   let score = 0;
   score += (crop.rating || 0) * 8;
   const conversionRate = (crop.views ?? 0) > 0 ? (crop.sold ?? 0) / (crop.views ?? 1) : 0;
@@ -243,8 +243,9 @@ export async function getCategoryBreakdown(req: Request, res: Response, next: Ne
 export async function getTopPerformingCrops(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const farmerId = req.user!._id;
-    const { limit = '10' } = req.query as Record<string, string>;
-    const topCrops = await CropListing.find({ farmerId }).select('cropName category price rating sold views quantity').sort({ sold: -1, views: -1 }).limit(Number(limit)).lean();
+    const rawLimit = parseInt(String(req.query.limit ?? '10'), 10);
+    const limit = isNaN(rawLimit) || rawLimit < 1 ? 10 : Math.min(rawLimit, 50);
+    const topCrops = await CropListing.find({ farmerId }).select('cropName category price rating sold views quantity').sort({ sold: -1, views: -1 }).limit(limit).lean();
     const result = topCrops.map((crop) => ({
       ...crop, revenue: crop.price * (crop.sold || 0),
       conversionRate: (crop.views ?? 0) > 0 ? (((crop.sold ?? 0) / (crop.views ?? 1)) * 100).toFixed(2) : 0,

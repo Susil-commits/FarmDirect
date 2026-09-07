@@ -4,6 +4,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendError } from '../utils/apiResponse.js';
 import { notifyNewMessage } from '../socket/eventHandlers.js';
 import type { Request, Response } from 'express';
+import { parsePagination } from '../utils/pagination.js';
 
 export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
   const { receiverId, content, cropId, orderId, type = 'text', attachments = [] } = req.body as {
@@ -38,17 +39,16 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
 
 export const getConversation = asyncHandler(async (req: Request, res: Response) => {
   const { receiverId } = req.params;
-  const { page = '1', limit = '50' } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 50, maxLimit: 100 });
   const userId = req.user!._id;
 
   const receiver = await User.findById(receiverId);
   if (!receiver) return sendError(res, 'User not found', 404);
 
   const conversationId = (Message as unknown as MessageModel).generateConversationId(userId.toString(), receiverId);
-  const skip = (Number(page) - 1) * Number(limit);
 
   const [messages, totalCount] = await Promise.all([
-    Message.find({ conversationId, isDeleted: false }).lean().sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
+    Message.find({ conversationId, isDeleted: false }).lean().sort({ createdAt: -1 }).skip(skip).limit(limit),
     Message.countDocuments({ conversationId, isDeleted: false }),
   ]);
 
@@ -56,14 +56,13 @@ export const getConversation = asyncHandler(async (req: Request, res: Response) 
 
   res.status(200).json({
     success: true, data: messages.reverse(),
-    pagination: { currentPage: Number(page), totalPages: Math.ceil(totalCount / Number(limit)), totalCount },
+    pagination: { currentPage: page, totalPages: Math.ceil(totalCount / limit), totalCount },
   });
 });
 
 export const getConversations = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!._id;
-  const { page = '1', limit = '20' } = req.query as Record<string, string>;
-  const skip = (Number(page) - 1) * Number(limit);
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 50 });
 
   const { Types } = await import('mongoose');
   const pipeline = [
@@ -87,7 +86,7 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
     },
     { $sort: { 'lastMessage.createdAt': -1 as const } },
     { $skip: skip },
-    { $limit: Number(limit) },
+    { $limit: limit },
     {
       $lookup: {
         from: 'users',
@@ -112,7 +111,7 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
 
   res.status(200).json({
     success: true, data: conversations,
-    pagination: { currentPage: Number(page), totalCount, totalPages: Math.ceil(totalCount / Number(limit)) },
+    pagination: { currentPage: page, totalCount, totalPages: Math.ceil(totalCount / limit) },
   });
 });
 

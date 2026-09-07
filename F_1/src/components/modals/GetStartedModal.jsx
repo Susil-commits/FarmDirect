@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { X, ArrowRight, Sprout } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../hooks/useRouter';

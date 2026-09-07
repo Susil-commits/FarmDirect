@@ -128,10 +128,6 @@ api.interceptors.request.use(
       }, 4000);
     }
 
-    if (import.meta.env.DEV && config.data instanceof FormData) {
-      for (const [key, value] of config.data.entries()) {
-      }
-    }
 
     if (token && isTokenExpired(token, 120)) {
       try {
@@ -217,9 +213,6 @@ api.interceptors.response.use(
       }
     }
 
-    if (error.response?.status === 403) {
-      
-    }
 
     if (!error.response && !originalRequest._retried) {
       const method = (originalRequest.method || '').toLowerCase();

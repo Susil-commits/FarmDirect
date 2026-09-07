@@ -54,7 +54,7 @@ export const SocketProvider = ({ children }) => {
         setConnected(true);
       });
 
-      socket.on('disconnect', (reason) => {
+      socket.on('disconnect', () => {
         setConnected(false);
       });
 

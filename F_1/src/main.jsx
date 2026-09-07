@@ -25,6 +25,7 @@ import { AuthProvider } from './context/AuthContext'
 import { RouterProvider } from './context/RouterContext'
 import { LoadingProvider } from './context/LoadingContext'
 import { SocketProvider } from './context/SocketContext'
+import ErrorBoundary from './components/common/ErrorBoundary'
 
 let pageLoadedSuccessfully = false;
 window.addEventListener('load', () => {
@@ -64,14 +65,16 @@ window.onerror = function(message, source, lineno, colno, error) {
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AuthProvider>
-      <RouterProvider>
-        <LoadingProvider>
-          <SocketProvider>
-            <App />
-          </SocketProvider>
-        </LoadingProvider>
-      </RouterProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <RouterProvider>
+          <LoadingProvider>
+            <SocketProvider>
+              <App />
+            </SocketProvider>
+          </LoadingProvider>
+        </RouterProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )

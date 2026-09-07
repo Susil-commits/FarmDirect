@@ -10,6 +10,7 @@ import { ContactQueryStatus, InquiryType, ContactQueryPriority } from '../types/
 import { env } from '../config/env.js';
 import type { Request, Response } from 'express';
 import type { Types } from 'mongoose';
+import { parsePagination } from '../utils/pagination.js';
 
 export const submitContactQuery = asyncHandler(async (req: Request, res: Response) => {
   const { name, email, phone, inquiryType, message } = req.body as {
@@ -71,7 +72,8 @@ export const submitContactQuery = asyncHandler(async (req: Request, res: Respons
 });
 
 export const getAllContactQueries = asyncHandler(async (req: Request, res: Response) => {
-  const { status, inquiryType, kycStatus, sortBy = 'createdAt', order = '-1', page = '1', limit = '20' } = req.query as Record<string, string>;
+  const { status, inquiryType, kycStatus, sortBy = 'createdAt', order = '-1' } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const filter: Record<string, unknown> = { isDeleted: false };
   if (status) filter.status = status;
   if (inquiryType) filter.inquiryType = inquiryType;
@@ -87,17 +89,16 @@ export const getAllContactQueries = asyncHandler(async (req: Request, res: Respo
     }
   }
 
-  const skip = (Number(page) - 1) * Number(limit);
   const sortOption: Record<string, 1 | -1> = { [sortBy]: Number(order) as 1 | -1 };
   const [queries, total] = await Promise.all([
-    ContactQuery.find(filter).sort(sortOption).skip(skip).limit(Number(limit))
+    ContactQuery.find(filter).sort(sortOption).skip(skip).limit(limit)
       .populate('adminResponse.respondedBy', 'name email').populate('userId', 'name email kycStatus role'),
     ContactQuery.countDocuments(filter),
   ]);
 
   res.status(200).json({
     success: true, data: queries,
-    pagination: { total, page: Number(page), limit: Number(limit), pages: Math.ceil(total / Number(limit)) },
+    pagination: { total, page, limit, pages: Math.ceil(total / limit) },
   });
 });
 

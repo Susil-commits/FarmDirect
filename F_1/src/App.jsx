@@ -274,7 +274,7 @@ function App() {
                     <Navbar />
                     <main className="flex-1">
                       <Suspense fallback={<div className="min-h-screen"><PageLoader message="Loading FarmDirect..." /></div>}>
-                        <ErrorBoundary>
+                        <ErrorBoundary resetKey={currentRoute} key={currentRoute}>
                           {renderPage()}
                         </ErrorBoundary>
                       </Suspense>

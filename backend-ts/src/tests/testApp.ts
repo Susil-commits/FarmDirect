@@ -3,11 +3,14 @@ import authRoutes from '../routes/authRoutes.js';
 import cropRoutes from '../routes/cropRoutes.js';
 import orderRoutes from '../routes/orderRoutes.js';
 import adminRoutes from '../routes/adminRoutes.js';
+import healthRoutes from '../routes/healthRoutes.js';
 import errorHandler from '../middleware/errorHandler.js';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/health', healthRoutes);
+app.use('/healthz', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/crops', cropRoutes);
 app.use('/api/orders', orderRoutes);

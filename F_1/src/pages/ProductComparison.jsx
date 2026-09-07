@@ -3,11 +3,9 @@ import { X, Download, Share2, Star, Sparkles, Check, ShoppingCart } from 'lucide
 import PageTransition from '../components/common/PageTransition';
 import { useToast } from '../hooks/useToast';
 import { useCart } from '../hooks/useCart';
-import { useRouter } from '../hooks/useRouter';
 import { cropService } from '../services/appService';
 
 export default function ProductComparison() {
-  const { navigate } = useRouter();
   const [comparisonData, setComparisonData] = useState(null);
   const [selectedCrops, setSelectedCrops] = useState([]);
   const [loading, setLoading] = useState(false);

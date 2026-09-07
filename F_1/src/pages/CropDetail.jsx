@@ -291,8 +291,6 @@ export default function CropDetail() {
   };
 
   const cropName = crop?.cropName || crop?.name || 'Unknown Crop';
-  
-  const rawCropImage = crop?.images?.[0] || crop?.image || null;
   const cropPrice = crop?.price || 0;
   const cropQuantity = crop?.quantity || 0;
   const cropUnit = crop?.unit || 'kg';
