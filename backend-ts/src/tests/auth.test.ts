@@ -9,7 +9,7 @@ describe('Auth Endpoints', () => {
     email: 'testfarmer@farm.com',
     password: 'Password123!',
     role: 'farmer',
-    phone: '1234567890'
+    phone: '9876543210'
   };
 
   beforeEach(async () => {
