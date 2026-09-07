@@ -9,7 +9,7 @@ import IdempotencyKey from '../models/IdempotencyKey.js';
 import { notifyOrderUpdate } from '../socket/eventHandlers.js';
 import { computeDiscount, redeemCoupon } from './couponController.js';
 import { sendError } from '../utils/apiResponse.js';
-import { createOutboxEvent } from '../workers/outboxPublisher.js';
+import { createOutboxEvent, triggerImmediateOutboxSweep } from '../workers/outboxPublisher.js';
 import { enqueueAnomalyDetection } from '../workers/queue.js';
 import {
   OrderStatus, PaymentMethod, PaymentStatus, CropAvailability, CropStatus, CancelledBy, UserRole,
@@ -335,6 +335,7 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
     if (order) {
        enqueueAnomalyDetection({ orderId: order._id.toString(), amount: finalAmount, userId: req.user!._id.toString() });
        notifyOrderUpdate(order, 'order:created');
+       triggerImmediateOutboxSweep();
     }
 
     res.status(201).json({ message: 'Order placed successfully! Farmer will start preparing your order.', order });

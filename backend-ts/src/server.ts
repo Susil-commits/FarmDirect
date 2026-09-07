@@ -8,7 +8,7 @@ import { connectDB, disconnectDB } from './config/db.js';
 import { initSocket } from './socket/socketManager.js';
 import { connectRedis, redisClient } from './config/redis.js';
 import { startAnomalyWorker } from './workers/anomalyWorker.js';
-import { startOutboxWorker } from './workers/outboxWorker.js';
+import { startOutboxWorker, startOutboxPollingWorker, stopOutboxPollingWorker } from './workers/outboxWorker.js';
 import { startPaymentReconciliationWorker, stopPaymentReconciliationWorker } from './workers/paymentReconciliationWorker.js';
 
 const httpServer: HttpServer = createServer(app);
@@ -21,6 +21,7 @@ let outboxWorkerInstance: any = null;
 function gracefulShutdown(signal: string): void {
   console.log(`Received ${signal}, shutting down gracefully...`);
   stopPaymentReconciliationWorker();
+  stopOutboxPollingWorker();
   
   if (workerInstance) {
     workerInstance.close().then(() => {
@@ -64,6 +65,7 @@ async function start(): Promise<void> {
   
   workerInstance = startAnomalyWorker();
   outboxWorkerInstance = startOutboxWorker();
+  startOutboxPollingWorker();
   startPaymentReconciliationWorker();
   
   const PORT = env.port;
