@@ -77,7 +77,7 @@ export function initSocket(httpServer: HttpServer, corsOptions: CorsConfig): Ser
       socket.to(`user:${data.receiverId}`).emit('typing:stop', { conversationId: data.conversationId, userId });
     });
 
-    socket.on('disconnect', (reason: string) => {
+    socket.on('disconnect', (_reason: string) => {
       connectedUsers.delete(userId);
       io!.emit('user:offline', { userId, role, onlineCount: connectedUsers.size });
     });

@@ -8,7 +8,6 @@ import { randomUUID } from 'crypto';
 
 describe('Idempotency Keys in Order Creation', () => {
   let buyerToken: string;
-  let farmerId: string;
   let buyerId: string;
   let cropId: string;
 
@@ -21,7 +20,6 @@ describe('Idempotency Keys in Order Creation', () => {
       firstName: 'Test', lastName: 'Farmer', email: 'farmer@farm.com',
       password: hashedPassword, role: 'farmer', phone: '1234567890', status: 'active', kycStatus: 'verified'
     });
-    farmerId = farmer._id.toString();
 
     const buyer = await User.create({
       firstName: 'Test', lastName: 'Buyer', email: 'buyer@farm.com',

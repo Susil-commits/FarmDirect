@@ -183,9 +183,9 @@ export default function FarmerVerification() {
         }
       });
 
-      const result = await uploadService.uploadKYCDocuments(fileMap, 'farmer_kyc');
+      await uploadService.uploadKYCDocuments(fileMap, 'farmer_kyc');
 
-      const refreshedUser = await refreshUser();
+      await refreshUser();
 
       setSubmittedAt(new Date().toLocaleDateString());
       setAllSubmitted(true);

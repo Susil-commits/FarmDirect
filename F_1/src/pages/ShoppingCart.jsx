@@ -69,7 +69,7 @@ export default function ShoppingCart() {
             clearCart();
             addToast('Payment successful! Orders confirmed.', 'success');
             navigate('/order-confirmation');
-          } catch (verr) {
+          } catch {
             const firstOrderId = orderIds[0];
             const poll = firstOrderId ? await paymentService.pollPaymentStatus(firstOrderId, 3, 1500) : { success: false };
             clearCart();

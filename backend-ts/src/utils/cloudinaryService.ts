@@ -15,7 +15,7 @@ export async function uploadFile(
   fileBuffer: Buffer,
   fileName: string,
   folder = 'general',
-  mimeType = 'image/jpeg',
+  _mimeType = 'image/jpeg',
 ): Promise<UploadResult> {
   if (!fileBuffer || fileBuffer.length === 0) {
     throw new Error('Cannot upload an empty file buffer');

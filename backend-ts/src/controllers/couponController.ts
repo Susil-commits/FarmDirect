@@ -5,12 +5,13 @@ import { CouponType } from '../types/enums.js';
 import type { ICoupon, DiscountResult } from '../types/index.js';
 import mongoose, { type Types, type ClientSession } from 'mongoose';
 import type { Request, Response } from 'express';
+import { parsePagination } from '../utils/pagination.js';
 
 export function computeDiscount(coupon: ICoupon | null, subtotal: number): DiscountResult | null {
   if (!coupon || typeof subtotal !== 'number') return null;
   if (coupon.minOrderAmount && subtotal < coupon.minOrderAmount) return null;
 
-  let discountAmount = 0;
+  let discountAmount: number;
   if (coupon.type === CouponType.Percentage) {
     discountAmount = (subtotal * (coupon.value || 0)) / 100;
     if (coupon.maxDiscount && discountAmount > coupon.maxDiscount) {
@@ -124,21 +125,21 @@ export async function redeemCoupon(
 }
 
 export const getAllCoupons = asyncHandler(async (req: Request, res: Response) => {
-  const { page = '1', limit = '20', active } = req.query as Record<string, string>;
+  const { active } = req.query as Record<string, string>;
+  const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 50 });
   const query: Record<string, unknown> = {};
   if (active === 'true') query.isActive = true;
   if (active === 'false') query.isActive = false;
 
-  const skip = (Number(page) - 1) * Number(limit);
   const [coupons, total] = await Promise.all([
-    Coupon.find(query).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).lean(),
+    Coupon.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
     Coupon.countDocuments(query),
   ]);
 
   res.status(200).json({
     success: true,
     coupons,
-    pagination: { total, page: Number(page), limit: Number(limit), pages: Math.ceil(total / Number(limit)) },
+    pagination: { total, page, limit, pages: Math.ceil(total / limit) },
   });
 });
 

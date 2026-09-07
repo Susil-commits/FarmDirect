@@ -11,7 +11,7 @@ export const createCircuitBreaker = <TArgs extends any[], TResult>(
     ...options,
   });
 
-  breaker.fallback((...args: any[]) => {
+  breaker.fallback((..._args: any[]) => {
     
     return Promise.reject(new Error('Service currently unavailable due to high failure rate (Circuit Open)'));
   });

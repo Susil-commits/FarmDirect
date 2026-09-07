@@ -12,6 +12,7 @@ import {
 import type { Request, Response, NextFunction } from 'express';
 import type { ICropSpecifications } from '../types/index.js';
 import { getCache, setCache, clearPrefix } from '../utils/cache.js';
+import { parsePagination } from '../utils/pagination.js';
 
 export async function createCrop(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -112,8 +113,10 @@ export async function getCrops(req: Request, res: Response, next: NextFunction):
 
     const {
       category, cropType, minPrice, maxPrice, search, location, rating, certifications,
-      page = '1', limit = '12', sortBy = 'createdAt', sortOrder = 'desc',
+      sortBy = 'createdAt', sortOrder = 'desc',
     } = req.query as Record<string, string>;
+
+    const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 12, maxLimit: 50 });
 
     const query: Record<string, unknown> = {
       status: CropStatus.Active,
@@ -152,7 +155,6 @@ export async function getCrops(req: Request, res: Response, next: NextFunction):
     const ALLOWED_SORT_FIELDS = new Set(['createdAt', 'price', 'rating', 'sold', 'views', 'quantity']);
     const safeSortBy = ALLOWED_SORT_FIELDS.has(sortBy) ? sortBy : 'createdAt';
 
-    const skip = (Number(page) - 1) * Number(limit);
     const sortDir = sortOrder === 'asc' ? 1 : -1;
     const sortOptions: Record<string, 1 | -1> = { [safeSortBy]: sortDir };
 
@@ -160,14 +162,14 @@ export async function getCrops(req: Request, res: Response, next: NextFunction):
       CropListing.find(query).lean()
         .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
         .skip(skip)
-        .limit(Number(limit))
+        .limit(limit)
         .sort(sortOptions),
       CropListing.countDocuments(query),
     ]);
 
     const responseData = {
       crops,
-      pagination: { total, page: Number(page), limit: Number(limit), pages: Math.ceil(total / Number(limit)) },
+      pagination: { total, page, limit, pages: Math.ceil(total / limit) },
     };
 
     await setCache(cacheKey, responseData, 60);
@@ -180,7 +182,8 @@ export async function getCrops(req: Request, res: Response, next: NextFunction):
 
 export async function getTrendingCrops(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { limit = '8' } = req.query as Record<string, string>;
+    const rawLimit = parseInt(String(req.query.limit ?? '8'), 10);
+    const limit = isNaN(rawLimit) || rawLimit < 1 ? 8 : Math.min(rawLimit, 30);
     const crops = await CropListing.find({
       status: CropStatus.Active,
       availability: CropAvailability.Available,
@@ -188,7 +191,7 @@ export async function getTrendingCrops(req: Request, res: Response, next: NextFu
     })
       .lean()
       .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
-      .limit(Number(limit))
+      .limit(limit)
       .sort({ sold: -1, views: -1, rating: -1, totalReviews: -1 });
     res.status(200).json({ crops });
   } catch (error) {
@@ -199,7 +202,8 @@ export async function getTrendingCrops(req: Request, res: Response, next: NextFu
 export async function getSimilarCrops(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
-    const { limit = '6' } = req.query as Record<string, string>;
+    const rawLimit = parseInt(String(req.query.limit ?? '6'), 10);
+    const limit = isNaN(rawLimit) || rawLimit < 1 ? 6 : Math.min(rawLimit, 30);
     const crop = await CropListing.findById(id).lean().select('category cropType farmerId');
     if (!crop) {
       sendError(res, 'Crop not found', 404);
@@ -214,7 +218,7 @@ export async function getSimilarCrops(req: Request, res: Response, next: NextFun
     })
       .lean()
       .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
-      .limit(Number(limit))
+      .limit(limit)
       .sort({ rating: -1, sold: -1 });
     res.status(200).json({ crops: similar });
   } catch (error) {
@@ -224,7 +228,8 @@ export async function getSimilarCrops(req: Request, res: Response, next: NextFun
 
 export async function getRecommendedCrops(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { limit = '8' } = req.query as Record<string, string>;
+    const rawLimit = parseInt(String(req.query.limit ?? '8'), 10);
+    const limit = isNaN(rawLimit) || rawLimit < 1 ? 8 : Math.min(rawLimit, 30);
     const userId = req.user!._id;
 
     const [pastOrders, wishlistItems] = await Promise.all([
@@ -256,12 +261,12 @@ export async function getRecommendedCrops(req: Request, res: Response, next: Nex
 
       recommended = await CropListing.find(q).lean()
         .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
-        .limit(Number(limit))
+        .limit(limit)
         .sort({ rating: -1, sold: -1, views: -1 });
     }
 
-    if (recommended.length < Number(limit)) {
-      const needed = Number(limit) - recommended.length;
+    if (recommended.length < limit) {
+      const needed = limit - recommended.length;
       const existingIds = recommended.map((c) => String((c as { _id: string })._id));
       const fallback = await CropListing.find({
         status: CropStatus.Active,

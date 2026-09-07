@@ -34,7 +34,6 @@ export default function AdminMessages() {
   const [viewMode, setViewMode] = useState('list'); 
   const [replyText, setReplyText] = useState('');
   
-  const [showMoreOptions, setShowMoreOptions] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = useCallback(() => {

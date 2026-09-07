@@ -23,7 +23,7 @@ import {
   Handshake,
   TrendingUp,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../hooks/useRouter';
 import { sendAiChatMessage, getAiStarterSuggestions } from '../../services/aiChatService';
@@ -36,7 +36,6 @@ export default function AgriBotWidget() {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [starterPrompts, setStarterPrompts] = useState([]);
   const [copiedIndex, setCopiedIndex] = useState(null);
@@ -131,9 +130,6 @@ export default function AgriBotWidget() {
         window.speechSynthesis.cancel();
         const plainText = botReply.text.replace(/[#*_`[\]()]/g, '');
         const utterance = new SpeechSynthesisUtterance(plainText);
-        utterance.onstart = () => setIsSpeaking(true);
-        utterance.onend = () => setIsSpeaking(false);
-        utterance.onerror = () => setIsSpeaking(false);
         window.speechSynthesis.speak(utterance);
       }
     } catch {
@@ -173,7 +169,6 @@ export default function AgriBotWidget() {
   const handleClearChat = () => {
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
-      setIsSpeaking(false);
     }
     setMessages([]);
   };

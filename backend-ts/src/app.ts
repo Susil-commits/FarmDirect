@@ -175,7 +175,7 @@ app.get('/api/health/detailed', async (_req: Request, res: Response) => {
     dbPingMs = Date.now() - start;
     dbPing = true;
   } catch {
-    dbPing = false;
+    // Ping failed, dbPing remains false
   }
   const healthy = dbState === 1 && dbPing;
   res.status(healthy ? 200 : 503).json({
@@ -194,7 +194,8 @@ app.get('/api/health/detailed', async (_req: Request, res: Response) => {
   });
 });
 
-app.use('/health', healthRoutes); 
+app.use('/health', healthRoutes);
+app.use('/healthz', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/crops', cropRoutes);
 app.use('/api/orders', orderRoutes);

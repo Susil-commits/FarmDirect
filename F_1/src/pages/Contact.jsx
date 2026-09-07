@@ -1,12 +1,8 @@
 import React, { useState } from 'react';
-import { useRouter } from '../hooks/useRouter';
 import PageTransition from '../components/common/PageTransition.jsx';
 import { Mail, Phone, MapPin, Send, Sparkles, CheckCircle2 } from 'lucide-react';
 
-import { motion } from 'framer-motion';
-
 export default function Contact() {
-  const { navigate } = useRouter();
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', message: '', role: 'Buyer' });
 

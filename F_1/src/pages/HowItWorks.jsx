@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { CheckCircle2, Users, TrendingUp, Award, Zap, Shield, Sparkles, ArrowRight, ShieldCheck, Sprout } from 'lucide-react';
 
-import { motion } from 'framer-motion';
 import { useRouter } from '../hooks/useRouter';
 import PageTransition from '../components/common/PageTransition';
 

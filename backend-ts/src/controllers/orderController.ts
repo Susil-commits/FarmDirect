@@ -1,4 +1,4 @@
-import { randomUUID, createHash } from 'crypto';
+import { randomUUID } from 'crypto';
 import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import CropListing from '../models/CropListing.js';
@@ -17,6 +17,7 @@ import {
 } from '../types/enums.js';
 import type { OrderTransitionMap, OrderLike } from '../types/index.js';
 import type { Request, Response, NextFunction } from 'express';
+import { parsePagination } from '../utils/pagination.js';
 
 const VALID_STATUSES: OrderStatus[] = [
   OrderStatus.Confirmed, OrderStatus.Preparing, OrderStatus.ReadyForPickup,
@@ -530,28 +531,28 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
 
 export async function getOrders(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { status, page = '1', limit = '10' } = req.query as Record<string, string>;
+    const { status } = req.query as Record<string, string>;
+    const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 10, maxLimit: 50 });
     const query: Record<string, unknown> = {};
 
     if (req.user!.role === 'farmer') query.farmerId = req.user!._id;
     else if (req.user!.role === 'buyer') query.buyerId = req.user!._id;
     if (status) query.orderStatus = status;
 
-    const skip = (Number(page) - 1) * Number(limit);
     const [orders, total] = await Promise.all([
       Order.find(query).lean()
         .populate('cropId', 'cropName images price unit')
         .populate('buyerId', 'firstName lastName name phone email city state')
         .populate('farmerId', 'firstName lastName name phone farmName city state')
         .skip(skip)
-        .limit(Number(limit))
+        .limit(limit)
         .sort({ createdAt: -1 }),
       Order.countDocuments(query),
     ]);
 
     res.status(200).json({
       orders,
-      pagination: { total, page: Number(page), pages: Math.ceil(total / Number(limit)) },
+      pagination: { total, page, limit, pages: Math.ceil(total / limit) },
     });
   } catch (error) {
     next(error);

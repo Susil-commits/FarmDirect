@@ -64,8 +64,8 @@ export async function run() {
 
   let email = args.email || process.env.ADMIN_BOOTSTRAP_EMAIL;
   let password = args.password || process.env.ADMIN_BOOTSTRAP_PASSWORD;
-  let firstName = args.firstName || 'System';
-  let lastName = args.lastName || 'Admin';
+  const firstName = args.firstName || 'System';
+  const lastName = args.lastName || 'Admin';
 
   if (!email) {
     email = await prompt('Enter Admin Email: ');
