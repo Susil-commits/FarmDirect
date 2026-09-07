@@ -37,7 +37,7 @@ directApi.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest?._retry) {
       originalRequest._retry = true;
       try {
-        const token = await refreshAuthToken();
+        const token = await refreshAuthToken(true);
         originalRequest.headers.Authorization = `Bearer ${token}`;
         return directApi(originalRequest);
       } catch (refreshErr) {

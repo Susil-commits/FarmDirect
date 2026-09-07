@@ -38,7 +38,11 @@ router.post(
       sendError(res, req.uploadError || 'No file uploaded', 400);
       return;
     }
-    sendCreated(res, { message: 'File uploaded successfully', data: req.uploadedFile });
+    sendCreated(res, {
+      message: 'File uploaded successfully',
+      url: req.uploadedFile.url,
+      data: req.uploadedFile,
+    });
   }),
 );
 
@@ -50,7 +54,11 @@ router.post(
       sendError(res, req.uploadError || 'No files uploaded', 400);
       return;
     }
-    sendCreated(res, { message: 'Files uploaded successfully', data: req.uploadedFiles });
+    sendCreated(res, {
+      message: 'Files uploaded successfully',
+      urls: req.uploadedFiles.map((f) => f.url),
+      data: req.uploadedFiles,
+    });
   }),
 );
 

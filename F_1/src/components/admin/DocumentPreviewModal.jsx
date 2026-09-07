@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, FileText, Image as ImageIcon } from 'lucide-react';
 import { getImageUrl } from '../../utils/formatters';
+import { getAccessToken } from '../../utils/tokenStore';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -13,7 +14,7 @@ const resolveDocUrl = (url) => {
 const getProxyUrl = (url) => {
   if (!url) return '';
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  const token = localStorage.getItem('token');
+  const token = getAccessToken() || localStorage.getItem('token');
   const tokenParam = token ? `&token=${encodeURIComponent(token)}` : '';
   return `${API_BASE}/admin/documents/proxy?url=${encodeURIComponent(url)}${tokenParam}`;
 };
