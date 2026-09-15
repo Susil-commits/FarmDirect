@@ -23,7 +23,7 @@ import {
   Handshake,
   TrendingUp,
 } from 'lucide-react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../hooks/useRouter';
 import { sendAiChatMessage, getAiStarterSuggestions } from '../../services/aiChatService';

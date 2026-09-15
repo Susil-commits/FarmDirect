@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import PageTransition from '../components/common/PageTransition.jsx';
 import { HeartHandshake, ShieldCheck, Zap, Shield, Sparkles, Sprout, ArrowRight } from 'lucide-react';
 
