@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { CheckCircle2, Users, TrendingUp, Award, Zap, Shield, Sparkles, ArrowRight, ShieldCheck, Sprout } from 'lucide-react';
 
 import { useRouter } from '../hooks/useRouter';

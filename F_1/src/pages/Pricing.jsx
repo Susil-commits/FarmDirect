@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import { motion } from 'framer-motion';
 import { Check, ArrowRight, Sparkles, Calculator } from 'lucide-react';
 import { useRouter } from '../hooks/useRouter';
 
