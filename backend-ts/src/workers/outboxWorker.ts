@@ -45,7 +45,7 @@ export async function processOutboxEvent(eventId: string | Types.ObjectId): Prom
 
       const order = await Order.findById(orderId)
         .populate('buyerId', 'name email')
-        .populate('cropId', 'name images price');
+        .populate('cropId', 'cropName images price');
 
       if (order) notifyOrderUpdate(order, 'order:new');
     }

@@ -342,6 +342,38 @@ export default function AdminCrops() {
                           </span>
                         </div>
 
+                        {/* Advisory AI Review Sanity Signal (T2.2) */}
+                        {crop.aiReview && (
+                          <div className={`mb-3 p-2.5 rounded-lg border text-xs ${
+                            crop.aiReview.looksLikeProduce === false
+                              ? 'bg-amber-50 border-amber-300 text-amber-900'
+                              : 'bg-emerald-50/80 border-emerald-200 text-emerald-900'
+                          }`}>
+                            <div className="flex items-center justify-between font-bold mb-1">
+                              <span className="flex items-center gap-1">
+                                {crop.aiReview.looksLikeProduce === false ? (
+                                  <>⚠️ <span>AI Review: Produce Not Detected</span></>
+                                ) : (
+                                  <>✓ <span>AI Review: Produce Verified</span></>
+                                )}
+                              </span>
+                              <span className="text-[10px] font-semibold opacity-75">
+                                {Math.round((crop.aiReview.confidence || 0.9) * 100)}% conf
+                              </span>
+                            </div>
+                            {crop.aiReview.issues && crop.aiReview.issues.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {crop.aiReview.issues.map((issue, idx) => (
+                                  <span key={idx} className="px-1.5 py-0.5 bg-white/80 border rounded text-[10px] font-mono text-amber-800">
+                                    {issue}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            <p className="text-[10px] opacity-75 mt-1 italic">Advisory signal only · Admin makes final decision</p>
+                          </div>
+                        )}
+
                         {crop.listingApprovalStatus === 'rejected' && crop.rejectionReason && (
                           <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
                             <p className="font-semibold">Rejection Reason:</p>

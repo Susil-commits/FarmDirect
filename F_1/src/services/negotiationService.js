@@ -14,5 +14,10 @@ export const negotiationService = {
   getNegotiations: async () => {
     const response = await api.get('/negotiations');
     return response.data;
+  },
+
+  getCopilotGuidance: async (params) => {
+    const response = await api.get('/negotiations/copilot-guidance', { params });
+    return response.data;
   }
 };

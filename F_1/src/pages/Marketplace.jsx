@@ -78,12 +78,31 @@ export default function Marketplace() {
       try {
         setLoading(true);
         setError(null);
-        const response = await cropService.getAllCrops({
-          category: filters.cropType || quickCategory || undefined,
-          minPrice: filters.priceRange[0],
-          maxPrice: filters.priceRange[1],
-          location: filters.location || undefined,
-        });
+        let response;
+        if (filters.searchQuery && filters.searchQuery.trim()) {
+          try {
+            response = await cropService.searchCrops(filters.searchQuery.trim(), {
+              category: filters.cropType || quickCategory || undefined,
+              minPrice: filters.priceRange[0],
+              maxPrice: filters.priceRange[1],
+              region: filters.location || undefined,
+            });
+          } catch {
+            response = await cropService.getAllCrops({
+              category: filters.cropType || quickCategory || undefined,
+              minPrice: filters.priceRange[0],
+              maxPrice: filters.priceRange[1],
+              location: filters.location || undefined,
+            });
+          }
+        } else {
+          response = await cropService.getAllCrops({
+            category: filters.cropType || quickCategory || undefined,
+            minPrice: filters.priceRange[0],
+            maxPrice: filters.priceRange[1],
+            location: filters.location || undefined,
+          });
+        }
         setCrops(response.crops || response.data?.crops || []);
       } catch (err) {
         console.error('Failed to fetch crops:', err);

@@ -25,6 +25,7 @@ const negotiationSchema = new Schema<INegotiation>(
         timestamp: { type: Date, default: Date.now },
       },
     ],
+    isSynthetic: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

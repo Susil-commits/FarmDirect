@@ -45,7 +45,7 @@ export const cropService = {
   
   updateCropWithFiles: (id, formData) => directApi.put(`/crops/${id}`, formData).then(r => r.data),
   deleteCrop: (id) => api.delete(`/crops/${id}`),
-  searchCrops: (query, filters) => api.get('/data/crops/search', { params: { q: query, ...filters } }),
+  searchCrops: (query, filters) => api.get('/crops/search', { params: { q: query, ...filters } }),
   getFarmerCrops: (farmerId, params) => api.get(`/crops/farmer/${farmerId}`, { params }),
   updateCropStatus: (id, status) => api.patch(`/crops/${id}/status`, { status }),
   
@@ -58,6 +58,8 @@ export const cropService = {
   getTrendingCrops: (limit = 8) => api.get('/crops/trending', { params: { limit } }),
   getSimilarCrops: (cropId, limit = 6) => api.get(`/crops/${cropId}/similar`, { params: { limit } }),
   getRecommendedCrops: (limit = 8) => api.get('/crops/buyer/recommended', { params: { limit } }),
+  getListingDraft: (data) => api.post('/ai/listing-draft', data).then((r) => r.data?.data || r.data?.draft || r.data),
+  getPriceGuidance: (params) => api.get('/ai/price-guidance', { params }).then((r) => r.data?.data || r.data),
 };
 
 export const couponService = {
@@ -88,6 +90,7 @@ export const orderService = {
 export const reviewService = {
   addReview: (cropId, data) => api.post(`/reviews/${cropId}`, data),
   getReviews: (cropId, params) => api.get(`/reviews/crop/${cropId}`, { params }),
+  getCropReviewSummary: (cropId) => api.get(`/reviews/crop/${cropId}/summary`),
   getFarmerReviews: (farmerId, params) => api.get(`/reviews/farmer/${farmerId}`, { params }),
   deleteReview: (reviewId) => api.delete(`/reviews/${reviewId}`),
   reportReview: (reviewId, data) => api.post(`/reviews/${reviewId}/report`, data)
@@ -134,6 +137,8 @@ export const adminService = {
   approveCrop: (cropId) => api.patch(`/admin/crops/${cropId}/approve`, {}),
   rejectCrop: (cropId, reason) => api.patch(`/admin/crops/${cropId}/reject`, { reason }),
   getAllOrders: (params) => api.get('/admin/orders', { params }),
+  getFlaggedOrders: (params) => api.get('/admin/orders/flagged', { params }),
+  labelOrderAnomaly: (orderId, label, notes) => api.post(`/admin/orders/${orderId}/anomaly-label`, { label, notes }),
   updateOrderStatus: (orderId, status) => api.patch(`/admin/orders/${orderId}/status`, { orderStatus: status }),
   debugKYCStatus: () => api.get('/admin/debug/users-kyc-status'),
   

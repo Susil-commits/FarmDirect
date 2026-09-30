@@ -90,8 +90,27 @@ export default function SearchResults() {
         if (max < 9999) params.maxPrice = max;
       }
 
-      const data = await cropService.getAllCrops(params);
-      const crops = data.crops || data.data?.crops || [];
+      let crops = [];
+      try {
+        const searchFilters = {
+          limit: 100,
+        };
+        if (filterValues.category !== 'all') searchFilters.category = filterValues.category;
+        if (filterValues.location !== 'all') searchFilters.region = filterValues.location;
+        if (filterValues.priceRange !== 'all') {
+          const [min, max] = filterValues.priceRange.split('-').map(Number);
+          searchFilters.minPrice = min;
+          if (max < 9999) searchFilters.maxPrice = max;
+        }
+
+        const searchRes = await cropService.searchCrops(query, searchFilters);
+        crops = searchRes.crops || searchRes.data?.crops || [];
+      } catch {
+        // Fallback to legacy getAllCrops
+        const data = await cropService.getAllCrops(params);
+        crops = data.crops || data.data?.crops || [];
+      }
+
       setResults(crops);
       setFilteredResults(crops);
       setPage(1);

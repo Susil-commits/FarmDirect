@@ -18,6 +18,7 @@ const uploadLimiter = rateLimit({
   keyGenerator: (req: Request) => {
     return req.user?._id ? `user_${req.user._id}` : (req.ip || 'unknown');
   },
+  validate: false,
   store: createRateLimitStore('rl:upload:'),
   message: {
     success: false,

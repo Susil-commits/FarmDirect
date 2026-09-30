@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../hooks/useRouter';
-import { orderService } from '../../services/appService';
+import { orderService, adminService } from '../../services/appService';
 import PageTransition from '../../components/common/PageTransition';
 import Card from '../../components/common/Card';
 import {
   ShoppingCart, Package, Truck, CheckCircle, XCircle,
   Clock, MapPin, Phone, User, ChevronDown, ChevronUp,
-  ArrowLeft, RefreshCw, Search, Filter, IndianRupee
+  ArrowLeft, RefreshCw, Search, Filter, IndianRupee,
+  ShieldAlert, AlertTriangle, Check, X, Sparkles
 } from 'lucide-react';
 import { getImageUrl } from '../../utils/formatters';
 
@@ -49,6 +50,7 @@ export default function AdminOrders() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [labelingAnomalyId, setLabelingAnomalyId] = useState(null);
   const [stats, setStats] = useState({
     total: 0,
     confirmed: 0,
@@ -93,8 +95,29 @@ export default function AdminOrders() {
     }
   };
 
+  const handleLabelAnomaly = async (orderId, label) => {
+    try {
+      setLabelingAnomalyId(orderId);
+      await adminService.labelOrderAnomaly(orderId, label);
+      setOrders(prev => prev.map(o => o._id === orderId ? {
+        ...o,
+        anomalyLabel: label,
+        flaggedAsAnomaly: label === 'confirmed',
+      } : o));
+    } catch (err) {
+      console.error('Error labeling anomaly:', err);
+    } finally {
+      setLabelingAnomalyId(null);
+    }
+  };
+
   const filteredOrders = orders.filter(order => {
-    const matchesStatus = filterStatus === 'all' || order.orderStatus === filterStatus;
+    const isAnomaly = order.flaggedAsAnomaly || (order.anomalyReasons && order.anomalyReasons.length > 0);
+    const matchesStatus = filterStatus === 'all'
+      ? true
+      : filterStatus === 'anomaly'
+        ? isAnomaly
+        : order.orderStatus === filterStatus;
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = !searchTerm || 
       (order.orderNumber || '').toLowerCase().includes(searchLower) ||
@@ -147,7 +170,7 @@ export default function AdminOrders() {
 
         <div className="p-6 max-w-7xl mx-auto">
           {}
-          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-3 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-8 gap-3 mb-6">
             <Card className="p-4 bg-gradient-to-br from-slate-50 to-white text-center">
               <p className="text-xs font-semibold text-gray-600 mb-1">Total</p>
               <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
@@ -161,6 +184,22 @@ export default function AdminOrders() {
             <Card className="p-4 bg-gradient-to-br from-red-50 to-white text-center border-2 border-red-200">
               <p className="text-xs font-semibold text-gray-600 mb-1">Cancelled</p>
               <p className="text-2xl font-bold text-red-600">{stats.cancelled}</p>
+            </Card>
+            <Card
+              onClick={() => setFilterStatus(filterStatus === 'anomaly' ? 'all' : 'anomaly')}
+              className={`p-4 text-center cursor-pointer transition border-2 ${
+                filterStatus === 'anomaly'
+                  ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-300'
+                  : 'border-amber-200 bg-gradient-to-br from-amber-50/60 to-white hover:bg-amber-50'
+              }`}
+            >
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+                <p className="text-xs font-semibold text-amber-800">AI Risk</p>
+              </div>
+              <p className="text-2xl font-bold text-amber-700">
+                {orders.filter(o => o.flaggedAsAnomaly || (o.anomalyReasons && o.anomalyReasons.length > 0)).length}
+              </p>
             </Card>
           </div>
 
@@ -184,6 +223,7 @@ export default function AdminOrders() {
                 className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 bg-white outline-none"
               >
                 <option value="all">All Statuses</option>
+                <option value="anomaly">⚠️ AI Risk Flags Only</option>
                 {ORDER_STATUS_FLOW.map(s => (
                   <option key={s} value={s}>{STATUS_LABELS[s]}</option>
                 ))}
@@ -249,13 +289,19 @@ export default function AdminOrders() {
                             </span>
                           </div>
                           <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <h3 className="font-bold text-gray-900 text-lg">
                                 #{order.orderNumber || order._id?.slice(-8)}
                               </h3>
                               <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${STATUS_COLORS[order.orderStatus] || 'bg-gray-100 text-gray-800 border-gray-300'}`}>
                                 {STATUS_LABELS[order.orderStatus] || order.orderStatus}
                               </span>
+                              {(order.flaggedAsAnomaly || (order.anomalyReasons && order.anomalyReasons.length > 0)) && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                                  <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+                                  AI Risk Flag {order.anomalyScore ? `(${Math.round(order.anomalyScore * 100)}%)` : ''}
+                                </span>
+                              )}
                             </div>
                             <p className="text-sm text-gray-600 mt-1">
                               {order.cropName || 'Crop'} • {order.quantity} {order.unit || 'kg'} •
@@ -283,6 +329,58 @@ export default function AdminOrders() {
                     {}
                     {isExpanded && (
                       <div className="px-6 pb-6 border-t border-gray-200 pt-4">
+                        {(order.flaggedAsAnomaly || (order.anomalyReasons && order.anomalyReasons.length > 0)) && (
+                          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 shadow-sm">
+                            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                              <div className="flex items-center gap-2">
+                                <ShieldAlert className="w-5 h-5 text-amber-600" />
+                                <h4 className="font-bold text-amber-950 text-sm sm:text-base">
+                                  AI Risk Analysis & Anomaly Diagnostics
+                                </h4>
+                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full">
+                                  <Sparkles className="w-3 h-3" /> Suggested by AI
+                                </span>
+                              </div>
+                              {order.anomalyLabel && (
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase ${
+                                  order.anomalyLabel === 'confirmed' ? 'bg-red-100 text-red-800 border border-red-300' : 'bg-gray-100 text-gray-700 border border-gray-300'
+                                }`}>
+                                  Status: {order.anomalyLabel}
+                                </span>
+                              )}
+                            </div>
+
+                            {order.anomalyReasons && order.anomalyReasons.length > 0 ? (
+                              <div className="space-y-1.5 mb-4">
+                                {order.anomalyReasons.map((reason, rIdx) => (
+                                  <div key={rIdx} className="flex items-start gap-2 text-xs sm:text-sm text-amber-900 bg-white/80 p-2.5 rounded-lg border border-amber-200/60">
+                                    <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                                    <span className="font-medium">{reason}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-amber-800 mb-4">Statistical spending outlier detected by real-time variance monitor.</p>
+                            )}
+
+                            <div className="flex items-center gap-3 pt-3 border-t border-amber-200/80">
+                              <button
+                                disabled={labelingAnomalyId === order._id || order.anomalyLabel === 'confirmed'}
+                                onClick={() => handleLabelAnomaly(order._id, 'confirmed')}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition shadow-sm"
+                              >
+                                <Check className="w-3.5 h-3.5" /> Confirm Anomaly
+                              </button>
+                              <button
+                                disabled={labelingAnomalyId === order._id || order.anomalyLabel === 'dismissed'}
+                                onClick={() => handleLabelAnomaly(order._id, 'dismissed')}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 disabled:opacity-50 text-gray-800 rounded-lg text-xs font-semibold transition"
+                              >
+                                <X className="w-3.5 h-3.5" /> Dismiss Flag
+                              </button>
+                            </div>
+                          </div>
+                        )}
                         {}
                         <div className="mb-6">
                           <p className="text-sm font-semibold text-gray-700 mb-3">Order Progress</p>

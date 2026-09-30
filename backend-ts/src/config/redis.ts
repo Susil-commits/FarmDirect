@@ -38,7 +38,7 @@ redisClient.on('connect', () => {
 
 let connectPromise: Promise<void> | null = null;
 
-if (redisUrl) {
+if (redisUrl && process.env.NODE_ENV !== 'test') {
   connectPromise = redisClient.connect().catch(() => {}) as Promise<void>;
 }
 

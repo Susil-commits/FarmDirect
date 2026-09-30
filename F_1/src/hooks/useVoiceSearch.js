@@ -1,8 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-export const useVoiceSearch = (onResult) => {
+export const useVoiceSearch = (onResult, languageOrOptions = 'en-IN') => {
+  const requestedLang = typeof languageOrOptions === 'string'
+    ? languageOrOptions
+    : languageOrOptions?.lang || 'en-IN';
+
   const [isListening, setIsListening] = useState(false);
   const [supported, setSupported] = useState(false);
+  const [activeLang, setActiveLang] = useState(requestedLang);
   const [recognition, setRecognition] = useState(null);
 
   const onResultRef = useRef(onResult);
@@ -11,15 +16,18 @@ export const useVoiceSearch = (onResult) => {
   }, [onResult]);
 
   useEffect(() => {
+    setActiveLang(requestedLang);
+  }, [requestedLang]);
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SpeechRecognition) {
-        
         setSupported(true);
         const recog = new SpeechRecognition();
         recog.continuous = false;
         recog.interimResults = false;
-        recog.lang = 'en-IN';
+        recog.lang = activeLang;
 
         recog.onstart = () => {
           setIsListening(true);
@@ -34,7 +42,20 @@ export const useVoiceSearch = (onResult) => {
         };
 
         recog.onerror = (event) => {
-          console.error('Speech recognition error', event.error);
+          // If Odia ('or-IN' or 'or') is not supported in the user's browser, fall back to 'hi-IN' or 'en-IN'
+          if (event.error === 'language-not-supported' && (activeLang === 'or-IN' || activeLang === 'or')) {
+            console.warn(`Web Speech API does not support Odia (${activeLang}) on this browser, falling back to Hindi (hi-IN)`);
+            recog.lang = 'hi-IN';
+            setActiveLang('hi-IN');
+            try {
+              recog.start();
+              return;
+            } catch {
+              // Ignore restart error
+            }
+          } else {
+            console.warn('Speech recognition error:', event.error);
+          }
           setIsListening(false);
         };
 
@@ -45,17 +66,18 @@ export const useVoiceSearch = (onResult) => {
         setRecognition(recog);
       }
     }
-  }, []);
+  }, [activeLang]);
 
   const startListening = useCallback(() => {
     if (recognition && !isListening) {
       try {
+        recognition.lang = activeLang;
         recognition.start();
       } catch (err) {
         console.error('Error starting recognition:', err);
       }
     }
-  }, [recognition, isListening]);
+  }, [recognition, isListening, activeLang]);
 
   const stopListening = useCallback(() => {
     if (recognition && isListening) {
@@ -70,6 +92,8 @@ export const useVoiceSearch = (onResult) => {
   return {
     isListening,
     supported,
+    activeLang,
+    setLanguage: setActiveLang,
     startListening,
     stopListening
   };

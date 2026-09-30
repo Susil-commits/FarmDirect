@@ -3,9 +3,9 @@ import IORedis from 'ioredis';
 
 const redisUrl = process.env.REDIS_URI || process.env.REDIS_URL;
 
-export const connection = redisUrl ? new IORedis(redisUrl, { maxRetriesPerRequest: null }) : undefined;
+export const connection = (redisUrl && process.env.NODE_ENV !== 'test') ? new IORedis(redisUrl, { maxRetriesPerRequest: null }) : undefined;
 
-if (!connection) {
+if (!connection && process.env.NODE_ENV !== 'test') {
   console.warn('REDIS_URI or REDIS_URL not provided. Background queues will be disabled.');
 }
 

@@ -6,8 +6,10 @@ import Card from '../components/common/Card.jsx';
 import Button from '../components/common/Button.jsx';
 import PageTransition from '../components/common/PageTransition.jsx';
 import ScrollAnimation from '../components/common/ScrollAnimation.jsx';
-import { AlertCircle, CheckCircle, ArrowLeft, Leaf, Upload, X, Image } from 'lucide-react';
+import { AlertCircle, CheckCircle, ArrowLeft, Leaf, Upload, X, Image, Sparkles, Info, AlertTriangle } from 'lucide-react';
 import { cropService } from '../services/appService.js';
+import { getListingDraft } from '../services/aiChatService.js';
+import MarketPriceBand from '../components/crops/MarketPriceBand.jsx';
 
 export default function CreateCrop() {
   const { user } = useAuth();
@@ -29,6 +31,12 @@ export default function CreateCrop() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [imagePreview, setImagePreview] = useState([]);
+  const [aiDraftLoading, setAiDraftLoading] = useState(false);
+  const [aiReview, setAiReview] = useState(null);
+  const [aiSuggested, setAiSuggested] = useState(false);
+  const [dismissAiBanner, setDismissAiBanner] = useState(false);
+  const [lastDraftGrade, setLastDraftGrade] = useState('A');
+  const [lastDraftConfidence, setLastDraftConfidence] = useState(90);
 
   const kycVerified = user?.kycStatus === 'verified';
 
@@ -38,6 +46,60 @@ export default function CreateCrop() {
       ...prev,
       [name]: value
     }));
+  };
+
+  const analyzeImageWithAi = async (file) => {
+    if (!file) return;
+    try {
+      setAiDraftLoading(true);
+      setError(null);
+
+      // Read file as base64 data URL
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const draft = await getListingDraft({
+        imageBase64: dataUrl,
+        cropNameHint: formData.cropName || file.name || undefined,
+      });
+
+      if (draft) {
+        setFormData((prev) => ({
+          ...prev,
+          cropName: prev.cropName || draft.cropName || '',
+          category: draft.category || prev.category,
+          cropType: draft.cropType || prev.cropType,
+          description: prev.description || draft.description || '',
+          price: prev.price || (draft.suggestedPrice ? String(draft.suggestedPrice) : ''),
+          specifications: prev.specifications || JSON.stringify({
+            qualityGrade: draft.qualityGrade || 'A',
+            ripeness: draft.ripeness || 'Freshly Harvested',
+            colour: draft.colour || 'Natural',
+            size: draft.size || 'Medium',
+            aiConfidence: draft.confidence ? Math.round(draft.confidence * 100) : 90,
+          }, null, 2),
+        }));
+
+        setAiReview({
+          looksLikeProduce: draft.looksLikeProduce !== false,
+          issues: draft.issues || [],
+          confidence: draft.confidence || 0.9,
+        });
+
+        setLastDraftGrade(draft.qualityGrade || 'A');
+        setLastDraftConfidence(draft.confidence ? Math.round(draft.confidence * 100) : 90);
+        setAiSuggested(true);
+        setDismissAiBanner(false);
+      }
+    } catch (err) {
+      console.warn('AI listing draft suggestion error:', err);
+    } finally {
+      setAiDraftLoading(false);
+    }
   };
 
   const handleImageUpload = (e) => {
@@ -57,6 +119,11 @@ export default function CreateCrop() {
       images: [...prev.images, ...files],
     }));
     setError(null);
+
+    // Auto-trigger AI Produce Vision Scanner on first uploaded image
+    if (files[0]) {
+      analyzeImageWithAi(files[0]);
+    }
   };
 
   const removeImage = (index) => {
@@ -96,6 +163,10 @@ export default function CreateCrop() {
       submitData.append('pickupLocation', formData.pickupLocation);
       submitData.append('contactNumber', formData.contactNumber);
       submitData.append('specifications', formData.specifications || '{}');
+
+      if (aiReview) {
+        submitData.append('aiReview', JSON.stringify(aiReview));
+      }
 
       formData.images.forEach((file) => {
         submitData.append('images', file);
@@ -208,6 +279,121 @@ export default function CreateCrop() {
                   )}
 
                   <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Crop Images & AI Vision Scanner */}
+                    <div className="bg-gradient-to-br from-emerald-50/70 via-stone-50/80 to-teal-50/70 p-5 rounded-2xl border border-emerald-200/80 shadow-sm">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-stone-900 font-bold flex items-center gap-2 text-sm">
+                          <Upload size={16} className="text-emerald-700" />
+                          <span>Crop Photos & AI Produce Scanner</span>
+                        </label>
+                        <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <Sparkles size={12} /> Smart Autofill
+                        </span>
+                      </div>
+
+                      <div className="border-2 border-dashed border-emerald-300/80 rounded-xl p-6 text-center bg-white/80 hover:bg-emerald-50/50 hover:border-emerald-500 transition-colors">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleImageUpload}
+                          className="hidden"
+                          id="crop-image-upload"
+                        />
+                        <label htmlFor="crop-image-upload" className="cursor-pointer block">
+                          <Upload size={32} className="mx-auto mb-2 text-emerald-600" />
+                          <p className="text-stone-800 font-semibold text-sm">Upload crop photograph</p>
+                          <p className="text-stone-500 text-xs mt-1">
+                            AgriVision AI will automatically detect crop variety, quality grade & market pricing
+                          </p>
+                        </label>
+                      </div>
+
+                      {/* Image Previews */}
+                      {imagePreview.length > 0 && (
+                        <div className="mt-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold text-stone-700">Uploaded Photos ({imagePreview.length}/5)</span>
+                            {formData.images[0] && (
+                              <button
+                                type="button"
+                                onClick={() => analyzeImageWithAi(formData.images[0])}
+                                disabled={aiDraftLoading}
+                                className="text-xs font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-emerald-200 shadow-xs cursor-pointer"
+                              >
+                                <Sparkles size={12} /> {aiDraftLoading ? 'Analyzing...' : 'Re-analyze with AI'}
+                              </button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                            {imagePreview.map((preview, index) => (
+                              <div key={index} className="relative group">
+                                <img
+                                  src={preview}
+                                  alt={`Preview ${index + 1}`}
+                                  className="w-full h-20 object-cover rounded-lg border-2 border-emerald-100 shadow-xs"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeImage(index)}
+                                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* AI Draft Loading Indicator */}
+                      {aiDraftLoading && (
+                        <div className="mt-3 p-3.5 bg-emerald-100/70 border border-emerald-300 rounded-xl flex items-center gap-3 text-emerald-900 animate-pulse">
+                          <Sparkles size={18} className="text-emerald-700 animate-spin shrink-0" />
+                          <div>
+                            <p className="font-bold text-xs">Analyzing Produce Photo with AI...</p>
+                            <p className="text-[11px] text-emerald-700">Detecting crop type, quality grade, freshness, and optimal market pricing.</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* AI Suggested Banner (Dismissible) */}
+                      {aiSuggested && !dismissAiBanner && (
+                        <div className="mt-3 p-3.5 bg-gradient-to-r from-emerald-50 via-teal-50 to-white border border-emerald-300 rounded-xl flex items-start justify-between gap-3 text-emerald-950 shadow-xs">
+                          <div className="flex items-start gap-2">
+                            <Sparkles size={16} className="text-emerald-600 mt-0.5 shrink-0" />
+                            <div>
+                              <p className="font-bold text-xs">Suggested by AI (Grade {lastDraftGrade} · {lastDraftConfidence}% confidence)</p>
+                              <p className="text-[11px] text-emerald-800 mt-0.5">
+                                Form fields have been suggested from your photo. You can edit any field before submitting.
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setDismissAiBanner(true)}
+                            className="text-stone-400 hover:text-stone-700 p-0.5 cursor-pointer"
+                            title="Dismiss"
+                          >
+                            <X size={15} />
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Advisory Sanity Review Banner */}
+                      {aiReview && (!aiReview.looksLikeProduce || aiReview.issues?.length > 0) && (
+                        <div className="mt-3 p-3.5 bg-amber-50 border border-amber-300 rounded-xl flex items-start gap-2.5 text-amber-900">
+                          <AlertTriangle size={16} className="text-amber-600 mt-0.5 shrink-0" />
+                          <div>
+                            <p className="font-bold text-xs">Advisory AI Quality Signal</p>
+                            <p className="text-[11px] text-amber-800 mt-0.5">
+                              Our automated inspector noted: {aiReview.issues?.join(', ') || 'Produce not clearly identified'}. You may still submit, but an admin will review the image before public listing.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                     {/* Crop Type */}
                     <div>
                       <label className="block text-gray-900 font-semibold mb-2">
@@ -262,56 +448,69 @@ export default function CreateCrop() {
                     </div>
 
                     {/* Price, Quantity, Unit */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-gray-900 font-semibold mb-2">
-                          Price per Unit (₹) *
-                        </label>
-                        <input
-                          type="number"
-                          name="price"
-                          value={formData.price}
-                          onChange={handleInputChange}
-                          placeholder="0.00"
-                          min="0"
-                          step="0.01"
-                          required
-                          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-green-600 focus:outline-none transition-colors"
-                        />
+                    <div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-gray-900 font-semibold mb-2">
+                            Price per Unit (₹) *
+                          </label>
+                          <input
+                            type="number"
+                            name="price"
+                            value={formData.price}
+                            onChange={handleInputChange}
+                            placeholder="0.00"
+                            min="0"
+                            step="0.01"
+                            required
+                            className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-green-600 focus:outline-none transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-gray-900 font-semibold mb-2">
+                            Quantity *
+                          </label>
+                          <input
+                            type="number"
+                            name="quantity"
+                            value={formData.quantity}
+                            onChange={handleInputChange}
+                            placeholder="0"
+                            min="0"
+                            required
+                            className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-green-600 focus:outline-none transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-gray-900 font-semibold mb-2">
+                            Unit
+                          </label>
+                          <select
+                            name="unit"
+                            value={formData.unit}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-green-600 focus:outline-none transition-colors"
+                          >
+                            <option value="kg">Kg</option>
+                            <option value="quintal">Quintal</option>
+                            <option value="ton">Ton</option>
+                            <option value="piece">Piece</option>
+                            <option value="dozen">Dozen</option>
+                            <option value="bundle">Bundle</option>
+                          </select>
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-gray-900 font-semibold mb-2">
-                          Quantity *
-                        </label>
-                        <input
-                          type="number"
-                          name="quantity"
-                          value={formData.quantity}
-                          onChange={handleInputChange}
-                          placeholder="0"
-                          min="0"
-                          required
-                          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-green-600 focus:outline-none transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-900 font-semibold mb-2">
-                          Unit
-                        </label>
-                        <select
-                          name="unit"
-                          value={formData.unit}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-green-600 focus:outline-none transition-colors"
-                        >
-                          <option value="kg">Kg</option>
-                          <option value="quintal">Quintal</option>
-                          <option value="ton">Ton</option>
-                          <option value="piece">Piece</option>
-                          <option value="dozen">Dozen</option>
-                          <option value="bundle">Bundle</option>
-                        </select>
-                      </div>
+
+                      {/* Market Price Guidance Band Bar (T2.3) */}
+                      {formData.cropName && (
+                        <div className="mt-3">
+                          <MarketPriceBand
+                            cropName={formData.cropName}
+                            currentPrice={formData.price}
+                            unit={formData.unit}
+                          />
+                        </div>
+                      )}
                     </div>
 
                     {/* Pickup Location */}
@@ -360,50 +559,6 @@ export default function CreateCrop() {
                         required
                         className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-green-600 focus:outline-none resize-none transition-colors"
                       />
-                    </div>
-
-                    {/* Image Upload */}
-                    <div>
-                      <label className="block text-gray-900 font-semibold mb-2">
-                        Crop Images
-                      </label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition-colors">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          onChange={handleImageUpload}
-                          className="hidden"
-                          id="crop-image-upload"
-                        />
-                        <label htmlFor="crop-image-upload" className="cursor-pointer">
-                          <Upload size={32} className="mx-auto mb-2 text-gray-400" />
-                          <p className="text-gray-600 font-medium">Click to upload images</p>
-                          <p className="text-gray-400 text-sm mt-1">Max 5 images (JPG, PNG, WebP)</p>
-                        </label>
-                      </div>
-
-                      {/* Image Previews */}
-                      {imagePreview.length > 0 && (
-                        <div className="grid grid-cols-3 gap-3 mt-4">
-                          {imagePreview.map((preview, index) => (
-                            <div key={index} className="relative group">
-                              <img
-                                src={preview}
-                                alt={`Preview ${index + 1}`}
-                                className="w-full h-24 object-cover rounded-lg border-2 border-gray-200"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => removeImage(index)}
-                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <X size={14} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </div>
 
                     {/* Specifications */}

@@ -68,5 +68,61 @@
     "shop_now": "Shop Now",
     "join_farmer": "Join as Farmer",
     "featured_crops": "Featured Crops"
+  },
+  "marketBand": {
+    "loading": "Fetching live market price guidance...",
+    "insufficientData": "Market benchmark: Collecting recent price history for this crop.",
+    "belowBand": "Below Market Band (Competitive)",
+    "aboveBand": "Premium / Above Market Band",
+    "inBand": "Fair Market Range",
+    "title": "Market Price Band (Last {{days}} Days)",
+    "snapshots": "{{count}} transactions"
+  },
+  "listingDraft": {
+    "analyzing": "Analyzing produce photo with AI...",
+    "suggestedByAi": "Suggested by AI",
+    "reviewAdvisory": "Advisory Review: Produce may not be clearly visible. Please verify before submitting.",
+    "produceNotDetected": "Produce not detected",
+    "autoFillSuccess": "Form pre-filled from photo. Please verify all details before submitting."
+  },
+  "priceForecast": {
+    "title": "Market Price Forecast & Selling Advice",
+    "cropSelect": "Select Crop to Forecast",
+    "advisoryTag": "AI Advisory (Hold/Sell)",
+    "forecastHidden": "Forecast hidden: Model did not beat baseline safeguards for this crop/region.",
+    "loading": "Calculating price forecast...",
+    "disclaimer": "AI projections are advisory only. Actual rates depend on daily mandi arrivals and weather.",
+    "daysCover": "Days of Stock Cover",
+    "velocity": "Sales Velocity",
+    "criticalStock": "Critical Stock",
+    "warningStock": "Low Stock",
+    "adequateStock": "Adequate Stock"
+  },
+  "anomaly": {
+    "riskFlag": "AI Risk Flag",
+    "riskDiagnostics": "AI Risk Analysis & Anomaly Diagnostics",
+    "suggestedByAi": "Suggested by AI",
+    "confirm": "Confirm Anomaly",
+    "dismiss": "Dismiss Flag",
+    "confirmed": "Confirmed Anomaly",
+    "dismissed": "Dismissed (Clean)",
+    "reasons": "Detected Risk Signals",
+    "score": "Anomaly Score",
+    "filterTab": "AI Risk"
+  },
+  "reviews": {
+    "aiSummaryTitle": "AI Customer Review Summary",
+    "pros": "Key Highlights",
+    "cons": "Areas for Improvement",
+    "sentiment": "Buyer Sentiment",
+    "spamFlagged": "Flagged for moderator review",
+    "basedOn": "Based on {{count}} customer reviews"
+  },
+  "negotiation": {
+    "aiCopilot": "AI Negotiation Copilot",
+    "suggestedRange": "Suggested Offer Range",
+    "acceptanceProb": "Estimated Acceptance Likelihood",
+    "counterAdvisory": "Suggested Counter-Offer",
+    "advisoryOnly": "Advisory only based on recent mandi transactions."
   }
 }

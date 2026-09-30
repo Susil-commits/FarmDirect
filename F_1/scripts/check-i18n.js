@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 const localesDir = path.resolve(__dirname, '../src/locales');
 const enPath = path.join(localesDir, 'en/translation.json');
 const hiPath = path.join(localesDir, 'hi/translation.json');
+const odPath = path.join(localesDir, 'od/translation.json');
 
 function loadJson(filePath) {
   try {
@@ -35,16 +36,19 @@ function getFlattenedKeys(obj, prefix = '') {
 
 const en = loadJson(enPath);
 const hi = loadJson(hiPath);
+const od = loadJson(odPath);
 
 const enKeys = getFlattenedKeys(en);
 const hiKeys = getFlattenedKeys(hi);
+const odKeys = getFlattenedKeys(od);
 
 const enKeyMap = new Map(enKeys.map((item) => [item.key, item.val]));
 const hiKeyMap = new Map(hiKeys.map((item) => [item.key, item.val]));
+const odKeyMap = new Map(odKeys.map((item) => [item.key, item.val]));
 
 let errors = 0;
 
-// Keys in EN missing from HI
+// Keys in EN missing or empty in HI
 for (const key of enKeyMap.keys()) {
   if (!hiKeyMap.has(key)) {
     console.error(`❌ Missing in Hindi (hi): ${key}`);
@@ -63,10 +67,29 @@ for (const [key] of hiKeyMap.entries()) {
   }
 }
 
+// Keys in EN missing or empty in OD
+for (const key of enKeyMap.keys()) {
+  if (!odKeyMap.has(key)) {
+    console.error(`❌ Missing in Odia (od): ${key}`);
+    errors++;
+  } else if (typeof odKeyMap.get(key) === 'string' && odKeyMap.get(key).trim() === '') {
+    console.error(`❌ Empty Odia translation for: ${key}`);
+    errors++;
+  }
+}
+
+// Keys in OD missing from EN
+for (const [key] of odKeyMap.entries()) {
+  if (!enKeyMap.has(key)) {
+    console.error(`❌ Extra in Odia (not in EN): ${key}`);
+    errors++;
+  }
+}
+
 if (errors > 0) {
-  console.error(`\nFound ${errors} i18n parity issues.`);
+  console.error(`\nFound ${errors} i18n parity issues across EN, HI, and OD.`);
   process.exit(1);
 } else {
-  console.log(`✅ i18n key parity check passed (${enKeyMap.size} keys verified across EN and HI).`);
+  console.log(`✅ i18n key parity check passed (${enKeyMap.size} keys verified across EN, HI, and OD).`);
   process.exit(0);
 }

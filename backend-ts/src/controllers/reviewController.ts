@@ -8,11 +8,12 @@ import { OrderStatus, UserRole } from '../types/enums.js';
 import type { Request, Response } from 'express';
 import mongoose, { type Types } from 'mongoose';
 import { parsePagination } from '../utils/pagination.js';
+import { analyzeReviewContent, generateCropReviewSummary } from '../services/reviewAnalysisService.js';
 
 async function updateCropRating(cropId: Types.ObjectId | string): Promise<void> {
   const targetCropId = typeof cropId === 'string' ? new mongoose.Types.ObjectId(cropId) : cropId;
   const result = await Review.aggregate([
-    { $match: { cropId: targetCropId } },
+    { $match: { cropId: targetCropId, isFlagged: { $ne: true } } },
     { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } },
   ]);
   const { avg = 0, count = 0 } = result[0] ?? {};
@@ -34,7 +35,7 @@ async function updateFarmerRating(farmerId: Types.ObjectId | string): Promise<vo
         pipeline: [{ $match: { farmerId: targetFarmerId } }, { $project: { _id: 1 } }],
       },
     },
-    { $match: { 'crop.0': { $exists: true } } },
+    { $match: { 'crop.0': { $exists: true }, isFlagged: { $ne: true } } },
     { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } },
   ]);
   const { avg = 0, count = 0 } = result[0] ?? {};
@@ -45,34 +46,68 @@ async function updateFarmerRating(farmerId: Types.ObjectId | string): Promise<vo
 }
 
 export const addReview = asyncHandler(async (req: Request, res: Response) => {
-  const { cropId, rating, comment } = req.body as { cropId: string; rating: number; comment: string };
+  const { rating, comment } = req.body as { rating: number; comment: string };
+  const cropId = req.params.cropId || (req.body as any).cropId;
   const userId = req.user!._id;
 
+  if (!cropId) return sendError(res, 'Crop ID is required', 400);
   if (rating < 1 || rating > 5) return sendError(res, 'Rating must be between 1 and 5', 400);
 
   const crop = await CropListing.findById(cropId);
   if (!crop) return sendError(res, 'Crop not found', 404);
 
   const order = await Order.findOne({ buyerId: userId, cropId, orderStatus: OrderStatus.Completed });
-  if (!order) return sendError(res, 'You can only review crops you have purchased', 400);
+  if (!order) return sendError(res, 'You can only review crops you have purchased and received', 400);
+
+  const analysis = analyzeReviewContent(comment, rating);
 
   const existingReview = await Review.findOne({ cropId, userId });
   if (existingReview) {
     existingReview.rating = rating;
     existingReview.comment = comment;
+    existingReview.sentimentScore = analysis.sentimentScore;
+    existingReview.sentimentLabel = analysis.sentimentLabel;
+    existingReview.isFlagged = analysis.isFlagged;
+    existingReview.flagReason = analysis.flagReason;
+    existingReview.isApproved = !analysis.isFlagged;
     await existingReview.save();
+
     await updateCropRating(cropId);
-    
     await updateFarmerRating(crop.farmerId);
-    return res.status(200).json({ success: true, message: 'Review updated successfully', data: existingReview });
+    generateCropReviewSummary(cropId).catch(() => {});
+
+    return res.status(200).json({
+      success: true,
+      message: analysis.isFlagged
+        ? 'Review submitted and flagged for moderator inspection.'
+        : 'Review updated successfully',
+      data: existingReview,
+    });
   }
 
-  const review = await Review.create({ cropId, userId, rating, comment });
+  const review = await Review.create({
+    cropId,
+    userId,
+    rating,
+    comment,
+    sentimentScore: analysis.sentimentScore,
+    sentimentLabel: analysis.sentimentLabel,
+    isFlagged: analysis.isFlagged,
+    flagReason: analysis.flagReason,
+    isApproved: !analysis.isFlagged,
+  });
+
   await updateCropRating(cropId);
-
   await updateFarmerRating(crop.farmerId);
+  generateCropReviewSummary(cropId).catch(() => {});
 
-  res.status(201).json({ success: true, message: 'Review added successfully', data: review });
+  res.status(201).json({
+    success: true,
+    message: analysis.isFlagged
+      ? 'Review submitted and pending moderator review.'
+      : 'Review added successfully',
+    data: review,
+  });
 });
 
 export const getReviews = asyncHandler(async (req: Request, res: Response) => {
@@ -87,14 +122,35 @@ export const getReviews = asyncHandler(async (req: Request, res: Response) => {
   else if (sortBy === 'highest') sortOption = { rating: -1 };
   else if (sortBy === 'lowest') sortOption = { rating: 1 };
 
+  // Only return non-flagged approved reviews to regular users
+  const filter: Record<string, unknown> = { cropId, isFlagged: { $ne: true } };
+
   const [reviews, total] = await Promise.all([
-    Review.find({ cropId }).lean().populate('userId', 'firstName lastName profilePicture').skip(skip).limit(limit).sort(sortOption),
-    Review.countDocuments({ cropId }),
+    Review.find(filter)
+      .lean()
+      .populate('userId', 'firstName lastName profilePicture')
+      .skip(skip)
+      .limit(limit)
+      .sort(sortOption),
+    Review.countDocuments(filter),
   ]);
 
   res.status(200).json({
-    success: true, data: reviews,
+    success: true,
+    data: reviews,
+    summary: crop.reviewSummary || null,
     pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+  });
+});
+
+export const getCropReviewSummaryController = asyncHandler(async (req: Request, res: Response) => {
+  const { cropId } = req.params;
+  const summary = await generateCropReviewSummary(cropId);
+  if (!summary) return sendError(res, 'Crop not found', 404);
+
+  res.status(200).json({
+    success: true,
+    data: summary,
   });
 });
 
@@ -107,11 +163,12 @@ export const deleteReview = asyncHandler(async (req: Request, res: Response) => 
     return sendError(res, 'Not authorized to delete this review', 403);
   }
   const cropId = review.cropId;
-  
+
   const crop = await CropListing.findById(cropId).select('farmerId');
   await Review.findByIdAndDelete(reviewId);
   await updateCropRating(cropId);
   if (crop) await updateFarmerRating(crop.farmerId);
+  generateCropReviewSummary(cropId, true).catch(() => {});
   res.status(200).json({ success: true, message: 'Review deleted successfully' });
 });
 
@@ -121,13 +178,21 @@ export const getFarmerReviews = asyncHandler(async (req: Request, res: Response)
   const crops = await CropListing.find({ farmerId }).lean();
   const cropIds = crops.map((crop) => crop._id);
 
+  const filter = { cropId: { $in: cropIds }, isFlagged: { $ne: true } };
+
   const [reviews, total] = await Promise.all([
-    Review.find({ cropId: { $in: cropIds } }).lean().populate('userId', 'firstName lastName profilePicture').skip(skip).limit(limit).sort({ createdAt: -1 }),
-    Review.countDocuments({ cropId: { $in: cropIds } }),
+    Review.find(filter)
+      .lean()
+      .populate('userId', 'firstName lastName profilePicture')
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }),
+    Review.countDocuments(filter),
   ]);
 
   res.status(200).json({
-    success: true, data: reviews,
+    success: true,
+    data: reviews,
     pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   });
 });

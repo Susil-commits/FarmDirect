@@ -4,6 +4,10 @@ import cropRoutes from '../routes/cropRoutes.js';
 import orderRoutes from '../routes/orderRoutes.js';
 import adminRoutes from '../routes/adminRoutes.js';
 import healthRoutes from '../routes/healthRoutes.js';
+import aiRoutes from '../routes/aiRoutes.js';
+import farmerRoutes from '../routes/farmerRoutes.js';
+import reviewRoutes from '../routes/reviewRoutes.js';
+import negotiationRoutes from '../routes/negotiationRoutes.js';
 import errorHandler from '../middleware/errorHandler.js';
 
 const app = express();
@@ -15,6 +19,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/crops', cropRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/farmer', farmerRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/negotiations', negotiationRoutes);
 app.use(errorHandler);
 
 export default app;

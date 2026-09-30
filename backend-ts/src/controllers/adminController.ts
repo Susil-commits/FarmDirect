@@ -9,7 +9,7 @@ import Wishlist from '../models/Wishlist.js';
 import Notification from '../models/Notification.js';
 import AuditLog from '../models/AuditLog.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { sendError } from '../utils/apiResponse.js';
+import { sendError, sendSuccess } from '../utils/apiResponse.js';
 import { invalidationStrategies } from '../utils/cache.js';
 import { notifyKYCUpdate } from '../socket/eventHandlers.js';
 import { UserRole, UserStatus, KycStatus, OrderStatus, CancelledBy, PaymentStatus, CropStatus, CropAvailability } from '../types/enums.js';
@@ -18,6 +18,7 @@ import type { Types, PipelineStage } from 'mongoose';
 import { AdminService } from '../services/adminService.js';
 import { getUploadsRoot } from '../config/localStorage.js';
 import { parsePagination } from '../utils/pagination.js';
+import { syncCropEmbedding } from '../services/listingEmbeddingService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -281,6 +282,7 @@ export const approveCrop = asyncHandler(async (req: Request, res: Response) => {
   try {
     await Notification.create({ userId: crop.farmerId, title: 'Crop Approved', message: `Your crop listing "${crop.cropName}" has been approved and is now visible to buyers!`, type: 'general', priority: 'high', data: { cropId: crop._id, cropName: crop.cropName } });
   } catch (err) { console.error('Notification creation error:', err); }
+  syncCropEmbedding(crop._id).catch(() => {});
   res.status(200).json({ success: true, message: 'Crop approved successfully', data: crop });
 });
 
@@ -648,4 +650,37 @@ export const getFlaggedOrders = asyncHandler(async (req: Request, res: Response)
     .lean();
 
   paginated(res, orders, total, page, limit);
+});
+
+export const labelOrderAnomaly = asyncHandler(async (req: Request, res: Response) => {
+  const { orderId } = req.params;
+  const { label, notes } = req.body;
+
+  if (!label || !['confirmed', 'dismissed'].includes(label)) {
+    return sendError(res, 'Invalid anomaly label: must be "confirmed" or "dismissed"', 400);
+  }
+
+  const order = await Order.findById(orderId);
+  if (!order) {
+    return sendError(res, 'Order not found', 404);
+  }
+
+  order.anomalyLabel = label;
+  order.anomalyLabeledAt = new Date();
+  order.anomalyLabeledBy = req.user!._id;
+  if (notes) {
+    order.anomalyLabelNotes = String(notes);
+  }
+  if (label === 'dismissed') {
+    order.flaggedAsAnomaly = false;
+  }
+
+  await order.save();
+
+  sendSuccess(res, {
+    message: `Order anomaly successfully marked as ${label}`,
+    orderId: order._id,
+    anomalyLabel: order.anomalyLabel,
+    flaggedAsAnomaly: order.flaggedAsAnomaly,
+  });
 });

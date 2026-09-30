@@ -13,6 +13,9 @@ import type { Request, Response, NextFunction } from 'express';
 import type { ICropSpecifications } from '../types/index.js';
 import { getCache, setCache, clearPrefix } from '../utils/cache.js';
 import { parsePagination } from '../utils/pagination.js';
+import { capturePriceSnapshot } from '../services/priceSnapshotService.js';
+import { searchCropsHybrid, syncCropEmbedding } from '../services/listingEmbeddingService.js';
+import { getHybridRecommendations, getSimilarCropsVector } from '../services/recsysService.js';
 
 export async function createCrop(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -74,6 +77,15 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
     const isAutoApproved = req.user?.role === UserRole.Admin;
     const listingApprovalStatus = isAutoApproved ? ListingApprovalStatus.Approved : ListingApprovalStatus.Pending;
 
+    let aiReview: Record<string, unknown> | undefined = undefined;
+    if (req.body.aiReview) {
+      try {
+        aiReview = typeof req.body.aiReview === 'string' ? JSON.parse(req.body.aiReview) : req.body.aiReview;
+      } catch {
+        aiReview = undefined;
+      }
+    }
+
     const crop = await CropListing.create({
       farmerId: req.user!._id,
       cropName,
@@ -90,8 +102,24 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
       status: CropStatus.Active,
       listingApprovalStatus,
       availability: CropAvailability.Available,
+      ...(aiReview ? { aiReview } : {}),
     });
     await clearPrefix('crops:');
+
+    const region = user.city || user.state || crop.pickupLocation || 'Odisha';
+    capturePriceSnapshot({
+      cropId: crop._id,
+      cropName: crop.cropName,
+      category: crop.category,
+      region,
+      price: crop.price,
+      unit: crop.unit,
+      isOrganic: Boolean(crop.specifications?.organicCertified),
+      source: 'listing_created',
+      at: new Date(),
+    }).catch(() => {});
+
+    syncCropEmbedding(crop._id).catch(() => {});
 
     const message = isAutoApproved
       ? 'Crop listing created and approved successfully'
@@ -204,22 +232,29 @@ export async function getSimilarCrops(req: Request, res: Response, next: NextFun
     const { id } = req.params;
     const rawLimit = parseInt(String(req.query.limit ?? '6'), 10);
     const limit = isNaN(rawLimit) || rawLimit < 1 ? 6 : Math.min(rawLimit, 30);
-    const crop = await CropListing.findById(id).lean().select('category cropType farmerId');
-    if (!crop) {
-      sendError(res, 'Crop not found', 404);
-      return;
+
+    // T3.5 Rank by embedding similarity with rating tiebreak
+    let similar = await getSimilarCropsVector(id, limit);
+
+    if (!similar || similar.length === 0) {
+      const crop = await CropListing.findById(id).lean().select('category cropType farmerId');
+      if (!crop) {
+        sendError(res, 'Crop not found', 404);
+        return;
+      }
+      similar = await CropListing.find({
+        _id: { $ne: id },
+        status: CropStatus.Active,
+        availability: CropAvailability.Available,
+        listingApprovalStatus: ListingApprovalStatus.Approved,
+        $or: [{ category: crop.category }, { cropType: crop.cropType }],
+      })
+        .lean()
+        .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
+        .limit(limit)
+        .sort({ rating: -1, sold: -1 });
     }
-    const similar = await CropListing.find({
-      _id: { $ne: id },
-      status: CropStatus.Active,
-      availability: CropAvailability.Available,
-      listingApprovalStatus: ListingApprovalStatus.Approved,
-      $or: [{ category: crop.category }, { cropType: crop.cropType }],
-    })
-      .lean()
-      .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
-      .limit(limit)
-      .sort({ rating: -1, sold: -1 });
+
     res.status(200).json({ crops: similar });
   } catch (error) {
     next(error);
@@ -232,56 +267,49 @@ export async function getRecommendedCrops(req: Request, res: Response, next: Nex
     const limit = isNaN(rawLimit) || rawLimit < 1 ? 8 : Math.min(rawLimit, 30);
     const userId = req.user!._id;
 
-    const [pastOrders, wishlistItems] = await Promise.all([
-      Order.find({ buyerId: userId }).lean().populate('cropId', 'category').select('cropId').limit(50),
-      Wishlist.find({ userId }).lean().populate('cropId', 'category').select('cropId').limit(50),
-    ]);
-
-    const preferredCategories = [
-      ...pastOrders.map((o) => (o.cropId as { category?: string })?.category),
-      ...wishlistItems.map((w) => (w.cropId as { category?: string })?.category),
-    ].filter(Boolean);
-    const uniqueCategories = [...new Set(preferredCategories.map(String))];
-
-    let recommended: unknown[] = [];
-
-    if (uniqueCategories.length > 0) {
-      const purchasedCropIds = pastOrders
-        .map((o) => (o.cropId as unknown as { _id?: string })?._id)
-        .filter(Boolean)
-        .map(String);
-
-      const q: Record<string, unknown> = {
-        status: CropStatus.Active,
-        availability: CropAvailability.Available,
-        listingApprovalStatus: ListingApprovalStatus.Approved,
-        category: { $in: uniqueCategories },
-      };
-      if (purchasedCropIds.length) q._id = { $nin: purchasedCropIds };
-
-      recommended = await CropListing.find(q).lean()
-        .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
-        .limit(limit)
-        .sort({ rating: -1, sold: -1, views: -1 });
-    }
-
-    if (recommended.length < limit) {
-      const needed = limit - recommended.length;
-      const existingIds = recommended.map((c) => String((c as { _id: string })._id));
-      const fallback = await CropListing.find({
-        status: CropStatus.Active,
-        availability: CropAvailability.Available,
-        listingApprovalStatus: ListingApprovalStatus.Approved,
-        _id: existingIds.length ? { $nin: existingIds } : { $exists: true },
-      })
-        .lean()
-        .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
-        .limit(needed)
-        .sort({ sold: -1, views: -1, rating: -1 });
-      recommended = [...recommended, ...fallback];
-    }
+    // T3.3 Hybrid Recommender (content similarity + co-occurrence + seasonal/regional boosts)
+    const recommended = await getHybridRecommendations({
+      userId,
+      limit,
+    });
 
     res.status(200).json({ crops: recommended });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * T3.2 Semantic + Multilingual Hybrid Search (RRF)
+ */
+export async function searchCrops(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { q, query, category, region, minPrice, maxPrice, isOrganic, page, limit } = req.query;
+    const rawLimit = parseInt(String(limit ?? '12'), 10);
+    const safeLimit = isNaN(rawLimit) || rawLimit < 1 ? 12 : Math.min(rawLimit, 50);
+    const rawPage = parseInt(String(page ?? '1'), 10);
+    const safePage = isNaN(rawPage) || rawPage < 1 ? 1 : rawPage;
+
+    const result = await searchCropsHybrid({
+      query: String(q || query || ''),
+      category: category ? String(category) : undefined,
+      region: region ? String(region) : undefined,
+      minPrice: minPrice !== undefined ? Number(minPrice) : undefined,
+      maxPrice: maxPrice !== undefined ? Number(maxPrice) : undefined,
+      isOrganic: isOrganic !== undefined ? String(isOrganic) === 'true' : undefined,
+      page: safePage,
+      limit: safeLimit,
+    });
+
+    res.status(200).json({
+      ...result,
+      pagination: {
+        page: result.page,
+        pages: result.pages,
+        total: result.total,
+        limit: safeLimit,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -375,8 +403,28 @@ export async function updateCrop(req: Request, res: Response, next: NextFunction
       updateFields.images = [...existingUrls, ...newUploadUrls];
     }
 
+    const previousPrice = crop.price;
     crop = await CropListing.findByIdAndUpdate(req.params.id, updateFields, { new: true, runValidators: true });
-        await clearPrefix('crops:');
+    await clearPrefix('crops:');
+
+    if (crop && price !== undefined && Number(price) !== previousPrice) {
+      const region = crop.pickupLocation || 'Odisha';
+      capturePriceSnapshot({
+        cropId: crop._id,
+        cropName: crop.cropName,
+        category: crop.category,
+        region,
+        price: crop.price,
+        unit: crop.unit,
+        isOrganic: Boolean(crop.specifications?.organicCertified),
+        source: 'price_updated',
+        at: new Date(),
+      }).catch(() => {});
+    }
+
+    if (crop) {
+      syncCropEmbedding(crop._id).catch(() => {});
+    }
 
     res.status(200).json({ message: 'Crop updated successfully', crop });
   } catch (error) {

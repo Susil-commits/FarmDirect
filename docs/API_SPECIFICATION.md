@@ -1088,11 +1088,185 @@ Access-Control-Allow-Credentials: true
 
 ---
 
+## 11. AI & AgriBot APIs
+
+### 11.1 Chat with AgriBot
+**Endpoint:** `POST /api/ai/chat`  
+**Authentication:** Required (Bearer Token)  
+**Rate Limit:** 30 requests/minute  
+
+**Request Body:**
+```json
+{
+  "message": "How do I list my crops?",
+  "conversationId": "6512bd34...",
+  "context": {
+    "role": "farmer",
+    "currentPath": "/marketplace"
+  }
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "reply": "### How to List Crops on FaRm...",
+  "topic": "platform",
+  "suggestions": ["How does price negotiation work?"],
+  "actionLinks": [{"label": "List a Crop", "url": "/create-crop", "icon": "PlusCircle"}],
+  "conversationId": "6512bd34...",
+  "modelUsed": "gemini-2.0-flash"
+}
+```
+
+### 11.2 Guest Demo Try
+**Endpoint:** `POST /api/ai/try`  
+**Authentication:** Public (Rate limit: 5 requests/hour/IP)  
+
+### 11.3 List Conversations
+**Endpoint:** `GET /api/ai/conversations`  
+**Authentication:** Required  
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "conversations": [
+    {
+      "_id": "6512bd34...",
+      "title": "How do I list my crops?",
+      "lastMessage": "Here are the steps to create a listing...",
+      "updatedAt": "2026-09-30T10:00:00.000Z",
+      "createdAt": "2026-09-30T09:45:00.000Z"
+    }
+  ]
+}
+```
+
+### 11.4 Get Conversation Details
+**Endpoint:** `GET /api/ai/conversations/:id`  
+**Authentication:** Required (Enforces user ownership)  
+
+### 11.5 Delete Conversation
+**Endpoint:** `DELETE /api/ai/conversations/:id`  
+**Authentication:** Required (Enforces user ownership)  
+
+---
+
+## 12. Interaction Events API
+
+### 12.1 Batch Log Events
+**Endpoint:** `POST /api/events`  
+**Authentication:** Optional (Session-based or Bearer Token)  
+**Rate Limit:** 120 requests/minute  
+
+**Request Body:**
+```json
+{
+  "events": [
+    {
+      "sessionId": "sess_abc123",
+      "type": "view",
+      "cropId": "6512...",
+      "meta": { "category": "vegetables" }
+    }
+  ]
+}
+---
+
+## 14. Trust, Risk, Reviews & Advisory Assistants (Phase 5)
+
+### 14.1 Admin Anomaly Labeling & Override
+**Endpoint:** `POST /admin/orders/:orderId/anomaly-label`  
+**Protected:** Yes (Admin only)  
+**Request:**
+```json
+{
+  "label": "confirmed", // or "dismissed"
+  "notes": "Verified intentional festival bulk purchase"
+}
+```
+**Response:** 200 OK
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Order anomaly successfully marked as confirmed",
+    "orderId": "6512...",
+    "anomalyLabel": "confirmed",
+    "flaggedAsAnomaly": true
+  }
+}
+```
+
+### 14.2 Crop AI Review Summary
+**Endpoint:** `GET /reviews/crop/:cropId/summary`  
+**Protected:** No  
+**Response:** 200 OK
+```json
+{
+  "success": true,
+  "data": {
+    "summary": "Buyers praised the exceptional crispness and sweet taste of these farm-fresh bell peppers with prompt dispatch.",
+    "pros": ["Exceptional farm freshness and sweetness", "Prompt delivery and secure transit boxing"],
+    "cons": ["Limited negative reports; minor size variations noted"],
+    "sentimentBreakdown": { "positive": 18, "neutral": 2, "negative": 1 },
+    "lastGeneratedAt": "2026-09-30T14:30:00.000Z",
+    "reviewCountAtGeneration": 21
+  }
+}
+```
+
+### 14.3 Negotiation Copilot Advisory Guidance
+**Endpoint:** `GET /negotiations/copilot-guidance`  
+**Protected:** Yes (Authenticated Buyer or Farmer)  
+**Query Parameters:** `?cropId=6512...&offeredPrice=54&role=buyer`  
+**Response:** 200 OK
+```json
+{
+  "success": true,
+  "data": {
+    "cropName": "Organic Bell Pepper",
+    "cropUnit": "kg",
+    "askingPrice": 60,
+    "marketPrice": 58,
+    "fairPriceBand": { "min": 49.3, "max": 66.7, "median": 58 },
+    "buyerGuidance": {
+      "recommendedOffer": 55.5,
+      "recommendedRange": { "min": 52.8, "max": 56.4 },
+      "acceptanceLikelihood": 78,
+      "strategy": "An offer of ₹55.5/kg (7.5% off asking price) balances solid buyer savings with a high likelihood of farmer acceptance."
+    },
+    "farmerGuidance": {
+      "recommendedCounter": 57.9,
+      "recommendedRange": { "min": 55.8, "max": 58.2 },
+      "acceptanceLikelihood": 82,
+      "strategy": "A counter-offer of ₹57.9/kg protects your crop margin while conceding an attractive win for the buyer."
+    },
+    "currentEvaluation": {
+      "offeredPrice": 54,
+      "discountPct": 10,
+      "estimatedLikelihood": 69,
+      "status": "moderate",
+      "advisoryMessage": "Moderate offer (10% discount). Farmer may send a counter-offer near ₹57.9."
+    },
+    "historicalNegotiationCount": 42,
+    "disclaimer": "Suggested by AI • Advisory only. Final deal terms are strictly mutually agreed upon by buyers and farmers."
+  }
+}
+```
+
+---
+
 ## Rate Limiting
 
 ```
 Default: 100 requests per 15 minutes per IP
 Auth Endpoints: 5 requests per minute per IP
+AI Chat: 30 requests per minute per user
+AI Guest Try: 5 requests per hour per IP
+Events Ingestion: 120 requests per minute per IP
 ```
 
 ---

@@ -6,6 +6,7 @@ const router = Router();
 
 router.post('/:cropId', protect, reviewController.addReview);
 router.get('/crop/:cropId', reviewController.getReviews);
+router.get('/crop/:cropId/summary', reviewController.getCropReviewSummaryController);
 router.get('/farmer/:farmerId', reviewController.getFarmerReviews);
 router.delete('/:reviewId', protect, reviewController.deleteReview);
 router.post('/:reviewId/report', protect, reviewController.reportReview);

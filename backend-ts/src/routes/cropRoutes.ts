@@ -2,7 +2,7 @@ import { Router } from 'express';
 import {
   createCrop, getCrops, getCropById, updateCrop, deleteCrop, getCropsByFarmer,
   getMyListings, toggleInterest, getInterestedBuyers, getMyInterestedCrops,
-  getTrendingCrops, getSimilarCrops, getRecommendedCrops, uploadImagesHandler,
+  getTrendingCrops, getSimilarCrops, getRecommendedCrops, searchCrops, uploadImagesHandler,
 } from '../controllers/cropController.js';
 import { protect, authorize, requireKYC, optionalProtect } from '../middleware/auth.js';
 import { uploadCropImages } from '../middleware/localUpload.js';
@@ -18,6 +18,7 @@ router.post('/with-images', protect, authorize(UserRole.Farmer, UserRole.Admin),
 
 router.get('/', cacheRoute(60), getCrops);
 router.get('/trending', cacheRoute(300), getTrendingCrops);
+router.get('/search', searchCrops);
 
 router.get('/buyer/recommended', protect, authorize(UserRole.Buyer), getRecommendedCrops);
 router.get('/my-listings', protect, authorize(UserRole.Farmer), getMyListings);

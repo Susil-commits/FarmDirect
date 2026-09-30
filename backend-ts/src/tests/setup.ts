@@ -10,18 +10,26 @@ beforeAll(async () => {
   mongoServer = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   const mongoUri = mongoServer.getUri();
   await mongoose.connect(mongoUri);
-});
+}, 60000);
 
 afterAll(async () => {
-  if (redisClient.isOpen) {
-    await redisClient.quit();
+  try {
+    if (redisClient && redisClient.isOpen) {
+      await redisClient.quit().catch(() => {});
+    }
+  } catch {}
+  try {
+    if (connection) {
+      connection.disconnect(false);
+    }
+  } catch {}
+  try {
+    await mongoose.disconnect();
+  } catch {}
+  if (mongoServer) {
+    await mongoServer.stop();
   }
-  if (connection) {
-    await connection.quit();
-  }
-  await mongoose.disconnect();
-  await mongoServer.stop();
-});
+}, 30000);
 
 afterEach(async () => {
   const collections = mongoose.connection.collections;

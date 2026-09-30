@@ -37,6 +37,13 @@ const orderSchema = new Schema<IOrder>(
     completedAt: Date,
     flaggedAsAnomaly: { type: Boolean, default: false },
     anomalyScore: { type: Number, default: null },
+    anomalyReasons: { type: [String], default: [] },
+    anomalyModelUsed: { type: String, default: null },
+    anomalyLabel: { type: String, enum: ['confirmed', 'dismissed', null], default: null },
+    anomalyLabeledAt: { type: Date, default: null },
+    anomalyLabeledBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    anomalyLabelNotes: { type: String, default: null },
+    isSynthetic: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

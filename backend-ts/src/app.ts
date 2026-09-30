@@ -37,6 +37,7 @@ import cartRoutes from './routes/cartRoutes.js';
 import negotiationRoutes from './routes/negotiationRoutes.js';
 import healthRoutes from './routes/healthRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import eventRoutes from './routes/eventRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -213,6 +214,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/negotiations', negotiationRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/events', eventRoutes);
 
 app.use('/api/upload', uploadRoutes);
 

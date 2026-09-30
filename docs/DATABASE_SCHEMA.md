@@ -208,6 +208,20 @@ Stores all crop/product listings by farmers
   batchNumber: String,
   lotNumber: String,
   
+  // AI Review Summary (Phase 5)
+  reviewSummary: {
+    summary: String,                 // 2-sentence balanced overview
+    pros: [String],                  // Key highlights
+    cons: [String],                  // Points for buyer consideration
+    sentimentBreakdown: {
+      positive: Number,
+      neutral: Number,
+      negative: Number
+    },
+    lastGeneratedAt: Date,
+    reviewCountAtGeneration: Number
+  },
+  
   // Timestamps
   createdAt: Date (auto),
   updatedAt: Date (auto),
@@ -351,6 +365,16 @@ Stores all purchase orders
   cancelledBy: Enum,                 // "buyer" | "farmer" | "admin" | "system"
   cancelledDate: Date,
   
+  // AI Anomaly & Risk Management (Phase 5)
+  flaggedAsAnomaly: Boolean,
+  anomalyScore: Number,              // 0.0 - 1.0 or z-score
+  anomalyReasons: [String],          // Specific diagnostic triggers
+  anomalyModelUsed: String,          // e.g. "robust-z-rules-v2"
+  anomalyLabel: Enum,                // "confirmed" | "dismissed" (admin labeled)
+  anomalyLabeledAt: Date,
+  anomalyLabeledBy: ObjectId (ref: User),
+  anomalyLabelNotes: String,
+  
   // Timestamps
   createdAt: Date (auto),
   updatedAt: Date (auto)
@@ -423,10 +447,12 @@ Stores crop and farmer reviews/ratings
     respondedAt: Date
   },
   
-  // Moderation
+  // Moderation & AI Sentiment (Phase 5)
   isFlagged: Boolean,
   flagReason: String,
   moderatorNotes: String,
+  sentimentScore: Number,            // -1.0 to 1.0
+  sentimentLabel: Enum,              // "positive" | "neutral" | "negative"
   
   // Timestamps
   createdAt: Date (auto),
@@ -777,10 +803,91 @@ Review ──── (Referenced by) Order
 - 30-day retention period
 - Point-in-time recovery enabled
 
-### Indexing Strategy
-- Index all foreign keys (farmerId, userId, etc.)
-- Index frequently searched fields (email, phone, cropName)
-- Index sort fields (createdAt, price)
-- Index filter fields (status, category, city)
+---
+
+## 14. AI & ML Collections
+
+### 14.1 PriceSnapshot Collection
+Stores historical commodity prices recorded upon listing creation, price updates, and completed transactions for market price guidance and forecasting.
+
+```javascript
+{
+  _id: ObjectId,
+  cropId: ObjectId (ref: "CropListing"),
+  cropName: String,
+  category: String,
+  region: {
+    city: String,
+    state: String
+  },
+  price: Number,
+  unit: String,
+  source: Enum ("listing_created" | "listing_updated" | "order_completed"),
+  isOrganic: Boolean,
+  at: Date
+}
+```
+**Indexes**: `{ cropName: 1, region: 1, at: -1 }`, `{ at: -1 }`
+
+### 14.2 EventLog Collection
+Stores user interaction behavioral events (views, searches, clicks, cart updates) for recommendation algorithms without logging PII.
+
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId (ref: "User", optional),
+  sessionId: String,
+  type: Enum ("view" | "search" | "click" | "wishlist" | "cart" | "interest" | "offer" | "order"),
+  cropId: ObjectId (ref: "CropListing", optional),
+  query: String (optional),
+  meta: Object (PII stripped),
+  at: Date
+}
+```
+**Indexes**: `{ at: 1 }` (TTL: 400 days), `{ sessionId: 1, at: -1 }`, `{ userId: 1, at: -1 }`
+
+### 14.3 AiUsage Collection
+Tracks AI token usage, model identifiers, latency, and costs per user and feature.
+
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId (ref: "User", optional),
+  feature: String,
+  model: String,
+  inputTokens: Number,
+  outputTokens: Number,
+  totalTokens: Number,
+  latencyMs: Number,
+  success: Boolean,
+  errorMessage: String,
+  at: Date
+}
+```
+**Indexes**: `{ userId: 1, at: -1 }`, `{ feature: 1, at: -1 }`
+
+### 14.4 AiConversation Collection
+Persists multi-turn conversation history for AgriBot assistant, scoped strictly to each authenticated user with a 30-day TTL.
+
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId (ref: "User", required),
+  title: String,
+  messages: [
+    {
+      role: Enum ("user" | "model" | "assistant" | "system"),
+      content: String,
+      toolCalls: Array (optional),
+      at: Date
+    }
+  ],
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+**Indexes**: `{ userId: 1, updatedAt: -1 }`, `{ updatedAt: 1 }` (TTL: 30 days)
+
+---
 
 This schema design provides a normalized, scalable foundation for the marketplace platform.

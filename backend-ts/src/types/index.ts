@@ -107,6 +107,7 @@ export interface IUser extends Timestamps, Document {
   socialAuth?: ISocialAuth;
   notificationPreferences?: INotificationPreferences;
   blockedUsers?: Types.ObjectId[];
+  isSynthetic?: boolean;
 }
 
 export interface ICropSpecifications {
@@ -143,6 +144,15 @@ export interface IMonthlyStats {
   averageRating: number;
 }
 
+export interface IAiReview {
+  looksLikeProduce: boolean;
+  issues: string[];
+  confidence: number;
+  qualityGrade?: string;
+  detectedCrop?: string;
+  suggestedPrice?: number;
+}
+
 export interface ICropListing extends Timestamps, Document {
   farmerId: Types.ObjectId;
   cropName: string;
@@ -175,6 +185,23 @@ export interface ICropListing extends Timestamps, Document {
   restockHistory?: IRestockHistoryEntry[];
   dailySales?: IDailySalesEntry[];
   monthlyStats?: IMonthlyStats;
+  isSynthetic?: boolean;
+  aiReview?: IAiReview;
+  embedding?: number[];
+  reviewSummary?: ICropReviewSummary;
+}
+
+export interface ICropReviewSummary {
+  summary?: string | null;
+  pros?: string[];
+  cons?: string[];
+  sentimentBreakdown?: {
+    positive: number;
+    neutral: number;
+    negative: number;
+  };
+  lastGeneratedAt?: Date | null;
+  reviewCountAtGeneration?: number;
 }
 
 export interface IOrderTimelineEntry {
@@ -220,6 +247,13 @@ export interface IOrder extends Timestamps, Document {
   completedAt?: Date;
   flaggedAsAnomaly?: boolean;
   anomalyScore?: number | null;
+  anomalyReasons?: string[];
+  anomalyModelUsed?: string | null;
+  anomalyLabel?: 'confirmed' | 'dismissed' | null;
+  anomalyLabeledAt?: Date | null;
+  anomalyLabeledBy?: Types.ObjectId | null;
+  anomalyLabelNotes?: string | null;
+  isSynthetic?: boolean;
 }
 
 export interface INegotiationTimelineEntry {
@@ -240,6 +274,7 @@ export interface INegotiation extends Timestamps, Document {
   timeline: INegotiationTimelineEntry[];
   orderId?: Types.ObjectId | null;
   lastActionBy?: Types.ObjectId | null;
+  isSynthetic?: boolean;
 }
 
 export interface IReviewReport {
@@ -260,6 +295,10 @@ export interface IReview extends Timestamps, Document {
   reports?: IReviewReport[];
   isApproved?: boolean;
   isFlagged?: boolean;
+  flagReason?: string | null;
+  sentimentScore?: number | null;
+  sentimentLabel?: 'positive' | 'neutral' | 'negative' | null;
+  isSynthetic?: boolean;
 }
 
 export interface INotification extends Timestamps, Document {

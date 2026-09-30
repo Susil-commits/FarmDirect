@@ -12,6 +12,7 @@ import SkeletonLoader from '../components/common/SkeletonLoader';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import LoginPrompt from '../components/modals/LoginPrompt';
 import MakeOfferModal from '../components/modals/MakeOfferModal';
+import ProductReviews from '../components/ProductReviews';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
 import { useRecentlyViewed } from '../context/RecentlyViewedContext';
@@ -19,6 +20,7 @@ import { useToast } from '../context/ToastContext';
 import { useCart } from '../context/CartContext';
 import { getImageUrl, getCropFallbackImage } from '../utils/formatters';
 import { cropService, wishlistService, userService } from '../services/appService';
+import { trackView } from '../services/eventService.js';
 import '../styles/CropDetail.css';
 
 export default function CropDetail() {
@@ -72,6 +74,10 @@ export default function CropDetail() {
 
         if (cropData) {
           addToRecentlyViewed(cropData);
+          trackView(cropData._id || cropId, {
+            cropName: cropData.cropName,
+            category: cropData.category,
+          });
         }
 
         try {
@@ -588,32 +594,10 @@ export default function CropDetail() {
                 </div>
               </Card>
 
-              {}
-              {crop.reviews_list && crop.reviews_list.length > 0 && (
-                <ScrollAnimation className="scroll-slide">
-                  <Card variant="light" animated={false}>
-                    <div className="p-6">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-6">⭐ Customer Reviews</h2>
-                      <div className="space-y-6">
-                        {crop.reviews_list?.map((review, i) => (
-                          <div key={i} className="pb-6 border-b last:border-b-0 stagger-item" style={{ animationDelay: `${i * 0.1}s` }}>
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="w-10 h-10 bg-green-100 text-green-700 rounded-full flex items-center justify-center font-semibold">
-                                {review?.name?.charAt(0) || 'U'}
-                              </div>
-                              <div>
-                                <p className="font-semibold text-gray-900">{review?.name}</p>
-                                <p className="text-yellow-400 text-sm">⭐ {review?.rating}</p>
-                              </div>
-                            </div>
-                            <p className="text-gray-700">{review?.text}</p>
-                          </div>
-                        )) ?? []}
-                      </div>
-                    </div>
-                  </Card>
-                </ScrollAnimation>
-              )}
+              {/* Customer Reviews & AI Review Summary */}
+              <ScrollAnimation className="scroll-slide mb-6">
+                <ProductReviews productId={crop._id || crop.id || cropId} />
+              </ScrollAnimation>
 
               {}
               <ScrollAnimation className="scroll-slide">

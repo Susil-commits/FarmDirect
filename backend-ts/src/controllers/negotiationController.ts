@@ -5,10 +5,11 @@ import Negotiation from '../models/Negotiation.js';
 import CropListing from '../models/CropListing.js';
 import Order from '../models/Order.js';
 import Notification from '../models/Notification.js';
-import { sendError } from '../utils/apiResponse.js';
+import { sendError, sendSuccess } from '../utils/apiResponse.js';
 import { notifyNegotiationUpdate, notifyOrderUpdate } from '../socket/eventHandlers.js';
 import { NegotiationStatus, OrderStatus, PaymentMethod, PaymentStatus, CropAvailability, CancelledBy, InterestedBuyerStatus, ListingApprovalStatus } from '../types/enums.js';
 import type { MakeOfferDto, RespondOfferDto } from '../types/index.js';
+import { getNegotiationCopilotGuidance } from '../services/negotiationCopilotService.js';
 
 export async function makeOffer(req: Request, res: Response, next: NextFunction): Promise<void> {
   const session = await mongoose.startSession();
@@ -275,6 +276,30 @@ export async function getNegotiations(req: Request, res: Response, next: NextFun
       .sort({ updatedAt: -1 });
 
     res.status(200).json({ negotiations });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getCopilotGuidance(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { cropId, cropName, offeredPrice, quantity, role } = req.query as Record<string, string>;
+    const userRole = (role as 'buyer' | 'farmer') || (req.user?.role === 'farmer' ? 'farmer' : 'buyer');
+
+    const guidance = await getNegotiationCopilotGuidance({
+      cropId,
+      cropName,
+      offeredPrice: offeredPrice ? parseFloat(offeredPrice) : undefined,
+      quantity: quantity ? parseFloat(quantity) : undefined,
+      role: userRole,
+    });
+
+    if (!guidance) {
+      sendError(res, 'Crop details not found for negotiation guidance', 404);
+      return;
+    }
+
+    sendSuccess(res, { data: guidance });
   } catch (error) {
     next(error);
   }

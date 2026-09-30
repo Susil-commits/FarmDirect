@@ -12,6 +12,8 @@ import SkeletonLoader from '../components/common/SkeletonLoader';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import CancelWithReason from '../components/modals/CancelWithReason';
 import NegotiationWidget from '../components/NegotiationWidget';
+import PriceForecastCard from '../components/PriceForecastCard';
+import SmartLowStockMonitor from '../components/SmartLowStockMonitor';
 import {
   Package, TrendingUp, ShoppingCart, AlertCircle, Eye, Edit2, Trash2,
   IndianRupee, BarChart3, PieChart, TrendingDown, CheckCircle, Clock,
@@ -578,7 +580,20 @@ export default function FarmerDashboardNew() {
 
           {activeTab === 'analytics' && (
             <ScrollAnimation className="scroll-slide space-y-6">
+              {/* T4.3 Price Forecast & "When to Sell" Card */}
+              <PriceForecastCard
+                crops={crops}
+                defaultCropName={crops[0]?.cropName || 'Tomato'}
+                userRegion={user?.state || user?.city || 'Odisha'}
+              />
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* T4.4 Smart Low-Stock Dynamic Monitor */}
+                <SmartLowStockMonitor onRestock={(cropId) => {
+                  setExpandedCrop(cropId);
+                  setActiveTab('inventory');
+                }} />
+
                 <Card className="p-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-4">Order Status Breakdown</h3>
                   <div className="space-y-3">

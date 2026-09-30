@@ -12,7 +12,13 @@
     "lint": "eslint src",
     "seed": "tsx src/scripts/seedData.ts",
     "admin:create": "tsx src/scripts/createAdmin.ts",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "eval:chat": "tsx src/scripts/evalChat.ts",
+    "eval:vision": "tsx src/scripts/evalVision.ts",
+    "eval:recsys": "tsx src/scripts/evalRecsys.ts",
+    "eval:forecast": "tsx src/scripts/evalForecast.ts",
+    "eval:anomaly": "tsx src/scripts/evalAnomaly.ts",
+    "backfill:embeddings": "tsx src/scripts/backfillCropEmbeddings.ts"
   },
   "keywords": [
     "farm",

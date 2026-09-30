@@ -18,6 +18,8 @@ import {
 import type { OrderTransitionMap, OrderLike } from '../types/index.js';
 import type { Request, Response, NextFunction } from 'express';
 import { parsePagination } from '../utils/pagination.js';
+import { capturePriceSnapshot } from '../services/priceSnapshotService.js';
+import { recordOrderSalesDaily, evaluateFarmerSmartLowStock } from '../services/inventoryService.js';
 
 const VALID_STATUSES: OrderStatus[] = [
   OrderStatus.Confirmed, OrderStatus.Preparing, OrderStatus.ReadyForPickup,
@@ -72,12 +74,40 @@ async function recordCropCompletion(order: OrderLike): Promise<void> {
     });
   }
 
-  const updatedCrop = await CropListing.findById(order.cropId).lean().select('quantity');
-  if (updatedCrop && updatedCrop.quantity <= 0) {
-    await CropListing.findByIdAndUpdate(order.cropId, {
-      status: CropStatus.SoldOut,
-      availability: CropAvailability.NotAvailable,
-    });
+  const updatedCrop = await CropListing.findById(order.cropId).lean().select('quantity cropName category pickupLocation unit specifications');
+  if (updatedCrop) {
+    if (updatedCrop.quantity <= 0) {
+      await CropListing.findByIdAndUpdate(order.cropId, {
+        status: CropStatus.SoldOut,
+        availability: CropAvailability.NotAvailable,
+      });
+    }
+
+    const total = Number((order as any).totalAmount || 0);
+    const qty = Number(order.quantity || 1);
+    const fallbackPrice = Number((order as any).unitPrice || 0);
+    const unitPrice = qty > 0 && total > 0 ? Math.round((total / qty) * 100) / 100 : fallbackPrice;
+    capturePriceSnapshot({
+      cropId: order.cropId,
+      cropName: updatedCrop.cropName || (order as any).cropName || 'produce',
+      category: updatedCrop.category || 'general',
+      region: updatedCrop.pickupLocation || (order as any).pickupLocation || 'Odisha',
+      price: unitPrice,
+      unit: updatedCrop.unit || 'kg',
+      isOrganic: Boolean(updatedCrop.specifications?.organicCertified),
+      source: 'order_completed',
+      at: new Date(),
+    }).catch(() => {});
+
+    recordOrderSalesDaily({
+      cropId: order.cropId,
+      farmerId: order.farmerId,
+      quantity: Number(order.quantity || 1),
+      totalAmount: Number(order.totalAmount || 0),
+      date: new Date(),
+    }).catch(() => {});
+
+    evaluateFarmerSmartLowStock(order.farmerId, true).catch(() => {});
   }
 }
 

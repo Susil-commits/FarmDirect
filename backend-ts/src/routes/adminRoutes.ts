@@ -37,6 +37,7 @@ router.patch('/crops/:cropId/freeze', adminController.freezeCrop);
 router.delete('/crops/:cropId', adminController.deleteCrop);
 
 router.get('/orders/flagged', adminController.getFlaggedOrders);
+router.post('/orders/:orderId/anomaly-label', adminController.labelOrderAnomaly);
 router.get('/orders', adminController.getAllOrders);
 router.patch('/orders/:orderId/status', adminController.updateOrderStatus);
 

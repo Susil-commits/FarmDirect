@@ -21,6 +21,10 @@ const reviewSchema = new Schema<IReview>(
     ],
     isApproved: { type: Boolean, default: true },
     isFlagged: { type: Boolean, default: false },
+    flagReason: { type: String, default: null },
+    sentimentScore: { type: Number, default: null },
+    sentimentLabel: { type: String, enum: ['positive', 'neutral', 'negative', null], default: null },
+    isSynthetic: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

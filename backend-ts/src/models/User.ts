@@ -79,6 +79,7 @@ const userSchema = new Schema<IUser>(
       push: { type: Boolean, default: true },
     },
     blockedUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    isSynthetic: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

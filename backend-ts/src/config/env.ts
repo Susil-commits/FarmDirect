@@ -51,6 +51,13 @@ export interface EnvConfig {
   githubClientId?: string;
   githubClientSecret?: string;
   geminiApiKey?: string;
+  geminiModel: string;
+  geminiFallbackModel: string;
+  aiChatEnabled: boolean;
+  aiVisionEnabled: boolean;
+  aiDailyTokenCap: number;
+  mlServiceUrl?: string;
+  mlServiceKey: string;
   sentryDsn?: string;
 }
 
@@ -129,6 +136,13 @@ function loadEnv(): EnvConfig {
     githubClientId: process.env.GITHUB_CLIENT_ID,
     githubClientSecret: process.env.GITHUB_CLIENT_SECRET,
     geminiApiKey: process.env.GEMINI_API_KEY,
+    geminiModel: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
+    geminiFallbackModel: process.env.GEMINI_FALLBACK_MODEL || 'gemini-2.5-flash',
+    aiChatEnabled: parseBoolean(process.env.AI_CHAT_ENABLED, true),
+    aiVisionEnabled: parseBoolean(process.env.AI_VISION_ENABLED, true),
+    aiDailyTokenCap: parseInt(process.env.AI_DAILY_TOKEN_CAP || '50000', 10),
+    mlServiceUrl: process.env.ML_SERVICE_URL,
+    mlServiceKey: process.env.ML_SERVICE_KEY || 'dev_ml_secret_key',
     sentryDsn: process.env.SENTRY_DSN,
   };
 }

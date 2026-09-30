@@ -4,16 +4,19 @@
   "description": "Direct Farmer to Consumer Marketplace — Buy fresh produce directly from local farmers",
   "private": true,
   "scripts": {
-    "install:all": "cd backend && npm install && cd ../backend-ts && npm install && cd ../F_1 && npm install",
-    "dev:backend": "cd backend && npm run dev",
+    "install:all": "cd backend-ts && npm install && cd ../F_1 && npm install",
+    "dev:backend": "cd backend-ts && npm run dev",
     "dev:backend:ts": "cd backend-ts && npm run dev",
     "dev:frontend": "cd F_1 && npm run dev",
     "build:frontend": "cd F_1 && npm run build",
     "build:backend:ts": "cd backend-ts && npm run build",
     "typecheck:backend:ts": "cd backend-ts && npm run typecheck",
+    "lint:backend:ts": "cd backend-ts && npm run lint",
+    "test:backend:ts": "cd backend-ts && npm test",
     "admin:create:ts": "cd backend-ts && npm run admin:create",
-    "seed": "cd backend && npm run seed",
-    "start:backend": "cd backend && npm start",
+    "seed": "cd backend-ts && npm run seed",
+    "eval:chat": "npm run --prefix backend-ts eval:chat",
+    "start:backend": "cd backend-ts && npm start",
     "start:backend:ts": "cd backend-ts && npm start"
   }
 }

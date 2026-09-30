@@ -26,7 +26,7 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../hooks/useRouter';
-import { sendAiChatMessage, getAiStarterSuggestions } from '../../services/aiChatService';
+import { sendAiChatMessageStream, getAiStarterSuggestions } from '../../services/aiChatService';
 import './AgriBotWidget.css';
 
 export default function AgriBotWidget() {
@@ -39,6 +39,7 @@ export default function AgriBotWidget() {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [starterPrompts, setStarterPrompts] = useState([]);
   const [copiedIndex, setCopiedIndex] = useState(null);
+  const [conversationId, setConversationId] = useState(null);
 
   const { user } = useAuth();
   const { currentRoute, navigate } = useRouter();
@@ -105,43 +106,85 @@ export default function AgriBotWidget() {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, newUserMsg]);
+    const botMsgId = Date.now() + 1;
+    const botPlaceholder = {
+      id: botMsgId,
+      sender: 'bot',
+      text: '',
+      isStreaming: true,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, newUserMsg, botPlaceholder]);
     setIsLoading(true);
 
     try {
-      const response = await sendAiChatMessage(query, {
-        role: userRole,
-        currentPath: currentRoute,
-      });
+      let accumulatedText = '';
+      const response = await sendAiChatMessageStream(
+        query,
+        {
+          role: userRole,
+          currentPath: currentRoute,
+        },
+        conversationId,
+        {
+          onToken: (token) => {
+            accumulatedText += token;
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === botMsgId
+                  ? { ...msg, text: accumulatedText }
+                  : msg
+              )
+            );
+          },
+          onDone: (res) => {
+            if (res?.conversationId) {
+              setConversationId(res.conversationId);
+            }
+          },
+        }
+      );
 
-      const botReply = {
-        id: Date.now() + 1,
-        sender: 'bot',
-        text: response?.reply || 'I received your question, but could not generate a response. Please try again.',
-        topic: response?.topic,
-        suggestions: response?.suggestions || [],
-        actionLinks: response?.actionLinks || [],
-        timestamp: new Date(),
-      };
+      if (response?.conversationId) {
+        setConversationId(response.conversationId);
+      }
 
-      setMessages((prev) => [...prev, botReply]);
+      const finalText = response?.reply || accumulatedText || 'I received your question, but could not generate a response. Please try again.';
 
-      if (soundEnabled && 'speechSynthesis' in window && botReply.text) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === botMsgId
+            ? {
+                ...msg,
+                text: finalText,
+                topic: response?.topic,
+                suggestions: response?.suggestions || [],
+                actionLinks: response?.actionLinks || [],
+                isStreaming: false,
+              }
+            : msg
+        )
+      );
+
+      if (soundEnabled && 'speechSynthesis' in window && finalText) {
         window.speechSynthesis.cancel();
-        const plainText = botReply.text.replace(/[#*_`[\]()]/g, '');
+        const plainText = finalText.replace(/[#*_`[\]()]/g, '');
         const utterance = new SpeechSynthesisUtterance(plainText);
         window.speechSynthesis.speak(utterance);
       }
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          sender: 'bot',
-          text: 'I am currently having trouble connecting. Please verify your connection or ask again.',
-          timestamp: new Date(),
-        },
-      ]);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === botMsgId
+            ? {
+                ...msg,
+                text: 'I am currently having trouble connecting. Please verify your connection or ask again.',
+                isStreaming: false,
+              }
+            : msg
+        )
+      );
     } finally {
       setIsLoading(false);
     }
@@ -171,6 +214,7 @@ export default function AgriBotWidget() {
       window.speechSynthesis.cancel();
     }
     setMessages([]);
+    setConversationId(null);
   };
 
   const handleCopyMessage = (text, index) => {
@@ -417,9 +461,25 @@ export default function AgriBotWidget() {
                           <p className="text-sm font-medium leading-relaxed m-0">{msg.text}</p>
                         ) : (
                           <div className="agribot-bot-content">
-                            {renderFormattedText(msg.text)}
+                            {msg.isStreaming && !msg.text ? (
+                              <div className="flex items-center gap-2 py-1">
+                                <div className="agribot-typing-dots">
+                                  <span />
+                                  <span />
+                                  <span />
+                                </div>
+                                <span className="text-xs text-gray-500 font-medium">AgriBot is thinking...</span>
+                              </div>
+                            ) : (
+                              <>
+                                {renderFormattedText(msg.text)}
+                                {msg.isStreaming && (
+                                  <span className="inline-block w-1.5 h-3.5 ml-1 bg-emerald-600 animate-pulse align-middle" />
+                                )}
+                              </>
+                            )}
 
-                            {msg.actionLinks && msg.actionLinks.length > 0 && (
+                            {!msg.isStreaming && msg.actionLinks && msg.actionLinks.length > 0 && (
                               <div className="agribot-action-links">
                                 {msg.actionLinks.map((action, aIdx) => (
                                   <button
@@ -434,7 +494,7 @@ export default function AgriBotWidget() {
                               </div>
                             )}
 
-                            {msg.suggestions && msg.suggestions.length > 0 && (
+                            {!msg.isStreaming && msg.suggestions && msg.suggestions.length > 0 && (
                               <div className="agribot-suggestions-wrapper">
                                 <span className="agribot-suggestions-title">
                                   Suggested queries:
@@ -453,44 +513,30 @@ export default function AgriBotWidget() {
                               </div>
                             )}
 
-                            <div className="agribot-bubble-actions">
-                              <button
-                                onClick={() => handleCopyMessage(msg.text, index)}
-                                className="agribot-copy-btn"
-                                title="Copy response"
-                              >
-                                {copiedIndex === index ? (
-                                  <span className="flex items-center gap-1 text-emerald-600">
-                                    <Check size={13} /> Copied
-                                  </span>
-                                ) : (
-                                  <span className="flex items-center gap-1">
-                                    <Copy size={13} /> Copy
-                                  </span>
-                                )}
-                              </button>
-                            </div>
+                            {!msg.isStreaming && msg.text && (
+                              <div className="agribot-bubble-actions">
+                                <button
+                                  onClick={() => handleCopyMessage(msg.text, index)}
+                                  className="agribot-copy-btn"
+                                  title="Copy response"
+                                >
+                                  {copiedIndex === index ? (
+                                    <span className="flex items-center gap-1 text-emerald-600">
+                                      <Check size={13} /> Copied
+                                    </span>
+                                  ) : (
+                                    <span className="flex items-center gap-1">
+                                      <Copy size={13} /> Copy
+                                    </span>
+                                  )}
+                                </button>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
                     </div>
                   ))}
-
-                  {isLoading && (
-                    <div className="agribot-message-row bot-row">
-                      <div className="agribot-bubble-avatar">
-                        <Bot size={15} className="text-emerald-700" />
-                      </div>
-                      <div className="agribot-bubble bot-bubble typing">
-                        <div className="agribot-typing-dots">
-                          <span />
-                          <span />
-                          <span />
-                        </div>
-                        <span className="text-xs text-gray-500 font-medium">AgriBot is thinking...</span>
-                      </div>
-                    </div>
-                  )}
 
                   <div ref={messagesEndRef} />
                 </div>

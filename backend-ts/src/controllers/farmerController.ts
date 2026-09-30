@@ -4,6 +4,7 @@ import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import { sendError } from '../utils/apiResponse.js';
 import { OrderStatus } from '../types/enums.js';
+import { evaluateFarmerSmartLowStock } from '../services/inventoryService.js';
 import type { Request, Response, NextFunction } from 'express';
 
 function calculatePerformanceScore(crop: { rating?: number; views?: number; sold?: number }, _orderCount: number): number {
@@ -179,6 +180,16 @@ export async function getLowStockItems(req: Request, res: Response, next: NextFu
     const lowStockItems = await CropListing.find({ farmerId, $expr: { $lte: ['$quantity', '$lowStockThreshold'] } })
       .select('cropName category quantity lowStockThreshold price status').sort({ quantity: 1 }).lean();
     res.status(200).json({ success: true, count: lowStockItems.length, data: lowStockItems });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getSmartLowStockItems(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const farmerId = req.user!._id;
+    const items = await evaluateFarmerSmartLowStock(farmerId, false);
+    res.status(200).json({ success: true, count: items.length, data: items });
   } catch (error) {
     next(error);
   }

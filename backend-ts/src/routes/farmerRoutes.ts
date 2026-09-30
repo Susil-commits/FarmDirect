@@ -4,7 +4,7 @@ import { protect, authorize } from '../middleware/auth.js';
 import { UserRole } from '../types/enums.js';
 import {
   getDashboardStats, getCropAnalytics, getRevenueAnalytics, getLowStockItems,
-  updateLowStockThreshold, getCategoryBreakdown, getTopPerformingCrops,
+  getSmartLowStockItems, updateLowStockThreshold, getCategoryBreakdown, getTopPerformingCrops,
   bulkUploadCrops, getExportTemplate,
 } from '../controllers/farmerController.js';
 
@@ -30,6 +30,7 @@ router.get('/analytics/revenue', getRevenueAnalytics);
 router.get('/crops/categories-breakdown', getCategoryBreakdown);
 router.get('/crops/top-performing', getTopPerformingCrops);
 router.get('/inventory/low-stock', getLowStockItems);
+router.get('/inventory/smart-low-stock', getSmartLowStockItems);
 router.post('/inventory/update-threshold', updateLowStockThreshold);
 router.post('/crops/bulk-upload', upload.single('file'), bulkUploadCrops);
 router.get('/crops/export-template', getExportTemplate);

@@ -91,6 +91,31 @@ const cropListingSchema = new Schema<ICropListing>(
       totalUnits: { type: Number, default: 0 },
       averageRating: { type: Number, default: 0 },
     },
+    isSynthetic: { type: Boolean, default: false },
+    aiReview: {
+      looksLikeProduce: { type: Boolean, default: true },
+      issues: [{ type: String }],
+      confidence: { type: Number, default: 1.0 },
+      qualityGrade: { type: String, enum: ['A', 'B', 'C'] },
+      detectedCrop: { type: String },
+      suggestedPrice: { type: Number },
+    },
+    embedding: {
+      type: [Number],
+      default: [],
+    },
+    reviewSummary: {
+      summary: { type: String, default: null },
+      pros: [{ type: String }],
+      cons: [{ type: String }],
+      sentimentBreakdown: {
+        positive: { type: Number, default: 0 },
+        neutral: { type: Number, default: 0 },
+        negative: { type: Number, default: 0 },
+      },
+      lastGeneratedAt: { type: Date, default: null },
+      reviewCountAtGeneration: { type: Number, default: 0 },
+    },
   },
   { timestamps: true },
 );

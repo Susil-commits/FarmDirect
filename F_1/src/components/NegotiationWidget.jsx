@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { Loader, CheckCircle, XCircle, Edit3 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Loader, CheckCircle, XCircle, Edit3, Sparkles } from 'lucide-react';
 import Button from './common/Button';
 import Badge from './common/Badge';
 import { useToast } from '../hooks/useToast';
 import { negotiationService } from '../services/negotiationService';
+import MarketPriceBand from './crops/MarketPriceBand.jsx';
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -20,13 +21,37 @@ export default function NegotiationWidget({ negotiation, userRole, onUpdate }) {
   const [showCounter, setShowCounter] = useState(false);
   const [counterPrice, setCounterPrice] = useState(negotiation?.offeredPrice || '');
   const [message, setMessage] = useState('');
+  const [copilot, setCopilot] = useState(null);
   const { addToast } = useToast();
+
+  const isFarmer = userRole === 'farmer';
+  const isPending = negotiation.status === 'pending';
+  const isCountered = negotiation.status === 'counter_offered';
+
+  const canAct = (isFarmer && isPending) || (!isFarmer && isCountered);
+
+  useEffect(() => {
+    if (showCounter && negotiation) {
+      negotiationService
+        .getCopilotGuidance({
+          cropId: negotiation.cropId?._id || negotiation.cropId?.id || negotiation.cropId,
+          cropName: negotiation.cropId?.cropName,
+          offeredPrice: counterPrice ? Number(counterPrice) : Number(negotiation.offeredPrice),
+          quantity: negotiation.quantity,
+          role: isFarmer ? 'farmer' : 'buyer',
+        })
+        .then((res) => {
+          if (res?.data) setCopilot(res.data);
+        })
+        .catch(() => {});
+    }
+  }, [showCounter, negotiation, isFarmer]);
 
   const handleAction = async (action) => {
     try {
       setLoadingAction(action);
       let payload = { action };
-      
+
       if (action === 'counter') {
         if (!counterPrice) {
           addToast('Please enter a counter price', 'warning');
@@ -35,7 +60,7 @@ export default function NegotiationWidget({ negotiation, userRole, onUpdate }) {
         }
         payload.offeredPrice = Number(counterPrice);
       }
-      
+
       if (message) {
         payload.message = message;
       }
@@ -52,20 +77,14 @@ export default function NegotiationWidget({ negotiation, userRole, onUpdate }) {
     }
   };
 
-  const isFarmer = userRole === 'farmer';
-  const isPending = negotiation.status === 'pending';
-  const isCountered = negotiation.status === 'counter_offered';
-
-  const canAct = (isFarmer && isPending) || (!isFarmer && isCountered);
-
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4 hover:shadow-md transition">
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 border-b pb-4 mb-4">
         <div>
           <h4 className="font-bold text-lg text-gray-900">{negotiation.cropId?.cropName || 'Unknown Crop'}</h4>
           <p className="text-sm text-gray-500">
-            {isFarmer 
-              ? `Offer from ${negotiation.buyerId?.name || negotiation.buyerId?.firstName || 'a buyer'}` 
+            {isFarmer
+              ? `Offer from ${negotiation.buyerId?.name || negotiation.buyerId?.firstName || 'a buyer'}`
               : `Offer to ${negotiation.farmerId?.name || negotiation.farmerId?.farmName || 'farmer'}`
             }
           </p>
@@ -89,6 +108,18 @@ export default function NegotiationWidget({ negotiation, userRole, onUpdate }) {
           </div>
         </div>
       </div>
+
+      {/* Market Price Band Guidance */}
+      {negotiation.cropId?.cropName && (
+        <div className="mb-4">
+          <MarketPriceBand
+            cropName={negotiation.cropId.cropName}
+            currentPrice={showCounter ? counterPrice : negotiation.offeredPrice}
+            unit={negotiation.cropId?.unit || 'kg'}
+            compact={true}
+          />
+        </div>
+      )}
 
       <div className="mb-4">
         <h5 className="text-sm font-semibold text-gray-700 mb-2">Timeline</h5>
@@ -124,11 +155,60 @@ export default function NegotiationWidget({ negotiation, userRole, onUpdate }) {
       {showCounter && (
         <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100 animate-slide-in-down">
           <h5 className="font-semibold text-blue-900 mb-3">Make a Counter Offer</h5>
+
+          {/* Negotiation Copilot Guidance Chip */}
+          {copilot && (
+            <div className="mb-3 p-3 bg-white rounded-lg border border-blue-200 text-xs shadow-xs">
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <div className="flex items-center gap-1.5 font-bold text-blue-950">
+                  <Sparkles size={14} className="text-blue-600" />
+                  <span>Negotiation Copilot</span>
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                  Suggested by AI
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-stone-700">
+                  {isFarmer ? (
+                    <>
+                      Suggested Counter:{' '}
+                      <strong className="text-blue-800">₹{copilot.farmerGuidance?.recommendedCounter}</strong>
+                      <span className="text-stone-500 ml-1">
+                        (~{copilot.farmerGuidance?.acceptanceLikelihood}% likelihood)
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      Suggested Offer:{' '}
+                      <strong className="text-blue-800">₹{copilot.buyerGuidance?.recommendedOffer}</strong>
+                      <span className="text-stone-500 ml-1">
+                        (~{copilot.buyerGuidance?.acceptanceLikelihood}% likelihood)
+                      </span>
+                    </>
+                  )}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const rec = isFarmer
+                      ? copilot.farmerGuidance?.recommendedCounter
+                      : copilot.buyerGuidance?.recommendedOffer;
+                    if (rec) setCounterPrice(rec);
+                  }}
+                  className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[11px] cursor-pointer"
+                >
+                  Apply ₹{isFarmer ? copilot.farmerGuidance?.recommendedCounter : copilot.buyerGuidance?.recommendedOffer}
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-4 mb-3">
             <div className="flex-1">
               <label className="block text-xs font-semibold text-gray-700 mb-1">Counter Price (₹)</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
                 value={counterPrice}
                 onChange={(e) => setCounterPrice(e.target.value)}
@@ -136,8 +216,8 @@ export default function NegotiationWidget({ negotiation, userRole, onUpdate }) {
             </div>
             <div className="flex-2">
               <label className="block text-xs font-semibold text-gray-700 mb-1">Message (Optional)</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
                 placeholder="E.g., This is my final offer."
                 value={message}
