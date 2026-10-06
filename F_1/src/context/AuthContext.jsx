@@ -1,7 +1,6 @@
 
 import React, { createContext, useState, useCallback, useEffect, useContext, useRef } from 'react';
 import { authService, userService } from '../services/appService.js';
-import { socialAuthService } from '../services/socialAuthService.js';
 import { isTokenExpired } from '../utils/jwtUtils.js';
 import { getAccessToken, setAccessToken, clearAccessToken } from '../utils/tokenStore.js';
 import { refreshAuthToken, canAttemptRefresh } from '../services/api.js';
@@ -366,68 +365,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
-  const googleLogin = useCallback(async (code) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await socialAuthService.handleGoogleCallback(code);
-      setAccessToken(response.token);
-      if (response.serverStartTime) {
-        localStorage.setItem('serverStartTime', response.serverStartTime.toString());
-      }
-      if (response.user) {
-        localStorage.setItem('userData', JSON.stringify(response.user));
-      }
-      const verifyStatus = response.user?.kycStatus || 'not_submitted';
-      setVerificationStatus(verifyStatus);
-      localStorage.setItem('verificationStatus', verifyStatus);
-      setUser(response.user);
-      setSessionActive(true);
-      recordLoginHistory(response.user);
-      return response;
-    } catch (err) {
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const githubLogin = useCallback(async (code) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await socialAuthService.handleGitHubCallback(code);
-      setAccessToken(response.token);
-      if (response.serverStartTime) {
-        localStorage.setItem('serverStartTime', response.serverStartTime.toString());
-      }
-      if (response.user) {
-        localStorage.setItem('userData', JSON.stringify(response.user));
-      }
-      const verifyStatus = response.user?.kycStatus || 'not_submitted';
-      setVerificationStatus(verifyStatus);
-      localStorage.setItem('verificationStatus', verifyStatus);
-      setUser(response.user);
-      setSessionActive(true);
-      recordLoginHistory(response.user);
-      return response;
-    } catch (err) {
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const initiateGoogleLogin = useCallback(() => {
-    socialAuthService.initiateGoogleLogin();
-  }, []);
-
-  const initiateGitHubLogin = useCallback(() => {
-    socialAuthService.initiateGitHubLogin();
-  }, []);
-
   const refreshUserRef = useRef(null);
 
   const submitVerificationDocuments = useCallback(async (documents) => {
@@ -608,10 +545,6 @@ export const AuthProvider = ({ children }) => {
     forgotPassword,
     resetPassword,
     updateProfile,
-    googleLogin,
-    githubLogin,
-    initiateGoogleLogin,
-    initiateGitHubLogin,
     submitVerificationDocuments,
     fetchVerificationStatus,
     refreshUser,

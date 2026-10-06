@@ -21,6 +21,7 @@ import { useCart } from '../context/CartContext';
 import { getImageUrl, getCropFallbackImage } from '../utils/formatters';
 import { cropService, wishlistService, userService } from '../services/appService';
 import { trackView } from '../services/eventService.js';
+import HarvestPassport from '../components/crops/HarvestPassport.jsx';
 import '../styles/CropDetail.css';
 
 export default function CropDetail() {
@@ -593,6 +594,11 @@ export default function CropDetail() {
                   </ScrollAnimation>
                 </div>
               </Card>
+
+              {/* Verifiable Digital Harvest Passport & Freshness Provenance */}
+              <ScrollAnimation className="scroll-slide mb-6">
+                <HarvestPassport crop={crop} farmer={farmer} />
+              </ScrollAnimation>
 
               {/* Customer Reviews & AI Review Summary */}
               <ScrollAnimation className="scroll-slide mb-6">

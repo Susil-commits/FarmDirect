@@ -5,9 +5,16 @@ import { getAccessToken } from '../utils/tokenStore.js';
 
 export const SocketContext = createContext(null);
 
-const SOCKET_URL = import.meta.env.VITE_API_BASE_URL
-  ? import.meta.env.VITE_API_BASE_URL.replace('/api', '')
-  : 'http://localhost:5000';
+const getSocketUrl = () => {
+  if (import.meta.env.VITE_SOCKET_URL) return import.meta.env.VITE_SOCKET_URL;
+  if (import.meta.env.VITE_API_DIRECT_URL) return import.meta.env.VITE_API_DIRECT_URL.replace(/\/api\/?$/, '');
+  if (import.meta.env.VITE_API_BASE_URL && !import.meta.env.VITE_API_BASE_URL.startsWith('/')) {
+    return import.meta.env.VITE_API_BASE_URL.replace(/\/api\/?$/, '');
+  }
+  return typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000';
+};
+
+const SOCKET_URL = getSocketUrl();
 
 export const SocketProvider = ({ children }) => {
   const { user, isAuthenticated } = useAuth();

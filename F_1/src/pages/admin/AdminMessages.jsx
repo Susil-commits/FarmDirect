@@ -474,21 +474,21 @@ export default function AdminMessages() {
               ) : (
                 <div className="space-y-4">
                   {messages.map((message, idx) => {
-                    const isOutgoing = message.senderId?._id === selectedConversation.otherUser?._id;
+                    const isFromOtherUser = message.senderId?._id === selectedConversation.otherUser?._id;
                     return (
-                      <div key={idx} className={`flex ${isOutgoing ? 'justify-start' : 'justify-end'}`}>
+                      <div key={idx} className={`flex ${isFromOtherUser ? 'justify-start' : 'justify-end'}`}>
                         <div
                           className={`max-w-xs px-4 py-3 rounded-lg ${
-                            isOutgoing
+                            isFromOtherUser
                               ? 'bg-gray-200 text-gray-900'
                               : 'bg-emerald-500 text-white'
                           }`}
                         >
                           <p className="text-sm font-semibold mb-1">
-                            {isOutgoing ? selectedConversation.otherUser?.firstName : 'Admin'}
+                            {isFromOtherUser ? selectedConversation.otherUser?.firstName : 'Admin'}
                           </p>
                           <p className="text-sm break-words">{message.content}</p>
-                          <p className={`text-xs mt-2 ${isOutgoing ? 'text-gray-600' : 'text-emerald-100'}`}>
+                          <p className={`text-xs mt-2 ${isFromOtherUser ? 'text-gray-600' : 'text-emerald-100'}`}>
                             {formatTime(message.createdAt)}
                           </p>
                         </div>
