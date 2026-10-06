@@ -12,632 +12,560 @@ import {
   CheckCircle,
   Eye,
   ShieldCheck,
-  Lock,
   Zap,
   TrendingUp,
   AlertTriangle,
   Database,
   ArrowRight,
-  RefreshCw,
-  Scale,
-  Clock,
-  ExternalLink,
-  ChevronRight,
-  HelpCircle,
+  Camera,
+  Mic,
+  Target,
+  History,
+  Cpu,
+  MessageSquare,
+  Lightbulb,
+  Compass,
+  Bell,
   Activity,
   Layers as TierIcon,
-  Search,
+  HelpCircle,
+  Smartphone,
+  ChevronDown,
 } from 'lucide-react';
 import PageTransition from '../components/common/PageTransition';
 
 // ============================================================================
-// FaRm ARCHITECTURE DEFINITION — 5 REAL TIERS & GENUINE SUBSYSTEMS
+// ARCHITECTURAL DEFINITION — 14 REAL FaRm NODES & ZERO-CROSSING TOPOLOGY
 // ============================================================================
 
-const FARM_TIERS = [
-  { id: 'tier_client', label: '1. Client Layer (F_1)', color: '#38BDF8', x: 40, width: 200 },
-  { id: 'tier_gateway', label: '2. Edge & Security', color: '#818CF8', x: 275, width: 200 },
-  { id: 'tier_core', label: '3. Core Commerce Engine', color: '#34D399', x: 510, width: 210 },
-  { id: 'tier_ai', label: '4. Ethical AI / ML (Gates 1-5)', color: '#FBBF24', x: 755, width: 220 },
-  { id: 'tier_data', label: '5. Event Bus & Storage', color: '#EC4899', x: 1010, width: 220 },
-];
-
-const INITIAL_NODES = [
-  // -------------------------------------------------------------
-  // TIER 1: CLIENT LAYER (F_1 Frontend)
-  // -------------------------------------------------------------
+// Desktop coordinates (1260 x 680 coordinate space)
+// Clean Left-to-Right Flow: 4 Inputs -> 2 Mid-Left AI -> 1 Center Hub -> 2 Mid-Right Exec -> 5 Right Outputs
+const INITIAL_FARM_NODES = [
+  // --------------------------------------------------------------------------
+  // COLUMN 1: INPUT INGESTION (Left, x: 45)
+  // --------------------------------------------------------------------------
   {
-    id: 'farmer_client',
-    title: 'Farmer Web & PWA',
-    subtitle: 'PHOTO-TO-DRAFT & VOICE',
-    tier: 'tier_client',
-    tierName: 'Tier 1: Client Layer',
-    x: 45,
-    y: 50,
-    width: 190,
-    height: 64,
-    color: '#38BDF8',
+    id: 'crop_scan',
+    title: 'Harvest Produce Scan',
+    subtitle: 'PHOTO / CLOUDINARY CDN',
+    category: 'input',
+    tierName: 'Input Tier',
+    icon: Camera,
+    iconColor: '#38BDF8',
     bgColor: 'rgba(56, 189, 248, 0.12)',
-    borderColor: 'rgba(56, 189, 248, 0.35)',
-    tech: 'React 19 + PWA + Web Speech',
-    role: 'Produce upload, native Odia/Hindi voice advisory, order fulfillment, and live sales tracking.',
-    metrics: { uptime: '99.98%', latency: '24ms FCP', cache: 'ServiceWorker PWA' },
-    samplePayload: {
-      action: 'CROP_LISTING_DRAFT',
-      farmerId: '65f8a129d4e8b1001e',
-      location: { district: 'Bargarh', state: 'Odisha' },
-      dialect: 'Odia (ଓଡ଼ିଆ)',
-      mediaAttached: 'cloudinary://raw_potato_field_01.webp',
-    },
-  },
-  {
-    id: 'buyer_client',
-    title: 'Buyer Marketplace',
-    subtitle: 'DISCOVERY & BARGAINING',
-    tier: 'tier_client',
-    tierName: 'Tier 1: Client Layer',
+    borderColor: 'rgba(56, 189, 248, 0.4)',
     x: 45,
-    y: 220,
-    width: 190,
-    height: 64,
-    color: '#34D399',
-    bgColor: 'rgba(52, 211, 153, 0.12)',
-    borderColor: 'rgba(52, 211, 153, 0.35)',
-    tech: 'React 19 + Recharts + Socket.io',
-    role: 'Hands-free voice discovery, live peer-to-peer bargaining, transparent price bands, and escrow checkout.',
-    metrics: { markup: '0% Middleman Tax', deliveryWindow: '< 24h Transit', activeUsers: '14,200+' },
-    samplePayload: {
-      action: 'SUBMIT_BARGAIN_QUOTE',
-      buyerId: '65f8b982e0a2c3002a',
-      cropId: 'crop_nashik_onion_08',
-      offeredPrice: 21.5,
-      mandiBaseline: 19.0,
-      quantityKg: 250,
-    },
-  },
-  {
-    id: 'admin_client',
-    title: 'Admin Sentinel & KYC',
-    subtitle: 'AUDIT & ANOMALY QUEUE',
-    tier: 'tier_client',
-    tierName: 'Tier 1: Client Layer',
-    x: 45,
-    y: 390,
-    width: 190,
-    height: 64,
-    color: '#F472B6',
-    bgColor: 'rgba(244, 114, 182, 0.12)',
-    borderColor: 'rgba(244, 114, 182, 0.35)',
-    tech: 'Admin Orders + KYC Vault',
-    role: 'Human-in-the-loop farmer document verification, commercial anomaly judgment, and ground-truth labeling.',
-    metrics: { kycTurnaround: '< 2 Hours', fraudQuarantine: '100% Verified', auditPassRate: '99.4%' },
-    samplePayload: {
-      action: 'REVIEW_ANOMALY_FLAG',
-      orderId: 'ORD-98421-B',
-      anomalyScore: 4.82,
-      ruleTriggered: 'PRICE_GOUGE_SPIKE_3X',
-      decision: 'CONFIRMED_QUARANTINE',
-    },
-  },
-
-  // -------------------------------------------------------------
-  // TIER 2: EDGE & SECURITY GATEWAY
-  // -------------------------------------------------------------
-  {
-    id: 'api_gateway',
-    title: 'API Gateway & Shield',
-    subtitle: 'HELMET CSP & RATE LIMIT',
-    tier: 'tier_gateway',
-    tierName: 'Tier 2: Edge & Security',
-    x: 280,
-    y: 120,
-    width: 190,
-    height: 64,
-    color: '#818CF8',
-    bgColor: 'rgba(129, 140, 248, 0.12)',
-    borderColor: 'rgba(129, 140, 248, 0.35)',
-    tech: 'Express + Helmet + Zod Guard',
-    role: 'Strict CORS, Content Security Policy, rate-limiting, PII sanitization, and agricultural prompt-injection defenses.',
-    metrics: { filterLatency: '< 1.8ms', piiScrubbing: '100% Regex Match', ddosMitigation: 'Tiered SlowDown' },
-    samplePayload: {
-      requestMethod: 'POST',
-      path: '/api/v1/orders/checkout',
-      piiSanitized: true,
-      circuitBreaker: 'CLOSED (Healthy)',
-      rateLimitRemaining: 98,
-    },
-  },
-  {
-    id: 'auth_guard',
-    title: 'Auth & Session Guard',
-    subtitle: 'JWT & ROTATING REFRESH',
-    tier: 'tier_gateway',
-    tierName: 'Tier 2: Edge & Security',
-    x: 280,
-    y: 300,
-    width: 190,
-    height: 64,
-    color: '#A78BFA',
-    bgColor: 'rgba(167, 139, 250, 0.12)',
-    borderColor: 'rgba(167, 139, 250, 0.35)',
-    tech: 'In-Memory JWT + Redis Rotation',
-    role: 'Zero-trust auth: short-lived 15m in-memory access tokens, HttpOnly cookie refresh token rotation, and reuse detection.',
-    metrics: { tokenTTL: '15 Minutes', reuseDetection: 'Instant Revocation', tokenStorage: 'HttpOnly Secure' },
-    samplePayload: {
-      userId: '65f8a129d4e8b1001e',
-      role: 'farmer',
-      tokenIssuedAt: '2026-10-06T15:20:00Z',
-      refreshTokenStatus: 'ROTATED_VALID',
-    },
-  },
-
-  // -------------------------------------------------------------
-  // TIER 3: CORE APPLICATION & COMMERCE ENGINE
-  // -------------------------------------------------------------
-  {
-    id: 'catalog_engine',
-    title: 'Marketplace Catalog',
-    subtitle: 'INVENTORY & DAYS-COVER',
-    tier: 'tier_core',
-    tierName: 'Tier 3: Core Commerce Engine',
-    x: 515,
     y: 50,
-    width: 200,
+    width: 210,
     height: 64,
-    color: '#34D399',
-    bgColor: 'rgba(52, 211, 153, 0.14)',
-    borderColor: 'rgba(52, 211, 153, 0.4)',
-    tech: 'TypeScript + CropListing Model',
-    role: 'Produce categorization, harvest freshness date indexing, perishable days-of-cover risk alerts (<= 3d), and stock reservations.',
-    metrics: { stockLock: 'Optimistic Versioning', searchIndex: 'Text + 768d Vector', queryTime: '8ms' },
+    tech: 'React 19 + Cloudinary CDN',
+    role: 'Direct camera & mobile upload of newly harvested produce (potatoes, onions, tomatoes) for automated quality grading.',
+    metrics: { uploadSpeed: '< 1.2s', format: 'WebP / JPEG', limit: '50MB' },
     samplePayload: {
-      cropId: 'crop_nashik_onion_08',
-      stockAvailableKg: 1250,
-      daysOfCover: 2.4,
-      spoilageRisk: 'WARNING_PERISHABLE',
-      minimumFarmerPrice: 18.0,
+      action: 'CROP_SCAN',
+      varietyHint: 'Potato',
+      region: 'Bargarh, Odisha',
+      sourceFormat: 'image/webp',
     },
   },
   {
-    id: 'negotiation_engine',
-    title: 'Bilateral Bargaining',
-    subtitle: 'WIN-WIN STATE MACHINE',
-    tier: 'tier_core',
-    tierName: 'Tier 3: Core Commerce Engine',
-    x: 515,
-    y: 220,
-    width: 200,
+    id: 'voice_nlp',
+    title: 'Farmer Multilingual Voice',
+    subtitle: 'ODIA / HINDI / EN NLP',
+    category: 'input',
+    tierName: 'Input Tier',
+    icon: Mic,
+    iconColor: '#818CF8',
+    bgColor: 'rgba(129, 140, 248, 0.12)',
+    borderColor: 'rgba(129, 140, 248, 0.4)',
+    x: 45,
+    y: 200,
+    width: 210,
     height: 64,
-    color: '#C084FC',
-    bgColor: 'rgba(192, 132, 252, 0.14)',
-    borderColor: 'rgba(192, 132, 252, 0.4)',
-    tech: 'Socket.io + Logistic Heuristic',
-    role: 'Direct buyer-farmer bargaining rounds, enforcing price floor protection and guiding optimal counter-offers.',
-    metrics: { maxRounds: '3 Rounds', mediationSuccess: '91.8%', resolutionTime: '< 45s' },
+    tech: 'Web Speech API + Dialect Classifier',
+    role: 'Farmers submit native speech queries in Odia and Hindi with automated dialect detection and injection defense.',
+    metrics: { dialects: 'Odia, Hindi, EN', latency: '16ms', guardrails: 'Prompt Safe' },
     samplePayload: {
-      bargainId: 'NEG-48192',
-      buyerOffer: 21.0,
-      farmerCounter: 22.0,
-      acceptanceProbability: '86.4%',
-      status: 'AGREED_PENDING_COMMIT',
+      dialect: 'Odia (ଓଡ଼ିଆ)',
+      query: 'ଆଳୁର ଆଜିର ଉଚିତ ମୂଲ୍ୟ କେତେ?',
+      sanitized: true,
     },
   },
   {
-    id: 'acid_manager',
-    title: 'ACID Transaction Bus',
-    subtitle: 'TWO-PHASE ORDER COMMIT',
-    tier: 'tier_core',
-    tierName: 'Tier 3: Core Commerce Engine',
-    x: 515,
-    y: 390,
-    width: 200,
+    id: 'mandi_snapshots',
+    title: 'Regional Mandi Feeds',
+    subtitle: 'GOVT APMC BENCHMARK',
+    category: 'input',
+    tierName: 'Input Tier',
+    icon: Target,
+    iconColor: '#F472B6',
+    bgColor: 'rgba(244, 114, 182, 0.12)',
+    borderColor: 'rgba(244, 114, 182, 0.4)',
+    x: 45,
+    y: 350,
+    width: 210,
     height: 64,
-    color: '#2DD4BF',
-    bgColor: 'rgba(45, 212, 191, 0.14)',
-    borderColor: 'rgba(45, 212, 191, 0.4)',
-    tech: 'MongoDB Multi-Doc Transactions',
-    role: 'Atomic checkout execution: deduces stock, creates order record, logs outbox event, and initializes escrow in a single isolated session.',
-    metrics: { isolation: 'ACID Multi-Doc', writeConcern: 'Majority', raceConditionRisk: '0.00%' },
+    tech: 'Agmarknet Pull + Cron Sweeper',
+    role: 'Daily ingestion of government APMC Mandi modal price quotes, establishing authentic price floor benchmarks.',
+    metrics: { markets: 'Cuttack, Nashik, Puri', cadence: 'Daily 06:00', verification: '100% Govt' },
     samplePayload: {
-      transactionId: 'TX-MONGO-99120',
-      status: 'COMMITTED_MAJORITY',
-      entitiesUpdated: ['Order', 'CropListing', 'OutboxEvent', 'UserOrderStats'],
-      executionDuration: '14ms',
+      mandi: 'Cuttack APMC',
+      commodity: 'Potato',
+      modalPriceKg: 20.5,
+      arrivalTonnes: 45.0,
+    },
+  },
+  {
+    id: 'buyer_demand',
+    title: 'Buyer Demand & Bids',
+    subtitle: 'MARKETPLACE VELOCITY',
+    category: 'input',
+    tierName: 'Input Tier',
+    icon: History,
+    iconColor: '#FB923C',
+    bgColor: 'rgba(251, 146, 60, 0.12)',
+    borderColor: 'rgba(251, 146, 60, 0.4)',
+    x: 45,
+    y: 500,
+    width: 210,
+    height: 64,
+    tech: 'Socket.io + SalesDaily DB',
+    role: 'Active wholesale buyer purchase orders, bulk negotiation quotes, and re-order demand velocity.',
+    metrics: { activeBuyers: '14,200+', avgBasket: '180 kg', transit: '< 24h Doorstep' },
+    samplePayload: {
+      buyerId: 'B-8831',
+      demandVolumeKg: 300,
+      targetPrice: 21.0,
+      reorderFreq: 'Weekly',
     },
   },
 
-  // -------------------------------------------------------------
-  // TIER 4: ETHICAL AI & ML INTELLIGENCE (Phase Gates 1 - 5)
-  // -------------------------------------------------------------
+  // --------------------------------------------------------------------------
+  // COLUMN 2: AI PRE-PROCESSING & ANALYSIS (Mid-Left, x: 335)
+  // --------------------------------------------------------------------------
   {
-    id: 'gemini_vision',
+    id: 'quality_grader',
     title: 'Gemini Vision Grader',
     subtitle: 'GATE 2: PHOTO-TO-DRAFT',
-    tier: 'tier_ai',
-    tierName: 'Tier 4: AI & ML Intelligence',
-    x: 760,
-    y: 50,
-    width: 210,
-    height: 64,
-    color: '#34D399',
-    bgColor: 'rgba(52, 211, 153, 0.15)',
+    category: 'analysis',
+    tierName: 'AI Intelligence Tier',
+    icon: Eye,
+    iconColor: '#34D399',
+    bgColor: 'rgba(52, 211, 153, 0.14)',
     borderColor: 'rgba(52, 211, 153, 0.45)',
-    tech: 'Gemini 3.5 Flash Lite Vision',
-    role: 'Automated crop variety classification, visual freshness scoring (Grade A/B/C), and sanity check filtering non-produce images.',
-    metrics: { top1Accuracy: '100.0% (85/85)', sanityCheck: '100.0% Pass', hallucination: '0.00%' },
-    samplePayload: {
-      identifiedProduce: 'Tomato (Himsona Variety)',
-      qualityGrade: 'Grade A Export Quality',
-      looksLikeProduce: true,
-      extractedSpecs: { organic: true, shelfLifeDays: 6 },
-    },
-  },
-  {
-    id: 'agribot',
-    title: 'Multilingual AgriBot',
-    subtitle: 'GATE 1: GROUNDED DIALECT',
-    tier: 'tier_ai',
-    tierName: 'Tier 4: AI & ML Intelligence',
-    x: 760,
-    y: 170,
-    width: 210,
+    x: 335,
+    y: 120,
+    width: 205,
     height: 64,
-    color: '#818CF8',
-    bgColor: 'rgba(129, 140, 248, 0.15)',
-    borderColor: 'rgba(129, 140, 248, 0.45)',
-    tech: 'Gemini Flash + FarmingKb Fallback',
-    role: 'Conversational assistant fluent in Odia, Hindi, and English. Grounded via 4 database tools strictly scoped to verified user ID.',
-    metrics: { goldenPassRate: '100% (62/62)', groundingLift: '+52.0%', offlineFallback: 'FarmingKb Local' },
+    tech: 'Gemini 3.5 Flash Lite Vision',
+    role: 'Automated produce classification (Tomato, Potato, Onion), freshness Grade A/B/C, and non-produce sanity filtering.',
+    metrics: { top1Accuracy: '100.0% (85/85)', sanity: '100/100', hallucination: '0.00%' },
     samplePayload: {
-      queryText: 'ଆଳୁର ଆଜିର ଉଚିତ ମୂଲ୍ୟ କେତେ?',
-      detectedLang: 'or (Odia)',
-      groundedTool: 'getCropPrices(crop: "Potato", district: "Cuttack")',
-      response: 'ଆଜି କଟକ ମଣ୍ଡିରେ ଆଳୁର ମୂଲ୍ୟ ₹19 - ₹22/କେଜି ଅଛି।',
+      produce: 'Red Potato (Sambalpur Variety)',
+      grade: 'Grade A Export Quality',
+      looksLikeProduce: true,
+      shelfLifeDays: 8,
     },
   },
   {
-    id: 'price_forecaster',
+    id: 'forecast_engine',
     title: '14-Day Price Forecaster',
     subtitle: 'GATE 4: QUANTILE REGRESSION',
-    tier: 'tier_ai',
-    tierName: 'Tier 4: AI & ML Intelligence',
-    x: 760,
-    y: 290,
-    width: 210,
-    height: 64,
-    color: '#FBBF24',
-    bgColor: 'rgba(251, 191, 36, 0.15)',
+    category: 'analysis',
+    tierName: 'AI Intelligence Tier',
+    icon: TrendingUp,
+    iconColor: '#FBBF24',
+    bgColor: 'rgba(251, 191, 36, 0.14)',
     borderColor: 'rgba(251, 191, 36, 0.45)',
-    tech: 'Holt-Damped + LightGBM (p10/p50/p90)',
-    role: 'Projects 2-week commodity trajectories and statistical price quartiles (p25/p50/p75) advising farmers whether to sell or hold.',
-    metrics: { mapeScore: '2.38% MAPE', baselineLift: '6/6 Series Beat Naive', ciCoverage: '84.5%' },
+    x: 335,
+    y: 425,
+    width: 205,
+    height: 64,
+    tech: 'Holt-Damped + LightGBM (p10/50/90)',
+    role: 'Projects 2-week commodity trajectories and statistical price quartiles (p25/p50/p75) advising hold vs sell.',
+    metrics: { mape: '2.38% MAPE', baselineLift: '6/6 Beat Naive', ciCoverage: '84.5%' },
     samplePayload: {
-      commodity: 'Tomato',
-      currentMandiMedian: 24.5,
-      day14ForecastP50: 29.8,
-      recommendedAction: 'HOLD_3_DAYS (+18% projected lift)',
-      quartiles: { p25: 22.0, median: 24.5, p75: 27.0 },
+      commodity: 'Potato',
+      quartiles: { p25: 19.0, median: 21.5, p75: 24.0 },
+      advice: 'HOLD_3_DAYS (+14% projected lift)',
+    },
+  },
+
+  // --------------------------------------------------------------------------
+  // COLUMN 3: CENTER CORE HUB (Center, x: 550)
+  // --------------------------------------------------------------------------
+  {
+    id: 'farm_core',
+    title: 'FaRm CORE ENGINE',
+    subtitle: '@AGRIBOT & ORCHESTRATOR',
+    category: 'core',
+    tierName: 'Center Orchestrator Hub',
+    isCore: true,
+    icon: Cpu,
+    iconColor: '#C084FC',
+    bgColor: 'rgba(192, 132, 252, 0.22)',
+    borderColor: 'rgba(192, 132, 252, 0.75)',
+    x: 555,
+    y: 250,
+    width: 170,
+    height: 105,
+    tech: 'TypeScript + Express + BullMQ',
+    role: 'Central nerve center orchestrating JWT auth, database tool execution, ACID order sessions, and real-time Socket.io rooms.',
+    metrics: { uptime: '99.98%', dbConsensus: 'Raft Majority', clusterState: 'ONLINE' },
+    samplePayload: {
+      orchestrator: 'FaRmDirect Engine v2.0',
+      activeSessions: 'Verified',
+      activeQueues: ['outbox', 'anomaly', 'payout'],
+      state: 'STABLE',
+    },
+  },
+
+  // --------------------------------------------------------------------------
+  // COLUMN 4: DECISION & EXECUTION (Mid-Right, x: 745)
+  // --------------------------------------------------------------------------
+  {
+    id: 'negotiation_copilot',
+    title: 'Negotiation Copilot',
+    subtitle: 'LOGISTIC CONCESSION CURVE',
+    category: 'execution',
+    tierName: 'Execution & Safety Tier',
+    icon: MessageSquare,
+    iconColor: '#A855F7',
+    bgColor: 'rgba(168, 85, 247, 0.14)',
+    borderColor: 'rgba(168, 85, 247, 0.45)',
+    x: 745,
+    y: 120,
+    width: 205,
+    height: 64,
+    tech: 'Socket.io + Math Concession Model',
+    role: 'Mediates direct bargaining rounds, protecting farmer minimum margins while ensuring buyer affordability.',
+    metrics: { maxRounds: '3 Rounds', winWinRate: '91.8%', resolution: '< 45s' },
+    samplePayload: {
+      dealId: 'NEG-4491',
+      buyerOffer: 21.0,
+      farmerFloor: 18.0,
+      recommendedQuote: 21.5,
+      winProb: '86.4%',
+    },
+  },
+  {
+    id: 'transaction_outbox',
+    title: 'ACID Transaction Bus',
+    subtitle: 'TWO-PHASE ORDER COMMIT',
+    category: 'execution',
+    tierName: 'Execution & Safety Tier',
+    icon: Activity,
+    iconColor: '#2DD4BF',
+    bgColor: 'rgba(45, 212, 191, 0.14)',
+    borderColor: 'rgba(45, 212, 191, 0.45)',
+    x: 745,
+    y: 425,
+    width: 205,
+    height: 64,
+    tech: 'MongoDB 8.0 Sessions + BullMQ',
+    role: 'Atomic checkout execution: deduces stock, creates order record, and enqueues OutboxEvent in single isolated transaction.',
+    metrics: { isolation: 'ACID Multi-Doc', writeConcern: 'Majority', raceRisk: '0.00%' },
+    samplePayload: {
+      txId: 'TX-MONGO-9921',
+      collections: ['Order', 'CropListing', 'OutboxEvent'],
+      durationMs: 14,
+      status: 'COMMITTED',
+    },
+  },
+
+  // --------------------------------------------------------------------------
+  // COLUMN 5: OUTPUTS & SETTLEMENTS (Right, x: 990)
+  // --------------------------------------------------------------------------
+  {
+    id: 'counteroffer_hint',
+    title: 'Fair Counter-Offer Clue',
+    subtitle: 'COPILOT HINT ADVISORY',
+    category: 'output',
+    tierName: 'Settlement & Output Tier',
+    icon: Lightbulb,
+    iconColor: '#FDE047',
+    bgColor: 'rgba(253, 224, 71, 0.12)',
+    borderColor: 'rgba(253, 224, 71, 0.4)',
+    x: 990,
+    y: 45,
+    width: 210,
+    height: 60,
+    tech: 'In-App Bargain Widget',
+    role: 'Surfaces optimal win-win counter-quotes directly in negotiation chat so both parties close agreements rapidly.',
+    metrics: { recommendedRate: '₹21.50 / kg', farmerGain: '+7.5%', delivery: 'In-app' },
+    samplePayload: {
+      counterQuote: '₹21.50 / kg',
+      rationale: 'Satisfies buyer budget and delivers 14% higher net realization than mandi broker.',
+    },
+  },
+  {
+    id: 'price_window',
+    title: 'Mandi Price Band Window',
+    subtitle: 'MARKET TRANSPARENCY CARD',
+    category: 'output',
+    tierName: 'Settlement & Output Tier',
+    icon: ShieldCheck,
+    iconColor: '#FB7185',
+    bgColor: 'rgba(251, 113, 133, 0.12)',
+    borderColor: 'rgba(251, 113, 133, 0.4)',
+    x: 990,
+    y: 165,
+    width: 210,
+    height: 60,
+    tech: 'Recharts Quartile Component',
+    role: 'Interactive price band widget on crop listing pages displaying verified mandi modal prices vs farm-direct savings.',
+    metrics: { mandiFloor: '₹18.50/kg', mandiCeil: '₹24.00/kg', middlemanTax: '0%' },
+    samplePayload: {
+      mandiFloor: 18.5,
+      mandiModal: 21.5,
+      mandiCeiling: 24.0,
+      buyerSavings: '24% vs Retail',
+    },
+  },
+  {
+    id: 'escrow_settlement',
+    title: 'Razorpay Escrow Guard',
+    subtitle: '0% COMMISSION PAYOUT',
+    category: 'output',
+    tierName: 'Settlement & Output Tier',
+    icon: Zap,
+    iconColor: '#34D399',
+    bgColor: 'rgba(52, 211, 153, 0.12)',
+    borderColor: 'rgba(52, 211, 153, 0.4)',
+    x: 990,
+    y: 285,
+    width: 210,
+    height: 60,
+    tech: 'Razorpay Webhooks + Auto-Sweep',
+    role: 'Holds buyer funds safely in escrow, verifies HMAC signatures, and executes automated 15m payouts to farmers.',
+    metrics: { farmerFee: '0% Zero Commission', sweep: 'Every 15m', verify: 'HMAC-SHA256' },
+    samplePayload: {
+      paymentId: 'pay_rzp_8849',
+      heldInEscrow: true,
+      farmerPayout: 6450.0,
+      releaseTrigger: 'DELIVERY_CONFIRMED',
     },
   },
   {
     id: 'anomaly_sentinel',
     title: 'Anomaly Sentinel v2',
-    subtitle: 'GATE 5: MULTI-VECTOR FRAUD',
-    tier: 'tier_ai',
-    tierName: 'Tier 4: AI & ML Intelligence',
-    x: 760,
+    subtitle: 'GATE 5: FRAUD QUARANTINE',
+    category: 'output',
+    tierName: 'Settlement & Output Tier',
+    icon: AlertTriangle,
+    iconColor: '#F43F5E',
+    bgColor: 'rgba(244, 63, 94, 0.12)',
+    borderColor: 'rgba(244, 63, 94, 0.4)',
+    x: 990,
     y: 410,
     width: 210,
-    height: 64,
-    color: '#FB7185',
-    bgColor: 'rgba(251, 113, 133, 0.15)',
-    borderColor: 'rgba(251, 113, 133, 0.45)',
+    height: 60,
     tech: 'Welford Algorithm + Z-Score Vectors',
-    role: 'Monitors unit price gouging (>2.5x), quantity surges (z > 4.0), high-velocity bot bursts, and suspicious COD cancellations.',
-    metrics: { precision: '100.0%', recall: '100.0% (F1 1.0)', evaluationCases: '20 Injected Vectors' },
+    role: 'Real-time fraud monitor flagging price gouging (>2.5x), quantity spikes (z > 4.0), and rapid bot bursts to Admin queue.',
+    metrics: { precision: '100.0%', recall: '100.0%', f1Score: '1.000' },
     samplePayload: {
       orderId: 'ORD-98421-B',
-      zScoreQuantity: 4.8,
-      unitPriceRatio: 1.1,
-      accountAgeHours: 3.2,
-      riskLevel: 'HIGH_ANOMALY_QUARANTINE',
+      zScoreQuantity: 0.42,
+      priceRatio: 1.05,
+      fraudStatus: 'PASSED_CLEAN',
     },
   },
-
-  // -------------------------------------------------------------
-  // TIER 5: ASYNC EVENT BUS, STORAGE & ESCROW SETTLEMENT
-  // -------------------------------------------------------------
   {
-    id: 'socket_bus',
-    title: 'Socket.io Realtime Bus',
-    subtitle: 'WEBSOCKET BROADCAST ENGINE',
-    tier: 'tier_data',
-    tierName: 'Tier 5: Event Bus & Storage',
-    x: 1015,
-    y: 50,
-    width: 205,
-    height: 64,
-    color: '#C084FC',
-    bgColor: 'rgba(192, 132, 252, 0.14)',
+    id: 'realtime_dispatch',
+    title: 'Socket.io & SMS Dispatch',
+    subtitle: 'LIVE DOORSTEP TELEMETRY',
+    category: 'output',
+    tierName: 'Settlement & Output Tier',
+    icon: Bell,
+    iconColor: '#C084FC',
+    bgColor: 'rgba(192, 132, 252, 0.12)',
     borderColor: 'rgba(192, 132, 252, 0.4)',
-    tech: 'Socket.io 4.x + Room Partitions',
-    role: 'Instant peer-to-peer bargaining negotiation bids, live harvest-to-doorstep driver location telemetry, and stock alerts.',
-    metrics: { pushLatency: '< 45ms', openSockets: '3,800+', reconnectStrategy: 'Exponential Backoff' },
+    x: 990,
+    y: 535,
+    width: 210,
+    height: 60,
+    tech: 'WebSocket Broadcast + Twilio SMS',
+    role: 'Pushes real-time harvest dispatch tracking alerts to farmer dashboards, buyer order trackers, and SMS notifications.',
+    metrics: { pushLatency: '< 45ms', transitWindow: '< 24h Doorstep', freshness: '96% Index' },
     samplePayload: {
-      event: 'NEGOTIATION_COUNTER_OFFER',
-      roomId: 'room_neg_48192',
-      counterPrice: 22.0,
-      timestamp: '2026-10-06T15:24:08Z',
-    },
-  },
-  {
-    id: 'bullmq_outbox',
-    title: 'Transactional Outbox',
-    subtitle: 'BULLMQ & REDIS EVENT STREAM',
-    tier: 'tier_data',
-    tierName: 'Tier 5: Event Bus & Storage',
-    x: 1015,
-    y: 170,
-    width: 205,
-    height: 64,
-    color: '#818CF8',
-    bgColor: 'rgba(129, 140, 248, 0.14)',
-    borderColor: 'rgba(129, 140, 248, 0.4)',
-    tech: 'BullMQ + Redis 7 + Outbox Worker',
-    role: 'Transactional Outbox pattern polling OutboxEvent table every 10s; guarantees at-least-once delivery for email, SMS, and invoice generation.',
-    metrics: { pollInterval: '10s Interval', queueLossRate: '0.00%', maxRetries: 5 },
-    samplePayload: {
-      outboxEventId: 'evt_outbox_88301',
-      eventType: 'ORDER_CONFIRMED',
-      recipients: ['farmer@farmdirect.org', 'buyer@kitchen.in'],
-      dispatchedAt: '2026-10-06T15:24:12Z',
-    },
-  },
-  {
-    id: 'mongo_vault',
-    title: 'MongoDB Replica Set',
-    subtitle: 'ACID MULTI-DOC DATA STORE',
-    tier: 'tier_data',
-    tierName: 'Tier 5: Event Bus & Storage',
-    x: 1015,
-    y: 290,
-    width: 205,
-    height: 64,
-    color: '#10B981',
-    bgColor: 'rgba(16, 185, 129, 0.14)',
-    borderColor: 'rgba(16, 185, 129, 0.4)',
-    tech: 'MongoDB 8.0 Replica Set',
-    role: 'Primary storage for CropListings, Orders, PriceSnapshots, User KYC records, and high-dimensional semantic search vectors.',
-    metrics: { replication: '3-Node Replica Set', consistency: 'Strict Majority', durability: 'Journaled' },
-    samplePayload: {
-      collectionsCount: 22,
-      activeDocuments: '184,200',
-      replicaStatus: 'PRIMARY_ONLINE',
-      secondaryLag: '< 2ms',
-    },
-  },
-  {
-    id: 'razorpay_escrow',
-    title: 'Razorpay Escrow Guard',
-    subtitle: 'IDEMPOTENT PAYOUT SWEEPER',
-    tier: 'tier_data',
-    tierName: 'Tier 5: Event Bus & Storage',
-    x: 1015,
-    y: 410,
-    width: 205,
-    height: 64,
-    color: '#34D399',
-    bgColor: 'rgba(52, 211, 153, 0.14)',
-    borderColor: 'rgba(52, 211, 153, 0.4)',
-    tech: 'Razorpay HMAC + 15m Auto-Sweep',
-    role: 'Secures funds in escrow until verified delivery, enforces webhook signature verification, and automatically sweeps payouts to farmers.',
-    metrics: { farmerCommission: '0% Zero Fee', webhookVerify: 'HMAC-SHA256', reconciliation: 'Every 15m' },
-    samplePayload: {
-      paymentId: 'pay_rzp_9948214',
-      escrowState: 'FUNDS_HELD',
-      releaseTrigger: 'DELIVERY_CONFIRMED',
-      farmerPayoutAmount: 5375.0,
-      convenienceFee: 134.38,
+      orderId: 'ORD-98421-B',
+      status: 'DISPATCHED_TO_KITCHEN',
+      etaHours: 12.5,
+      liveCoords: { lat: 21.467, lng: 83.98 },
     },
   },
 ];
 
-// REAL ARCHITECTURAL CABLES CONNECTING FaRm's ACTUAL SUBSYSTEMS
+// ZERO-COLLISION CONNECTING CABLES (13 Clean Geometric Curves)
 const FARM_CABLES = [
-  { from: 'farmer_client', to: 'api_gateway', badge: 'REST / UPLOAD', color: '#38BDF8' },
-  { from: 'buyer_client', to: 'api_gateway', badge: 'REST / QUERY', color: '#34D399' },
-  { from: 'admin_client', to: 'api_gateway', badge: 'ADMIN AUDIT', color: '#F472B6' },
-  { from: 'api_gateway', to: 'auth_guard', badge: 'JWT / REUSE CHECK', color: '#818CF8' },
-  { from: 'api_gateway', to: 'catalog_engine', badge: 'PRODUCE ROUTE', color: '#38BDF8' },
-  { from: 'farmer_client', to: 'gemini_vision', badge: 'PHOTO STREAM', color: '#10B981' },
-  { from: 'gemini_vision', to: 'catalog_engine', badge: 'SPECS & GRADE', color: '#34D399' },
-  { from: 'buyer_client', to: 'agribot', badge: 'ODIA/HI VOICE', color: '#818CF8' },
-  { from: 'agribot', to: 'catalog_engine', badge: 'TOOL GROUNDING', color: '#A78BFA' },
-  { from: 'catalog_engine', to: 'price_forecaster', badge: 'MANDI SNAPSHOT', color: '#FBBF24' },
-  { from: 'price_forecaster', to: 'negotiation_engine', badge: 'PRICE BANDS (P25-P75)', color: '#F59E0B' },
-  { from: 'buyer_client', to: 'negotiation_engine', badge: 'BARGAIN QUOTE', color: '#EC4899' },
-  { from: 'negotiation_engine', to: 'socket_bus', badge: 'REALTIME BID', color: '#C084FC' },
-  { from: 'negotiation_engine', to: 'acid_manager', badge: 'AGREED DEAL', color: '#2DD4BF' },
-  { from: 'acid_manager', to: 'anomaly_sentinel', badge: 'RISK AUDIT (Z-SCORE)', color: '#FB7185' },
-  { from: 'anomaly_sentinel', to: 'admin_client', badge: 'ANOMALY FLAG', color: '#F43F5E' },
-  { from: 'acid_manager', to: 'mongo_vault', badge: 'ACID 2PC COMMIT', color: '#10B981' },
-  { from: 'acid_manager', to: 'razorpay_escrow', badge: 'ESCROW LOCK', color: '#14B8A6' },
-  { from: 'acid_manager', to: 'bullmq_outbox', badge: 'OUTBOX EVENT', color: '#818CF8' },
-  { from: 'bullmq_outbox', to: 'socket_bus', badge: 'DISPATCH BROADCAST', color: '#C084FC' },
-  { from: 'razorpay_escrow', to: 'farmer_client', badge: '15M PAYOUT SWEEP', color: '#34D399' },
+  // Inputs to Mid-Left Analysis
+  { from: 'crop_scan', to: 'quality_grader', badge: 'CROP SCAN', color: '#06B6D4' },
+  { from: 'mandi_snapshots', to: 'forecast_engine', badge: 'MANDI FEED', color: '#EC4899' },
+  { from: 'buyer_demand', to: 'forecast_engine', badge: 'HISTORY BIDS', color: '#F97316' },
+
+  // Mid-Left to Center Core
+  { from: 'quality_grader', to: 'farm_core', badge: 'GRADE & SPEC', color: '#10B981' },
+  { from: 'voice_nlp', to: 'farm_core', badge: 'ODIA/HI VOICE', color: '#818CF8' },
+  { from: 'forecast_engine', to: 'farm_core', badge: 'PRICE BAND', color: '#EAB308' },
+
+  // Center Core to Mid-Right Execution
+  { from: 'farm_core', to: 'negotiation_copilot', badge: 'DEAL LOGIC', color: '#A855F7' },
+  { from: 'farm_core', to: 'transaction_outbox', badge: 'ACID COMMIT', color: '#8B5CF6' },
+
+  // Mid-Right Execution to Outputs
+  { from: 'negotiation_copilot', to: 'counteroffer_hint', badge: 'HINT', color: '#EAB308' },
+  { from: 'negotiation_copilot', to: 'price_window', badge: 'MARGIN BAND', color: '#F43F5E' },
+  { from: 'transaction_outbox', to: 'escrow_settlement', badge: 'ESCROW PAY', color: '#14B8A6' },
+  { from: 'transaction_outbox', to: 'anomaly_sentinel', badge: 'FRAUD CHECK', color: '#FB7185' },
+  { from: 'transaction_outbox', to: 'realtime_dispatch', badge: 'DISPATCH', color: '#C084FC' },
 ];
 
-// 4 GENUINE REAL-WORLD FaRm WORKFLOW SIMULATIONS
+// 4 REAL-WORLD SIMULATION WORKFLOWS
 const SIMULATION_FLOWS = [
   {
     id: 'order_lifecycle',
     name: '🌾 Complete Harvest-to-Payout Flow',
-    description: 'Farmer photo listing -> AI produce grading -> Buyer negotiation -> ACID order placement -> Escrow payout.',
+    description: 'Farmer produce scan -> Gemini grading -> Mandi price band -> Negotiation -> ACID commit -> Escrow payout.',
     steps: [
       {
-        nodeId: 'farmer_client',
-        cableBadge: 'PHOTO STREAM',
-        log: '[Farmer App] Farmer in Bargarh uploads newly harvested Sambalpur Red Potato crate photo via mobile PWA.',
+        nodeId: 'crop_scan',
+        cableBadge: 'CROP SCAN',
+        log: '[1. Harvest Scan] Farmer uploads newly harvested Sambalpur Red Potato crate photo via mobile PWA.',
       },
       {
-        nodeId: 'gemini_vision',
-        cableBadge: 'SPECS & GRADE',
-        log: '[Gemini Vision 3.5] Multimodal classifier confirms produce sanity: Red Potato, Grade A export, organic harvest freshness (98.4% confidence).',
+        nodeId: 'quality_grader',
+        cableBadge: 'GRADE & SPEC',
+        log: '[2. Gemini Vision 3.5] Produce authenticity verified. Variety: Red Potato, Grade A Export, organic certification validated.',
       },
       {
-        nodeId: 'catalog_engine',
-        cableBadge: 'MANDI SNAPSHOT',
-        log: '[Catalog Engine] Listing generated with 1,250 kg stock. Perishable cover calculated at 4.2 days. Real-time listing published.',
+        nodeId: 'farm_core',
+        cableBadge: 'DEAL LOGIC',
+        log: '[3. FaRm Core Hub] Core orchestrator creates catalog listing draft and pulls real-time mandi benchmarks.',
       },
       {
-        nodeId: 'price_forecaster',
-        cableBadge: 'PRICE BANDS (P25-P75)',
-        log: '[Price Forecaster] Rolling APMC price bands computed: p25 = ₹19/kg, median = ₹22/kg, p75 = ₹24/kg. Hold/Sell advisory: SELL PRIME.',
+        nodeId: 'negotiation_copilot',
+        cableBadge: 'HINT',
+        log: '[4. Negotiation Copilot] Buyer proposes ₹21.00/kg. Copilot evaluates logistic concession curve (86.4% acceptance probability).',
       },
       {
-        nodeId: 'buyer_client',
-        cableBadge: 'BARGAIN QUOTE',
-        log: '[Buyer App] Bhubaneswar bulk kitchen buyer initiates bilateral bargaining offer: ₹21.00/kg for 300 kg.',
+        nodeId: 'counteroffer_hint',
+        cableBadge: 'MARGIN BAND',
+        log: '[5. Counter-Offer Hint] Displays optimal counter-quote of ₹21.50/kg to farmer. Buyer accepts terms!',
       },
       {
-        nodeId: 'negotiation_engine',
-        cableBadge: 'REALTIME BID',
-        log: '[Negotiation Engine] Logistic concession curve evaluates offer (86.4% win-win probability). Counter-quote ₹21.50 accepted by buyer!',
+        nodeId: 'transaction_outbox',
+        cableBadge: 'ACID COMMIT',
+        log: '[6. ACID Transaction Bus] MongoDB multi-document isolated session locks 300 kg stock and commits order.',
       },
       {
-        nodeId: 'acid_manager',
-        cableBadge: 'RISK AUDIT (Z-SCORE)',
-        log: '[ACID Engine] Initiating MongoDB multi-document isolated session. Pre-commit risk assessment triggered.',
+        nodeId: 'escrow_settlement',
+        cableBadge: 'ESCROW PAY',
+        log: '[7. Razorpay Escrow] Buyer payment captured and locked in escrow. 0% farmer commission enforced.',
       },
       {
-        nodeId: 'anomaly_sentinel',
-        cableBadge: 'ACID 2PC COMMIT',
-        log: '[Anomaly Sentinel v2] Order evaluated: Unit price within 1.1x median, z-score volume = 0.42. Fraud score clean (< 0.01). Verified.',
-      },
-      {
-        nodeId: 'mongo_vault',
-        cableBadge: 'ESCROW LOCK',
-        log: '[MongoDB Replica Set] Two-Phase ACID Commit completed in 14ms across Order, CropListing, and OutboxEvent collections.',
-      },
-      {
-        nodeId: 'razorpay_escrow',
-        cableBadge: 'OUTBOX EVENT',
-        log: '[Razorpay Escrow] Buyer funds (₹6,450) captured & locked in escrow. 0% farmer commission enforced. Webhook verified.',
-      },
-      {
-        nodeId: 'bullmq_outbox',
-        cableBadge: 'DISPATCH BROADCAST',
-        log: '[BullMQ Outbox] Outbox worker processed event #88301. SMS and push notifications sent to farmer.',
-      },
-      {
-        nodeId: 'socket_bus',
-        cableBadge: '15M PAYOUT SWEEP',
-        log: '[Socket.io Bus] Real-time harvest dispatch tracking stream active. Produce arrives in < 24h. Escrow unlocked directly to farmer bank account.',
+        nodeId: 'realtime_dispatch',
+        cableBadge: 'DISPATCH',
+        log: '[8. Live Dispatch] Real-time harvest dispatch tracking activated. 15-minute payout sweep scheduled upon delivery confirmation.',
       },
     ],
   },
   {
-    id: 'ai_listing',
-    name: '📸 AI Photo-to-Draft & Voice Advisory',
-    description: 'Farmer takes produce picture and speaks native dialect -> Grounded AgriBot and Gemini Vision build catalog listing instantly.',
+    id: 'voice_advisory',
+    name: '🗣️ Odia/Hindi Voice Advisory & Price Forecast',
+    description: 'Farmer speaks dialect question -> Grounded AgriBot queries Mandi feeds -> 14-day price forecasting advisory.',
     steps: [
       {
-        nodeId: 'farmer_client',
-        cableBadge: 'PHOTO STREAM',
-        log: '[Farmer App] Farmer takes photo of Nashik Red Onions and asks voice question: "କେତେ ମୂଲ୍ୟରେ ବିକ୍ରି କରିବି?" (What price should I sell at?).',
+        nodeId: 'voice_nlp',
+        cableBadge: 'ODIA/HI VOICE',
+        log: '[1. Multilingual Voice] Farmer speaks Odia: "ଆଳୁର ଆଜିର ଉଚିତ ମୂଲ୍ୟ କେତେ?" (What is the fair price of potato today?).',
       },
       {
-        nodeId: 'agribot',
-        cableBadge: 'TOOL GROUNDING',
-        log: '[Multilingual AgriBot] Detected Odia dialect. Executing database tool getCropPrices("Onion", "Nashik") strictly scoped to user session.',
+        nodeId: 'farm_core',
+        cableBadge: 'PRICE BAND',
+        log: '[2. Core AgriBot] Grounded database tool getCropPrices("Potato", "Cuttack") triggered with strict session authentication.',
       },
       {
-        nodeId: 'gemini_vision',
-        cableBadge: 'SPECS & GRADE',
-        log: '[Gemini Vision 3.5] Produce authenticity verified (looksLikeProduce: true). Variety: Nashik Red Onion. Certified Grade A.',
+        nodeId: 'mandi_snapshots',
+        cableBadge: 'MANDI FEED',
+        log: '[3. Mandi Feeds] Govt APMC modal benchmark confirms floor price of ₹20.50/kg in regional trading yard.',
       },
       {
-        nodeId: 'price_forecaster',
-        cableBadge: 'PRICE BANDS (P25-P75)',
-        log: '[Price Forecaster] 14-day Holt-damped forecast: p50 price rising from ₹24 to ₹29/kg over next 5 days. Advisory: HOLD_3_DAYS for +18% profit.',
+        nodeId: 'forecast_engine',
+        cableBadge: 'GRADE & SPEC',
+        log: '[4. Price Forecaster] 14-day Holt-damped smoothing projects price rising to ₹24.00/kg. Advice: HOLD_3_DAYS for +14% profit!',
       },
       {
-        nodeId: 'catalog_engine',
-        cableBadge: 'PRODUCE ROUTE',
-        log: '[Catalog Engine] Draft auto-populated with recommended price ₹27.50/kg. Listing saved with zero manual typing required.',
+        nodeId: 'price_window',
+        cableBadge: 'MARGIN BAND',
+        log: '[5. Price Window] Surfaces statistical quartiles (p25 = ₹19, median = ₹21.50, p75 = ₹24) directly on farmer screen.',
       },
     ],
   },
   {
-    id: 'live_bargaining',
-    name: '🤝 Real-Time Bilateral Negotiation',
-    description: 'Socket.io peer-to-peer price bargaining with AI concession copilot protecting farmer profit margins.',
+    id: 'bilateral_bargain',
+    name: '🤝 Real-Time Bilateral Bargaining',
+    description: 'Buyer and farmer engage in direct peer-to-peer price discovery with automated minimum margin floor protection.',
     steps: [
       {
-        nodeId: 'buyer_client',
-        cableBadge: 'BARGAIN QUOTE',
-        log: '[Buyer App] Buyer sends custom offer: ₹17.00/kg (Below farmer floor cost).',
+        nodeId: 'buyer_demand',
+        cableBadge: 'HISTORY BIDS',
+        log: '[1. Buyer Bids] Bulk kitchen buyer offers ₹17.00/kg (Below farmer cost of production).',
       },
       {
-        nodeId: 'negotiation_engine',
-        cableBadge: 'REALTIME BID',
-        log: '[Negotiation Engine] Evaluates offer against historical regional acceptance curve. Offer rejected: Violates farmer floor margin (₹18.00/kg).',
+        nodeId: 'farm_core',
+        cableBadge: 'DEAL LOGIC',
+        log: '[2. FaRm Core Hub] Intercepts offer; evaluates against farmer minimum floor threshold (₹18.00/kg).',
       },
       {
-        nodeId: 'price_forecaster',
-        cableBadge: 'PRICE BANDS (P25-P75)',
-        log: '[Price Forecaster] Surfaces regional market quartiles: Regional mandi modal is ₹19.50/kg. Generates sweet-spot advice: ₹19.20/kg.',
+        nodeId: 'negotiation_copilot',
+        cableBadge: 'HINT',
+        log: '[3. Negotiation Copilot] Blocks predatory rate and formulates win-win counter-quote of ₹19.20/kg based on regional acceptance curve.',
       },
       {
-        nodeId: 'socket_bus',
-        cableBadge: 'BID BROADCAST',
-        log: '[Socket.io] Pushes recommended counter-quote directly to farmer negotiation screen with 1-click apply action.',
+        nodeId: 'counteroffer_hint',
+        cableBadge: 'MARGIN BAND',
+        log: '[4. Counter-Offer Hint] Farmer transmits ₹19.20/kg counter-offer via 1-click button. Buyer agrees!',
       },
       {
-        nodeId: 'buyer_client',
-        cableBadge: 'AGREED DEAL',
-        log: '[Buyer App] Buyer receives counter-quote of ₹19.20/kg and accepts. Deal locks with mutual win-win outcome.',
+        nodeId: 'transaction_outbox',
+        cableBadge: 'ESCROW PAY',
+        log: '[5. ACID Bus] Agreement sealed directly between parties with 0% middleman deduction.',
       },
     ],
   },
   {
-    id: 'fraud_quarantine',
+    id: 'fraud_sentinel',
     name: '🛡️ Anomaly Sentinel & Fraud Interception',
-    description: 'Multi-vector statistical fraud engine intercepts price-gouging or burst-bot orders and alerts Admin Sentinel.',
+    description: 'Multi-vector fraud monitoring intercepts price gouging or volume surges before database commit.',
     steps: [
       {
-        nodeId: 'buyer_client',
-        cableBadge: 'REST / QUERY',
-        log: '[Buyer Client] New account (< 2 hours old) places high-velocity order: 5,000 kg at 3.2x normal market price.',
+        nodeId: 'buyer_demand',
+        cableBadge: 'HISTORY BIDS',
+        log: '[1. Rapid Burst Order] Unverified account attempts rapid order: 8,000 kg at 3.5x normal market price.',
       },
       {
-        nodeId: 'api_gateway',
-        cableBadge: 'PRODUCE ROUTE',
-        log: '[API Gateway] Enforces rate-limiting and forwards sanitized payload to ACID Transaction Manager.',
+        nodeId: 'farm_core',
+        cableBadge: 'ACID COMMIT',
+        log: '[2. FaRm Core Hub] Dispatches order attributes to pre-commit risk assessment pipeline.',
       },
       {
-        nodeId: 'acid_manager',
-        cableBadge: 'RISK AUDIT (Z-SCORE)',
-        log: '[ACID Engine] Dispatches order attributes to Anomaly Sentinel v2 before database commit.',
+        nodeId: 'transaction_outbox',
+        cableBadge: 'FRAUD CHECK',
+        log: '[3. ACID Bus] Halts transaction commit pending Anomaly Sentinel score validation.',
       },
       {
         nodeId: 'anomaly_sentinel',
-        cableBadge: 'ANOMALY FLAG',
-        log: '[Anomaly Sentinel v2] Multi-vector evaluation triggered! Quantity z-score = 5.4 (> 4.0 threshold). Price ratio = 3.2x. Risk: HIGH.',
-      },
-      {
-        nodeId: 'admin_client',
-        cableBadge: 'ADMIN AUDIT',
-        log: '[Admin Sentinel] Order quarantined automatically! Real-time alert dispatched to Admin Sentinel queue for Human-in-the-Loop review.',
+        cableBadge: 'DISPATCH',
+        log: '[4. Anomaly Sentinel v2] Quantity z-score = 5.2 (> 4.0 threshold). Order quarantined to Admin review queue automatically!',
       },
     ],
   },
 ];
 
 export default function Pipeline() {
-  const [nodes, setNodes] = useState(INITIAL_NODES);
+  const [nodes, setNodes] = useState(INITIAL_FARM_NODES);
   const [selectedNode, setSelectedNode] = useState(null);
-  const [viewMode, setViewMode] = useState('map'); // 'map', 'cards', or 'benchmarks'
+  const [viewMode, setViewMode] = useState('map'); // 'map', 'cards', 'benchmarks', 'mobile_stream'
   const [activeFlowIndex, setActiveFlowIndex] = useState(0);
   const [isSimulating, setIsSimulating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -659,7 +587,7 @@ export default function Pipeline() {
     }
   }, [simulationLogs]);
 
-  // Simulation execution engine
+  // Simulation step execution
   useEffect(() => {
     if (!isSimulating || isPaused) {
       if (simulationTimerRef.current) clearTimeout(simulationTimerRef.current);
@@ -668,7 +596,6 @@ export default function Pipeline() {
 
     const currentStep = activeFlow.steps[currentStepIndex];
     if (!currentStep) {
-      // Completed flow
       setIsSimulating(false);
       setCurrentStepIndex(0);
       setSimulationLogs((prev) => [
@@ -676,13 +603,12 @@ export default function Pipeline() {
         {
           id: Date.now(),
           type: 'success',
-          text: `✅ ${activeFlow.name} completed successfully across all architectural tiers.`,
+          text: `✅ ${activeFlow.name} simulated cleanly through all architectural stages.`,
         },
       ]);
       return;
     }
 
-    // Add log
     setSimulationLogs((prev) => [
       ...prev,
       {
@@ -707,7 +633,7 @@ export default function Pipeline() {
       {
         id: Date.now(),
         type: 'start',
-        text: `🚀 Initializing ${activeFlow.name}...`,
+        text: `🚀 Launching live trace: ${activeFlow.name}...`,
       },
     ]);
     setCurrentStepIndex(0);
@@ -724,10 +650,10 @@ export default function Pipeline() {
     setIsPaused(false);
     setCurrentStepIndex(0);
     setSimulationLogs([]);
-    setNodes(INITIAL_NODES);
+    setNodes(INITIAL_FARM_NODES);
   };
 
-  // Node Drag handlers (flexible Bezier canvas)
+  // Drag physics for interactive canvas
   const handleMouseDownNode = (e, nodeId) => {
     e.stopPropagation();
     const node = nodes.find((n) => n.id === nodeId);
@@ -735,7 +661,7 @@ export default function Pipeline() {
 
     const rect = canvasRef.current.getBoundingClientRect();
     const scaleX = 1260 / rect.width;
-    const scaleY = 560 / rect.height;
+    const scaleY = 660 / rect.height;
 
     const mouseX = (e.clientX - rect.left) * scaleX;
     const mouseY = (e.clientY - rect.top) * scaleY;
@@ -752,7 +678,7 @@ export default function Pipeline() {
       if (!draggedNodeId || !canvasRef.current) return;
       const rect = canvasRef.current.getBoundingClientRect();
       const scaleX = 1260 / rect.width;
-      const scaleY = 560 / rect.height;
+      const scaleY = 660 / rect.height;
 
       const mouseX = (e.clientX - rect.left) * scaleX;
       const mouseY = (e.clientY - rect.top) * scaleY;
@@ -762,8 +688,8 @@ export default function Pipeline() {
           if (node.id === draggedNodeId) {
             return {
               ...node,
-              x: Math.max(10, Math.min(1040, mouseX - dragOffset.x)),
-              y: Math.max(10, Math.min(480, mouseY - dragOffset.y)),
+              x: Math.max(10, Math.min(1050, mouseX - dragOffset.x)),
+              y: Math.max(10, Math.min(580, mouseY - dragOffset.y)),
             };
           }
           return node;
@@ -788,7 +714,7 @@ export default function Pipeline() {
     }
   }, [draggedNodeId, handleMouseMove, handleMouseUp]);
 
-  // Compute curved cubic Bezier cable paths
+  // Cubic Bezier cable path with clean midpoint pill calculations
   const getCableGeometry = (cable) => {
     const fromNode = nodes.find((n) => n.id === cable.from);
     const toNode = nodes.find((n) => n.id === cable.to);
@@ -799,7 +725,6 @@ export default function Pipeline() {
     let endX = toNode.x;
     let endY = toNode.y + toNode.height / 2;
 
-    // If reverse direction or same column
     if (toNode.x < fromNode.x) {
       startX = fromNode.x;
       endX = toNode.x + toNode.width;
@@ -818,41 +743,56 @@ export default function Pipeline() {
     return { pathData, midX, midY, startX, startY, endX, endY };
   };
 
-  const activeStepNodeId = isSimulating && activeFlow.steps[currentStepIndex] ? activeFlow.steps[currentStepIndex].nodeId : null;
-  const activeStepCableBadge = isSimulating && activeFlow.steps[currentStepIndex] ? activeFlow.steps[currentStepIndex].cableBadge : null;
+  const activeStepNodeId =
+    isSimulating && activeFlow.steps[currentStepIndex] ? activeFlow.steps[currentStepIndex].nodeId : null;
+  const activeStepCableBadge =
+    isSimulating && activeFlow.steps[currentStepIndex] ? activeFlow.steps[currentStepIndex].cableBadge : null;
 
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#070B14] text-slate-100 flex flex-col font-sans select-none overflow-x-hidden pt-18 pb-12">
         {/* ================================================================= */}
-        {/* TOP COMMAND HEADER */}
+        {/* COMPACT COMMAND HEADER (Clean Desktop & Mobile Alignment) */}
         {/* ================================================================= */}
-        <header className="border-b border-slate-800/80 bg-[#0B1120]/80 backdrop-blur-md sticky top-16 z-30 px-4 sm:px-6 py-3.5 shadow-xl">
-          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-            {/* Title & Live Status */}
-            <div className="flex items-center gap-3">
-              <div className="relative flex items-center justify-center">
-                <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 animate-ping absolute opacity-75" />
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 relative" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
-                    FaRm DIRECT COMMERCE ENGINE
-                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-700/50">
-                      LIVE ARCHITECTURE
-                    </span>
-                  </h1>
+        <header className="border-b border-slate-800/80 bg-[#0B1120]/90 backdrop-blur-md sticky top-16 z-30 px-3 sm:px-6 py-2.5 shadow-xl">
+          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+            {/* Brand Title & Pulse */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="relative flex items-center justify-center">
+                  <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping absolute opacity-75" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 relative" />
                 </div>
-                <p className="text-xs text-slate-400 hidden sm:block">
-                  Multi-Tier System Flow • 5 Phase Gates • Real-time Event Streaming & ACID Two-Phase Commit
-                </p>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-sm sm:text-base font-bold tracking-tight text-white flex items-center gap-1.5">
+                      FaRm DIRECT COMMERCE ENGINE
+                    </h1>
+                    <span className="text-[9px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-700/50">
+                      LIVE
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 hidden md:block">
+                    5-Tier Direct Architecture • 14 Subsystems • Real-time Event Streaming
+                  </p>
+                </div>
+              </div>
+
+              {/* Mobile View Toggle Button */}
+              <div className="flex lg:hidden items-center gap-1">
+                <button
+                  onClick={() => setViewMode(viewMode === 'map' ? 'mobile_stream' : 'map')}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-[11px] font-semibold text-emerald-400"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span>{viewMode === 'map' ? 'Mobile View' : 'Canvas Map'}</span>
+                </button>
               </div>
             </div>
 
-            {/* Middle: Workflow Selector & Sim Controls */}
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
-              {/* Simulation Preset Selector */}
+            {/* Middle & Right: Preset Selector, Sim Controls, View Switcher */}
+            <div className="flex flex-wrap items-center gap-2 justify-between lg:justify-end">
+              {/* Preset Selector */}
               <select
                 value={activeFlowIndex}
                 onChange={(e) => {
@@ -860,7 +800,7 @@ export default function Pipeline() {
                   handleReset();
                 }}
                 disabled={isSimulating}
-                className="bg-slate-900 border border-slate-700/80 text-xs text-slate-200 rounded-lg px-3 py-2 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer disabled:opacity-50"
+                className="bg-slate-900 border border-slate-700/80 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer disabled:opacity-50 max-w-[210px] sm:max-w-none truncate"
               >
                 {SIMULATION_FLOWS.map((flow, index) => (
                   <option key={flow.id} value={index}>
@@ -869,65 +809,67 @@ export default function Pipeline() {
                 ))}
               </select>
 
-              {/* Simulation Action Buttons */}
-              {!isSimulating ? (
-                <button
-                  onClick={handleStartSimulation}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-950/60 transition active:scale-95 cursor-pointer"
-                >
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  Simulate Flow
-                </button>
-              ) : (
-                <button
-                  onClick={handleTogglePause}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold shadow-lg transition active:scale-95 cursor-pointer ${
-                    isPaused
-                      ? 'bg-amber-600 hover:bg-amber-500 text-white'
-                      : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
-                  }`}
-                >
-                  {isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5" />}
-                  {isPaused ? 'Resume' : 'Pause'}
-                </button>
-              )}
+              {/* Action Buttons */}
+              <div className="flex items-center gap-1.5">
+                {!isSimulating ? (
+                  <button
+                    onClick={handleStartSimulation}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md transition active:scale-95 cursor-pointer"
+                  >
+                    <Play className="w-3 h-3 fill-current" />
+                    <span>Simulate Flow</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleTogglePause}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                      isPaused
+                        ? 'bg-amber-600 hover:bg-amber-500 text-white'
+                        : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                    }`}
+                  >
+                    {isPaused ? <Play className="w-3 h-3 fill-current" /> : <Pause className="w-3 h-3" />}
+                    <span>{isPaused ? 'Resume' : 'Pause'}</span>
+                  </button>
+                )}
 
-              <button
-                onClick={handleReset}
-                title="Reset layout & flow"
-                className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700/80 transition cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
+                <button
+                  onClick={handleReset}
+                  title="Reset flow & layout"
+                  className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700 transition cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
-              {/* View Switcher Tabs */}
-              <div className="flex items-center bg-slate-900/90 border border-slate-800 rounded-lg p-0.5 text-xs font-medium ml-auto lg:ml-0">
+              {/* Desktop View Switcher */}
+              <div className="hidden sm:flex items-center bg-slate-900/90 border border-slate-800 rounded-lg p-0.5 text-xs font-medium">
                 <button
                   onClick={() => setViewMode('map')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition cursor-pointer ${
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition cursor-pointer ${
                     viewMode === 'map' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  <MapIcon className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Interactive Map</span>
+                  <MapIcon className="w-3 h-3" />
+                  <span>Map</span>
                 </button>
                 <button
                   onClick={() => setViewMode('cards')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition cursor-pointer ${
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition cursor-pointer ${
                     viewMode === 'cards' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  <Layers className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Step Cards</span>
+                  <Layers className="w-3 h-3" />
+                  <span>Step Cards</span>
                 </button>
                 <button
                   onClick={() => setViewMode('benchmarks')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition cursor-pointer ${
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition cursor-pointer ${
                     viewMode === 'benchmarks' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  <BarChart3 className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Phase Benchmarks</span>
+                  <BarChart3 className="w-3 h-3" />
+                  <span>Benchmarks</span>
                 </button>
               </div>
             </div>
@@ -937,53 +879,55 @@ export default function Pipeline() {
         {/* ================================================================= */}
         {/* INTERACTION HINT BANNER */}
         {/* ================================================================= */}
-        <div className="bg-[#0D1527] border-b border-slate-800/60 px-4 py-2 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+        <div className="bg-[#0D1527] border-b border-slate-800/60 px-4 py-1.5 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
           <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
           <span>
-            <strong className="text-slate-200">Interactive Live Architecture:</strong> Click any node to inspect payload & benchmark
-            telemetry — or drag nodes freely to flex live Bezier cables!
+            💡 Click or drag nodes freely to flex live cables — or click{' '}
+            <strong className="text-emerald-400">Simulate Flow</strong> to stream data packets!
           </span>
         </div>
 
         {/* ================================================================= */}
         {/* MAIN BODY CONTAINER */}
         {/* ================================================================= */}
-        <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 flex-1 flex flex-col gap-6">
+        <main className="max-w-7xl mx-auto w-full px-3 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col gap-5">
           {/* =============================================================== */}
-          {/* VIEW MODE 1: INTERACTIVE ARCHITECTURE CANVAS */}
+          {/* VIEW MODE 1: INTERACTIVE ARCHITECTURE CANVAS (DESKTOP) */}
           {/* =============================================================== */}
           {viewMode === 'map' && (
             <div className="flex flex-col gap-4">
-              {/* Architecture Tier Column Legend */}
-              <div className="hidden xl:grid grid-cols-5 gap-3 text-xs font-mono uppercase tracking-wider text-slate-400 px-2">
-                {FARM_TIERS.map((tier) => (
-                  <div key={tier.id} className="flex items-center gap-2 border-b border-slate-800 pb-1.5">
-                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tier.color }} />
-                    <span className="font-semibold text-slate-300">{tier.label}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Interactive Canvas */}
+              {/* Architecture Canvas */}
               <div
                 ref={canvasRef}
-                className="relative w-full h-[540px] sm:h-[580px] bg-[#0A0F1D] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden cursor-crosshair"
+                className="relative w-full h-[580px] sm:h-[660px] bg-[#0A0F1D] border border-slate-800 rounded-2xl shadow-2xl overflow-x-auto overflow-y-hidden cursor-crosshair"
                 style={{
-                  backgroundImage: `radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px)`,
+                  backgroundImage: `radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px)`,
                   backgroundSize: '24px 24px',
                 }}
               >
-                {/* SVG Connections Layer */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1260 560" preserveAspectRatio="none">
+                {/* SVG Connections & Particle Layer */}
+                <svg
+                  className="absolute inset-0 w-[1260px] h-[660px] pointer-events-none"
+                  viewBox="0 0 1260 660"
+                  preserveAspectRatio="none"
+                >
                   <defs>
-                    <linearGradient id="cableActiveGlow" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#10B981" />
-                      <stop offset="50%" stopColor="#6EE7B7" />
-                      <stop offset="100%" stopColor="#38BDF8" />
-                    </linearGradient>
+                    {/* Pulsing Core Hub Gradient Rings */}
+                    <radialGradient id="coreAura" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#A855F7" stopOpacity="0.35" />
+                      <stop offset="60%" stopColor="#6366F1" stopOpacity="0.12" />
+                      <stop offset="100%" stopColor="transparent" stopOpacity="0" />
+                    </radialGradient>
                   </defs>
 
-                  {/* Render All Cables */}
+                  {/* Orbital Center Rings around Core Hub */}
+                  <g transform="translate(640, 302)">
+                    <circle r="95" fill="none" stroke="#A855F7" strokeWidth="1" strokeOpacity="0.25" strokeDasharray="6 6" />
+                    <circle r="130" fill="none" stroke="#6366F1" strokeWidth="1" strokeOpacity="0.18" strokeDasharray="4 8" />
+                    <circle r="170" fill="url(#coreAura)" />
+                  </g>
+
+                  {/* Render All 13 Connected Cables */}
                   {FARM_CABLES.map((cable, idx) => {
                     const geo = getCableGeometry(cable);
                     if (!geo) return null;
@@ -992,25 +936,25 @@ export default function Pipeline() {
                       activeStepCableBadge && activeStepCableBadge.toLowerCase() === cable.badge.toLowerCase();
 
                     return (
-                      <g key={`cable-${idx}`} className="transition-opacity duration-300">
-                        {/* Base Shadow/Glow Path */}
+                      <g key={`cable-${idx}`} className="transition-all duration-300">
+                        {/* Shadow Glow Path */}
                         <path
                           d={geo.pathData}
                           fill="none"
                           stroke={isCableActive ? cable.color : cable.color}
-                          strokeWidth={isCableActive ? 4.5 : 2}
-                          strokeOpacity={isCableActive ? 0.9 : 0.28}
+                          strokeWidth={isCableActive ? 4 : 2}
+                          strokeOpacity={isCableActive ? 0.95 : 0.3}
                           strokeLinecap="round"
                         />
 
-                        {/* Animated Glowing Packet Flow */}
+                        {/* Animated Data Packets Flow */}
                         <path
                           d={geo.pathData}
                           fill="none"
                           stroke={isCableActive ? '#FFFFFF' : cable.color}
-                          strokeWidth={isCableActive ? 3.5 : 1.8}
+                          strokeWidth={isCableActive ? 3 : 1.5}
                           strokeOpacity={isCableActive ? 1 : 0.65}
-                          strokeDasharray={isCableActive ? '10 8' : '6 12'}
+                          strokeDasharray={isCableActive ? '10 8' : '5 12'}
                           className="animate-flow-cable"
                         />
                       </g>
@@ -1029,20 +973,19 @@ export default function Pipeline() {
                   return (
                     <div
                       key={`badge-${idx}`}
-                      className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10 transition-all duration-300"
+                      className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10 transition-transform duration-300"
                       style={{
-                        left: `${(geo.midX / 1260) * 100}%`,
-                        top: `${(geo.midY / 560) * 100}%`,
+                        left: `${geo.midX}px`,
+                        top: `${geo.midY}px`,
                       }}
                     >
                       <div
-                        className={`px-2 py-0.5 rounded-full text-[9px] font-mono tracking-wider font-bold uppercase backdrop-blur-md border shadow-lg transition-transform ${
+                        className={`px-2 py-0.5 rounded-full text-[9px] font-mono tracking-wider font-bold uppercase backdrop-blur-md border shadow-md ${
                           isBadgeActive
-                            ? 'scale-115 text-white shadow-emerald-500/50 ring-2 ring-emerald-400'
-                            : 'text-slate-300'
+                            ? 'scale-115 text-white ring-2 ring-emerald-400 bg-emerald-900/90 border-emerald-400 shadow-emerald-500/50'
+                            : 'text-slate-300 bg-[#0B1120]/85'
                         }`}
                         style={{
-                          backgroundColor: isBadgeActive ? 'rgba(16, 185, 129, 0.9)' : 'rgba(11, 17, 32, 0.85)',
                           borderColor: isBadgeActive ? '#34D399' : `${cable.color}66`,
                           color: isBadgeActive ? '#FFFFFF' : cable.color,
                         }}
@@ -1057,13 +1000,49 @@ export default function Pipeline() {
                 {nodes.map((node) => {
                   const isNodeActive = activeStepNodeId === node.id;
                   const isNodeSelected = selectedNode?.id === node.id;
+                  const IconComponent = node.icon;
 
+                  // Render Center Core Hub distinctly
+                  if (node.isCore) {
+                    return (
+                      <div
+                        key={node.id}
+                        onMouseDown={(e) => handleMouseDownNode(e, node.id)}
+                        onClick={() => setSelectedNode(node)}
+                        className={`absolute rounded-2xl p-3 flex flex-col items-center justify-center text-center cursor-grab active:cursor-grabbing border shadow-2xl transition-all z-20 group ${
+                          isNodeActive
+                            ? 'ring-2 ring-emerald-400 shadow-emerald-500/50 scale-105'
+                            : isNodeSelected
+                            ? 'ring-2 ring-purple-400 shadow-purple-500/40'
+                            : 'hover:border-purple-400 hover:scale-102'
+                        }`}
+                        style={{
+                          left: `${node.x}px`,
+                          top: `${node.y}px`,
+                          width: `${node.width}px`,
+                          height: `${node.height}px`,
+                          backgroundColor: isNodeActive ? 'rgba(168, 85, 247, 0.35)' : 'rgba(23, 15, 38, 0.95)',
+                          backdropFilter: 'blur(12px)',
+                          borderColor: isNodeActive ? '#34D399' : node.borderColor,
+                        }}
+                      >
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-purple-500/20 text-purple-300 border border-purple-500/40 mb-1.5 shadow-inner">
+                          <Cpu className="w-5 h-5 animate-pulse" />
+                        </div>
+                        <h3 className="text-xs font-bold text-white tracking-wide">{node.title}</h3>
+                        <p className="text-[9px] font-mono text-purple-300 font-semibold">{node.subtitle}</p>
+                        <span className="text-[8px] font-mono text-slate-400 mt-0.5">MongoDB • BullMQ • WS</span>
+                      </div>
+                    );
+                  }
+
+                  // Standard Pipeline Card
                   return (
                     <div
                       key={node.id}
                       onMouseDown={(e) => handleMouseDownNode(e, node.id)}
                       onClick={() => setSelectedNode(node)}
-                      className={`absolute rounded-xl p-2.5 transition-shadow cursor-grab active:cursor-grabbing border shadow-lg z-20 group ${
+                      className={`absolute rounded-xl p-2.5 transition-all cursor-grab active:cursor-grabbing border shadow-lg z-20 group ${
                         isNodeActive
                           ? 'ring-2 ring-emerald-400 shadow-emerald-500/40 scale-103'
                           : isNodeSelected
@@ -1071,33 +1050,29 @@ export default function Pipeline() {
                           : 'hover:border-slate-500'
                       }`}
                       style={{
-                        left: `${(node.x / 1260) * 100}%`,
-                        top: `${(node.y / 560) * 100}%`,
+                        left: `${node.x}px`,
+                        top: `${node.y}px`,
                         width: `${node.width}px`,
                         minHeight: `${node.height}px`,
-                        backgroundColor: isNodeActive ? 'rgba(16, 185, 129, 0.25)' : 'rgba(15, 23, 42, 0.88)',
+                        backgroundColor: isNodeActive ? 'rgba(16, 185, 129, 0.25)' : 'rgba(15, 23, 42, 0.92)',
                         backdropFilter: 'blur(8px)',
                         borderColor: isNodeActive ? '#34D399' : isNodeSelected ? '#818CF8' : node.borderColor,
                       }}
                     >
-                      <div className="flex items-start gap-2">
-                        {/* Node Status Dot / Icon */}
+                      <div className="flex items-start gap-2.5">
+                        {/* Node Icon Box */}
                         <div
                           className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 border"
                           style={{
                             backgroundColor: node.bgColor,
                             borderColor: node.borderColor,
-                            color: node.color,
+                            color: node.iconColor,
                           }}
                         >
-                          {node.tier === 'tier_client' && <TierIcon className="w-3.5 h-3.5" />}
-                          {node.tier === 'tier_gateway' && <ShieldCheck className="w-3.5 h-3.5" />}
-                          {node.tier === 'tier_core' && <Activity className="w-3.5 h-3.5" />}
-                          {node.tier === 'tier_ai' && <Sparkles className="w-3.5 h-3.5" />}
-                          {node.tier === 'tier_data' && <Database className="w-3.5 h-3.5" />}
+                          <IconComponent className="w-3.5 h-3.5" />
                         </div>
 
-                        {/* Node Titles */}
+                        {/* Titles & Meta */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <h3 className="text-xs font-bold text-white truncate group-hover:text-emerald-300 transition">
@@ -1108,14 +1083,12 @@ export default function Pipeline() {
                             )}
                           </div>
                           <p
-                            className="text-[9px] font-mono tracking-tight font-medium uppercase truncate"
-                            style={{ color: node.color }}
+                            className="text-[9px] font-mono tracking-tight font-semibold uppercase truncate"
+                            style={{ color: node.iconColor }}
                           >
                             {node.subtitle}
                           </p>
-                          <p className="text-[9px] text-slate-400 truncate mt-0.5 font-mono">
-                            {node.tech}
-                          </p>
+                          <p className="text-[9px] text-slate-400 truncate mt-0.5 font-mono">{node.tech}</p>
                         </div>
                       </div>
                     </div>
@@ -1123,28 +1096,28 @@ export default function Pipeline() {
                 })}
               </div>
 
-              {/* Bottom Telemetry Console / Live Event Logs */}
-              <div className="bg-[#0B1120] border border-slate-800 rounded-xl p-3.5 shadow-xl">
-                <div className="flex items-center justify-between mb-2">
+              {/* Bottom Telemetry Console */}
+              <div className="bg-[#0B1120] border border-slate-800 rounded-xl p-3 shadow-xl">
+                <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
-                    <Terminal className="w-4 h-4 text-emerald-400" />
+                    <Terminal className="w-3.5 h-3.5 text-emerald-400" />
                     <span className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider">
                       Live Telemetry Log Tape
                     </span>
                     {isSimulating && (
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 animate-pulse">
+                      <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 animate-pulse">
                         STEP {currentStepIndex + 1}/{activeFlow.steps.length}
                       </span>
                     )}
                   </div>
-                  <span className="text-[11px] font-mono text-slate-400">
+                  <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
                     Active Flow: <strong className="text-slate-200">{activeFlow.name}</strong>
                   </span>
                 </div>
 
-                <div className="h-24 overflow-y-auto font-mono text-xs space-y-1.5 p-2 bg-[#060913] rounded-lg border border-slate-800/80">
+                <div className="h-20 overflow-y-auto font-mono text-xs space-y-1 p-2 bg-[#060913] rounded-lg border border-slate-800/80">
                   {simulationLogs.length === 0 ? (
-                    <div className="text-slate-400 italic text-[11px] flex items-center gap-2">
+                    <div className="text-slate-400 italic text-[11px] flex items-center gap-1.5">
                       <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
                       Click "Simulate Flow" above to stream live end-to-end telemetry packets through the architecture.
                     </div>
@@ -1152,7 +1125,7 @@ export default function Pipeline() {
                     simulationLogs.map((log) => (
                       <div
                         key={log.id}
-                        className={`flex items-start gap-2 ${
+                        className={`flex items-start gap-1.5 ${
                           log.type === 'start'
                             ? 'text-indigo-400 font-semibold'
                             : log.type === 'success'
@@ -1172,29 +1145,103 @@ export default function Pipeline() {
           )}
 
           {/* =============================================================== */}
-          {/* VIEW MODE 2: STEP-BY-STEP FLOW CARDS */}
+          {/* VIEW MODE 2: DEDICATED RESPONSIVE MOBILE STREAM VIEW */}
           {/* =============================================================== */}
-          {viewMode === 'cards' && (
-            <div className="flex flex-col gap-6">
-              <div className="bg-[#0B1120] border border-slate-800 rounded-xl p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                      {activeFlow.name}
-                    </h2>
-                    <p className="text-xs text-slate-400">{activeFlow.description}</p>
-                  </div>
+          {viewMode === 'mobile_stream' && (
+            <div className="flex flex-col gap-4">
+              <div className="bg-[#0B1120] border border-slate-800 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Smartphone className="w-4 h-4 text-emerald-400" />
+                    Mobile Architecture Stream
+                  </h2>
                   <button
-                    onClick={handleStartSimulation}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg transition active:scale-95 cursor-pointer"
+                    onClick={() => setViewMode('map')}
+                    className="text-xs text-indigo-400 font-semibold underline"
                   >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    Run Workflow
+                    Switch to Canvas
                   </button>
                 </div>
+                <p className="text-xs text-slate-400">
+                  Touch-friendly sequential pipeline flow. Tap any node to inspect telemetry.
+                </p>
               </div>
 
-              {/* Steps Flow Grid */}
+              {/* Sequential Node Cards on Mobile */}
+              <div className="space-y-3">
+                {nodes.map((node) => {
+                  const IconComponent = node.icon;
+                  const isNodeActive = activeStepNodeId === node.id;
+
+                  return (
+                    <div
+                      key={node.id}
+                      onClick={() => setSelectedNode(node)}
+                      className={`rounded-xl border p-3.5 bg-[#0B1120] transition active:scale-98 cursor-pointer ${
+                        isNodeActive
+                          ? 'border-emerald-400 ring-2 ring-emerald-500/40 bg-emerald-950/20'
+                          : 'border-slate-800'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                          {node.tierName}
+                        </span>
+                        <span
+                          className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full"
+                          style={{
+                            backgroundColor: node.bgColor,
+                            color: node.iconColor,
+                            border: `1px solid ${node.borderColor}`,
+                          }}
+                        >
+                          {node.subtitle}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border"
+                          style={{
+                            backgroundColor: node.bgColor,
+                            borderColor: node.borderColor,
+                            color: node.iconColor,
+                          }}
+                        >
+                          <IconComponent className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-bold text-white truncate">{node.title}</h3>
+                          <p className="text-xs text-slate-400 font-mono">{node.tech}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* =============================================================== */}
+          {/* VIEW MODE 3: STEP-BY-STEP FLOW CARDS */}
+          {/* =============================================================== */}
+          {viewMode === 'cards' && (
+            <div className="flex flex-col gap-5">
+              <div className="bg-[#0B1120] border border-slate-800 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-white">{activeFlow.name}</h2>
+                  <p className="text-xs text-slate-400">{activeFlow.description}</p>
+                </div>
+                <button
+                  onClick={handleStartSimulation}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md transition active:scale-95 cursor-pointer"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  Run Workflow
+                </button>
+              </div>
+
+              {/* Grid of Steps */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {activeFlow.steps.map((step, idx) => {
                   const node = nodes.find((n) => n.id === step.nodeId);
@@ -1214,19 +1261,19 @@ export default function Pipeline() {
                           STEP {idx + 1}
                         </span>
                         <span
-                          className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full"
+                          className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full"
                           style={{
-                            backgroundColor: `${node?.color}20`,
-                            color: node?.color,
-                            border: `1px solid ${node?.color}40`,
+                            backgroundColor: node?.bgColor,
+                            color: node?.iconColor,
+                            border: `1px solid ${node?.borderColor}`,
                           }}
                         >
                           {step.cableBadge}
                         </span>
                       </div>
 
-                      <h3 className="text-sm font-bold text-white mb-1">{node?.title}</h3>
-                      <p className="text-[11px] font-mono text-slate-400 mb-3">{node?.tierName}</p>
+                      <h3 className="text-sm font-bold text-white mb-0.5">{node?.title}</h3>
+                      <p className="text-[10px] font-mono text-slate-400 mb-2">{node?.tierName}</p>
 
                       <p className="text-xs text-slate-300 leading-relaxed bg-[#060913] p-2.5 rounded-lg border border-slate-800/80 font-mono">
                         {step.log}
@@ -1239,21 +1286,21 @@ export default function Pipeline() {
           )}
 
           {/* =============================================================== */}
-          {/* VIEW MODE 3: PHASE GATE BENCHMARKS & VERIFIED METRICS */}
+          {/* VIEW MODE 4: PHASE GATE BENCHMARKS */}
           {/* =============================================================== */}
           {viewMode === 'benchmarks' && (
-            <div className="flex flex-col gap-6">
-              <div className="bg-[#0B1120] border border-slate-800 rounded-xl p-5">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-1">
+            <div className="flex flex-col gap-5">
+              <div className="bg-[#0B1120] border border-slate-800 rounded-xl p-4 sm:p-5">
+                <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2 mb-1">
                   <BarChart3 className="w-5 h-5 text-emerald-400" />
                   FaRm Direct: Verified AI/ML Benchmark Scorecard (All 5 Phase Gates)
                 </h2>
                 <p className="text-xs text-slate-400">
-                  Every single AI subsystem was benchmarked against empirical offline baselines before production deployment.
+                  Every single AI subsystem was benchmarked against empirical offline baselines before production release.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Gate 1 */}
                 <div className="bg-[#0B1120] border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
                   <div>
@@ -1296,27 +1343,6 @@ export default function Pipeline() {
                   </div>
                 </div>
 
-                {/* Gate 3 */}
-                <div className="bg-[#0B1120] border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-pink-950 text-pink-400 border border-pink-800">
-                        GATE 3: RECSYS
-                      </span>
-                      <span className="text-xs font-bold text-emerald-400">+175% NDCG</span>
-                    </div>
-                    <h3 className="text-sm font-bold text-white mb-1">Hybrid Recommender Engine</h3>
-                    <p className="text-xs text-slate-400 mb-3">
-                      Leave-last-out basket evaluation combining user preference vectors with co-occurrence matrix and regional boosts.
-                    </p>
-                    <div className="space-y-1 text-[11px] font-mono text-slate-300 bg-[#060913] p-2.5 rounded border border-slate-800">
-                      <div>Baseline NDCG: 0.165 Category Match</div>
-                      <div className="text-emerald-400 font-bold">FaRm Model: 0.454 NDCG@10 (+175% Lift)</div>
-                      <div className="text-slate-400">Context Boosts: +15% Proximity, +10% Organic</div>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Gate 4 */}
                 <div className="bg-[#0B1120] border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
                   <div>
@@ -1326,7 +1352,7 @@ export default function Pipeline() {
                       </span>
                       <span className="text-xs font-bold text-emerald-400">2.38% MAPE</span>
                     </div>
-                    <h3 className="text-sm font-bold text-white mb-1">14-Day Rolling Price Trajectories</h3>
+                    <h3 className="text-sm font-bold text-white mb-1">14-Day Price Forecaster</h3>
                     <p className="text-xs text-slate-400 mb-3">
                       Holt-damped smoothing + LightGBM quantile regression backtested across 6 core Indian agricultural commodities.
                     </p>
@@ -1355,6 +1381,27 @@ export default function Pipeline() {
                       <div>Precision & Recall: 100.0% / 100.0%</div>
                       <div className="text-emerald-400 font-bold">F1 Benchmark: 1.000 vs Welford (0.72)</div>
                       <div className="text-slate-400">Admin Loop: Human-in-the-Loop Feedback</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gate 3 */}
+                <div className="bg-[#0B1120] border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-pink-950 text-pink-400 border border-pink-800">
+                        GATE 3: RECSYS
+                      </span>
+                      <span className="text-xs font-bold text-emerald-400">+175% NDCG</span>
+                    </div>
+                    <h3 className="text-sm font-bold text-white mb-1">Hybrid Recommender Engine</h3>
+                    <p className="text-xs text-slate-400 mb-3">
+                      Leave-last-out basket evaluation combining user preference vectors with co-occurrence matrix and regional boosts.
+                    </p>
+                    <div className="space-y-1 text-[11px] font-mono text-slate-300 bg-[#060913] p-2.5 rounded border border-slate-800">
+                      <div>Baseline NDCG: 0.165 Category Match</div>
+                      <div className="text-emerald-400 font-bold">FaRm Model: 0.454 NDCG@10 (+175% Lift)</div>
+                      <div className="text-slate-400">Context Boosts: +15% Proximity, +10% Organic</div>
                     </div>
                   </div>
                 </div>
@@ -1388,29 +1435,26 @@ export default function Pipeline() {
         {/* NODE INSPECTOR DRAWER / MODAL */}
         {/* ================================================================= */}
         {selectedNode && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-[#0B1120] border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-150">
+          <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-[#0B1120] border border-slate-800 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-150">
               {/* Header */}
-              <div className="flex items-start justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-start justify-between border-b border-slate-800 pb-3">
                 <div className="flex items-center gap-3">
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center border font-bold"
                     style={{
                       backgroundColor: selectedNode.bgColor,
                       borderColor: selectedNode.borderColor,
-                      color: selectedNode.color,
+                      color: selectedNode.iconColor,
                     }}
                   >
                     <Activity className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                       {selectedNode.title}
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-                        {selectedNode.tierName}
-                      </span>
                     </h3>
-                    <p className="text-xs font-mono" style={{ color: selectedNode.color }}>
+                    <p className="text-xs font-mono font-semibold" style={{ color: selectedNode.iconColor }}>
                       {selectedNode.subtitle}
                     </p>
                   </div>
@@ -1424,9 +1468,9 @@ export default function Pipeline() {
               </div>
 
               {/* Subsystem Details */}
-              <div className="space-y-4 text-xs">
+              <div className="space-y-3.5 text-xs">
                 <div>
-                  <h4 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
                     Architectural Role
                   </h4>
                   <p className="text-slate-200 leading-relaxed bg-[#060913] p-3 rounded-lg border border-slate-800/80">
@@ -1434,43 +1478,43 @@ export default function Pipeline() {
                   </p>
                 </div>
 
-                {/* Tech Stack & Live Metrics */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-[#060913] p-3 rounded-lg border border-slate-800/80">
-                    <span className="text-[10px] font-mono text-slate-400 block mb-1">TECH STACK</span>
+                {/* Tech & Health */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="bg-[#060913] p-2.5 rounded-lg border border-slate-800/80">
+                    <span className="text-[10px] font-mono text-slate-400 block mb-0.5">TECH STACK</span>
                     <span className="font-mono font-semibold text-slate-200">{selectedNode.tech}</span>
                   </div>
-                  <div className="bg-[#060913] p-3 rounded-lg border border-slate-800/80">
-                    <span className="text-[10px] font-mono text-slate-400 block mb-1">SYSTEM HEALTH</span>
-                    <span className="font-mono font-semibold text-emerald-400 flex items-center gap-1.5">
+                  <div className="bg-[#060913] p-2.5 rounded-lg border border-slate-800/80">
+                    <span className="text-[10px] font-mono text-slate-400 block mb-0.5">HEALTH STATUS</span>
+                    <span className="font-mono font-semibold text-emerald-400 flex items-center gap-1">
                       <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                      Healthy (Online)
+                      Online (Healthy)
                     </span>
                   </div>
                 </div>
 
-                {/* Live Metrics Grid */}
+                {/* Metrics */}
                 <div>
-                  <h4 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    Subsystem Telemetry
+                  <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    Subsystem Metrics
                   </h4>
-                  <div className="grid grid-cols-3 gap-2 bg-[#060913] p-3 rounded-lg border border-slate-800/80 font-mono text-[11px]">
+                  <div className="grid grid-cols-3 gap-2 bg-[#060913] p-2.5 rounded-lg border border-slate-800/80 font-mono text-[11px]">
                     {Object.entries(selectedNode.metrics).map(([key, val]) => (
                       <div key={key}>
-                        <div className="text-[10px] text-slate-400 uppercase">{key}</div>
+                        <div className="text-[9px] text-slate-400 uppercase truncate">{key}</div>
                         <div className="font-bold text-slate-200 truncate">{val}</div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Live Sample JSON Payload */}
+                {/* Sample JSON */}
                 <div>
-                  <h4 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-1.5">
-                    <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-                    Live System Packet Format (JSON)
+                  <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-1.5">
+                    <Terminal className="w-3 h-3 text-emerald-400" />
+                    Live System Payload (JSON)
                   </h4>
-                  <pre className="bg-[#060913] p-3 rounded-lg border border-slate-800/80 text-[11px] font-mono text-emerald-400 overflow-x-auto max-h-36">
+                  <pre className="bg-[#060913] p-2.5 rounded-lg border border-slate-800/80 text-[10px] font-mono text-emerald-400 overflow-x-auto max-h-32">
                     {JSON.stringify(selectedNode.samplePayload, null, 2)}
                   </pre>
                 </div>
@@ -1480,7 +1524,7 @@ export default function Pipeline() {
               <div className="flex justify-end pt-2 border-t border-slate-800">
                 <button
                   onClick={() => setSelectedNode(null)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition cursor-pointer"
                 >
                   Close Inspector
                 </button>
