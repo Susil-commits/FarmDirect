@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, X, ShoppingCart, Heart, User, LogOut, Search, Bell, Home, Grid, Settings, Compass, CheckCircle, MessageCircle, Lock, ShieldCheck, Sprout, ArrowRight } from 'lucide-react';
+import { Menu, X, ShoppingCart, Heart, User, LogOut, Search, Bell, Home, Grid, Settings, Compass, CheckCircle, MessageCircle, Lock, ShieldCheck, Sprout, ArrowRight, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '../../hooks/useRouter';
 import { useAuth } from '../../context/AuthContext';
@@ -85,6 +85,7 @@ export default function Navbar() {
   const getNavItems = () => {
     if (!user) {
       return [
+        { id: 'pipeline', label: 'Live Pipeline', path: '/pipeline', isLive: true },
         { id: 'about', label: t('navbar.about', 'About'), path: '/about' },
         { id: 'pricing', label: t('navbar.pricing', 'Pricing'), path: '/pricing' },
         { id: 'contact', label: t('navbar.contact', 'Contact'), path: '/contact' },
@@ -93,6 +94,7 @@ export default function Navbar() {
 
     if (user.role === 'farmer') {
       return [
+        { id: 'pipeline', label: 'Live Pipeline', path: '/pipeline', isLive: true },
         { id: 'dashboard', label: t('navbar.dashboard', 'Dashboard'), path: '/farmer/dashboard' },
         { id: 'add-crop', label: t('navbar.list_crop', 'List Crop'), path: '/create-crop' },
       ];
@@ -102,7 +104,9 @@ export default function Navbar() {
       const isVerificationPage = currentRoute && (
         currentRoute.includes('/verification') || currentRoute.startsWith('/verify')
       );
-      const items = [];
+      const items = [
+        { id: 'pipeline', label: 'Live Pipeline', path: '/pipeline', isLive: true },
+      ];
       if (!isVerificationPage) {
         items.push({ id: 'marketplace', label: t('navbar.marketplace', 'Marketplace'), path: '/marketplace' });
       }
@@ -112,6 +116,7 @@ export default function Navbar() {
 
     if (user.role === 'admin') {
       return [
+        { id: 'pipeline', label: 'Live Pipeline', path: '/pipeline', isLive: true },
         { id: 'dashboard', label: t('navbar.dashboard', 'Dashboard'), path: '/admin/dashboard' },
         { id: 'users', label: t('navbar.users', 'Users'), path: '/admin/users' },
         { id: 'crops', label: t('navbar.crops', 'Crops'), path: '/admin/crops' },
@@ -149,7 +154,7 @@ export default function Navbar() {
           </div>
 
           {}
-          <div className="hidden md:flex items-center gap-6 flex-1 px-8">
+          <div className="hidden md:flex items-center gap-5 flex-1 px-8">
             {navItems?.map((item) => (
               <button
                 key={item.id}
@@ -160,12 +165,20 @@ export default function Navbar() {
                     handleNavigate(item.path);
                   }
                 }}
-                className={`text-sm font-semibold transition-colors duration-200 cursor-pointer ${
+                className={`text-sm font-semibold transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
                   currentRoute === item.path
                     ? 'text-[#D97736] font-bold'
+                    : item.isLive
+                    ? 'text-purple-700 hover:text-purple-900 bg-purple-50/90 hover:bg-purple-100 px-2.5 py-1 rounded-full border border-purple-200/90 shadow-sm'
                     : 'text-[#132E20] hover:text-[#D97736]'
                 }`}
               >
+                {item.isLive && (
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                )}
                 {item.label}
               </button>
             ))}
@@ -449,6 +462,19 @@ export default function Navbar() {
               {}
               <div className="px-0 py-4 space-y-1">
                 {}
+                <button
+                  onClick={() => handleNavigate('/pipeline')}
+                  className="w-full px-6 py-3 flex items-center gap-4 text-purple-700 bg-purple-50/80 hover:bg-purple-100 transition-all duration-200 group cursor-pointer border-y border-purple-100"
+                >
+                  <Sparkles size={20} className="text-purple-600 animate-pulse" />
+                  <span className="text-sm font-bold flex items-center gap-2">
+                    Live Pipeline Flow
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-purple-600 text-white font-bold">
+                      LIVE
+                    </span>
+                  </span>
+                </button>
+
                 <button
                   onClick={() => handleNavigate('/')}
                   className="w-full px-6 py-3 flex items-center gap-4 text-gray-700 hover:text-green-600 hover:bg-white/10 transition-all duration-200 group cursor-pointer"

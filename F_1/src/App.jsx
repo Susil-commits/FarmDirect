@@ -20,6 +20,7 @@ import { lazyWithRetry as lazy } from './utils/lazyWithRetry';
 
 const Home = lazy(() => import('./pages/Home'));
 const Marketplace = lazy(() => import('./pages/Marketplace'));
+const Pipeline = lazy(() => import('./pages/Pipeline'));
 const CropDetail = lazy(() => import('./pages/CropDetail'));
 const CreateCrop = lazy(() => import('./pages/CreateCrop'));
 const EditCrop = lazy(() => import('./pages/EditCrop'));
@@ -30,8 +31,6 @@ const StartShopping = lazy(() => import('./pages/StartShopping'));
 const JoinAsFarmer = lazy(() => import('./pages/JoinAsFarmer'));
 const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
-const GoogleCallback = lazy(() => import('./pages/auth/GoogleCallback'));
-const GitHubCallback = lazy(() => import('./pages/auth/GitHubCallback'));
 const ShoppingCart = lazy(() => import('./pages/ShoppingCart'));
 const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'));
 const Wishlist = lazy(() => import('./pages/Wishlist'));
@@ -67,7 +66,6 @@ const Refund = lazy(() => import('./pages/Refund'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 const Support = lazy(() => import('./pages/Support'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks'));
-const RoutingTest = lazy(() => import('./pages/RoutingTest'));
 const Messages = lazy(() => import('./pages/Messages'));
 
 function App() {
@@ -147,6 +145,9 @@ function App() {
     switch (routePath) {
       case '/':
         return <Home />;
+      case '/pipeline':
+      case '/live-pipeline':
+        return <Pipeline />;
       case '/marketplace':
         return <Marketplace />;
       case '/create-crop':
@@ -179,10 +180,6 @@ function App() {
         return <Login />;
       case '/auth/register':
         return <Register />;
-      case '/auth/google/callback':
-        return <GoogleCallback />;
-      case '/auth/github/callback':
-        return <GitHubCallback />;
       case '/pending-verification':
         return <PendingVerification />;
       case '/verification/progress':
@@ -235,8 +232,6 @@ function App() {
         return <Support />;
       case '/how-it-works':
         return <HowItWorks />;
-      case '/routing-test':
-        return <RoutingTest />;
       case '/messages':
         return user ? <Messages /> : <Login />;
       default:

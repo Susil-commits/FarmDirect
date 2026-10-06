@@ -16,6 +16,7 @@ export default function GiantBrandFooter({ onNavigate }) {
   ];
 
   const resources = [
+    { label: 'Live AI & Event Pipeline', href: '/pipeline' },
     { label: 'Case Studies', href: '/about' },
     { label: 'Organic Soil Reports', href: '/support' },
     { label: 'Farmer Voice Logs', href: '/#hero' },

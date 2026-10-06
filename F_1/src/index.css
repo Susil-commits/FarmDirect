@@ -1156,3 +1156,12 @@ body {
     padding: 0 0.25rem;
   }
 }
+
+@keyframes flowCable {
+  0% { stroke-dashoffset: 38; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.animate-flow-cable {
+  animation: flowCable 1.5s linear infinite;
+}
