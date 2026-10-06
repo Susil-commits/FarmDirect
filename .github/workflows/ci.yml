@@ -91,7 +91,9 @@ jobs:
         working-directory: ml-service
 
       - name: Run ML service tests
-        run: pytest
+        run: python -m pytest
         working-directory: ml-service
         env:
           ML_SERVICE_KEY: dev_ml_secret_key
+          PYTHONPATH: .
+
