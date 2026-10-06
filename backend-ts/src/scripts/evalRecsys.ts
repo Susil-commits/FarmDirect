@@ -328,13 +328,18 @@ This benchmark report compares the **Proposed Hybrid Recommender** against basel
   - **NDCG@10 (Normalized Discounted Cumulative Gain)**: Position-sensitive ranking metric with discount $\\frac{1}{\\log_2(\\text{rank} + 1)}$.
 
 ## 2. Benchmark Results
-| Model | Recall@10 | NDCG@10 | Relative Lift vs Category Baseline | Status |
+| Model | Recall@10 | NDCG@10 | Relative Lift vs Category Baseline | Finding |
 |---|---|---|---|---|
 | **Global Popularity Baseline** | ${popRecall}% | ${popNdcg} | - | Baseline |
 | **Category-Match Baseline (Legacy)** | ${catRecall}% | ${catNdcg} | 0.0% | Baseline |
-| **Proposed Hybrid Recommender** | **${hybridRecall}%** | **${hybridNdcg}** | **+${(parseFloat(hybridRecall) - parseFloat(catRecall)).toFixed(1)}% Recall** | **PASS (Superior)** |
+| **Proposed Hybrid Recommender** | **${hybridRecall}%** | **${hybridNdcg}** | **+${(parseFloat(hybridRecall) - parseFloat(catRecall)).toFixed(1)}% Recall** | **Beat legacy baseline, but not popularity on n=8 synthetic cases** |
 
-## 3. Architecture Details
+## 3. Evaluation Analysis & Honest Takeaways
+- **Sample Size ($n=8$)**: Synthetic dataset ($n=8$ test journeys).
+- **Recall vs. Popularity**: Hybrid model (${hybridRecall}%) beat legacy category matching (${catRecall}%), but fell short of popularity (${popRecall}%).
+- **Ranking Quality**: Hybrid achieved higher NDCG@10 (${hybridNdcg} vs ${popNdcg}).
+
+## 4. Architecture Details
 1. **Content-Based Profile Vector**: Computes weighted average vector from user's orders ($3.0\\times$), wishlists ($2.0\\times$), and views ($1.0\\times$) using listing embeddings.
 2. **Item-Item Co-occurrence Matrix**: Aggregated from real purchase baskets and wishlists to capture complementary products (e.g. Tomato + Onion + Potato).
 3. **Contextual Boosts**:
@@ -343,9 +348,10 @@ This benchmark report compares the **Proposed Hybrid Recommender** against basel
    - **Organic Affinity**: $+10\\%$ boost if buyer shows historic preference for organic certified crops.
 4. **Graceful Fallback & Cold Start**: If user has no interaction history, popularity prior and regional discovery automatically guide recommendations. If embeddings or vectors are unavailable, legacy category matching acts as a zero-failure fallback.
 
-## 4. Gate 3 Validation Criteria
-- [x] **New Model Outperforms Baseline**: Hybrid Recall@10 (${hybridRecall}%) > Category Baseline (${catRecall}%).
-- [x] **NDCG@10 Improvement**: Hybrid NDCG@10 (${hybridNdcg}) > Category Baseline (${catNdcg}).
+## 5. Gate 3 Validation Status
+- [x] **Beats Legacy Category Baseline**: Hybrid Recall@10 (${hybridRecall}%) > Category Baseline (${catRecall}%).
+- [x] **NDCG Ranking Lift**: Hybrid NDCG@10 (${hybridNdcg}) > Category Baseline (${catNdcg}).
+- [ ] **Beats Global Popularity**: Popularity Recall@10 (${popRecall}%) remains ahead on synthetic test split ($n=8$).
 - [x] **AI-Off Fallback Operability**: System functions seamlessly with zero external LLM API calls using deterministic vectors and category fallbacks.
 
 ## 5. How to Run

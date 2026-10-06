@@ -47,6 +47,13 @@ class FarmingKbService {
   public async syncKnowledgeBase(): Promise<number> {
     let syncedCount = 0;
     for (const guide of FARMING_GUIDES) {
+      // Check if already embedded in database to avoid burning LLM quotas on every server restart
+      const existing = await Embedding.findOne({ sourceId: guide.sourceId }).lean();
+      if (existing && Array.isArray(existing.embedding) && existing.embedding.length > 0) {
+        syncedCount++;
+        continue;
+      }
+
       let embeddingVector: number[];
       if (llmClient.isConfigured()) {
         try {

@@ -100,6 +100,19 @@ export async function generateWeeklyDigestForFarmer(
     return null;
   }
 
+  // Deduplication guard: Skip if farmer already received a weekly digest in the last 6 days
+  const sixDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
+  const existingRecentDigest = await Notification.findOne({
+    userId: farmerId,
+    type: NotificationType.General,
+    createdAt: { $gte: sixDaysAgo },
+    'data.kpis': { $exists: true },
+  }).lean();
+  if (existingRecentDigest) {
+    logger.info({ farmerId }, 'Farmer already received a weekly digest within the last 6 days, skipping redundant LLM call');
+    return null;
+  }
+
   // Factual English base text
   let baseSummary = `Weekly Farm Digest: You fulfilled ${kpis.orderCount} orders generating ₹${kpis.totalRevenue.toLocaleString('en-IN')} in revenue this week.`;
   if (kpis.topCropName) {
@@ -111,9 +124,10 @@ export async function generateWeeklyDigestForFarmer(
     baseSummary += ` All crop inventory levels are currently healthy.`;
   }
 
-  // LLM narrates in user preferred language if configured
+  // LLM narrates in user preferred language ONLY if configured AND there is active farm activity to report
   let finalMessage = baseSummary;
-  if (preferredLanguage !== 'en' && llmClient.isConfigured()) {
+  const hasActivity = kpis.orderCount > 0 || kpis.lowCoverCrops.length > 0;
+  if (hasActivity && preferredLanguage !== 'en' && llmClient.isConfigured()) {
     try {
       const langName = preferredLanguage === 'hi' ? 'Hindi' : 'Odia';
       const prompt = `Narrate this farmer weekly performance summary in warm, encouraging, simple ${langName} without altering any numbers or facts:\n"${baseSummary}"`;
@@ -202,3 +216,30 @@ export async function runWeeklyDigestJob(): Promise<{ processed: number; skipped
     }
   }
 }
+
+let weeklyDigestIntervalHandle: NodeJS.Timeout | null = null;
+
+export function startWeeklyDigestWorker(intervalMs = 24 * 60 * 60 * 1000): void {
+  if (weeklyDigestIntervalHandle) return;
+
+  // Only auto-run if explicitly enabled to prevent burning LLM quotas on server deploys / container wake-ups
+  if (process.env.ENABLE_WEEKLY_DIGEST === 'true') {
+    weeklyDigestIntervalHandle = setInterval(() => {
+      runWeeklyDigestJob().catch((err) => {
+        logger.warn({ err: err?.message || err }, 'Weekly digest job periodic run failed');
+      });
+    }, intervalMs);
+
+    logger.info('[WeeklyDigestWorker] Weekly digest worker scheduled (every 24h)');
+  } else {
+    logger.info('[WeeklyDigestWorker] Weekly digest worker idle (set ENABLE_WEEKLY_DIGEST=true to activate background runs)');
+  }
+}
+
+export function stopWeeklyDigestWorker(): void {
+  if (weeklyDigestIntervalHandle) {
+    clearInterval(weeklyDigestIntervalHandle);
+    weeklyDigestIntervalHandle = null;
+  }
+}
+

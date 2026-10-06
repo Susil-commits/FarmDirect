@@ -1,3 +1,6 @@
+import os
+os.environ.setdefault("ML_SERVICE_KEY", "dev_ml_secret_key")
+
 from fastapi.testclient import TestClient
 from app.main import app
 

@@ -112,8 +112,8 @@ class LlmClient {
     }
 
     const candidateModels = [
-      env.geminiModel || 'gemini-3.8-flash',
-      env.geminiFallbackModel || 'gemini-2.5-flash',
+      env.geminiModel || 'gemini-3.5-flash-lite',
+      env.geminiFallbackModel || 'gemini-2.5-flash-lite',
     ];
 
     const config: any = {
@@ -231,8 +231,8 @@ class LlmClient {
     }
 
     const candidateModels = [
-      env.geminiModel || 'gemini-3.8-flash',
-      env.geminiFallbackModel || 'gemini-2.5-flash',
+      env.geminiModel || 'gemini-3.5-flash-lite',
+      env.geminiFallbackModel || 'gemini-2.5-flash-lite',
     ];
 
     const config: any = {
@@ -379,8 +379,8 @@ class LlmClient {
     }
 
     const candidateModels = [
-      env.geminiModel || 'gemini-3.8-flash',
-      env.geminiFallbackModel || 'gemini-2.5-flash',
+      env.geminiModel || 'gemini-3.5-flash-lite',
+      env.geminiFallbackModel || 'gemini-2.5-flash-lite',
     ];
 
     const config: any = {

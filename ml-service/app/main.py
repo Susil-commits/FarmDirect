@@ -1,7 +1,6 @@
 import os
 from fastapi import FastAPI, Depends, HTTPException, Security, status
 from fastapi.security.api_key import APIKeyHeader
-from fastapi.middleware.cors import CORSMiddleware
 
 from .schemas import (
     HealthResponse,
@@ -13,7 +12,9 @@ from .schemas import (
 from .forecasting import generate_price_forecast
 
 API_KEY_NAME = "X-ML-Service-Key"
-EXPECTED_API_KEY = os.getenv("ML_SERVICE_KEY", "dev_ml_secret_key")
+EXPECTED_API_KEY = os.getenv("ML_SERVICE_KEY")
+if not EXPECTED_API_KEY:
+    raise RuntimeError("ML_SERVICE_KEY environment variable is required and must be set before boot.")
 
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
@@ -31,14 +32,6 @@ app = FastAPI(
     version="1.0.0",
     docs_url=None,  # No public API exposure
     redoc_url=None,
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 
 @app.get("/health", response_model=HealthResponse)

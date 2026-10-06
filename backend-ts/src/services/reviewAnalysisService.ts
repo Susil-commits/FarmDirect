@@ -176,8 +176,9 @@ export async function generateCropReviewSummary(
   // Anonymized sample of reviews (no user names or IDs)
   const reviewSnippets = reviews.slice(0, 15).map((r) => `Rating: ${r.rating}/5. Feedback: ${r.comment}`);
 
-  try {
-    const prompt = `You are an AI assistant analyzing customer produce reviews for ${crop.cropName} on the FaRm marketplace.
+  if (llmClient.isConfigured()) {
+    try {
+      const prompt = `You are an AI assistant analyzing customer produce reviews for ${crop.cropName} on the FaRm marketplace.
 Analyze the following customer reviews and produce a JSON response with:
 1. "summary": A balanced 2-sentence overview of overall produce quality and buyer satisfaction.
 2. "pros": Array of 2 to 4 bullet points highlighting specific praised attributes (e.g. freshness, packaging, taste).
@@ -188,21 +189,22 @@ ${reviewSnippets.join('\n')}
 
 Format your response strictly as valid JSON with keys "summary", "pros", "cons".`;
 
-    const llmRes = await llmClient.generateText({
-      prompt,
-      feature: 'review_summary',
-      temperature: 0.2,
-      responseMimeType: 'application/json',
-    });
+      const llmRes = await llmClient.generateText({
+        prompt,
+        feature: 'review_summary',
+        temperature: 0.2,
+        responseMimeType: 'application/json',
+      });
 
-    const parsed = JSON.parse(llmRes.text);
-    if (parsed.summary && Array.isArray(parsed.pros)) {
-      summaryText = parsed.summary;
-      pros = parsed.pros.slice(0, 4);
-      cons = Array.isArray(parsed.cons) ? parsed.cons.slice(0, 3) : [];
+      const parsed = JSON.parse(llmRes.text);
+      if (parsed.summary && Array.isArray(parsed.pros)) {
+        summaryText = parsed.summary;
+        pros = parsed.pros.slice(0, 4);
+        cons = Array.isArray(parsed.cons) ? parsed.cons.slice(0, 3) : [];
+      }
+    } catch (err: any) {
+      logger.warn({ err: err?.message || err }, 'LLM review summary failed; using deterministic fallback');
     }
-  } catch (err: any) {
-    logger.warn({ err: err?.message || err }, 'LLM review summary failed; using deterministic fallback');
   }
 
   // Fallback if LLM was skipped or failed

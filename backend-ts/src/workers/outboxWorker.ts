@@ -44,7 +44,7 @@ export async function processOutboxEvent(eventId: string | Types.ObjectId): Prom
       });
 
       const order = await Order.findById(orderId)
-        .populate('buyerId', 'name email')
+        .populate('buyerId', 'firstName lastName email')
         .populate('cropId', 'cropName images price');
 
       if (order) notifyOrderUpdate(order, 'order:new');
@@ -131,7 +131,12 @@ export function startOutboxWorker(): Worker | null {
       const { eventId } = job.data;
       await processOutboxEvent(eventId);
     },
-    { connection }
+    {
+      connection,
+      stalledInterval: 300_000, // 5 min interval to reduce idle Redis command polling
+      maxStalledCount: 1,
+      drainDelay: 30, // Long poll for 30s when empty to reduce Redis command frequency
+    }
   );
 
   outboxWorker.on('failed', (job, err) => {
@@ -146,13 +151,13 @@ let startupTimeoutHandle: NodeJS.Timeout | null = null;
 /**
  * Starts the fallback polling sweeper (runs on setInterval).
  */
-export function startOutboxPollingWorker(intervalMs = 10 * 1000): void {
+export function startOutboxPollingWorker(intervalMs = 30 * 1000): void {
   if (pollingIntervalHandle) return;
 
   startupTimeoutHandle = setTimeout(() => {
     startupTimeoutHandle = null;
     sweepPendingOutboxEvents().catch(() => {});
-  }, 3000);
+  }, 5000);
 
   pollingIntervalHandle = setInterval(() => {
     sweepPendingOutboxEvents().catch(() => {});
