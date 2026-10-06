@@ -2,6 +2,7 @@
   "name": "farm-direct-marketplace",
   "version": "2.0.0",
   "description": "Direct Farmer to Consumer Marketplace — Buy fresh produce directly from local farmers",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "install:all": "cd backend-ts && npm install && cd ../F_1 && npm install",

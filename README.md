@@ -503,7 +503,7 @@ If you wish to trigger automatic redeploys on `git push main`:
 
 ## 📄 License
 
-This project is licensed under the ISC License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 <div align="center">
   <b>FaRm Direct — Direct from local farms to your doorstep.</b><br>
