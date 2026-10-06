@@ -101,10 +101,11 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+// High-volume global and polling rate limiters use in-memory store to conserve Redis 500k command budget.
+// Sensitive auth limiter retains distributed Redis store for brute-force defense.
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 600,
-  store: createRateLimitStore('rl:global:'),
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please try again later.' },
@@ -124,7 +125,6 @@ app.use('/api/auth', authLimiter);
 const pollingLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 120,
-  store: createRateLimitStore('rl:polling:'),
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please slow down.' },

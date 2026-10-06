@@ -12,7 +12,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendError, sendSuccess } from '../utils/apiResponse.js';
 import { invalidationStrategies } from '../utils/cache.js';
 import { notifyKYCUpdate } from '../socket/eventHandlers.js';
-import { UserRole, UserStatus, KycStatus, OrderStatus, CancelledBy, PaymentStatus, CropStatus, CropAvailability } from '../types/enums.js';
+import { UserRole, UserStatus, KycStatus, OrderStatus, CancelledBy, PaymentStatus, CropStatus, CropAvailability, ListingApprovalStatus } from '../types/enums.js';
 import type { Request, Response } from 'express';
 import type { Types, PipelineStage } from 'mongoose';
 import { AdminService } from '../services/adminService.js';
@@ -277,7 +277,7 @@ export const getAllCrops = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const approveCrop = asyncHandler(async (req: Request, res: Response) => {
-  const crop = await CropListing.findByIdAndUpdate(req.params.cropId, { listingApprovalStatus: 'approved', updatedAt: new Date() }, { new: true }).populate('farmerId', 'name email');
+  const crop = await CropListing.findByIdAndUpdate(req.params.cropId, { listingApprovalStatus: ListingApprovalStatus.Approved }, { new: true }).populate('farmerId', 'name email');
   if (!crop) return sendError(res, 'Crop not found', 404);
   try {
     await Notification.create({ userId: crop.farmerId, title: 'Crop Approved', message: `Your crop listing "${crop.cropName}" has been approved and is now visible to buyers!`, type: 'general', priority: 'high', data: { cropId: crop._id, cropName: crop.cropName } });
@@ -288,7 +288,7 @@ export const approveCrop = asyncHandler(async (req: Request, res: Response) => {
 
 export const rejectCrop = asyncHandler(async (req: Request, res: Response) => {
   const { reason } = req.body as { reason?: string };
-  const crop = await CropListing.findByIdAndUpdate(req.params.cropId, { listingApprovalStatus: 'rejected', rejectionReason: reason }, { new: true }).populate('farmerId', 'name email');
+  const crop = await CropListing.findByIdAndUpdate(req.params.cropId, { listingApprovalStatus: ListingApprovalStatus.Rejected, rejectionReason: reason }, { new: true }).populate('farmerId', 'name email');
   if (!crop) return sendError(res, 'Crop not found', 404);
   try {
     await Notification.create({ userId: crop.farmerId, title: 'Crop Rejected', message: `Your crop listing "${crop.cropName}" has been rejected. Reason: ${reason || 'Not specified'}.`, type: 'general', priority: 'high', data: { cropId: crop._id, cropName: crop.cropName, rejectionReason: reason } });
@@ -298,7 +298,7 @@ export const rejectCrop = asyncHandler(async (req: Request, res: Response) => {
 
 export const freezeCrop = asyncHandler(async (req: Request, res: Response) => {
   const { reason } = req.body as { reason?: string };
-  const crop = await CropListing.findByIdAndUpdate(req.params.cropId, { status: 'inactive' }, { new: true });
+  const crop = await CropListing.findByIdAndUpdate(req.params.cropId, { status: CropStatus.Inactive }, { new: true });
   if (!crop) return sendError(res, 'Crop not found', 404);
   try {
     await Notification.create({ userId: crop.farmerId, title: 'Crop Suspended', message: `Your crop "${crop.cropName}" has been suspended. Reason: ${reason}`, type: 'general', relatedId: String(crop._id), priority: 'high' });
@@ -382,26 +382,32 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (crop.quantity <= 0) {
-        updateFields.status = 'soldOut';
-        updateFields.availability = 'not_available';
+        updateFields.status = CropStatus.SoldOut;
+        updateFields.availability = CropAvailability.NotAvailable;
       }
       const todaySalesEntry = (crop.dailySales || []).find((ds) => new Date(ds.date).toDateString() === today.toDateString());
       if (todaySalesEntry) {
-        await CropListing.findByIdAndUpdate(order.cropId, {
-          ...updateFields,
+        const updateDoc: Record<string, unknown> = {
           $inc: {
             'dailySales.$[elem].quantity': order.quantity,
             'dailySales.$[elem].revenue': order.totalAmount,
             'monthlyStats.totalRevenue': order.totalAmount,
             'monthlyStats.totalUnits': order.quantity,
           },
-        }, { arrayFilters: [{ 'elem.date': { $gte: today, $lt: new Date(today.getTime() + 86400000) } }] });
+        };
+        if (Object.keys(updateFields).length > 0) {
+          updateDoc.$set = updateFields;
+        }
+        await CropListing.findByIdAndUpdate(order.cropId, updateDoc, { arrayFilters: [{ 'elem.date': { $gte: today, $lt: new Date(today.getTime() + 86400000) } }] });
       } else {
-        await CropListing.findByIdAndUpdate(order.cropId, {
-          ...updateFields,
+        const updateDoc: Record<string, unknown> = {
           $push: { dailySales: { date: today, quantity: order.quantity, revenue: order.totalAmount } },
           $inc: { 'monthlyStats.totalRevenue': order.totalAmount, 'monthlyStats.totalUnits': order.quantity },
-        });
+        };
+        if (Object.keys(updateFields).length > 0) {
+          updateDoc.$set = updateFields;
+        }
+        await CropListing.findByIdAndUpdate(order.cropId, updateDoc);
       }
     }
   }
@@ -606,8 +612,9 @@ export const proxyDocument = asyncHandler(async (req: Request, res: Response) =>
 
   const uploadsDir = getUploadsRoot();
   const filePath = path.resolve(uploadsDir, url.replace(/^\/uploads\//, ''));
-  if (!filePath.startsWith(uploadsDir + path.sep) && filePath !== uploadsDir) {
-
+  // Prevent path traversal: resolved path must be inside the uploads directory
+  const relative = path.relative(uploadsDir, filePath);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
     return sendError(res, 'Access denied', 403);
   }
   if (!fs.existsSync(filePath)) return sendError(res, 'File not found', 404);

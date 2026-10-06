@@ -3,7 +3,7 @@ import Order from '../models/Order.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import { sendError } from '../utils/apiResponse.js';
-import { OrderStatus } from '../types/enums.js';
+import { OrderStatus, CropStatus, ListingApprovalStatus } from '../types/enums.js';
 import { evaluateFarmerSmartLowStock } from '../services/inventoryService.js';
 import type { Request, Response, NextFunction } from 'express';
 
@@ -286,6 +286,30 @@ interface BulkUploadError {
   error: string;
 }
 
+function parseCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
 export async function bulkUploadCrops(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const farmerId = req.user!._id;
@@ -303,7 +327,7 @@ export async function bulkUploadCrops(req: Request, res: Response, next: NextFun
       return;
     }
 
-    const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+    const headers = parseCsvLine(lines[0]).map((h) => h.toLowerCase());
     const requiredHeaders = ['cropname', 'category', 'price', 'quantity', 'description'];
     const missingHeaders = requiredHeaders.filter((h) => !headers.includes(h));
     if (missingHeaders.length > 0) {
@@ -321,13 +345,13 @@ export async function bulkUploadCrops(req: Request, res: Response, next: NextFun
     }
 
     for (let i = 1; i < Math.min(lines.length, 1001); i++) {
-      const values = lines[i].split(',').map((v) => v.trim());
+      const values = parseCsvLine(lines[i]);
       if (values.length < requiredHeaders.length) {
         errors.push({ row: i + 1, error: 'Insufficient columns' });
         continue;
       }
       const rowData: Record<string, string> = {};
-      headers.forEach((header, index) => { rowData[header] = values[index]; });
+      headers.forEach((header, index) => { rowData[header] = values[index] ?? ''; });
 
       if (!rowData.cropname || !rowData.category || !rowData.price || !rowData.quantity) {
         errors.push({ row: i + 1, error: 'Missing required fields' });
@@ -350,8 +374,8 @@ export async function bulkUploadCrops(req: Request, res: Response, next: NextFun
         discount: parseFloat(rowData.discount) || 0,
         pickupLocation: rowData.pickuplocation || user.address || 'Location not provided',
         contactNumber: rowData.contactnumber || user.phone || 'Phone not provided',
-        status: 'active',
-        listingApprovalStatus: 'pending',
+        status: CropStatus.Active,
+        listingApprovalStatus: ListingApprovalStatus.Pending,
       });
       if (crops.length >= 1000) break;
     }

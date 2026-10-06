@@ -1,15 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { aiService } from '../services/aiService.js';
 import { farmingKbService } from '../services/farmingKbService.js';
 import User from '../models/User.js';
 import CropListing from '../models/CropListing.js';
 import Order from '../models/Order.js';
 import { ListingApprovalStatus, CropCategory, CropUnit, OrderStatus, PaymentStatus } from '../types/enums.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 describe('T1.8 Golden Eval Suite & Gate 1 Verification', () => {
   let farmerUser: any;
@@ -119,7 +115,11 @@ describe('T1.8 Golden Eval Suite & Gate 1 Verification', () => {
 
   describe('Gate 1 Golden Evaluation Cases (eval/chat/golden.jsonl)', () => {
     it('achieves >= 90% pass rate across the full golden evaluation set', async () => {
-      const goldenPath = path.resolve(__dirname, '../../../eval/chat/golden.jsonl');
+      const candidates = [
+        path.resolve(process.cwd(), '../eval/chat/golden.jsonl'),
+        path.resolve(process.cwd(), 'eval/chat/golden.jsonl'),
+      ];
+      const goldenPath = candidates.find((p) => fs.existsSync(p)) || candidates[0];
       const fileContent = fs.readFileSync(goldenPath, 'utf-8');
       const cases = fileContent
         .split('\n')

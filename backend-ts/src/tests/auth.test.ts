@@ -66,4 +66,21 @@ describe('Auth Endpoints', () => {
     
     expect(res.status).toBe(401);
   });
+
+  it('should revoke a token and persist to MongoDB when Redis is not ready', async () => {
+    const { revokeToken, isTokenRevoked } = await import('../services/tokenService.js');
+    const RevokedToken = (await import('../models/RevokedToken.js')).default;
+
+    const jti = 'test-jti-revoked-fallback-123';
+    expect(await isTokenRevoked(jti)).toBe(false);
+
+    await revokeToken(jti, 3600);
+
+    expect(await isTokenRevoked(jti)).toBe(true);
+
+    const doc = await RevokedToken.findOne({ jti });
+    expect(doc).not.toBeNull();
+    expect(doc?.jti).toBe(jti);
+  });
 });
+

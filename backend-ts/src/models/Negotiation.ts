@@ -33,6 +33,7 @@ const negotiationSchema = new Schema<INegotiation>(
 negotiationSchema.index({ buyerId: 1, status: 1 });
 negotiationSchema.index({ farmerId: 1, status: 1 });
 negotiationSchema.index({ cropId: 1 });
+negotiationSchema.index({ cropId: 1, buyerId: 1, status: 1 });
 
 const Negotiation: Model<INegotiation> = mongoose.model<INegotiation>('Negotiation', negotiationSchema);
 export default Negotiation;

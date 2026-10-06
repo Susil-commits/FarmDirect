@@ -46,12 +46,15 @@ async function updateFarmerRating(farmerId: Types.ObjectId | string): Promise<vo
 }
 
 export const addReview = asyncHandler(async (req: Request, res: Response) => {
-  const { rating, comment } = req.body as { rating: number; comment: string };
+  const { rating, comment } = req.body as { rating: number | string; comment: string };
   const cropId = req.params.cropId || (req.body as any).cropId;
   const userId = req.user!._id;
 
   if (!cropId) return sendError(res, 'Crop ID is required', 400);
-  if (rating < 1 || rating > 5) return sendError(res, 'Rating must be between 1 and 5', 400);
+  const numRating = Number(rating);
+  if (!Number.isFinite(numRating) || numRating < 1 || numRating > 5) {
+    return sendError(res, 'Rating must be a number between 1 and 5', 400);
+  }
 
   const crop = await CropListing.findById(cropId);
   if (!crop) return sendError(res, 'Crop not found', 404);
@@ -59,11 +62,11 @@ export const addReview = asyncHandler(async (req: Request, res: Response) => {
   const order = await Order.findOne({ buyerId: userId, cropId, orderStatus: OrderStatus.Completed });
   if (!order) return sendError(res, 'You can only review crops you have purchased and received', 400);
 
-  const analysis = analyzeReviewContent(comment, rating);
+  const analysis = analyzeReviewContent(comment, numRating);
 
   const existingReview = await Review.findOne({ cropId, userId });
   if (existingReview) {
-    existingReview.rating = rating;
+    existingReview.rating = numRating;
     existingReview.comment = comment;
     existingReview.sentimentScore = analysis.sentimentScore;
     existingReview.sentimentLabel = analysis.sentimentLabel;
@@ -88,7 +91,7 @@ export const addReview = asyncHandler(async (req: Request, res: Response) => {
   const review = await Review.create({
     cropId,
     userId,
-    rating,
+    rating: numRating,
     comment,
     sentimentScore: analysis.sentimentScore,
     sentimentLabel: analysis.sentimentLabel,

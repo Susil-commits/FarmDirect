@@ -5,6 +5,7 @@ import { sendError } from '../utils/apiResponse.js';
 import { notifyNewMessage } from '../socket/eventHandlers.js';
 import type { Request, Response } from 'express';
 import { parsePagination } from '../utils/pagination.js';
+import { Types } from 'mongoose';
 
 export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
   const { receiverId, content, cropId, orderId, type = 'text', attachments = [] } = req.body as {
@@ -15,6 +16,7 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
 
   if (!receiverId) return sendError(res, 'Receiver ID is required', 400);
   if (!content || content.trim().length === 0) return sendError(res, 'Message content cannot be empty', 400);
+  if (content.trim().length > 5000) return sendError(res, 'Message content cannot exceed 5000 characters', 400);
   if (senderId.toString() === receiverId.toString()) return sendError(res, 'Cannot send message to yourself', 400);
 
   const receiver = await User.findById(receiverId);
@@ -64,7 +66,6 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
   const userId = req.user!._id;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 50 });
 
-  const { Types } = await import('mongoose');
   const pipeline = [
     { $match: { $or: [{ senderId: new Types.ObjectId(String(userId)) }, { receiverId: new Types.ObjectId(String(userId)) }], isDeleted: false } },
     { $sort: { createdAt: -1 as const } },
@@ -148,10 +149,25 @@ export const deleteMessage = asyncHandler(async (req: Request, res: Response) =>
 
 export const getUnreadCount = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!._id;
-  const unreadCount = await Message.countDocuments({ receiverId: userId, isRead: false, isDeleted: false });
-  const userMessages = await Message.find({ receiverId: userId, isRead: false, isDeleted: false }).lean().select('conversationId');
+
+  // Single aggregate: total count + per-conversation breakdown
+  const result = await (Message as any).aggregate([
+    { $match: { receiverId: new Types.ObjectId(String(userId)), isRead: false, isDeleted: false } },
+    {
+      $group: {
+        _id: '$conversationId',
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
   const conversationUnread: Record<string, number> = {};
-  userMessages.forEach((msg) => { conversationUnread[msg.conversationId] = (conversationUnread[msg.conversationId] || 0) + 1; });
+  let unreadCount = 0;
+  for (const entry of result) {
+    conversationUnread[entry._id] = entry.count;
+    unreadCount += entry.count;
+  }
+
   res.status(200).json({ success: true, totalUnread: unreadCount, byConversation: conversationUnread });
 });
 

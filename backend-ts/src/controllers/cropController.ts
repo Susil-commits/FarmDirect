@@ -50,6 +50,21 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
     const uploadedUrls = req.uploadedFiles ? req.uploadedFiles.map((f) => f.url) : [];
     const imageUrls = Array.from(new Set([...bodyImages, ...uploadedUrls]));
 
+    if (!cropName || !cropType || !price || !quantity || !pickupLocation || !contactNumber) {
+      sendError(res, 'Missing required fields', 400);
+      return;
+    }
+
+    if (!description || (description as string).trim().length < 10) {
+      sendError(res, 'Description is required and must be at least 10 characters', 400);
+      return;
+    }
+
+    if (!category) {
+      sendError(res, 'Category is required', 400);
+      return;
+    }
+
     const user = await User.findById(req.user!._id);
     if (!user) {
       sendError(res, 'User not found', 404);
@@ -61,16 +76,6 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
         kycStatus: user.kycStatus,
         error: 'Complete your KYC verification before listing crops',
       });
-      return;
-    }
-
-    if (!cropName || !cropType || !price || !quantity || !pickupLocation || !contactNumber) {
-      sendError(res, 'Missing required fields', 400);
-      return;
-    }
-
-    if (!description || (description as string).trim().length < 10) {
-      sendError(res, 'Description is required and must be at least 10 characters', 400);
       return;
     }
 
@@ -90,7 +95,7 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
       farmerId: req.user!._id,
       cropName,
       cropType: (cropType as string) || CropType.Vegetables,
-      category: (category as string) || (cropType as string) || 'vegetables',
+      category: (category as string),
       price,
       quantity,
       unit: (unit as string) || 'kg',
@@ -132,7 +137,8 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
 
 export async function getCrops(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const cacheKey = `crops:${JSON.stringify(req.query)}`;
+    const sortedQuery = Object.keys(req.query).sort().reduce<Record<string, unknown>>((acc, k) => { acc[k] = req.query[k]; return acc; }, {});
+    const cacheKey = `crops:${JSON.stringify(sortedQuery)}`;
     const cachedResponse = await getCache(cacheKey);
     if (cachedResponse) {
       res.status(200).json(cachedResponse);
@@ -449,27 +455,39 @@ export async function deleteCrop(req: Request, res: Response, next: NextFunction
       orderStatus: { $nin: [OrderStatus.Completed, OrderStatus.Cancelled] },
     });
 
-    for (const activeOrder of activeOrders) {
-      activeOrder.orderStatus = OrderStatus.Cancelled;
-      activeOrder.cancellationReason = 'Crop listing was removed by the farmer';
-      activeOrder.cancelledBy = CancelledBy.Farmer;
-      activeOrder.cancelledAt = new Date();
-      activeOrder.timeline.push({
-        event: 'CANCELLED',
-        description: 'Order auto-cancelled: crop listing deleted by farmer',
-        timestamp: new Date(),
-      });
-      await activeOrder.save();
+    if (activeOrders.length > 0) {
+      const session = await (await import('mongoose')).default.startSession();
+      try {
+        await session.withTransaction(async () => {
+          for (const activeOrder of activeOrders) {
+            activeOrder.orderStatus = OrderStatus.Cancelled;
+            activeOrder.cancellationReason = 'Crop listing was removed by the farmer';
+            activeOrder.cancelledBy = CancelledBy.Farmer;
+            activeOrder.cancelledAt = new Date();
+            activeOrder.timeline.push({
+              event: 'CANCELLED',
+              description: 'Order auto-cancelled: crop listing deleted by farmer',
+              timestamp: new Date(),
+            });
+            await activeOrder.save({ session });
+          }
+        });
+      } finally {
+        await session.endSession();
+      }
 
-      Notification.create({
-        userId: activeOrder.buyerId,
-        title: 'Order Cancelled — Crop Removed',
-        message: `Your order #${activeOrder.orderNumber} for "${crop.cropName}" has been cancelled because the farmer removed the listing.`,
-        type: 'order',
-        relatedId: String(activeOrder._id),
-        priority: 'high',
-        actionUrl: `/buyer/orders/${activeOrder._id}`,
-      }).catch((e: unknown) => console.error('Failed to create cancellation notification:', e));
+      // Notify buyers outside the transaction (best-effort)
+      for (const activeOrder of activeOrders) {
+        Notification.create({
+          userId: activeOrder.buyerId,
+          title: 'Order Cancelled — Crop Removed',
+          message: `Your order #${activeOrder.orderNumber} for "${crop.cropName}" has been cancelled because the farmer removed the listing.`,
+          type: 'order',
+          relatedId: String(activeOrder._id),
+          priority: 'high',
+          actionUrl: `/buyer/orders/${activeOrder._id}`,
+        }).catch((e: unknown) => console.error('Failed to create cancellation notification:', e));
+      }
     }
 
     await Promise.all([
@@ -618,7 +636,7 @@ export async function getMyInterestedCrops(req: Request, res: Response, next: Ne
     const cropsWithStatus = crops.map((crop) => {
       const myInterest = crop.interestedBuyers.find((ib) => ib.buyerId.toString() === req.user!._id.toString());
       return {
-        ...crop.toObject(),
+        ...crop, // already a plain object from .lean()
         myInterestStatus: myInterest ? myInterest.status : null,
         myInterestedAt: myInterest ? myInterest.interestedAt : null,
         myOrderId: myInterest ? myInterest.orderId : null,
