@@ -9,7 +9,7 @@ describe('LLM Client & AI Usage Governance', () => {
     await AiUsage.create({
       userId,
       feature: 'chat',
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3.5-flash-lite',
       inputTokens: 120,
       outputTokens: 80,
       totalTokens: 200,
@@ -32,7 +32,7 @@ describe('LLM Client & AI Usage Governance', () => {
     await AiUsage.create({
       userId: cappedUser,
       feature: 'chat',
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3.5-flash-lite',
       inputTokens: 30000,
       outputTokens: 25000,
       totalTokens: 55000,
@@ -45,7 +45,7 @@ describe('LLM Client & AI Usage Governance', () => {
     await AiUsage.create({
       userId: underCapUser,
       feature: 'chat',
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3.5-flash-lite',
       inputTokens: 500,
       outputTokens: 500,
       totalTokens: 1000,

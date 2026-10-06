@@ -7,3 +7,6 @@ process.env.MONGOMS_VERSION = process.env.MONGOMS_VERSION || '7.0.14';
 // Disable external remote Redis during testing
 delete process.env.REDIS_URI;
 delete process.env.REDIS_URL;
+
+// Prevent live Gemini API calls in test suite to protect API quotas and ensure deterministic offline test runs
+process.env.GEMINI_API_KEY = '';

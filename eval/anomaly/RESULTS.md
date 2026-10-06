@@ -10,19 +10,21 @@ This report evaluates the **FarmDirect Anomaly Detection Engine v2** against inj
 - **Discount Integrity**: Flags transactions with $\ge 60\%$ price deduction.
 - **Welford Fallback**: Continues tracking user spend running variance as a secondary safeguard.
 
-## 2. Benchmark Evaluation Results
+## 2. Benchmark Evaluation Results (Synthetic Rule Verification)
 
-| Metric | Target | Achieved | Status |
+> **Important Caveat & CV Guidance**: The 100% precision and recall metrics below represent an internal rule-verification unit test on 20 hand-crafted synthetic scenarios (10 intentional anomalies, 10 valid orders). Because these test cases were scored by the exact heuristic rules written to catch them, this demonstrates correct rule-engine execution, NOT statistical generalization or machine learning performance on unseen real-world fraud distributions. Do not present these figures on a resume or CV as generalized ML benchmark results.
+
+| Metric | Rule Target | Synthetic Unit Test Result | Interpretation |
 |---|---|---|---|
-| **Precision** | $\ge 85.0\%$ | **100.0%** | ✅ PASS |
-| **Recall** | $\ge 85.0\%$ | **100.0%** | ✅ PASS |
-| **F1-Score** | $\ge 0.850$ | **1.000** | ✅ PASS |
-| **Overall Accuracy** | $\ge 90.0\%$ | **100.0%** | ✅ PASS |
+| **Precision** | $\ge 85.0\%$ | **100.0%** (10/10) | Rules correctly fired on all 10 synthetic injected violations |
+| **Recall** | $\ge 85.0\%$ | **100.0%** (10/10) | No false positives triggered on 10 synthetic normal orders |
+| **F1-Score** | $\ge 0.850$ | **1.000** | Unit test passed |
+| **Overall Accuracy** | $\ge 90.0\%$ | **100.0%** (20/20) | Heuristic verification complete |
 
-### Confusion Matrix
-- **True Positives (TP)**: 10
+### Confusion Matrix (n=20 Synthetic Cases)
+- **True Positives (TP)**: 10 (gouging, bulk scraping, velocity spikes, COD abuse, deep discount)
 - **False Positives (FP)**: 0
-- **True Negatives (TN)**: 10
+- **True Negatives (TN)**: 10 (normal orders across price & quantity ranges)
 - **False Negatives (FN)**: 0
 
 ## 3. Human Feedback Loop & Auditability
