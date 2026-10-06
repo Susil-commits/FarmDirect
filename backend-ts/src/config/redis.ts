@@ -5,47 +5,43 @@ dotenv.config();
 
 const redisUrl = process.env.REDIS_URI || process.env.REDIS_URL;
 
-let isInitialErrorLogged = false;
+let isOutageLogged = false;
 
 export const redisClient = createClient({
   url: redisUrl,
+  pingInterval: 300_000, // 5 min interval to keep alive while conserving 500k monthly command limit
   socket: {
-    connectTimeout: 5000,
-    reconnectStrategy: (retries) => {
-      if (retries > 2) {
-        if (!isInitialErrorLogged) {
-          console.log('[Redis] Remote cache unreachable. Operating with in-memory & direct DB queries.');
-          isInitialErrorLogged = true;
-        }
-        return false;
-      }
-      return 1000;
-    },
+    connectTimeout: 10_000,
+    reconnectStrategy: (retries) => Math.min(500 * 2 ** retries, 15_000), // retry forever
   },
 });
 
 redisClient.on('error', (err) => {
-  if (!isInitialErrorLogged) {
-    console.log(`[Redis] Notice: ${err?.message || 'Connection timeout'}. Running with in-memory / direct DB fallback.`);
-    isInitialErrorLogged = true;
+  if (!isOutageLogged) {
+    console.warn(`[Redis] Remote cache unreachable: ${err?.message || 'Connection error'}. Operating with in-memory & direct DB queries.`);
+    isOutageLogged = true;
   }
 });
 
 redisClient.on('connect', () => {
   console.log('[Redis] Connected successfully');
-  isInitialErrorLogged = false;
+  isOutageLogged = false;
+});
+
+redisClient.on('ready', () => {
+  isOutageLogged = false;
 });
 
 let connectPromise: Promise<void> | null = null;
 
 if (redisUrl && process.env.NODE_ENV !== 'test') {
-  connectPromise = redisClient.connect().catch(() => {}) as Promise<void>;
+  connectPromise = redisClient.connect().catch((err) => {
+    console.warn('[Redis] Initial connection failed:', err?.message || err);
+  }) as Promise<void>;
 }
 
 export const connectRedis = async (): Promise<void> => {
-  if (connectPromise) {
-    try {
-      await connectPromise;
-    } catch {}
-  }
+  if (!connectPromise) return;
+  // never block startup for more than 3s
+  await Promise.race([connectPromise, new Promise<void>((r) => setTimeout(r, 3000))]);
 };

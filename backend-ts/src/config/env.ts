@@ -46,10 +46,6 @@ export interface EnvConfig {
   razorpayKeyId?: string;
   razorpayKeySecret?: string;
   razorpayWebhookSecret?: string;
-  googleClientId?: string;
-  googleClientSecret?: string;
-  githubClientId?: string;
-  githubClientSecret?: string;
   geminiApiKey?: string;
   geminiModel: string;
   geminiFallbackModel: string;
@@ -131,13 +127,9 @@ function loadEnv(): EnvConfig {
     razorpayKeyId: process.env.RAZORPAY_KEY_ID,
     razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET,
     razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
-    googleClientId: process.env.GOOGLE_CLIENT_ID,
-    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    githubClientId: process.env.GITHUB_CLIENT_ID,
-    githubClientSecret: process.env.GITHUB_CLIENT_SECRET,
     geminiApiKey: process.env.GEMINI_API_KEY,
-    geminiModel: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
-    geminiFallbackModel: process.env.GEMINI_FALLBACK_MODEL || 'gemini-2.5-flash',
+    geminiModel: process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite',
+    geminiFallbackModel: process.env.GEMINI_FALLBACK_MODEL || 'gemini-2.5-flash-lite',
     aiChatEnabled: parseBoolean(process.env.AI_CHAT_ENABLED, true),
     aiVisionEnabled: parseBoolean(process.env.AI_VISION_ENABLED, true),
     aiDailyTokenCap: parseInt(process.env.AI_DAILY_TOKEN_CAP || '50000', 10),

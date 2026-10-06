@@ -39,3 +39,17 @@ backend/data_dump/
 coverage/
 .nyc_output/
 .vercel
+.pytest_cache/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+.coverage
+htmlcov/
+
+# Backend TS
+backend-ts/dist/
+backend-ts/coverage/
+backend-ts/.env
+backend-ts/uploads/

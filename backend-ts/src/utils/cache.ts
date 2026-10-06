@@ -38,6 +38,11 @@ export async function getCache<T = unknown>(key: string): Promise<T | null> {
 export async function invalidateCache(pattern: string): Promise<void> {
   if (!redisClient.isReady) return;
   try {
+    // If exact key without wildcards, directly del to save a KEYS command
+    if (!pattern.includes('*')) {
+      await redisClient.del(pattern);
+      return;
+    }
     const keys = await redisClient.keys(`*${pattern}*`);
     if (keys.length > 0) {
       await redisClient.del(keys);
