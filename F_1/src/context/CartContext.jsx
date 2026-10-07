@@ -4,30 +4,29 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 export const CartContext = createContext();
 
 export function CartProvider({ children }) {
-  const [cart, setCart] = useState([]);
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('farm-cart');
-    if (saved) {
-      try {
+  const [cart, setCart] = useState(() => {
+    try {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('farm-cart') : null;
+      if (saved) {
         const parsed = JSON.parse(saved);
-        const normalized = parsed.map(item => ({
+        return parsed.map(item => ({
           ...item,
           _id: item._id || item.id,
           id: item._id || item.id,
         }));
-       
-        setCart(normalized);
-      } catch (e) {
-        console.error('Failed to load cart:', e);
       }
+    } catch (e) {
+      console.error('Failed to load cart:', e);
     }
-  }, []);
+    return [];
+  });
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   useEffect(() => {
-    if (cart.length > 0 || localStorage.getItem('farm-cart')) {
+    try {
       localStorage.setItem('farm-cart', JSON.stringify(cart));
+    } catch (e) {
+      console.error('Failed to save cart to localStorage:', e);
     }
   }, [cart]);
 

@@ -6,6 +6,8 @@ import { sendError } from '../utils/apiResponse.js';
 import { env } from '../config/env.js';
 import type { UploadedFileMeta, UploadedFileMetaWithField } from '../types/index.js';
 
+import { ApiError } from '../utils/apiError.js';
+
 const storage = multer.memoryStorage();
 
 const ALLOWED_MIMES = [
@@ -28,12 +30,12 @@ function fileFilter(
 ): void {
   const ext = file.originalname.split('.').pop()?.toLowerCase();
   if (ext === 'svg' || file.mimetype === 'image/svg+xml') {
-    return cb(new Error('SVG files are not allowed for security reasons.'));
+    return cb(ApiError.badRequest('SVG files are not allowed for security reasons.'));
   }
   if (ALLOWED_MIMES.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error(`Unsupported file type: ${file.mimetype}`));
+    cb(ApiError.badRequest(`Unsupported file type: ${file.mimetype}`));
   }
 }
 
