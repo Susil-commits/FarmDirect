@@ -25,11 +25,12 @@ export async function makeOffer(req: Request, res: Response, next: NextFunction)
       const { cropId, offeredPrice, quantity, message } = req.body as MakeOfferDto;
       const buyerId = req.user!._id;
 
-      if (!cropId || !offeredPrice || !quantity) {
-        throw ApiError.badRequest('Crop ID, offered price, and quantity are required.');
+      if (!cropId || typeof cropId !== 'string' || !mongoose.isValidObjectId(cropId) || !offeredPrice || !quantity) {
+        throw ApiError.badRequest('Valid Crop ID, offered price, and quantity are required.');
       }
+      const safeCropId = new mongoose.Types.ObjectId(cropId);
 
-      const crop = await CropListing.findById(cropId).session(session);
+      const crop = await CropListing.findById(safeCropId).session(session);
       if (!crop) throw new CropNotFoundError('Crop not found');
       if (crop.listingApprovalStatus !== ListingApprovalStatus.Approved) throw new ListingPendingApprovalError('Crop is pending admin approval');
       if (crop.availability !== CropAvailability.Available) throw new CropUnavailableError('Crop is no longer available');
@@ -45,13 +46,13 @@ export async function makeOffer(req: Request, res: Response, next: NextFunction)
         await crop.save({ session });
       }
 
-      const existing = await Negotiation.findOne({ cropId, buyerId, status: NegotiationStatus.Pending }).session(session);
+      const existing = await Negotiation.findOne({ cropId: safeCropId, buyerId, status: NegotiationStatus.Pending }).session(session);
       if (existing) {
         throw ApiError.badRequest('You already have a pending offer for this crop. Wait for the farmer to respond.');
       }
 
       const [negotiation] = await Negotiation.create([{
-        cropId,
+        cropId: safeCropId,
         buyerId,
         farmerId: crop.farmerId,
         originalPrice: crop.price,

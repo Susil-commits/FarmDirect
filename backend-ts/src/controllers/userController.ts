@@ -15,9 +15,16 @@ export const getUserProfile = asyncHandler(async (req: Request, res: Response) =
 
 export const updateUserProfile = asyncHandler(async (req: Request, res: Response) => {
   const { firstName, lastName, phone, bio, profilePicture } = req.body as Record<string, unknown>;
+  const updateData: Record<string, unknown> = { updatedAt: new Date() };
+  if (typeof firstName === 'string') updateData.firstName = firstName.trim();
+  if (typeof lastName === 'string') updateData.lastName = lastName.trim();
+  if (typeof phone === 'string') updateData.phone = phone.trim();
+  if (typeof bio === 'string') updateData.bio = bio.trim();
+  if (typeof profilePicture === 'string') updateData.profilePicture = profilePicture.trim();
+
   const user = await User.findByIdAndUpdate(
     req.user!._id,
-    { firstName, lastName, phone, bio, profilePicture, updatedAt: new Date() },
+    { $set: updateData },
     { new: true, runValidators: true },
   ).select('-password');
   if (!user) return sendError(res, 'User not found', 404);
@@ -93,11 +100,12 @@ export const getAllBuyers = asyncHandler(async (req: Request, res: Response) => 
   const { search } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = { role: UserRole.Buyer };
-  if (search) {
+  if (typeof search === 'string' && search.trim()) {
+    const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
     query.$or = [
-      { firstName: { $regex: search, $options: 'i' } },
-      { lastName: { $regex: search, $options: 'i' } },
-      { email: { $regex: search, $options: 'i' } },
+      { firstName: { $regex: escaped, $options: 'i' } },
+      { lastName: { $regex: escaped, $options: 'i' } },
+      { email: { $regex: escaped, $options: 'i' } },
     ];
   }
   const [buyers, total] = await Promise.all([
@@ -114,14 +122,17 @@ export const getAllFarmers = asyncHandler(async (req: Request, res: Response) =>
   const { search, kycStatus } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = { role: UserRole.Farmer };
-  if (search) {
+  if (typeof search === 'string' && search.trim()) {
+    const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
     query.$or = [
-      { firstName: { $regex: search, $options: 'i' } },
-      { farmName: { $regex: search, $options: 'i' } },
-      { email: { $regex: search, $options: 'i' } },
+      { firstName: { $regex: escaped, $options: 'i' } },
+      { farmName: { $regex: escaped, $options: 'i' } },
+      { email: { $regex: escaped, $options: 'i' } },
     ];
   }
-  if (kycStatus) query.kycStatus = kycStatus;
+  if (typeof kycStatus === 'string' && ['pending', 'approved', 'rejected', 'not_submitted'].includes(kycStatus)) {
+    query.kycStatus = kycStatus;
+  }
   const [farmers, total] = await Promise.all([
     User.find(query).lean().select('-password').skip(skip).limit(limit).sort({ createdAt: -1 }),
     User.countDocuments(query),

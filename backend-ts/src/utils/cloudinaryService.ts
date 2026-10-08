@@ -78,23 +78,25 @@ export async function uploadFile(
 export async function deleteFile(fileUrl: string): Promise<boolean> {
   if (!fileUrl || typeof fileUrl !== 'string') return false;
 
-  if (isCloudinaryConfigured() && fileUrl.includes('res.cloudinary.com')) {
+  if (isCloudinaryConfigured()) {
     try {
       const urlObj = new URL(fileUrl);
-      const pathParts = urlObj.pathname.split('/');
-      const uploadIdx = pathParts.indexOf('upload');
-      if (uploadIdx !== -1) {
-        let idParts = pathParts.slice(uploadIdx + 1);
-        if (idParts[0]?.startsWith('v') && /^\d+$/.test(idParts[0].slice(1))) {
-          idParts = idParts.slice(1);
+      if (urlObj.hostname === 'res.cloudinary.com' || urlObj.hostname.endsWith('.cloudinary.com')) {
+        const pathParts = urlObj.pathname.split('/');
+        const uploadIdx = pathParts.indexOf('upload');
+        if (uploadIdx !== -1) {
+          let idParts = pathParts.slice(uploadIdx + 1);
+          if (idParts[0]?.startsWith('v') && /^\d+$/.test(idParts[0].slice(1))) {
+            idParts = idParts.slice(1);
+          }
+          const publicId = idParts.join('/').replace(/\.[^.]+$/, '');
+          if (publicId) {
+            await cloudinary.uploader.destroy(publicId, { resource_type: 'auto' });
+            return true;
+          }
         }
-        const publicId = idParts.join('/').replace(/\.[^.]+$/, '');
-        if (publicId) {
-          await cloudinary.uploader.destroy(publicId, { resource_type: 'auto' });
-          return true;
-        }
+        return false;
       }
-      return false;
     } catch (error) {
       console.error('Cloudinary delete failed:', error instanceof Error ? error.message : error);
       return false;

@@ -7,7 +7,7 @@ import Notification from '../models/Notification.js';
 import AuditLog from '../models/AuditLog.js';
 import { UserRole, UserStatus, KycStatus, OrderStatus } from '../types/enums.js';
 import { notifyUserStatusChange } from '../socket/eventHandlers.js';
-import type { Types, PipelineStage } from 'mongoose';
+import mongoose, { type Types, type PipelineStage } from 'mongoose';
 
 const PENDING_STATUSES = [OrderStatus.Confirmed, OrderStatus.Preparing, OrderStatus.ReadyForPickup, OrderStatus.PickedUp];
 
@@ -83,16 +83,23 @@ export class AdminService {
     ipAddress: string,
     userAgent: string
   ) {
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      throw new Error('Invalid user ID');
+    }
+    const targetUserId = new mongoose.Types.ObjectId(String(userId));
+
     if (![UserStatus.Active, UserStatus.Suspended, UserStatus.Banned].includes(status)) {
       throw new Error('Invalid status');
     }
 
-    const previousUser = await User.findById(userId).select('-password');
+    const previousUser = await User.findById(targetUserId).select('-password');
     if (!previousUser) throw new Error('User not found');
 
+    const safeReason = typeof reason === 'string' ? reason.trim().slice(0, 500) : '';
+
     const user = await User.findByIdAndUpdate(
-      userId,
-      { status, suspensionReason: status !== UserStatus.Active ? reason : '', updatedAt: new Date() },
+      targetUserId,
+      { status, suspensionReason: status !== UserStatus.Active ? safeReason : '', updatedAt: new Date() },
       { new: true },
     ).select('-password');
 

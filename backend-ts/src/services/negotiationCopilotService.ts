@@ -78,10 +78,8 @@ export async function getNegotiationCopilotGuidance(
   let cropUnit = 'kg';
 
   // 1. Fetch Crop Listing if cropId is provided
-  if (params.cropId) {
-    const targetCropId = typeof params.cropId === 'string'
-      ? new mongoose.Types.ObjectId(params.cropId)
-      : params.cropId;
+  if (params.cropId && mongoose.isValidObjectId(params.cropId)) {
+    const targetCropId = new mongoose.Types.ObjectId(String(params.cropId));
     const crop = await CropListing.findById(targetCropId).lean();
     if (crop) {
       cropName = crop.cropName;

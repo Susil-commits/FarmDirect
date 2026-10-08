@@ -290,10 +290,11 @@ function parseCsvLine(line: string): string[] {
   const result: string[] = [];
   let current = '';
   let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
+  const maxLineLen = Math.min(line.length, 4096);
+  for (let i = 0; i < maxLineLen; i++) {
     const char = line[i];
     if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
+      if (inQuotes && i + 1 < maxLineLen && line[i + 1] === '"') {
         current += '"';
         i++;
       } else {

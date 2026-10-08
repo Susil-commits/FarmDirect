@@ -227,26 +227,35 @@ export const getImageUrl = (url, categoryOrName = '', options = {}) => {
 
   const cleanUrl = url.trim();
 
-  // Automatically apply WebP/AVIF and compression transformations to Cloudinary assets
-  if (cleanUrl.includes('res.cloudinary.com') && cleanUrl.includes('/upload/')) {
-    if (!cleanUrl.includes('/upload/f_auto') && !cleanUrl.includes('/upload/q_auto')) {
-      const width = options.width || 800;
-      const transform = `f_auto,q_auto,w_${width},c_limit`;
-      return cleanUrl.replace('/upload/', `/upload/${transform}/`);
+  // Inspect absolute URLs safely
+  if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+    try {
+      const parsed = new URL(cleanUrl);
+      // Automatically apply WebP/AVIF and compression transformations to Cloudinary assets
+      if ((parsed.hostname === 'res.cloudinary.com' || parsed.hostname.endsWith('.cloudinary.com')) && parsed.pathname.includes('/upload/')) {
+        if (!cleanUrl.includes('/upload/f_auto') && !cleanUrl.includes('/upload/q_auto')) {
+          const width = options.width || 800;
+          const transform = `f_auto,q_auto,w_${width},c_limit`;
+          return cleanUrl.replace('/upload/', `/upload/${transform}/`);
+        }
+        return cleanUrl;
+      }
+
+      // Optimize Unsplash images with auto format & quality
+      if (parsed.hostname === 'images.unsplash.com' || parsed.hostname.endsWith('.unsplash.com')) {
+        if (!cleanUrl.includes('auto=format')) {
+          const sep = cleanUrl.includes('?') ? '&' : '?';
+          return `${cleanUrl}${sep}auto=format&fit=crop&q=75`;
+        }
+        return cleanUrl;
+      }
+    } catch {
+      // Fall through if URL parsing fails
     }
     return cleanUrl;
   }
 
-  // Optimize Unsplash images with auto format & quality
-  if (cleanUrl.includes('images.unsplash.com')) {
-    if (!cleanUrl.includes('auto=format')) {
-      const sep = cleanUrl.includes('?') ? '&' : '?';
-      return `${cleanUrl}${sep}auto=format&fit=crop&q=75`;
-    }
-    return cleanUrl;
-  }
-
-  if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://') || cleanUrl.startsWith('data:')) {
+  if (cleanUrl.startsWith('data:')) {
     return cleanUrl;
   }
 

@@ -106,7 +106,10 @@ export async function generateCropReviewSummary(
   cropId: Types.ObjectId | string,
   force: boolean = false
 ): Promise<ICropReviewSummary | null> {
-  const targetCropId = typeof cropId === 'string' ? new mongoose.Types.ObjectId(cropId) : cropId;
+  if (!cropId || !mongoose.isValidObjectId(cropId)) {
+    return null;
+  }
+  const targetCropId = new mongoose.Types.ObjectId(String(cropId));
 
   const crop = await CropListing.findById(targetCropId);
   if (!crop) return null;

@@ -27,11 +27,13 @@ export function cosineSimilarity(a: number[], b: number[]): number {
 }
 
 export function generateDeterministicVector(text: string, dimensions = 64): number[] {
+  const safeText = typeof text === 'string' ? text.slice(0, 2048) : '';
   const vec = new Array(dimensions).fill(0);
-  const words = text.toLowerCase().split(/\W+/).filter(Boolean);
+  const words = safeText.toLowerCase().split(/\W+/).filter(Boolean).slice(0, 500);
   for (const word of words) {
     let hash = 0;
-    for (let i = 0; i < word.length; i++) {
+    const maxLen = Math.min(word.length, 128);
+    for (let i = 0; i < maxLen; i++) {
       hash = (hash * 31 + word.charCodeAt(i)) & 0xffffffff;
     }
     const idx = Math.abs(hash) % dimensions;

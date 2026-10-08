@@ -127,17 +127,23 @@ async function recordCropCompletion(order: OrderLike): Promise<void> {
 
 export async function startOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { cropId, buyerId } = req.body as { cropId?: string; buyerId?: string };
-    if (!cropId || !buyerId) {
-      throw ApiError.badRequest('Crop ID and Buyer ID are required');
+    const { cropId, buyerId } = req.body as { cropId?: unknown; buyerId?: unknown };
+    if (!cropId || typeof cropId !== 'string' || !mongoose.isValidObjectId(cropId)) {
+      throw ApiError.badRequest('Valid Crop ID is required');
     }
+    if (!buyerId || typeof buyerId !== 'string' || !mongoose.isValidObjectId(buyerId)) {
+      throw ApiError.badRequest('Valid Buyer ID is required');
+    }
+
+    const safeCropId = new mongoose.Types.ObjectId(cropId);
+    const safeBuyerId = new mongoose.Types.ObjectId(buyerId);
 
     const session = await mongoose.startSession();
     let createdResult: any;
 
     try {
       await session.withTransaction(async () => {
-        const crop = await CropListing.findById(cropId).session(session);
+        const crop = await CropListing.findById(safeCropId).session(session);
         if (!crop) {
           throw new CropNotFoundError('Crop not found');
         }
@@ -155,15 +161,15 @@ export async function startOrder(req: Request, res: Response, next: NextFunction
         }
 
         const interestEntry = crop.interestedBuyers.find(
-          (ib) => ib.buyerId.toString() === buyerId && ib.status === 'interested',
+          (ib) => ib.buyerId.toString() === safeBuyerId.toString() && ib.status === 'interested',
         );
         if (!interestEntry) {
           throw ApiError.badRequest('This buyer has not marked interest in this crop');
         }
 
         const existingOrder = await Order.findOne({
-          cropId,
-          buyerId,
+          cropId: safeCropId,
+          buyerId: safeBuyerId,
           orderStatus: { $nin: ['cancelled', 'completed'] },
         }).session(session);
 
@@ -171,7 +177,7 @@ export async function startOrder(req: Request, res: Response, next: NextFunction
           throw new ActiveOrderExistsError('An active order already exists for this buyer and crop');
         }
 
-        const buyer = await User.findById(buyerId)
+        const buyer = await User.findById(safeBuyerId)
           .select('firstName lastName name phone email city state')
           .session(session);
         if (!buyer) {
@@ -180,8 +186,8 @@ export async function startOrder(req: Request, res: Response, next: NextFunction
 
         createdResult = await createOrderInSession(
           {
-            buyerId,
-            cropId,
+            buyerId: safeBuyerId,
+            cropId: safeCropId,
             quantity: 1,
             paymentMethod: PaymentMethod.Cod,
             buyerContact: buyer.phone || '',
@@ -229,10 +235,13 @@ export async function startOrder(req: Request, res: Response, next: NextFunction
 export async function createOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { cropId, quantity, couponCode, paymentMethod: requestedMethod } = req.body as {
-      cropId: string; quantity?: number; couponCode?: string; paymentMethod?: PaymentMethod;
+      cropId?: unknown; quantity?: number; couponCode?: string; paymentMethod?: PaymentMethod;
     };
 
-    if (!cropId) throw ApiError.badRequest('Crop ID is required');
+    if (!cropId || typeof cropId !== 'string' || !mongoose.isValidObjectId(cropId)) {
+      throw ApiError.badRequest('Valid Crop ID is required');
+    }
+    const safeCropId = new mongoose.Types.ObjectId(cropId);
 
     const paymentMethod = requestedMethod === PaymentMethod.Razorpay ? PaymentMethod.Razorpay : PaymentMethod.Cod;
     const orderQty = quantity || 1;
@@ -242,7 +251,7 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
 
     try {
       await session.withTransaction(async () => {
-        const crop = await CropListing.findById(cropId).session(session);
+        const crop = await CropListing.findById(safeCropId).session(session);
         if (!crop) throw new CropNotFoundError('Crop not found');
         if (crop.listingApprovalStatus !== ListingApprovalStatus.Approved) {
           throw new ListingPendingApprovalError('This crop listing is pending admin approval');
@@ -290,7 +299,7 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
         createdResult = await createOrderInSession(
           {
             buyerId: req.user!._id,
-            cropId,
+            cropId: safeCropId,
             quantity: orderQty,
             paymentMethod,
             couponCode: appliedCouponCode,
@@ -493,7 +502,9 @@ export async function getOrders(req: Request, res: Response, next: NextFunction)
 
     if (req.user!.role === 'farmer') query.farmerId = req.user!._id;
     else if (req.user!.role === 'buyer') query.buyerId = req.user!._id;
-    if (status) query.orderStatus = status;
+    if (typeof status === 'string' && Object.values(OrderStatus).includes(status as OrderStatus)) {
+      query.orderStatus = status;
+    }
 
     const [orders, total] = await Promise.all([
       Order.find(query).lean()

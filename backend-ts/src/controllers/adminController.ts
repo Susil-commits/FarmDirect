@@ -14,7 +14,7 @@ import { invalidationStrategies } from '../utils/cache.js';
 import { notifyKYCUpdate } from '../socket/eventHandlers.js';
 import { UserRole, UserStatus, KycStatus, OrderStatus, CancelledBy, PaymentStatus, CropStatus, CropAvailability, ListingApprovalStatus } from '../types/enums.js';
 import type { Request, Response } from 'express';
-import type { Types, PipelineStage } from 'mongoose';
+import mongoose, { type Types, type PipelineStage } from 'mongoose';
 import { AdminService } from '../services/adminService.js';
 import { getUploadsRoot } from '../config/localStorage.js';
 import { parsePagination } from '../utils/pagination.js';
@@ -123,6 +123,9 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
 
 export const toggleUserStatus = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
+  if (!userId || !mongoose.isValidObjectId(userId)) {
+    return sendError(res, 'Invalid user ID', 400);
+  }
   const { status, reason } = req.body as { status: UserStatus; reason?: string };
   const adminUser = req.user as AdminUser;
 

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { ClientSession, Types } from 'mongoose';
+import mongoose, { type ClientSession, type Types } from 'mongoose';
 import Order from '../models/Order.js';
 import CropListing from '../models/CropListing.js';
 import User from '../models/User.js';
@@ -78,7 +78,17 @@ export async function createOrderInSession(
     throw new InsufficientStockError('Order quantity must be at least 1 unit');
   }
 
-  const crop = await CropListing.findById(cropId).session(session);
+  if (!cropId || !mongoose.isValidObjectId(cropId)) {
+    throw new CropNotFoundError(`Invalid crop ID provided`);
+  }
+  const safeCropId = new mongoose.Types.ObjectId(String(cropId));
+
+  if (!buyerId || !mongoose.isValidObjectId(buyerId)) {
+    throw new CropNotFoundError('Invalid buyer ID provided');
+  }
+  const safeBuyerId = new mongoose.Types.ObjectId(String(buyerId));
+
+  const crop = await CropListing.findById(safeCropId).session(session);
   if (!crop) {
     throw new CropNotFoundError(`Crop with ID "${cropId}" not found`);
   }
@@ -111,7 +121,7 @@ export async function createOrderInSession(
     [
       {
         orderNumber,
-        buyerId,
+        buyerId: safeBuyerId,
         farmerId: crop.farmerId,
         cropId: crop._id,
         cropName: crop.cropName,

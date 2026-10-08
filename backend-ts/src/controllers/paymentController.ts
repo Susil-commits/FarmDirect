@@ -96,33 +96,45 @@ export async function createRazorpayOrder(req: Request, res: Response, next: Nex
 export async function verifyRazorpayPayment(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body as {
-      razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string;
+      razorpayOrderId?: unknown; razorpayPaymentId?: unknown; razorpaySignature?: unknown;
     };
-    if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
-      sendError(res, 'Missing payment verification details', 400);
+    if (
+      typeof razorpayOrderId !== 'string' ||
+      typeof razorpayPaymentId !== 'string' ||
+      typeof razorpaySignature !== 'string' ||
+      !razorpayOrderId.trim() ||
+      !razorpayPaymentId.trim() ||
+      !razorpaySignature.trim() ||
+      !/^[a-zA-Z0-9_\-]+$/.test(razorpayOrderId.trim())
+    ) {
+      sendError(res, 'Missing or invalid payment verification details', 400);
       return;
     }
+
+    const safeOrderId = razorpayOrderId.trim();
+    const safePaymentId = razorpayPaymentId.trim();
+    const safeSignature = razorpaySignature.trim();
 
     const secret = env.razorpayKeySecret || (env.nodeEnv === 'test' ? 'test_secret' : '');
     const expectedSignature = crypto
       .createHmac('sha256', secret)
-      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+      .update(`${safeOrderId}|${safePaymentId}`)
       .digest('hex');
 
-    const isValidSignature = safeCompareSignatures(expectedSignature, razorpaySignature);
+    const isValidSignature = safeCompareSignatures(expectedSignature, safeSignature);
 
     if (!isValidSignature) {
       // Guard: ONLY update orders that are NOT already Completed.
       // A bad signature sent after successful payment must NEVER flip a paid order to Failed!
       await Order.updateMany(
-        { razorpayOrderId, buyerId: req.user!._id, paymentStatus: { $ne: PaymentStatus.Completed } },
+        { razorpayOrderId: safeOrderId, buyerId: req.user!._id, paymentStatus: { $ne: PaymentStatus.Completed } },
         { $set: { paymentStatus: PaymentStatus.Failed } },
       );
       sendError(res, 'Payment verification failed: invalid signature', 400);
       return;
     }
 
-    const orders = await Order.find({ razorpayOrderId, buyerId: req.user!._id });
+    const orders = await Order.find({ razorpayOrderId: safeOrderId, buyerId: req.user!._id });
     if (orders.length === 0) { sendError(res, 'No orders found for this payment', 404); return; }
 
     const allCompleted = orders.every((o) => o.paymentStatus === PaymentStatus.Completed);

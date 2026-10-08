@@ -102,12 +102,12 @@ export function uploadMultipleFiles(folder = 'general', maxFiles = 5) {
   return [
     upload.any(),
     asyncHandler(async (req, res, next) => {
-      if (!req.files || req.files.length === 0) {
+      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
         req.uploadedFiles = [];
         return next();
       }
 
-      const files = req.files as Express.Multer.File[];
+      const files = req.files;
       if (files.length > maxFiles) {
         return sendError(res, `Too many files. Maximum ${maxFiles} allowed.`, 400);
       }
