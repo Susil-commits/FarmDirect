@@ -4,21 +4,23 @@ updates:
     directory: "/backend-ts"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
 
   - package-ecosystem: "npm"
     directory: "/F_1"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
 
   - package-ecosystem: "pip"
     directory: "/ml-service"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 0
+
