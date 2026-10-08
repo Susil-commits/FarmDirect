@@ -153,7 +153,7 @@ if (!enableCluster || numWorkers <= 1) {
     if (wasLeader) {
       assignedLeaderPid = null;
     }
-    const newWorker = cluster.fork();
+    cluster.fork();
     if (wasLeader) {
       // Re-elect leader immediately among surviving workers or new worker
       electLeader();

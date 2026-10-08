@@ -55,10 +55,10 @@ export const getConversation = asyncHandler(async (req: Request, res: Response) 
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 50, maxLimit: 100 });
   const userId = req.user!._id;
 
-  const receiver = await User.findById(receiverId);
+  const receiver = await User.findById(safeReceiverId);
   if (!receiver) return sendError(res, 'User not found', 404);
 
-  const conversationId = (Message as unknown as MessageModel).generateConversationId(userId.toString(), receiverId);
+  const conversationId = (Message as unknown as MessageModel).generateConversationId(userId.toString(), String(safeReceiverId));
 
   const [messages, totalCount] = await Promise.all([
     Message.find({ conversationId, isDeleted: false }).lean().sort({ createdAt: -1 }).skip(skip).limit(limit),

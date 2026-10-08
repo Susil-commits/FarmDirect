@@ -105,7 +105,7 @@ export async function verifyRazorpayPayment(req: Request, res: Response, next: N
       !razorpayOrderId.trim() ||
       !razorpayPaymentId.trim() ||
       !razorpaySignature.trim() ||
-      !/^[a-zA-Z0-9_\-]+$/.test(razorpayOrderId.trim())
+      !/^[a-zA-Z0-9_-]+$/.test(razorpayOrderId.trim())
     ) {
       sendError(res, 'Missing or invalid payment verification details', 400);
       return;
@@ -193,7 +193,7 @@ export async function verifyRazorpayPayment(req: Request, res: Response, next: N
 export async function markRazorpayPaymentFailed(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { razorpayOrderId, reason } = req.body as { razorpayOrderId: string; reason?: string };
-    if (!razorpayOrderId || typeof razorpayOrderId !== 'string' || !/^[a-zA-Z0-9_\-]+$/.test(razorpayOrderId.trim())) {
+    if (!razorpayOrderId || typeof razorpayOrderId !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(razorpayOrderId.trim())) {
       sendError(res, 'Valid razorpayOrderId is required', 400);
       return;
     }
@@ -255,7 +255,7 @@ export async function handleRazorpayWebhook(req: Request, res: Response, next: N
       const razorpayOrderId = payment?.order_id || payload.order?.entity?.id;
       const razorpayPaymentId = payment?.id;
 
-      if (!razorpayOrderId || typeof razorpayOrderId !== 'string' || !/^[a-zA-Z0-9_\-]+$/.test(razorpayOrderId.trim())) {
+      if (!razorpayOrderId || typeof razorpayOrderId !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(razorpayOrderId.trim())) {
         res.status(200).json({ status: 'ignored', message: 'No valid order ID in payload' });
         return;
       }
@@ -334,7 +334,7 @@ export async function handleRazorpayWebhook(req: Request, res: Response, next: N
       const razorpayOrderId = payment?.order_id;
       const errorDesc = payment?.error_description || 'Online payment failed';
 
-      if (razorpayOrderId && typeof razorpayOrderId === 'string' && /^[a-zA-Z0-9_\-]+$/.test(razorpayOrderId.trim())) {
+      if (razorpayOrderId && typeof razorpayOrderId === 'string' && /^[a-zA-Z0-9_-]+$/.test(razorpayOrderId.trim())) {
         const safeOrderId = razorpayOrderId.trim();
         await Order.updateMany(
           { razorpayOrderId: safeOrderId, paymentStatus: { $ne: PaymentStatus.Completed } },

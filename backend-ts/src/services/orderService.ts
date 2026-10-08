@@ -4,7 +4,7 @@ import Order from '../models/Order.js';
 import CropListing from '../models/CropListing.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
-import { createOutboxEvent, triggerImmediateOutboxSweep } from '../workers/outboxPublisher.js';
+import { triggerImmediateOutboxSweep } from '../workers/outboxPublisher.js';
 import { enqueueAnomalyDetection } from '../workers/queue.js';
 import { notifyOrderUpdate } from '../socket/eventHandlers.js';
 import {
@@ -188,7 +188,7 @@ export async function createOrderInSession(
  */
 export async function handlePostOrderCreation(
   order: IOrder,
-  buyerName = 'Buyer',
+  _buyerName = 'Buyer',
 ): Promise<void> {
   try {
     enqueueAnomalyDetection({

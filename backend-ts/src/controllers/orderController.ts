@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto';
 import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import CropListing from '../models/CropListing.js';
@@ -8,13 +7,11 @@ import Coupon from '../models/Coupon.js';
 import IdempotencyKey from '../models/IdempotencyKey.js';
 import { notifyOrderUpdate } from '../socket/eventHandlers.js';
 import { computeDiscount, redeemCoupon } from './couponController.js';
-import { sendError, sendSuccess } from '../utils/apiResponse.js';
-import { createOutboxEvent, triggerImmediateOutboxSweep } from '../workers/outboxPublisher.js';
-import { enqueueAnomalyDetection } from '../workers/queue.js';
+import { sendError } from '../utils/apiResponse.js';
+import { createOutboxEvent } from '../workers/outboxPublisher.js';
 import {
   createOrderInSession,
   handlePostOrderCreation,
-  generateOrderNumber,
 } from '../services/orderService.js';
 import {
   ApiError,
