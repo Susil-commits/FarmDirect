@@ -11,7 +11,9 @@ F_1/dist/
 .env.local
 .env.*.local
 backend/.env
-F_1/.env
+backend-ts/.env*
+F_1/.env*
+ml-service/.env*
 
 # Uploads (user-generated content)
 backend/uploads/
