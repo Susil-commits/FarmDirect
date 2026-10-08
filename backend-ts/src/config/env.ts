@@ -99,6 +99,8 @@ function loadEnv(): EnvConfig {
 
   const jwtSecret = process.env.JWT_SECRET || (nodeEnv === 'test' ? 'test_jwt_secret_32_characters_min!' : (isDev ? 'dev_secret_local_only_insecure' : ''));
   const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || (nodeEnv === 'test' ? 'test_refresh_secret_32_chars_min!' : (isDev ? 'dev_refresh_secret_local_only' : ''));
+  const mlServiceUrl = process.env.ML_SERVICE_URL;
+  const hasMlService = Boolean(mlServiceUrl && mlServiceUrl.trim().length > 0);
   const mlServiceKey = process.env.ML_SERVICE_KEY || (nodeEnv === 'test' ? 'test_ml_secret_key' : (isDev ? 'dev_ml_secret_key' : ''));
 
   if (!isDev && nodeEnv !== 'test') {
@@ -108,8 +110,8 @@ function loadEnv(): EnvConfig {
     if (!jwtRefreshSecret || jwtRefreshSecret.includes('change_me') || jwtRefreshSecret.includes('local_only')) {
       throw new Error('JWT_REFRESH_SECRET must be explicitly set to a strong secret in production/deployed environments.');
     }
-    if (!mlServiceKey || mlServiceKey === 'dev_ml_secret_key') {
-      throw new Error('ML_SERVICE_KEY must be explicitly set to a strong secret in production/deployed environments.');
+    if (hasMlService && (!mlServiceKey || mlServiceKey === 'dev_ml_secret_key')) {
+      throw new Error('ML_SERVICE_KEY must be explicitly set to a strong secret in production/deployed environments when ML_SERVICE_URL is configured.');
     }
   }
 
