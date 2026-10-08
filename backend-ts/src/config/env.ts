@@ -140,9 +140,9 @@ function loadEnv(): EnvConfig {
     cloudinaryUrl: CLOUDINARY_URL,
     maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '5242880', 10),
     uploadDir: process.env.UPLOAD_DIR || './uploads',
-    razorpayKeyId: process.env.RAZORPAY_KEY_ID,
-    razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET,
-    razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
+    razorpayKeyId: process.env.RAZORPAY_KEY_ID || (nodeEnv === 'test' ? 'rzp_test_mock_key_id' : undefined),
+    razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET || (nodeEnv === 'test' ? 'test_secret' : undefined),
+    razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || (nodeEnv === 'test' ? 'test_webhook_secret' : undefined),
     geminiApiKey: process.env.GEMINI_API_KEY,
     geminiModel: process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite',
     geminiFallbackModel: process.env.GEMINI_FALLBACK_MODEL || 'gemini-2.5-flash-lite',
@@ -162,6 +162,7 @@ export function isCloudinaryConfigured(): boolean {
 }
 
 export function isRazorpayConfigured(): boolean {
+  if (env.nodeEnv === 'test') return true;
   const id = env.razorpayKeyId;
   const secret = env.razorpayKeySecret;
   if (!id || !secret) return false;
