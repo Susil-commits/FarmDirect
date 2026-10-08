@@ -52,6 +52,5 @@ router.post('/delete-account', protect, deleteAccount);
 router.post('/complete-onboarding', protect, trimStrings, completeOnboarding);
 
 router.post('/kyc/submit', protect, uploadMultipleFiles('kyc_documents', 10), submitKYCDocuments);
-router.post('/submit-kyc', protect, uploadMultipleFiles('kyc_documents', 10), submitKYCDocuments);
 
 export default router;

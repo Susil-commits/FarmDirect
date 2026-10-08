@@ -97,16 +97,32 @@ function loadEnv(): EnvConfig {
     }
   }
 
+  const jwtSecret = process.env.JWT_SECRET || (nodeEnv === 'test' ? 'test_jwt_secret_32_characters_min!' : (isDev ? 'dev_secret_local_only_insecure' : ''));
+  const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || (nodeEnv === 'test' ? 'test_refresh_secret_32_chars_min!' : (isDev ? 'dev_refresh_secret_local_only' : ''));
+  const mlServiceKey = process.env.ML_SERVICE_KEY || (nodeEnv === 'test' ? 'test_ml_secret_key' : (isDev ? 'dev_ml_secret_key' : ''));
+
+  if (!isDev && nodeEnv !== 'test') {
+    if (!jwtSecret || jwtSecret.includes('change_me') || jwtSecret.includes('local_only')) {
+      throw new Error('JWT_SECRET must be explicitly set to a strong secret in production/deployed environments.');
+    }
+    if (!jwtRefreshSecret || jwtRefreshSecret.includes('change_me') || jwtRefreshSecret.includes('local_only')) {
+      throw new Error('JWT_REFRESH_SECRET must be explicitly set to a strong secret in production/deployed environments.');
+    }
+    if (!mlServiceKey || mlServiceKey === 'dev_ml_secret_key') {
+      throw new Error('ML_SERVICE_KEY must be explicitly set to a strong secret in production/deployed environments.');
+    }
+  }
+
   return {
     nodeEnv,
     isProd,
     isDev,
     port: parseInt(process.env.PORT || '5000', 10),
     mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/farmdirect',
-    jwtSecret: process.env.JWT_SECRET || 'dev_secret_change_me',
+    jwtSecret,
     jwtExpire: process.env.JWT_EXPIRE || '15m',
-    jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'dev_refresh_secret_change_me',
-    jwtRefreshExpire: process.env.JWT_REFRESH_EXPIRE || '30d',
+    jwtRefreshSecret,
+    jwtRefreshExpire: process.env.JWT_REFRESH_EXPIRE || '7d',
     corsOrigins: parseStringList(
       process.env.CORS_ORIGIN,
       ['http://localhost:5173'],
@@ -134,7 +150,7 @@ function loadEnv(): EnvConfig {
     aiVisionEnabled: parseBoolean(process.env.AI_VISION_ENABLED, true),
     aiDailyTokenCap: parseInt(process.env.AI_DAILY_TOKEN_CAP || '50000', 10),
     mlServiceUrl: process.env.ML_SERVICE_URL,
-    mlServiceKey: process.env.ML_SERVICE_KEY || 'dev_ml_secret_key',
+    mlServiceKey,
     sentryDsn: process.env.SENTRY_DSN,
   };
 }

@@ -43,7 +43,7 @@ const STATUS_COLORS = {
   cancelled: 'bg-red-100 text-red-800'
 };
 
-export default function FarmerDashboardNew() {
+export default function FarmerDashboard() {
   const { navigate } = useRouter();
   const { user } = useAuth();
   const { addToast } = useToast();

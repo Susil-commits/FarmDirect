@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Upload, X, AlertCircle, CheckCircle } from 'lucide-react';
-import directApi from '../../services/directApi.js';
+import api from '../../services/api.js';
 import '../styles/ImageUpload.css';
 
 const ImageUpload = ({ 
@@ -61,7 +61,7 @@ const ImageUpload = ({
       formData.append('file', file);
       formData.append('folder', folder);
 
-      const response = await directApi.post(
+      const response = await api.post(
         '/upload',
         formData,
         {
@@ -75,7 +75,7 @@ const ImageUpload = ({
       );
 
       setSuccess(true);
-      onUploadSuccess(response.data.url);
+      onUploadSuccess(response?.data?.url || response?.url);
       
       setTimeout(() => {
         setPreview(null);

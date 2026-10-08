@@ -1,12 +1,15 @@
+import crypto from 'crypto';
 import User from '../models/User.js';
 import { generateToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import { hashPassword, comparePassword } from '../utils/password.js';
 import { getServerStartTime } from '../utils/serverTime.js';
 import { sendError } from '../utils/apiResponse.js';
 import { isTokenRevoked, revokeToken } from '../services/tokenService.js';
-import { UserRole, KycStatus } from '../types/enums.js';
+import { UserRole, KycStatus, UserStatus } from '../types/enums.js';
 import { env } from '../config/env.js';
 import sendEmail from '../utils/emailService.js';
+import { deleteFile } from '../utils/cloudinaryService.js';
+import { disconnectUserSockets } from '../socket/socketManager.js';
 import type { RegisterDto, LoginDto } from '../types/index.js';
 import type { Request, Response, NextFunction } from 'express';
 import type { Types } from 'mongoose';
@@ -121,8 +124,8 @@ export async function register(req: Request, res: Response, next: NextFunction):
     if (pincode !== undefined) userData.pincode = pincode;
 
     const user = (await User.create(userData)) as unknown as PublicUserDoc;
-    const token = generateToken(user._id, user.role);
-    const refreshToken = generateRefreshToken(user._id);
+    const token = generateToken(user._id, user.role, (user as any).tokenVersion || 0);
+    const refreshToken = generateRefreshToken(user._id, undefined, (user as any).tokenVersion || 0);
 
     res.cookie('refreshToken', refreshToken, getRefreshTokenCookieOptions());
 
@@ -160,8 +163,8 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
       return;
     }
 
-    const token = generateToken(user._id, user.role);
-    const refreshToken = generateRefreshToken(user._id);
+    const token = generateToken(user._id, user.role, (user as any).tokenVersion || 0);
+    const refreshToken = generateRefreshToken(user._id, undefined, (user as any).tokenVersion || 0);
 
     res.cookie('refreshToken', refreshToken, getRefreshTokenCookieOptions());
 
@@ -253,7 +256,6 @@ export async function forgotPassword(req: Request, res: Response, next: NextFunc
       return;
     }
 
-    const crypto = await import('crypto');
     const resetToken = crypto.randomBytes(32).toString('hex');
     const passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
     const passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
@@ -308,9 +310,7 @@ export async function resetPassword(req: Request, res: Response, next: NextFunct
   try {
     const { token, password } = req.body as { token?: string, password?: string };
     if (!token || !password) { sendError(res, 'Token and new password required', 400); return; }
-    if (password.length < 6) { sendError(res, 'Password must be at least 6 characters', 400); return; }
 
-    const crypto = await import('crypto');
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     const user = await User.findOne({
@@ -323,6 +323,8 @@ export async function resetPassword(req: Request, res: Response, next: NextFunct
     user.password = await hashPassword(password);
     (user as any).passwordResetToken = undefined;
     (user as any).passwordResetExpires = undefined;
+    (user as any).passwordChangedAt = new Date();
+    (user as any).tokenVersion = ((user as any).tokenVersion || 0) + 1;
     await user.save();
 
     res.status(200).json({ success: true, message: 'Password reset successful. You can now log in with your new password.' });
@@ -335,7 +337,6 @@ export async function updatePassword(req: Request, res: Response, next: NextFunc
   try {
     const { currentPassword, newPassword } = req.body as { currentPassword?: string, newPassword?: string };
     if (!currentPassword || !newPassword) { sendError(res, 'Current and new password required', 400); return; }
-    if (newPassword.length < 6) { sendError(res, 'New password must be at least 6 characters', 400); return; }
 
     const user = await User.findById(req.user!._id).select('+password') as unknown as PublicUserDoc | null;
     if (!user || !user.password) { sendError(res, 'User not found', 404); return; }
@@ -344,6 +345,8 @@ export async function updatePassword(req: Request, res: Response, next: NextFunc
     if (!isMatch) { sendError(res, 'Incorrect current password', 401); return; }
 
     user.password = await hashPassword(newPassword);
+    (user as any).passwordChangedAt = new Date();
+    (user as any).tokenVersion = ((user as any).tokenVersion || 0) + 1;
     await user.save();
 
     res.status(200).json({ success: true, message: 'Password updated successfully' });
@@ -372,15 +375,27 @@ export async function refreshTokenHandler(req: Request, res: Response): Promise<
       return;
     }
 
-    const user = await User.findById(decoded.id).select('role status');
-    if (!user || user.status === 'banned') {
+    const user = await User.findById(decoded.id).select('role status tokenVersion');
+    if (!user || user.status === 'banned' || user.status === 'suspended') {
       res.clearCookie('refreshToken', getRefreshTokenCookieOptions());
       sendError(res, 'User no longer active', 401);
       return;
     }
 
-    const newToken = generateToken(user._id, user.role);
-    const newRefreshToken = generateRefreshToken(user._id);
+    if (decoded.tokenVersion !== undefined && user.tokenVersion !== undefined && decoded.tokenVersion !== user.tokenVersion) {
+      res.clearCookie('refreshToken', getRefreshTokenCookieOptions());
+      sendError(res, 'Session has expired or was revoked. Please log in again.', 401);
+      return;
+    }
+
+    // Immediately revoke the consumed refresh token to prevent replay attacks
+    if (decoded.jti) {
+      await revokeToken(decoded.jti);
+    }
+
+    const currentVersion = user.tokenVersion || 0;
+    const newToken = generateToken(user._id, user.role, currentVersion);
+    const newRefreshToken = generateRefreshToken(user._id, undefined, currentVersion);
     
     res.cookie('refreshToken', newRefreshToken, getRefreshTokenCookieOptions());
 
@@ -453,9 +468,20 @@ export async function submitKYCDocuments(req: Request, res: Response, next: Next
     user.kycVerifiedAt = null;
     user.kycSubmittedAt = new Date();
 
+    let maskedAadhar: string | undefined;
+    let aadharLast4: string | undefined;
+    if (aadharNumber) {
+      const cleanDigits = aadharNumber.replace(/\D/g, '');
+      if (cleanDigits.length >= 4) {
+        aadharLast4 = cleanDigits.slice(-4);
+        maskedAadhar = `XXXX-XXXX-${aadharLast4}`;
+      }
+    }
+
     if (req.uploadedFiles && req.uploadedFiles.length > 0) {
       const kycDocs: Record<string, KycDocEntry | string> = {
-        aadharNumber: aadharNumber || (user.kycDocuments?.aadharNumber as string) || '',
+        maskedAadhar: maskedAadhar || (user.kycDocuments?.maskedAadhar as string) || '',
+        aadharLast4: aadharLast4 || (user.kycDocuments?.aadharLast4 as string) || '',
       };
 
       req.uploadedFiles.forEach((file) => {
@@ -481,12 +507,15 @@ export async function submitKYCDocuments(req: Request, res: Response, next: Next
     } else {
       user.kycDocuments = {
         ...(user.kycDocuments || {}),
-        ...(aadharNumber ? { aadharNumber } : {}),
+        ...(maskedAadhar ? { maskedAadhar, aadharLast4 } : {}),
       };
     }
 
-    if (aadharNumber || address || city || state || pincode || farmName || farmArea || experience) {
-      user.kycDetails = { aadharNumber };
+    if (maskedAadhar || address || city || state || pincode || farmName || farmArea || experience) {
+      user.kycDetails = {
+        maskedAadhar,
+        aadharLast4,
+      };
 
       if (!user.addresses) user.addresses = [];
       if (user.addresses.length === 0) {
@@ -537,32 +566,79 @@ export async function submitKYCDocuments(req: Request, res: Response, next: Next
 export async function deleteAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const userId = req.user!._id;
-    const user = await User.findById(userId);
-    if (!user) {
+    const { password } = req.body as { password?: string };
+    if (!password) {
+      sendError(res, 'Password confirmation is required to delete your account', 400);
+      return;
+    }
+
+    const user = await User.findById(userId).select('+password');
+    if (!user || !user.password) {
       sendError(res, 'User not found', 404);
       return;
     }
 
-    const CropListing = (await import('../models/CropListing.js')).default;
+    const isMatch = await comparePassword(password, user.password);
+    if (!isMatch) {
+      sendError(res, 'Invalid password confirmation', 401);
+      return;
+    }
+
+    // Retain orders as legally-mandated financial & tax records, but redact customer PII
     const Order = (await import('../models/Order.js')).default;
+    await Order.updateMany({ buyerId: userId }, { $set: { buyerContact: '[Redacted]', deliveryAddress: '[Redacted]' } });
+    await Order.updateMany({ farmerId: userId }, { $set: { farmerContact: '[Redacted]' } });
+
+    const CropListing = (await import('../models/CropListing.js')).default;
     const Review = (await import('../models/Review.js')).default;
     const Wishlist = (await import('../models/Wishlist.js')).default;
     const Notification = (await import('../models/Notification.js')).default;
+    const Cart = (await import('../models/Cart.js')).default;
+    const Negotiation = (await import('../models/Negotiation.js')).default;
+    const Message = (await import('../models/Message.js')).default;
+    const AiConversation = (await import('../models/AiConversation.js')).default;
 
     if (user.role === UserRole.Farmer) {
       const farmerCropIds = await CropListing.find({ farmerId: userId }).distinct('_id');
       await CropListing.deleteMany({ farmerId: userId });
       await Review.deleteMany({ cropId: { $in: farmerCropIds } });
     }
-    await Order.deleteMany({ $or: [{ buyerId: userId }, { farmerId: userId }] });
     await Review.deleteMany({ userId });
     await Wishlist.deleteMany({ userId });
     await Notification.deleteMany({ userId });
-    await User.findByIdAndDelete(userId);
+    await Cart.deleteMany({ buyerId: userId });
+    await Negotiation.deleteMany({ $or: [{ buyerId: userId }, { farmerId: userId }] });
+    await Message.deleteMany({ $or: [{ senderId: userId }, { receiverId: userId }] });
+    await AiConversation.deleteMany({ userId });
+
+    // Clean up Cloudinary avatar if stored remotely
+    if (user.profilePicture) {
+      try {
+        await deleteFile(user.profilePicture);
+      } catch (fileErr) {
+        console.warn('Failed to delete Cloudinary profile picture on account deletion:', fileErr);
+      }
+    }
+
+    // Immediately terminate any open realtime socket connections
+    disconnectUserSockets(String(userId));
+
+    // Scrub identity and mark account deleted
+    user.status = UserStatus.Suspended;
+    user.email = `deleted_${userId}_${Date.now()}@farmdirect.deleted`;
+    user.name = 'Deleted User';
+    user.firstName = 'Deleted';
+    user.lastName = 'User';
+    user.phone = '';
+    user.profilePicture = null;
+    (user as any).tokenVersion = ((user as any).tokenVersion || 0) + 1;
+    await user.save();
+
+    res.clearCookie('refreshToken', getRefreshTokenCookieOptions());
 
     res.status(200).json({
       success: true,
-      message: 'Your account has been permanently deleted. All associated data has been removed.',
+      message: 'Your account has been deleted and active sessions revoked. Financial records have been anonymized.',
     });
   } catch (error) {
     console.error('Account deletion error:', error);

@@ -108,7 +108,7 @@ export default function HowItWorksSection() {
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-[#E29578]" />
-                    <span>Escrow buyer guarantee</span>
+                    <span>Direct buyer guarantee</span>
                   </div>
                 </div>
               </div>

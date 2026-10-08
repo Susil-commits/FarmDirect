@@ -45,10 +45,10 @@ const AdminUsers = lazy(() => import('./pages/dashboards/AdminUsers'));
 const AdminCrops = lazy(() => import('./pages/dashboards/AdminCrops'));
 const AdminOrders = lazy(() => import('./pages/dashboards/AdminOrders'));
 const AdminNotifications = lazy(() => import('./pages/dashboards/AdminNotifications'));
-const FarmerDashboardNew = lazy(() => import('./pages/FarmerDashboardNew'));
-const BuyerDashboardNew = lazy(() => import('./pages/BuyerDashboardNew'));
-const CheckoutNew = lazy(() => import('./pages/CheckoutNew'));
-const OrderTrackingNew = lazy(() => import('./pages/OrderTrackingNew'));
+const FarmerDashboard = lazy(() => import('./pages/FarmerDashboard'));
+const BuyerDashboard = lazy(() => import('./pages/BuyerDashboard'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const OrderTracking = lazy(() => import('./pages/OrderTracking'));
 const SearchResults = lazy(() => import('./pages/SearchResults'));
 const FarmerVerification = lazy(() => import('./pages/verification/FarmerVerification'));
 const BuyerVerification = lazy(() => import('./pages/verification/BuyerVerification'));
@@ -163,13 +163,13 @@ function App() {
       case '/cart':
         return <ShoppingCart />;
       case '/checkout':
-        return user ? <CheckoutNew /> : <Login />;
+        return user ? <Checkout /> : <Login />;
       case '/order-confirmation':
         return <OrderConfirmation />;
       case '/wishlist':
         return <Wishlist />;
       case '/orders':
-        return user ? <OrderTrackingNew /> : <Login />;
+        return user ? <OrderTracking /> : <Login />;
       case '/search':
         return <SearchResults />;
       case '/compare':
@@ -189,11 +189,11 @@ function App() {
       case '/kyc-sorry':
         return user ? <KYCSorry /> : <Home />;
       case '/farmer/dashboard':
-        return currentUserRole === 'farmer' ? <FarmerDashboardNew /> : <Home />;
+        return currentUserRole === 'farmer' ? <FarmerDashboard /> : <Home />;
       case '/farmer/verification':
         return currentUserRole === 'farmer' ? <FarmerVerification /> : <Home />;
       case '/buyer/dashboard':
-        return currentUserRole === 'buyer' ? <BuyerDashboardNew /> : <Home />
+        return currentUserRole === 'buyer' ? <BuyerDashboard /> : <Home />;
       case '/buyer/verification':
         return currentUserRole === 'buyer' ? <BuyerVerification /> : <Home />;
       case '/admin/dashboard':

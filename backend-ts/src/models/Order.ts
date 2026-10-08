@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import mongoose, { Schema, type Model } from 'mongoose';
 import { updateIfCurrentPlugin } from 'mongoose-update-if-current';
 import type { IOrder } from '../types/index.js';
@@ -5,7 +6,12 @@ import { OrderStatus, PaymentMethod, PaymentStatus, CancelledBy } from '../types
 
 const orderSchema = new Schema<IOrder>(
   {
-    orderNumber: { type: String, unique: true, default: () => 'ORD-' + Date.now() },
+    orderNumber: {
+      type: String,
+      unique: true,
+      required: true,
+      default: () => 'ORD-' + randomUUID().replace(/-/g, '').substring(0, 12).toUpperCase(),
+    },
     buyerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     farmerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     cropId: { type: Schema.Types.ObjectId, ref: 'CropListing', required: true },
@@ -48,8 +54,7 @@ const orderSchema = new Schema<IOrder>(
   { timestamps: true },
 );
 
-orderSchema.index({ buyerId: 1 });
-orderSchema.index({ farmerId: 1 });
+// Note: buyerId and farmerId single-field indexes are redundant because the compound indexes below cover them as prefixes
 orderSchema.index({ cropId: 1 });
 orderSchema.index({ orderStatus: 1 });
 orderSchema.index({ createdAt: -1 });

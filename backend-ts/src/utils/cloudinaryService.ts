@@ -31,6 +31,7 @@ export async function uploadFile(
   }
 
   try {
+    const isKyc = folder === 'kyc_documents';
     const result = await new Promise<UploadResult>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
@@ -39,6 +40,7 @@ export async function uploadFile(
           use_filename: true,
           unique_filename: true,
           overwrite: false,
+          ...(isKyc ? { type: 'authenticated', access_mode: 'authenticated' } : {}),
         },
         (error, res) => {
           if (error || !res) {

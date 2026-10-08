@@ -1,5 +1,4 @@
 import api from './api.js';
-import directApi from './directApi.js';
 
 const farmerService = {
   
@@ -16,7 +15,7 @@ const farmerService = {
   bulkUploadCrops: (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    return directApi.post('/farmer/crops/bulk-upload', formData).then(r => r.data);
+    return api.post('/farmer/crops/bulk-upload', formData);
   },
 
   getExportTemplate: async () => {

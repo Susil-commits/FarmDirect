@@ -24,7 +24,7 @@ export default function About() {
     {
       icon: Shield,
       title: 'Zero Middlemen Trust',
-      description: 'Transparent 1-to-1 transactions with direct buyer protection and escrow.'
+      description: 'Transparent 1-to-1 transactions with direct buyer protection and secure payments.'
     }
   ];
 

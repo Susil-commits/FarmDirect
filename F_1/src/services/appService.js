@@ -1,5 +1,4 @@
 import api from './api.js';
-import directApi from './directApi.js';
 import { clearAccessToken } from '../utils/tokenStore.js';
 
 export const authService = {
@@ -21,9 +20,9 @@ export const authService = {
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   
   resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
-  submitKYC: (documents) => api.post('/auth/submit-kyc', { documents }),
+  submitKYC: (documents) => api.post('/auth/kyc/submit', { documents }),
   
-  submitKYCFormData: (formData) => directApi.post('/auth/submit-kyc', formData).then(r => r.data),
+  submitKYCFormData: (formData) => api.post('/auth/kyc/submit', formData).then(r => r.data),
 };
 
 export const userService = {
@@ -39,11 +38,11 @@ export const cropService = {
   getAllCrops: (params) => api.get('/crops', { params }),
   getCropById: (id) => api.get(`/crops/${id}`),
   
-  createCrop: (data) => directApi.post('/crops', data).then(r => r.data),
+  createCrop: (data) => api.post('/crops', data),
   
   updateCrop: (id, data) => api.put(`/crops/${id}`, data),
   
-  updateCropWithFiles: (id, formData) => directApi.put(`/crops/${id}`, formData).then(r => r.data),
+  updateCropWithFiles: (id, formData) => api.put(`/crops/${id}`, formData),
   deleteCrop: (id) => api.delete(`/crops/${id}`),
   searchCrops: (query, filters) => api.get('/crops/search', { params: { q: query, ...filters } }),
   getFarmerCrops: (farmerId, params) => api.get(`/crops/farmer/${farmerId}`, { params }),

@@ -40,6 +40,8 @@ const userSchema = new Schema<IUser>(
     kycDocuments: { type: Schema.Types.Mixed, default: {} },
     kycDetails: {
       aadharNumber: String,
+      aadharLast4: String,
+      maskedAadhar: String,
       governmentIdType: String,
       governmentIdNumber: String,
       dateOfBirth: Date,
@@ -65,6 +67,8 @@ const userSchema = new Schema<IUser>(
     emailVerificationToken: String,
     passwordResetToken: String,
     passwordResetExpires: Date,
+    passwordChangedAt: Date,
+    tokenVersion: { type: Number, default: 0 },
     socialLinks: { linkedin: String, twitter: String, facebook: String, instagram: String },
     socialAuth: {
       provider: { type: String, enum: Object.values(SocialAuthProvider), default: null },

@@ -85,4 +85,53 @@ export class ApiError extends Error {
   }
 }
 
+export class InsufficientStockError extends ApiError {
+  constructor(message = 'Insufficient stock available for this crop', details?: unknown) {
+    super(400, message, { code: 'INSUFFICIENT_STOCK', details });
+    this.name = 'InsufficientStockError';
+  }
+}
+
+export class CropNotFoundError extends ApiError {
+  constructor(message = 'Crop listing not found', details?: unknown) {
+    super(404, message, { code: 'CROP_NOT_FOUND', details });
+    this.name = 'CropNotFoundError';
+  }
+}
+
+export class CropUnavailableError extends ApiError {
+  constructor(message = 'This crop is no longer available', details?: unknown) {
+    super(400, message, { code: 'CROP_UNAVAILABLE', details });
+    this.name = 'CropUnavailableError';
+  }
+}
+
+export class ListingPendingApprovalError extends ApiError {
+  constructor(message = 'This crop listing is pending admin approval', details?: unknown) {
+    super(400, message, { code: 'LISTING_PENDING_APPROVAL', details });
+    this.name = 'ListingPendingApprovalError';
+  }
+}
+
+export class ActiveOrderExistsError extends ApiError {
+  constructor(message = 'An active order already exists for this buyer and crop', details?: unknown) {
+    super(400, message, { code: 'ACTIVE_ORDER_EXISTS', details });
+    this.name = 'ActiveOrderExistsError';
+  }
+}
+
+export class CouponError extends ApiError {
+  constructor(message = 'Invalid or expired coupon code', details?: unknown) {
+    super(400, message, { code: 'INVALID_COUPON', details });
+    this.name = 'CouponError';
+  }
+}
+
+export class OrderNotFoundError extends ApiError {
+  constructor(message = 'Order not found', details?: unknown) {
+    super(404, message, { code: 'ORDER_NOT_FOUND', details });
+    this.name = 'OrderNotFoundError';
+  }
+}
+
 export default ApiError;

@@ -61,6 +61,17 @@ process.on('uncaughtException', (error) => {
   gracefulShutdown('uncaughtException');
 });
 
+let isLeader = false;
+
+function startPollers(): void {
+  if (isLeader) return;
+  isLeader = true;
+  console.log(`[Worker ${process.pid}] Promoted to background poller leader.`);
+  startOutboxPollingWorker();
+  startPaymentReconciliationWorker();
+  startWeeklyDigestWorker();
+}
+
 async function start(): Promise<void> {
   await connectRedis();
   await connectDB();
@@ -68,17 +79,21 @@ async function start(): Promise<void> {
   workerInstance = startAnomalyWorker();
   outboxWorkerInstance = startOutboxWorker();
 
-  // In clustered environments, only run background pollers on worker #1 (or standalone process)
-  const isLeaderWorker = !cluster.isWorker || cluster.worker?.id === 1;
-  if (isLeaderWorker) {
-    startOutboxPollingWorker();
-    startPaymentReconciliationWorker();
-    startWeeklyDigestWorker();
+  // If running single-process (standard container deployment) or explicitly enabled
+  const isCluster = cluster.isWorker;
+  if (!isCluster || process.env.ENABLE_BACKGROUND_WORKERS === 'true') {
+    startPollers();
   }
+
+  process.on('message', (msg: any) => {
+    if (msg?.type === 'PROMOTE_LEADER') {
+      startPollers();
+    }
+  });
   
   const PORT = env.port;
   httpServer.listen(PORT, () => {
-    console.log(`Worker ${process.pid} listening on port ${PORT}`);
+    console.log(`Server process ${process.pid} listening on port ${PORT}`);
   });
 }
 
@@ -91,20 +106,35 @@ function selfPing(): void {
 
   fetch(pingUrl)
     .then(() => console.log('Self-ping successful (Keeping instance warm)'))
-    .catch((err) => console.error('Self-ping failed:', err.message));
+    .catch((err) => console.error('Self-ping failed:', (err as Error).message));
 }
 
+// Default to single-process per container (standard in Docker/K8s). Enable cluster with CLUSTER_MODE=true
+const enableCluster = process.env.CLUSTER_MODE === 'true';
 const numWorkers = Number(process.env.WEB_CONCURRENCY) || os.cpus().length;
-if (numWorkers <= 1 || !cluster.isPrimary) {
+
+if (!enableCluster || numWorkers <= 1) {
   start().catch((err) => {
-    console.error(`Worker ${process.pid} failed to start:`, err);
+    console.error(`Process ${process.pid} failed to start:`, err);
     process.exit(1);
   });
-  if (numWorkers <= 1 && process.env.RENDER_EXTERNAL_URL && process.env.ENABLE_SELF_PING !== 'false') {
-    setInterval(selfPing, 10 * 60_000); // keep Render instance warm
+  if (process.env.RENDER_EXTERNAL_URL && process.env.ENABLE_SELF_PING !== 'false') {
+    setInterval(selfPing, 10 * 60_000);
   }
-} else {
+} else if (cluster.isPrimary) {
   console.log(`Primary cluster setting up ${numWorkers} workers...`);
+
+  let assignedLeaderPid: number | null = null;
+
+  function electLeader(): void {
+    const workers = Object.values(cluster.workers || {}).filter(Boolean);
+    if (workers.length > 0 && workers[0]) {
+      const leader = workers[0];
+      assignedLeaderPid = leader.process.pid ?? null;
+      leader.send({ type: 'PROMOTE_LEADER' });
+      console.log(`[Primary] Assigned worker ${leader.process.pid} as leader for background pollers.`);
+    }
+  }
 
   for (let i = 0; i < numWorkers; i++) {
     cluster.fork();
@@ -112,13 +142,28 @@ if (numWorkers <= 1 || !cluster.isPrimary) {
 
   cluster.on('online', (worker) => {
     console.log(`Worker ${worker.process.pid} is online`);
+    if (assignedLeaderPid === null) {
+      electLeader();
+    }
   });
 
   cluster.on('exit', (worker, code, signal) => {
-    console.log(`Worker ${worker.process.pid} died with code: ${code}, and signal: ${signal}`);
-    console.log('Starting a new worker to replace it...');
-    cluster.fork();
+    console.log(`Worker ${worker.process.pid} died (code: ${code}, signal: ${signal}). Replacing...`);
+    const wasLeader = worker.process.pid === assignedLeaderPid;
+    if (wasLeader) {
+      assignedLeaderPid = null;
+    }
+    const newWorker = cluster.fork();
+    if (wasLeader) {
+      // Re-elect leader immediately among surviving workers or new worker
+      electLeader();
+    }
   });
 
   setInterval(selfPing, 10 * 60_000);
+} else {
+  start().catch((err) => {
+    console.error(`Worker ${process.pid} failed to start:`, err);
+    process.exit(1);
+  });
 }

@@ -7,6 +7,42 @@ on:
     branches: [ main, master ]
 
 jobs:
+  gitleaks:
+    name: Gitleaks Secret Detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  security-audit:
+    name: NPM Audit Security Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Audit backend dependencies
+        run: npm audit --audit-level=high
+        working-directory: backend-ts
+        continue-on-error: true
+
+      - name: Audit frontend dependencies
+        run: npm audit --audit-level=high
+        working-directory: F_1
+        continue-on-error: true
+
   backend-ts:
     name: Backend TypeScript Checks
     runs-on: ubuntu-latest
@@ -96,4 +132,3 @@ jobs:
         env:
           ML_SERVICE_KEY: dev_ml_secret_key
           PYTHONPATH: .
-

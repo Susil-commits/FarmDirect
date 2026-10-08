@@ -39,7 +39,7 @@ const STATUS_COLORS = {
   cancelled: 'bg-red-100 text-red-800'
 };
 
-export default function BuyerDashboardNew() {
+export default function BuyerDashboard() {
   const { navigate } = useRouter();
   const { user } = useAuth();
   const { addToast } = useToast();

@@ -34,10 +34,14 @@ export interface IKycDocumentEntry {
   mimeType?: string;
   uploadedAt?: Date;
   aadharNumber?: string;
+  aadharLast4?: string;
+  maskedAadhar?: string;
 }
 
 export interface IKycDetails {
   aadharNumber?: string;
+  aadharLast4?: string;
+  maskedAadhar?: string;
   governmentIdType?: string;
   governmentIdNumber?: string;
   dateOfBirth?: Date;
@@ -103,6 +107,8 @@ export interface IUser extends Timestamps, Document {
   emailVerificationToken?: string;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
+  passwordChangedAt?: Date;
+  tokenVersion?: number;
   socialLinks?: ISocialLinks;
   socialAuth?: ISocialAuth;
   notificationPreferences?: INotificationPreferences;

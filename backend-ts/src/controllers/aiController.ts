@@ -152,7 +152,7 @@ export const getPromptSuggestions = asyncHandler(async (req: Request, res: Respo
   } else if (role === 'buyer') {
     starterPrompts = [
       { label: 'Negotiate Prices', query: 'How can I negotiate crop prices with farmers directly?', icon: 'Handshake', category: 'Deals' },
-      { label: 'Escrow & Safety', query: 'How does payment protection work on FaRm?', icon: 'ShieldCheck', category: 'Payment' },
+      { label: 'Payment & Safety', query: 'How does payment protection work on FaRm?', icon: 'ShieldCheck', category: 'Payment' },
       { label: 'Track Fresh Produce', query: 'How can I track my farm-to-door delivery order?', icon: 'Package', category: 'Orders' },
       { label: 'Organic Quality', query: 'How can I verify if listed crops are genuinely organic?', icon: 'CheckCircle', category: 'Produce' },
     ];

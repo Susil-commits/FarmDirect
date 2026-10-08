@@ -1,5 +1,5 @@
 
-import directApi from './directApi.js';
+import api from './api.js';
 
 export const uploadService = {
   
@@ -11,8 +11,8 @@ export const uploadService = {
         formData.append('files', file);
       });
 
-      const response = await directApi.post('/crops/upload-images', formData);
-      return response.data;
+      const response = await api.post('/crops/upload-images', formData);
+      return response?.data || response;
     } catch (error) {
       console.error('Crop image upload error:', error);
       throw error;
@@ -24,8 +24,8 @@ export const uploadService = {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await directApi.put('/users/profile-picture', formData);
-      return response.data;
+      const response = await api.put('/users/profile-picture', formData);
+      return response?.data || response;
     } catch (error) {
       console.error('Profile picture upload error:', error);
       throw error;
@@ -43,9 +43,9 @@ export const uploadService = {
       });
       formData.append('documentType', documentType);
 
-      const response = await directApi.post('/auth/kyc/submit', formData);
+      const response = await api.post('/auth/kyc/submit', formData);
       
-      return response.data;
+      return response?.data || response;
     } catch (error) {
       console.error('❌ [uploadService] KYC upload error:', error);
       if (error.response) {
@@ -63,8 +63,8 @@ export const uploadService = {
       const formData = new FormData();
       formData.append('files', file);
 
-      const response = await directApi.post(`/orders/${orderId}/invoice`, formData);
-      return response.data;
+      const response = await api.post(`/orders/${orderId}/invoice`, formData);
+      return response?.data || response;
     } catch (error) {
       console.error('Invoice upload error:', error);
       throw error;

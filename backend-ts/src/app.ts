@@ -14,6 +14,8 @@ import mongoose from 'mongoose';
 import { env } from './config/env.js';
 import errorHandler from './middleware/errorHandler.js';
 import { requestId } from './middleware/requestId.js';
+import { protect, authorize } from './middleware/auth.js';
+import { UserRole } from './types/enums.js';
 import { resetServerStartTime, getServerStartTime } from './utils/serverTime.js';
 import { trimStrings } from './middleware/sanitizer.js';
 
@@ -148,24 +150,15 @@ app.use(trimStrings);
 
 app.use(compression({ threshold: 1024 }));
 
-if (env.isDev) {
-  app.use((req: Request, _res: Response, next) => {
-    next();
-  });
-}
-
 app.get('/api/health', (_req: Request, res: Response) => {
   res.status(200).json({
     status: 'ok',
-    message: 'Server is running',
+    message: 'Server is healthy',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    serverStartTime: getServerStartTime(),
-    environment: env.nodeEnv,
   });
 });
 
-app.get('/api/health/detailed', async (_req: Request, res: Response) => {
+app.get('/api/health/detailed', protect, authorize(UserRole.Admin), async (_req: Request, res: Response) => {
   const dbState = mongoose.connection.readyState;
   const dbStateMap: Record<number, string> = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
   let dbPing = false;
@@ -184,7 +177,6 @@ app.get('/api/health/detailed', async (_req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     serverStartTime: getServerStartTime(),
-    environment: env.nodeEnv,
     services: {
       database: {
         status: dbStateMap[dbState] ?? 'unknown',
@@ -196,7 +188,6 @@ app.get('/api/health/detailed', async (_req: Request, res: Response) => {
 });
 
 app.use('/health', healthRoutes);
-app.use('/healthz', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/crops', cropRoutes);
 app.use('/api/orders', orderRoutes);

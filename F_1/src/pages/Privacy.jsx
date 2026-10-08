@@ -32,7 +32,7 @@ export default function Privacy() {
             </p>
 
             <h3 className="font-serif-display text-2xl font-bold text-[#132E20]">
-              3. Smart Contract & Escrow Security
+              3. Payment Gateway & Transaction Security
             </h3>
             <p>
               Payment data is encrypted using SOC 2 Type II compliant financial gateways. Direct payouts to farmers are settled through bank-grade transfers.

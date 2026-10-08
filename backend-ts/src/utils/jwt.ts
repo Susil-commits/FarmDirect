@@ -7,19 +7,23 @@ export interface TokenPayload extends JwtPayload {
   id: string;
   role?: string;
   jti?: string;
+  tokenVersion?: number;
 }
 
-export function generateToken(id: Types.ObjectId | string, role?: string): string {
-  const payload: { id: string; role?: string } = { id: String(id) };
+export function generateToken(id: Types.ObjectId | string, role?: string, tokenVersion?: number): string {
+  const payload: { id: string; role?: string; tokenVersion?: number } = { id: String(id) };
   if (role) payload.role = role;
+  if (tokenVersion !== undefined) payload.tokenVersion = tokenVersion;
   return jwt.sign(payload, env.jwtSecret, {
     expiresIn: env.jwtExpire,
   } as SignOptions);
 }
 
-export function generateRefreshToken(id: Types.ObjectId | string, jti?: string): string {
+export function generateRefreshToken(id: Types.ObjectId | string, jti?: string, tokenVersion?: number): string {
   const tokenId = jti || crypto.randomUUID();
-  return jwt.sign({ id: String(id), jti: tokenId }, env.jwtRefreshSecret, {
+  const payload: { id: string; jti: string; tokenVersion?: number } = { id: String(id), jti: tokenId };
+  if (tokenVersion !== undefined) payload.tokenVersion = tokenVersion;
+  return jwt.sign(payload, env.jwtRefreshSecret, {
     expiresIn: env.jwtRefreshExpire,
   } as SignOptions);
 }

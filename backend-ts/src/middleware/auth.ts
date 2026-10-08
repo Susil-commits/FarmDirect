@@ -24,8 +24,6 @@ export const protect: RequestHandler = async (req, res, next) => {
       } else {
         return next(ApiError.unauthorized('Malformed authorization header'));
       }
-    } else if (typeof req.query?.token === 'string' && req.query.token.trim()) {
-      token = req.query.token.trim();
     }
 
     if (!token) {
@@ -39,6 +37,19 @@ export const protect: RequestHandler = async (req, res, next) => {
     const user = await User.findById(decoded.id);
     if (!user) {
       return next(ApiError.notFound('User not found'));
+    }
+
+    // Session invalidation on password change or reset
+    if (user.tokenVersion !== undefined && decoded.tokenVersion !== undefined) {
+      if (decoded.tokenVersion !== user.tokenVersion) {
+        return next(ApiError.unauthorized('Session has been invalidated. Please log in again.'));
+      }
+    }
+    if (user.passwordChangedAt && decoded.iat) {
+      const changedTimestamp = Math.floor(user.passwordChangedAt.getTime() / 1000);
+      if (decoded.iat < changedTimestamp) {
+        return next(ApiError.unauthorized('Password was changed recently. Please log in again.'));
+      }
     }
 
     req.user = {

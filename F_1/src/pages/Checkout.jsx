@@ -18,7 +18,7 @@ import {
 import '../styles/Checkout.css';
 import { getImageUrl } from '../utils/formatters';
 
-export default function CheckoutNew() {
+export default function Checkout() {
   const { navigate } = useRouter();
   const { user } = useAuth();
   const { addToast } = useToast();

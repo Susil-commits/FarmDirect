@@ -103,7 +103,7 @@ CORE MISSION & CAPABILITIES:
    - Post-harvest management, safe grain/fruit storage, minimizing transit spoilage.
 2. FaRm Marketplace Guide:
    - For Farmers: How to create listings, set unit prices (₹/kg, ₹/quintal, ₹/ton), upload clear photos, earn verified badges, accept negotiations, fulfill orders, and complete KYC.
-   - For Buyers: How to search crops by category/location, compare organic vs conventional produce, initiate direct price negotiations with farmers, checkout with Razorpay/escrow, and track delivery.
+   - For Buyers: How to search crops by category/location, compare organic vs conventional produce, initiate direct price negotiations with farmers, checkout with secure Razorpay payment, and track delivery.
    - Platform Values: Direct trade (zero middleman commission), fair farmer remuneration, transparent farm-to-table traceability, secure verification.
 3. Market Transparency & Fair Trade:
    - Direct trade, transparent farm-to-table transactions without middleman cuts.
@@ -153,13 +153,13 @@ const FALLBACK_KNOWLEDGE: Array<{ keywords: string[]; reply: string; topic: 'far
 - **Instant Deal Lock**: Once both parties agree on the price, the agreed rate is reserved for checkout.`,
     topic: 'platform',
     actions: [{ label: 'Explore Marketplace Deals', url: '/marketplace', icon: 'ShoppingBag' }],
-    suggestions: ['How to set competitive crop prices?', 'How does escrow payment protect farmers?', 'How to track incoming orders?'],
+    suggestions: ['How to set competitive crop prices?', 'How does secure payment protect farmers?', 'How to track incoming orders?'],
   },
   {
     keywords: ['kyc', 'verify', 'verification', 'document', 'aadhaar', 'id'],
     reply: `### FaRm KYC Verification:
 - **For Farmers**: Submit your Government ID (Aadhaar/PAN) and Land Record/Kisan Credit Card (KCC) to unlock verified seller badges and higher listing limits.
-- **For Buyers**: Quick verification for high-volume purchasing and secure escrow transactions.
+- **For Buyers**: Quick verification for high-volume purchasing and secure direct transactions.
 - **Review Time**: Admin verifies documents usually within a few hours!`,
     topic: 'platform',
     actions: [{ label: 'Check Verification Status', url: '/verification/progress', icon: 'ShieldCheck' }],
@@ -171,11 +171,11 @@ const FALLBACK_KNOWLEDGE: Array<{ keywords: string[]; reply: string; topic: 'far
 1. **Browse Marketplace**: Filter by category, organic badge, location, or price.
 2. **Review Farmer Details**: View farmer ratings, farm location, and harvest date.
 3. **Add to Cart or Negotiate**: Buy at listed price or offer a bulk deal.
-4. **Secure Checkout**: Pay safely with Razorpay, UPI, Cards, or NetBanking with escrow protection.
+4. **Secure Checkout**: Pay safely with Razorpay, UPI, Cards, or NetBanking with encrypted payment processing.
 5. **Real-Time Tracking**: Track dispatch from the farm straight to your doorstep!`,
     topic: 'platform',
     actions: [{ label: 'Browse Fresh Crops', url: '/marketplace', icon: 'ShoppingBag' }, { label: 'Track My Orders', url: '/orders', icon: 'Package' }],
-    suggestions: ['How to filter organic crops only?', 'How does escrow protection work?', 'Can I contact the farmer directly?'],
+    suggestions: ['How to filter organic crops only?', 'How does secure payment protection work?', 'Can I contact the farmer directly?'],
   },
   {
     keywords: ['pest', 'disease', 'insect', 'organic spray', 'neem', 'fungus'],
@@ -969,7 +969,7 @@ Respond helpfully as AgriBot for the FaRm marketplace. Ensure markdown formattin
           success: true,
           reply: '### Market Price Benchmark for Rice:\n- **Going Rate**: ₹2,200 to ₹2,500 per quintal (₹22 - ₹25/kg) depending on grain variety.\n- **Unit**: Quintal / Kg\nRates reflect direct farm-gate prices on FaRm.',
           topic: 'pricing',
-          suggestions: ['Search grain listings', 'How to list paddy crops', 'Buyer escrow protection'],
+          suggestions: ['Search grain listings', 'How to list paddy crops', 'Buyer payment protection'],
           actionLinks: [{ label: 'View Marketplace', url: '/marketplace', icon: 'ShoppingBag' }],
           modelUsed: 'agribot-core-kb',
         };

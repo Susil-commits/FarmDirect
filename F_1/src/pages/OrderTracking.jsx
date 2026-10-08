@@ -26,7 +26,7 @@ const STATUS_LABELS = {
   cancelled: 'Cancelled'
 };
 
-export default function OrderTrackingNew() {
+export default function OrderTracking() {
   const { navigate } = useRouter();
   const { user } = useAuth();
   const { addToast } = useToast();

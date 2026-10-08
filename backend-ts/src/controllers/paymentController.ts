@@ -12,6 +12,14 @@ import { createCircuitBreaker } from '../utils/circuitBreaker.js';
 
 export const VALID_PAYMENT_METHODS = [PaymentMethod.Cod, PaymentMethod.Razorpay];
 
+function safeCompareSignatures(expected: string, received: string): boolean {
+  if (!expected || !received) return false;
+  const bufExpected = Buffer.from(expected, 'utf-8');
+  const bufReceived = Buffer.from(received, 'utf-8');
+  if (bufExpected.length !== bufReceived.length) return false;
+  return crypto.timingSafeEqual(bufExpected, bufReceived);
+}
+
 const razorpayCreateOrder = (razorpayInstance: any, options: any) => {
   return razorpayInstance.orders.create(options);
 };
@@ -41,6 +49,22 @@ export async function createRazorpayOrder(req: Request, res: Response, next: Nex
     if (totalAmount <= 0) { sendError(res, 'Invalid payment amount', 400); return; }
 
     const targetIds = unpaidOrders.map((o) => o._id);
+
+    // Prevent double-init from overwriting razorpayOrderId and orphaning the first Razorpay order
+    const existingRzpId = unpaidOrders[0].razorpayOrderId;
+    const allShareSameRzpId = existingRzpId && unpaidOrders.every((o) => o.razorpayOrderId === existingRzpId);
+    if (allShareSameRzpId) {
+      res.status(200).json({
+        success: true,
+        razorpayOrderId: existingRzpId,
+        amount: Math.round(totalAmount * 100),
+        currency: 'INR',
+        keyId: env.razorpayKeyId,
+        orderIds: targetIds.map((id) => String(id)),
+      });
+      return;
+    }
+
     const receipt = `rcpt_${String(targetIds[0]).slice(-12)}`;
 
     const razorpayOrder = await razorpayBreaker.fire(razorpay, {
@@ -56,6 +80,7 @@ export async function createRazorpayOrder(req: Request, res: Response, next: Nex
     );
 
     res.status(200).json({
+      success: true,
       razorpayOrderId: razorpayOrder.id,
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
@@ -78,12 +103,19 @@ export async function verifyRazorpayPayment(req: Request, res: Response, next: N
     }
 
     const expectedSignature = crypto
-      .createHmac('sha256', env.razorpayKeySecret!)
+      .createHmac('sha256', env.razorpayKeySecret || '')
       .update(`${razorpayOrderId}|${razorpayPaymentId}`)
       .digest('hex');
 
-    if (expectedSignature !== razorpaySignature) {
-      await Order.updateMany({ razorpayOrderId, buyerId: req.user!._id }, { $set: { paymentStatus: PaymentStatus.Failed } });
+    const isValidSignature = safeCompareSignatures(expectedSignature, razorpaySignature);
+
+    if (!isValidSignature) {
+      // Guard: ONLY update orders that are NOT already Completed.
+      // A bad signature sent after successful payment must NEVER flip a paid order to Failed!
+      await Order.updateMany(
+        { razorpayOrderId, buyerId: req.user!._id, paymentStatus: { $ne: PaymentStatus.Completed } },
+        { $set: { paymentStatus: PaymentStatus.Failed } },
+      );
       sendError(res, 'Payment verification failed: invalid signature', 400);
       return;
     }
@@ -95,6 +127,26 @@ export async function verifyRazorpayPayment(req: Request, res: Response, next: N
     if (allCompleted) {
       res.status(200).json({ message: 'Payment verified successfully', orderIds: orders.map((o) => String(o._id)) });
       return;
+    }
+
+    // Verify paid amount matches order total if Razorpay instance is configured
+    const totalExpectedAmount = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    if (isRazorpayConfigured()) {
+      try {
+        const razorpay = getRazorpayInstance();
+        if (razorpay) {
+          const paymentEntity = await (razorpay.payments as any).fetch(razorpayPaymentId);
+          if (paymentEntity && paymentEntity.amount !== undefined) {
+            const paidAmount = Number(paymentEntity.amount) / 100;
+            if (Math.abs(paidAmount - totalExpectedAmount) > 0.01) {
+              sendError(res, `Payment amount mismatch: expected ₹${totalExpectedAmount}, received ₹${paidAmount}`, 400);
+              return;
+            }
+          }
+        }
+      } catch (fetchErr) {
+        // If razorpay network fails or mock test, proceed if signature HMAC verified
+      }
     }
 
     await Order.updateMany(
@@ -118,7 +170,7 @@ export async function verifyRazorpayPayment(req: Request, res: Response, next: N
       }
     }
 
-    res.status(200).json({ message: 'Payment verified successfully', orderIds: orders.map((o) => String(o._id)) });
+    res.status(200).json({ success: true, message: 'Payment verified successfully', orderIds: orders.map((o) => String(o._id)) });
   } catch (error) {
     next(error);
   }
@@ -136,7 +188,7 @@ export async function markRazorpayPaymentFailed(req: Request, res: Response, nex
         $push: { timeline: { event: 'PAYMENT_FAILED', description: reason || 'Online payment failed', timestamp: new Date() } },
       },
     );
-    res.status(200).json({ message: 'Payment marked as failed', modifiedCount: result.modifiedCount });
+    res.status(200).json({ success: true, message: 'Payment marked as failed', modifiedCount: result.modifiedCount });
   } catch (error) {
     next(error);
   }
@@ -144,10 +196,9 @@ export async function markRazorpayPaymentFailed(req: Request, res: Response, nex
 
 export async function handleRazorpayWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const webhookSecret = env.razorpayWebhookSecret;
+    const webhookSecret = env.razorpayWebhookSecret || env.razorpayKeySecret;
     if (!webhookSecret) {
-      console.warn('[Webhook] Razorpay webhook secret is not configured in environment variables');
-      sendError(res, 'Webhook secret not configured on server', 500);
+      sendError(res, 'Webhook secret not configured on server', 400);
       return;
     }
 
@@ -157,13 +208,17 @@ export async function handleRazorpayWebhook(req: Request, res: Response, next: N
       return;
     }
 
-    const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
+    if (!req.rawBody) {
+      sendError(res, 'Raw body missing for webhook signature verification', 400);
+      return;
+    }
+
     const expectedSignature = crypto
       .createHmac('sha256', webhookSecret)
-      .update(rawBody)
+      .update(req.rawBody)
       .digest('hex');
 
-    if (expectedSignature !== signature) {
+    if (!safeCompareSignatures(expectedSignature, signature)) {
       console.warn('[Webhook] Razorpay signature verification failed');
       sendError(res, 'Invalid webhook signature', 400);
       return;
@@ -192,6 +247,17 @@ export async function handleRazorpayWebhook(req: Request, res: Response, next: N
         console.warn(`[Webhook] No matching orders found for razorpayOrderId: ${razorpayOrderId}`);
         res.status(200).json({ status: 'ignored', message: 'Orders not found' });
         return;
+      }
+
+      // Verify that paid amount matches order total amount
+      const totalAmount = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+      if (payment?.amount !== undefined) {
+        const paidAmount = Number(payment.amount) / 100;
+        if (Math.abs(paidAmount - totalAmount) > 0.01) {
+          console.error(`[Webhook] Amount mismatch for order ${razorpayOrderId}: expected ₹${totalAmount}, paid ₹${paidAmount}`);
+          sendError(res, 'Payment amount mismatch', 400);
+          return;
+        }
       }
 
       // Idempotency: skip if already completed

@@ -1,0 +1,92 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: farmdirect-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: farmdirect-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: farmdirect-ml-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ML_SERVICE_KEY=dev_ml_secret_key
+      - PORT=8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  backend:
+    build:
+      context: ./backend-ts
+      dockerfile: Dockerfile
+    container_name: farmdirect-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ml-service:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongodb:27017/farmdirect
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=super_secret_jwt_key_at_least_32_chars_long_12345
+      - JWT_REFRESH_SECRET=super_secret_refresh_jwt_key_at_least_32_chars_long_12345
+      - ML_SERVICE_URL=http://ml-service:8000
+      - ML_SERVICE_KEY=dev_ml_secret_key
+      - CORS_ORIGIN=http://localhost,http://localhost:80,http://localhost:5173
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./F_1
+      dockerfile: Dockerfile
+    container_name: farmdirect-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  mongo_data:
+  redis_data:

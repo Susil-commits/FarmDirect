@@ -9,7 +9,7 @@ export default function Support() {
 
   const topics = [
     { title: 'Order & Harvest Tracking', icon: Truck, desc: 'Track your live harvest dispatch timestamp and express transport route.' },
-    { title: 'Farmer Payments & Escrow', icon: ShieldCheck, desc: 'Learn how smart contract escrow ensures 85%+ farm-gate payout to growers.' },
+    { title: 'Farmer Payments & Payouts', icon: ShieldCheck, desc: 'Learn how direct razorpay settlements ensure 85%+ farm-gate payout to growers.' },
     { title: 'Refunds & Returns', icon: RefreshCw, desc: 'Report any damaged items within 24 hours for instant 100% replacement or refund.' },
     { title: 'Direct Communications', icon: MessageSquare, desc: 'Contact your assigned farmer or regional agronomist through voice logs.' },
   ];

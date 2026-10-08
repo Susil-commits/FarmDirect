@@ -323,8 +323,8 @@ const INITIAL_FARM_NODES = [
     },
   },
   {
-    id: 'escrow_settlement',
-    title: 'Razorpay Escrow Guard',
+    id: 'payment_settlement',
+    title: 'Razorpay Settlement Guard',
     subtitle: '0% COMMISSION PAYOUT',
     category: 'output',
     tierName: 'Settlement & Output Tier',
@@ -337,11 +337,11 @@ const INITIAL_FARM_NODES = [
     width: 210,
     height: 60,
     tech: 'Razorpay Webhooks + Auto-Sweep',
-    role: 'Holds buyer funds safely in escrow, verifies HMAC signatures, and executes automated 15m payouts to farmers.',
+    role: 'Verifies HMAC signatures, captures buyer payments, and routes automated 15m direct payouts to farmers.',
     metrics: { farmerFee: '0% Zero Commission', sweep: 'Every 15m', verify: 'HMAC-SHA256' },
     samplePayload: {
       paymentId: 'pay_rzp_8849',
-      heldInEscrow: true,
+      paymentVerified: true,
       farmerPayout: 6450.0,
       releaseTrigger: 'DELIVERY_CONFIRMED',
     },
@@ -415,7 +415,7 @@ const FARM_CABLES = [
   // Mid-Right Execution to Outputs
   { from: 'negotiation_copilot', to: 'counteroffer_hint', badge: 'HINT', color: '#EAB308' },
   { from: 'negotiation_copilot', to: 'price_window', badge: 'MARGIN BAND', color: '#F43F5E' },
-  { from: 'transaction_outbox', to: 'escrow_settlement', badge: 'ESCROW PAY', color: '#14B8A6' },
+  { from: 'transaction_outbox', to: 'payment_settlement', badge: 'DIRECT PAY', color: '#14B8A6' },
   { from: 'transaction_outbox', to: 'anomaly_sentinel', badge: 'FRAUD CHECK', color: '#FB7185' },
   { from: 'transaction_outbox', to: 'realtime_dispatch', badge: 'DISPATCH', color: '#C084FC' },
 ];
@@ -425,7 +425,7 @@ const SIMULATION_FLOWS = [
   {
     id: 'order_lifecycle',
     name: '🌾 Complete Harvest-to-Payout Flow',
-    description: 'Farmer produce scan -> Gemini grading -> Mandi price band -> Negotiation -> ACID commit -> Escrow payout.',
+    description: 'Farmer produce scan -> Gemini grading -> Mandi price band -> Negotiation -> ACID commit -> Direct payout.',
     steps: [
       {
         nodeId: 'crop_scan',
@@ -458,9 +458,9 @@ const SIMULATION_FLOWS = [
         log: '[6. ACID Transaction Bus] MongoDB multi-document isolated session locks 300 kg stock and commits order.',
       },
       {
-        nodeId: 'escrow_settlement',
-        cableBadge: 'ESCROW PAY',
-        log: '[7. Razorpay Escrow] Buyer payment captured and locked in escrow. 0% farmer commission enforced.',
+        nodeId: 'payment_settlement',
+        cableBadge: 'DIRECT PAY',
+        log: '[7. Razorpay Settlement] Buyer payment captured with HMAC verification. 0% farmer commission enforced.',
       },
       {
         nodeId: 'realtime_dispatch',
@@ -528,7 +528,7 @@ const SIMULATION_FLOWS = [
       },
       {
         nodeId: 'transaction_outbox',
-        cableBadge: 'ESCROW PAY',
+        cableBadge: 'DIRECT PAY',
         log: '[5. ACID Bus] Agreement sealed directly between parties with 0% middleman deduction.',
       },
     ],

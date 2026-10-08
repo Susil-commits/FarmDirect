@@ -148,7 +148,7 @@ export default function HowItWorks() {
                     'Field-fresh produce delivered in 4 to 12 hours from harvest',
                     'Zero distributor inflation — save 20% to 40% on bulk produce',
                     'QR soil & pesticide testing reports on every batch',
-                    'Buyer protection & secure escrow payment processing',
+                    'Buyer protection & secure direct payment processing',
                     'Direct chat & offer negotiations with verified growers'
                   ].map((b, i) => (
                     <div key={i} className="flex items-start gap-3 text-xs text-[#FBF8F3]/85">
@@ -173,7 +173,7 @@ export default function HowItWorks() {
                 </div>
                 <div className="bg-[#1B3B2B]/60 border border-white/10 p-6 rounded-2xl">
                   <Shield className="w-8 h-8 text-[#84A98C] mx-auto mb-2" />
-                  <h4 className="font-serif-display text-xl font-bold">256-Bit Escrow Security</h4>
+                  <h4 className="font-serif-display text-xl font-bold">256-Bit Payment Security</h4>
                   <p className="font-sans-body text-[11px] text-[#FBF8F3]/70 mt-1">Encrypted payments & buyer protection</p>
                 </div>
                 <div className="bg-[#1B3B2B]/60 border border-white/10 p-6 rounded-2xl">
