@@ -96,8 +96,9 @@ export async function getNegotiationCopilotGuidance(
   let marketMax = Math.round(marketMedian * 1.15 * 100) / 100;
 
   try {
+    const safeCropName = cropName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
     const snapshots = await PriceSnapshot.find({
-      cropName: { $regex: new RegExp(`^${cropName.trim()}$`, 'i') },
+      cropName: { $regex: new RegExp(`^${safeCropName}$`, 'i') },
     })
       .sort({ at: -1 })
       .limit(10)

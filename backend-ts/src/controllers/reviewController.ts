@@ -11,20 +11,24 @@ import { parsePagination } from '../utils/pagination.js';
 import { analyzeReviewContent, generateCropReviewSummary } from '../services/reviewAnalysisService.js';
 
 async function updateCropRating(cropId: Types.ObjectId | string): Promise<void> {
-  const targetCropId = typeof cropId === 'string' ? new mongoose.Types.ObjectId(cropId) : cropId;
+  if (!cropId || !mongoose.isValidObjectId(cropId)) return;
+  const targetCropId = new mongoose.Types.ObjectId(String(cropId));
   const result = await Review.aggregate([
     { $match: { cropId: targetCropId, isFlagged: { $ne: true } } },
     { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } },
   ]);
   const { avg = 0, count = 0 } = result[0] ?? {};
-  await CropListing.findByIdAndUpdate(cropId, {
-    rating: count > 0 ? parseFloat(avg.toFixed(2)) : 0,
-    totalReviews: count,
+  await CropListing.findByIdAndUpdate(targetCropId, {
+    $set: {
+      rating: count > 0 ? parseFloat(avg.toFixed(2)) : 0,
+      totalReviews: count,
+    },
   });
 }
 
 async function updateFarmerRating(farmerId: Types.ObjectId | string): Promise<void> {
-  const targetFarmerId = typeof farmerId === 'string' ? new mongoose.Types.ObjectId(farmerId) : farmerId;
+  if (!farmerId || !mongoose.isValidObjectId(farmerId)) return;
+  const targetFarmerId = new mongoose.Types.ObjectId(String(farmerId));
   const result = await Review.aggregate([
     {
       $lookup: {
@@ -39,32 +43,38 @@ async function updateFarmerRating(farmerId: Types.ObjectId | string): Promise<vo
     { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } },
   ]);
   const { avg = 0, count = 0 } = result[0] ?? {};
-  await User.findByIdAndUpdate(farmerId, {
-    rating: count > 0 ? parseFloat(avg.toFixed(2)) : 0,
-    totalReviews: count,
+  await User.findByIdAndUpdate(targetFarmerId, {
+    $set: {
+      rating: count > 0 ? parseFloat(avg.toFixed(2)) : 0,
+      totalReviews: count,
+    },
   });
 }
 
 export const addReview = asyncHandler(async (req: Request, res: Response) => {
   const { rating, comment } = req.body as { rating: number | string; comment: string };
-  const cropId = req.params.cropId || (req.body as any).cropId;
+  const rawCropId = req.params.cropId || (req.body as any)?.cropId;
   const userId = req.user!._id;
 
-  if (!cropId) return sendError(res, 'Crop ID is required', 400);
+  if (!rawCropId || typeof rawCropId !== 'string' || !mongoose.isValidObjectId(rawCropId)) {
+    return sendError(res, 'Valid Crop ID is required', 400);
+  }
+  const safeCropId = new mongoose.Types.ObjectId(rawCropId);
+
   const numRating = Number(rating);
   if (!Number.isFinite(numRating) || numRating < 1 || numRating > 5) {
     return sendError(res, 'Rating must be a number between 1 and 5', 400);
   }
 
-  const crop = await CropListing.findById(cropId);
+  const crop = await CropListing.findById(safeCropId);
   if (!crop) return sendError(res, 'Crop not found', 404);
 
-  const order = await Order.findOne({ buyerId: userId, cropId, orderStatus: OrderStatus.Completed });
+  const order = await Order.findOne({ buyerId: userId, cropId: safeCropId, orderStatus: OrderStatus.Completed });
   if (!order) return sendError(res, 'You can only review crops you have purchased and received', 400);
 
   const analysis = analyzeReviewContent(comment, numRating);
 
-  const existingReview = await Review.findOne({ cropId, userId });
+  const existingReview = await Review.findOne({ cropId: safeCropId, userId });
   if (existingReview) {
     existingReview.rating = numRating;
     existingReview.comment = comment;
@@ -75,9 +85,9 @@ export const addReview = asyncHandler(async (req: Request, res: Response) => {
     existingReview.isApproved = !analysis.isFlagged;
     await existingReview.save();
 
-    await updateCropRating(cropId);
+    await updateCropRating(safeCropId);
     await updateFarmerRating(crop.farmerId);
-    generateCropReviewSummary(cropId).catch(() => {});
+    generateCropReviewSummary(safeCropId).catch(() => {});
 
     return res.status(200).json({
       success: true,
@@ -89,7 +99,7 @@ export const addReview = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const review = await Review.create({
-    cropId,
+    cropId: safeCropId,
     userId,
     rating: numRating,
     comment,
@@ -100,9 +110,9 @@ export const addReview = asyncHandler(async (req: Request, res: Response) => {
     isApproved: !analysis.isFlagged,
   });
 
-  await updateCropRating(cropId);
+  await updateCropRating(safeCropId);
   await updateFarmerRating(crop.farmerId);
-  generateCropReviewSummary(cropId).catch(() => {});
+  generateCropReviewSummary(safeCropId).catch(() => {});
 
   res.status(201).json({
     success: true,
@@ -115,9 +125,13 @@ export const addReview = asyncHandler(async (req: Request, res: Response) => {
 
 export const getReviews = asyncHandler(async (req: Request, res: Response) => {
   const { cropId } = req.params;
+  if (!cropId || !mongoose.isValidObjectId(cropId)) {
+    return sendError(res, 'Valid Crop ID is required', 400);
+  }
+  const safeCropId = new mongoose.Types.ObjectId(cropId);
   const { sortBy = 'newest' } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 10, maxLimit: 50 });
-  const crop = await CropListing.findById(cropId);
+  const crop = await CropListing.findById(safeCropId);
   if (!crop) return sendError(res, 'Crop not found', 404);
 
   let sortOption: Record<string, 1 | -1> = {};
@@ -126,7 +140,7 @@ export const getReviews = asyncHandler(async (req: Request, res: Response) => {
   else if (sortBy === 'lowest') sortOption = { rating: 1 };
 
   // Only return non-flagged approved reviews to regular users
-  const filter: Record<string, unknown> = { cropId, isFlagged: { $ne: true } };
+  const filter: Record<string, unknown> = { cropId: safeCropId, isFlagged: { $ne: true } };
 
   const [reviews, total] = await Promise.all([
     Review.find(filter)
@@ -148,7 +162,11 @@ export const getReviews = asyncHandler(async (req: Request, res: Response) => {
 
 export const getCropReviewSummaryController = asyncHandler(async (req: Request, res: Response) => {
   const { cropId } = req.params;
-  const summary = await generateCropReviewSummary(cropId);
+  if (!cropId || !mongoose.isValidObjectId(cropId)) {
+    return sendError(res, 'Valid Crop ID is required', 400);
+  }
+  const safeCropId = new mongoose.Types.ObjectId(cropId);
+  const summary = await generateCropReviewSummary(safeCropId);
   if (!summary) return sendError(res, 'Crop not found', 404);
 
   res.status(200).json({
@@ -159,8 +177,12 @@ export const getCropReviewSummaryController = asyncHandler(async (req: Request, 
 
 export const deleteReview = asyncHandler(async (req: Request, res: Response) => {
   const { reviewId } = req.params;
+  if (!reviewId || !mongoose.isValidObjectId(reviewId)) {
+    return sendError(res, 'Valid Review ID is required', 400);
+  }
+  const safeReviewId = new mongoose.Types.ObjectId(reviewId);
   const userId = req.user!._id;
-  const review = await Review.findById(reviewId);
+  const review = await Review.findById(safeReviewId);
   if (!review) return sendError(res, 'Review not found', 404);
   if (review.userId.toString() !== userId.toString() && req.user!.role !== UserRole.Admin) {
     return sendError(res, 'Not authorized to delete this review', 403);
@@ -168,7 +190,7 @@ export const deleteReview = asyncHandler(async (req: Request, res: Response) => 
   const cropId = review.cropId;
 
   const crop = await CropListing.findById(cropId).select('farmerId');
-  await Review.findByIdAndDelete(reviewId);
+  await Review.findByIdAndDelete(safeReviewId);
   await updateCropRating(cropId);
   if (crop) await updateFarmerRating(crop.farmerId);
   generateCropReviewSummary(cropId, true).catch(() => {});
@@ -177,8 +199,12 @@ export const deleteReview = asyncHandler(async (req: Request, res: Response) => 
 
 export const getFarmerReviews = asyncHandler(async (req: Request, res: Response) => {
   const { farmerId } = req.params;
+  if (!farmerId || !mongoose.isValidObjectId(farmerId)) {
+    return sendError(res, 'Valid Farmer ID is required', 400);
+  }
+  const safeFarmerId = new mongoose.Types.ObjectId(farmerId);
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 10, maxLimit: 50 });
-  const crops = await CropListing.find({ farmerId }).lean();
+  const crops = await CropListing.find({ farmerId: safeFarmerId }).lean();
   const cropIds = crops.map((crop) => crop._id);
 
   const filter = { cropId: { $in: cropIds }, isFlagged: { $ne: true } };
@@ -202,8 +228,12 @@ export const getFarmerReviews = asyncHandler(async (req: Request, res: Response)
 
 export const reportReview = asyncHandler(async (req: Request, res: Response) => {
   const { reviewId } = req.params;
+  if (!reviewId || !mongoose.isValidObjectId(reviewId)) {
+    return sendError(res, 'Valid Review ID is required', 400);
+  }
+  const safeReviewId = new mongoose.Types.ObjectId(reviewId);
   const { reason, description } = req.body as { reason: string; description: string };
-  const review = await Review.findById(reviewId);
+  const review = await Review.findById(safeReviewId);
   if (!review) return sendError(res, 'Review not found', 404);
   review.reports = review.reports || [];
   review.reports.push({ reportedBy: req.user!._id, reason: reason as never, description, reportedAt: new Date() });

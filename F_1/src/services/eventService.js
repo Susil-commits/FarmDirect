@@ -3,17 +3,26 @@ import { getAccessToken } from '../utils/tokenStore.js';
 
 let sessionId = null;
 
+function generateSecureId() {
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
+  return Date.now().toString(36) + Math.floor(Math.random() * 1e9).toString(36);
+}
+
 function getSessionId() {
   if (sessionId) return sessionId;
   try {
     sessionId = sessionStorage.getItem('fd_session_id');
     if (!sessionId) {
-      sessionId = 'sess_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+      sessionId = 'sess_' + generateSecureId() + '_' + Date.now().toString(36);
       sessionStorage.setItem('fd_session_id', sessionId);
     }
   } catch {
     if (!sessionId) {
-      sessionId = 'sess_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+      sessionId = 'sess_' + generateSecureId() + '_' + Date.now().toString(36);
     }
   }
   return sessionId;

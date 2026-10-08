@@ -33,15 +33,18 @@ const PENDING_STATUSES = [OrderStatus.Confirmed, OrderStatus.Preparing, OrderSta
 function buildQuery(req: Request): Record<string, unknown> {
   const { role, search, status } = req.query as Record<string, string>;
   const query: Record<string, unknown> = {};
-  if (role) query.role = role;
-  if (status) query.status = status;
-  if (search) {
-    query.$or = [
-      { firstName: { $regex: search, $options: 'i' } },
-      { lastName: { $regex: search, $options: 'i' } },
-      { email: { $regex: search, $options: 'i' } },
-      { farmName: { $regex: search, $options: 'i' } },
-    ];
+  if (role && Object.values(UserRole).includes(role as UserRole)) query.role = role;
+  if (status && Object.values(UserStatus).includes(status as UserStatus)) query.status = status;
+  if (search && typeof search === 'string') {
+    const cleanSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
+    if (cleanSearch) {
+      query.$or = [
+        { firstName: { $regex: cleanSearch, $options: 'i' } },
+        { lastName: { $regex: cleanSearch, $options: 'i' } },
+        { email: { $regex: cleanSearch, $options: 'i' } },
+        { farmName: { $regex: cleanSearch, $options: 'i' } },
+      ];
+    }
   }
   return query;
 }
@@ -166,12 +169,14 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
 
 export const approveUserKYC = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
+  if (!userId || !mongoose.isValidObjectId(userId)) return sendError(res, 'Invalid user ID', 400);
+  const safeUserId = new mongoose.Types.ObjectId(userId);
   const { comments } = req.body as { comments?: string };
   const adminUser = req.user as AdminUser;
 
   const user = await User.findByIdAndUpdate(
-    userId,
-    { kycStatus: KycStatus.Verified, kycVerifiedAt: new Date(), kycComments: comments, status: UserStatus.Active, kycResultSeen: false },
+    safeUserId,
+    { $set: { kycStatus: KycStatus.Verified, kycVerifiedAt: new Date(), kycComments: typeof comments === 'string' ? comments.trim() : '', status: UserStatus.Active, kycResultSeen: false } },
     { new: true },
   ).select('-password');
 
@@ -181,13 +186,13 @@ export const approveUserKYC = asyncHandler(async (req: Request, res: Response) =
     ? 'You can now list your crops on the marketplace and start selling!'
     : 'You can now browse the marketplace and place orders!';
   try {
-    await Notification.create({ userId, title: 'KYC Approved', message: `Congratulations! Your KYC has been approved. ${roleMessage} ${comments ? `Admin notes: ${comments}` : ''}`, type: 'general', priority: 'high' });
+    await Notification.create({ userId: safeUserId, title: 'KYC Approved', message: `Congratulations! Your KYC has been approved. ${roleMessage} ${comments ? `Admin notes: ${comments}` : ''}`, type: 'general', priority: 'high' });
   } catch (err) { console.error('Notification creation error:', err); }
 
-  notifyKYCUpdate(userId, 'verified', undefined);
+  notifyKYCUpdate(String(safeUserId), 'verified', undefined);
 
   try {
-    await AuditLog.create({ adminId: adminUser._id, adminEmail: adminUser.email, action: 'KYC_APPROVED', resourceType: 'KYC', resourceId: userId, resourceDetails: `${user.firstName} ${user.lastName} (${user.email})`, reason: comments || 'KYC documents verified', ipAddress: req.ip, userAgent: req.get('user-agent') || 'Unknown', status: 'success' });
+    await AuditLog.create({ adminId: adminUser._id, adminEmail: adminUser.email, action: 'KYC_APPROVED', resourceType: 'KYC', resourceId: safeUserId, resourceDetails: `${user.firstName} ${user.lastName} (${user.email})`, reason: comments || 'KYC documents verified', ipAddress: req.ip, userAgent: req.get('user-agent') || 'Unknown', status: 'success' });
   } catch (auditErr) { console.error('Audit log error:', auditErr); }
 
   res.status(200).json({ success: true, message: 'User KYC approved', data: user });
@@ -195,24 +200,30 @@ export const approveUserKYC = asyncHandler(async (req: Request, res: Response) =
 
 export const rejectUserKYC = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
+  if (!userId || !mongoose.isValidObjectId(userId)) return sendError(res, 'Invalid user ID', 400);
+  const safeUserId = new mongoose.Types.ObjectId(userId);
   const { reason } = req.body as { reason: string };
   const adminUser = req.user as AdminUser;
 
-  if (!reason || reason.trim().length < 10) {
+  if (!reason || typeof reason !== 'string' || reason.trim().length < 10) {
     return sendError(res, 'A rejection reason of at least 10 characters is required', 400);
   }
 
-  const user = await User.findByIdAndUpdate(userId, { kycStatus: KycStatus.Rejected, kycRejectionReason: reason.trim(), kycResultSeen: false }, { new: true }).select('-password');
+  const user = await User.findByIdAndUpdate(
+    safeUserId,
+    { $set: { kycStatus: KycStatus.Rejected, kycRejectionReason: reason.trim(), kycResultSeen: false } },
+    { new: true },
+  ).select('-password');
   if (!user) return sendError(res, 'User not found', 404);
 
   try {
-    await Notification.create({ userId, title: 'KYC Rejected', message: `Your KYC application has been rejected. Reason: ${reason.trim()}. You can re-submit your documents for verification.`, type: 'general', priority: 'high' });
+    await Notification.create({ userId: safeUserId, title: 'KYC Rejected', message: `Your KYC application has been rejected. Reason: ${reason.trim()}. You can re-submit your documents for verification.`, type: 'general', priority: 'high' });
   } catch (err) { console.error('Notification creation error:', err); }
 
-  notifyKYCUpdate(userId, 'rejected', reason.trim());
+  notifyKYCUpdate(String(safeUserId), 'rejected', reason.trim());
 
   try {
-    await AuditLog.create({ adminId: adminUser._id, adminEmail: adminUser.email, action: 'KYC_REJECTED', resourceType: 'KYC', resourceId: userId, resourceDetails: `${user.firstName} ${user.lastName} (${user.email})`, reason: reason.trim(), ipAddress: req.ip, userAgent: req.get('user-agent') || 'Unknown', status: 'success' });
+    await AuditLog.create({ adminId: adminUser._id, adminEmail: adminUser.email, action: 'KYC_REJECTED', resourceType: 'KYC', resourceId: safeUserId, resourceDetails: `${user.firstName} ${user.lastName} (${user.email})`, reason: reason.trim(), ipAddress: req.ip, userAgent: req.get('user-agent') || 'Unknown', status: 'success' });
   } catch (auditErr) { console.error('Audit log error:', auditErr); }
 
   res.status(200).json({ success: true, message: 'User KYC rejected', data: user });
@@ -270,8 +281,11 @@ export const getAllCrops = asyncHandler(async (req: Request, res: Response) => {
   const { status, search } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = {};
-  if (status) query.status = status;
-  if (search) query.$or = [{ cropName: { $regex: search, $options: 'i' } }, { category: { $regex: search, $options: 'i' } }];
+  if (status && Object.values(CropStatus).includes(status as CropStatus)) query.status = status;
+  if (search && typeof search === 'string') {
+    const cleanSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
+    if (cleanSearch) query.$or = [{ cropName: { $regex: cleanSearch, $options: 'i' } }, { category: { $regex: cleanSearch, $options: 'i' } }];
+  }
   const [crops, total] = await Promise.all([
     CropListing.find(query).lean().populate('farmerId', 'firstName lastName farmName').skip(skip).limit(limit).sort({ createdAt: -1 }),
     CropListing.countDocuments(query),
@@ -280,7 +294,9 @@ export const getAllCrops = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const approveCrop = asyncHandler(async (req: Request, res: Response) => {
-  const crop = await CropListing.findByIdAndUpdate(req.params.cropId, { listingApprovalStatus: ListingApprovalStatus.Approved }, { new: true }).populate('farmerId', 'name email');
+  if (!req.params.cropId || !mongoose.isValidObjectId(req.params.cropId)) return sendError(res, 'Invalid crop ID', 400);
+  const safeCropId = new mongoose.Types.ObjectId(req.params.cropId);
+  const crop = await CropListing.findByIdAndUpdate(safeCropId, { $set: { listingApprovalStatus: ListingApprovalStatus.Approved } }, { new: true }).populate('farmerId', 'name email');
   if (!crop) return sendError(res, 'Crop not found', 404);
   try {
     await Notification.create({ userId: crop.farmerId, title: 'Crop Approved', message: `Your crop listing "${crop.cropName}" has been approved and is now visible to buyers!`, type: 'general', priority: 'high', data: { cropId: crop._id, cropName: crop.cropName } });
@@ -290,8 +306,10 @@ export const approveCrop = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const rejectCrop = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.params.cropId || !mongoose.isValidObjectId(req.params.cropId)) return sendError(res, 'Invalid crop ID', 400);
+  const safeCropId = new mongoose.Types.ObjectId(req.params.cropId);
   const { reason } = req.body as { reason?: string };
-  const crop = await CropListing.findByIdAndUpdate(req.params.cropId, { listingApprovalStatus: ListingApprovalStatus.Rejected, rejectionReason: reason }, { new: true }).populate('farmerId', 'name email');
+  const crop = await CropListing.findByIdAndUpdate(safeCropId, { $set: { listingApprovalStatus: ListingApprovalStatus.Rejected, rejectionReason: typeof reason === 'string' ? reason.trim() : '' } }, { new: true }).populate('farmerId', 'name email');
   if (!crop) return sendError(res, 'Crop not found', 404);
   try {
     await Notification.create({ userId: crop.farmerId, title: 'Crop Rejected', message: `Your crop listing "${crop.cropName}" has been rejected. Reason: ${reason || 'Not specified'}.`, type: 'general', priority: 'high', data: { cropId: crop._id, cropName: crop.cropName, rejectionReason: reason } });
@@ -300,8 +318,10 @@ export const rejectCrop = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const freezeCrop = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.params.cropId || !mongoose.isValidObjectId(req.params.cropId)) return sendError(res, 'Invalid crop ID', 400);
+  const safeCropId = new mongoose.Types.ObjectId(req.params.cropId);
   const { reason } = req.body as { reason?: string };
-  const crop = await CropListing.findByIdAndUpdate(req.params.cropId, { status: CropStatus.Inactive }, { new: true });
+  const crop = await CropListing.findByIdAndUpdate(safeCropId, { $set: { status: CropStatus.Inactive } }, { new: true });
   if (!crop) return sendError(res, 'Crop not found', 404);
   try {
     await Notification.create({ userId: crop.farmerId, title: 'Crop Suspended', message: `Your crop "${crop.cropName}" has been suspended. Reason: ${reason}`, type: 'general', relatedId: String(crop._id), priority: 'high' });
@@ -310,25 +330,30 @@ export const freezeCrop = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const deleteCrop = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.params.cropId || !mongoose.isValidObjectId(req.params.cropId)) return sendError(res, 'Invalid crop ID', 400);
+  const safeCropId = new mongoose.Types.ObjectId(req.params.cropId);
   const { reason } = req.body as { reason?: string };
-  const crop = await CropListing.findById(req.params.cropId);
+  const crop = await CropListing.findById(safeCropId);
   if (!crop) return sendError(res, 'Crop not found', 404);
   const cropName = crop.cropName;
   const farmerId = crop.farmerId;
-  await CropListing.findByIdAndDelete(req.params.cropId);
+  await CropListing.findByIdAndDelete(safeCropId);
   try {
     await Notification.create({ userId: farmerId, title: 'Crop Deleted', message: `Your crop "${cropName}" has been deleted from marketplace. Reason: ${reason}`, type: 'general', priority: 'high' });
   } catch (err) { console.error('Notification creation error:', err); }
-  res.status(200).json({ success: true, message: 'Crop deleted successfully', data: { id: req.params.cropId } });
+  res.status(200).json({ success: true, message: 'Crop deleted successfully', data: { id: String(safeCropId) } });
 });
 
 export const getAllOrders = asyncHandler(async (req: Request, res: Response) => {
   const { status, search } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = {};
-  if (status) query.orderStatus = status;
+  if (status && Object.values(OrderStatus).includes(status as OrderStatus)) query.orderStatus = status;
   
-  if (search) query.orderNumber = { $regex: search, $options: 'i' };
+  if (search && typeof search === 'string') {
+    const cleanSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
+    if (cleanSearch) query.orderNumber = { $regex: cleanSearch, $options: 'i' };
+  }
   const [orders, total] = await Promise.all([
     Order.find(query).lean().populate('buyerId', 'firstName lastName email phone city state').populate('farmerId', 'firstName lastName name farmName phone city state').populate('cropId', 'cropName images price unit').skip(skip).limit(limit).sort({ createdAt: -1 }),
     Order.countDocuments(query),
@@ -338,13 +363,15 @@ export const getAllOrders = asyncHandler(async (req: Request, res: Response) => 
 
 export const updateOrderStatus = asyncHandler(async (req: Request, res: Response) => {
   const { orderId } = req.params;
+  if (!orderId || !mongoose.isValidObjectId(orderId)) { sendError(res, 'Invalid order ID', 400); return; }
+  const safeOrderId = new mongoose.Types.ObjectId(orderId);
   const { orderStatus, cancellationReason } = req.body as { orderStatus: OrderStatus; cancellationReason?: string };
   const adminUser = req.user as AdminUser;
 
   const validStatuses: OrderStatus[] = [OrderStatus.Confirmed, OrderStatus.Preparing, OrderStatus.ReadyForPickup, OrderStatus.PickedUp, OrderStatus.Completed, OrderStatus.Cancelled];
   if (!validStatuses.includes(orderStatus)) { sendError(res, `Invalid order status. Must be one of: ${validStatuses.join(', ')}`, 400); return; }
 
-  const order = await Order.findById(orderId);
+  const order = await Order.findById(safeOrderId);
   if (!order) { sendError(res, 'Order not found', 404); return; }
 
   const validTransitions: Record<OrderStatus, OrderStatus[]> = {
@@ -488,7 +515,9 @@ export const getDashboardAnalytics = asyncHandler(async (_req: Request, res: Res
 });
 
 export const getFarmerAnalytics = asyncHandler(async (req: Request, res: Response) => {
-  const farmer = await User.findById(req.params.farmerId);
+  if (!req.params.farmerId || !mongoose.isValidObjectId(req.params.farmerId)) return sendError(res, 'Invalid farmer ID', 400);
+  const safeFarmerId = new mongoose.Types.ObjectId(req.params.farmerId);
+  const farmer = await User.findById(safeFarmerId);
   if (!farmer || farmer.role !== UserRole.Farmer) return sendError(res, 'Farmer not found', 404);
   const [crops, orders] = await Promise.all([CropListing.find({ farmerId: farmer._id }).lean(), Order.find({ farmerId: farmer._id }).lean()]);
   const totalEarnings = orders.filter((o) => o.orderStatus === OrderStatus.Completed).reduce((sum, o) => sum + o.totalAmount, 0);
@@ -496,7 +525,9 @@ export const getFarmerAnalytics = asyncHandler(async (req: Request, res: Respons
 });
 
 export const getBuyerAnalytics = asyncHandler(async (req: Request, res: Response) => {
-  const buyer = await User.findById(req.params.buyerId);
+  if (!req.params.buyerId || !mongoose.isValidObjectId(req.params.buyerId)) return sendError(res, 'Invalid buyer ID', 400);
+  const safeBuyerId = new mongoose.Types.ObjectId(req.params.buyerId);
+  const buyer = await User.findById(safeBuyerId);
   if (!buyer || buyer.role !== UserRole.Buyer) return sendError(res, 'Buyer not found', 404);
   const orders = await Order.find({ buyerId: buyer._id }).lean();
   const totalSpent = orders.filter((o) => o.orderStatus === OrderStatus.Completed).reduce((sum, o) => sum + o.totalAmount, 0);
@@ -515,8 +546,10 @@ export const getAuditLogs = asyncHandler(async (req: Request, res: Response) => 
   const { action, adminId } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 50, maxLimit: 100 });
   const query: Record<string, unknown> = {};
-  if (action && action !== 'all') query.action = action;
-  if (adminId) query.adminId = adminId;
+  if (action && typeof action === 'string' && action !== 'all') query.action = action.trim().slice(0, 50);
+  if (adminId && typeof adminId === 'string' && mongoose.isValidObjectId(adminId)) {
+    query.adminId = new mongoose.Types.ObjectId(adminId);
+  }
   const [logs, total] = await Promise.all([
     AuditLog.find(query).lean().populate('adminId', 'name email').skip(skip).limit(limit).sort({ timestamp: -1 }),
     AuditLog.countDocuments(query),
@@ -527,7 +560,9 @@ export const getAuditLogs = asyncHandler(async (req: Request, res: Response) => 
 export const changeUserRole = asyncHandler(async (req: Request, res: Response) => {
   const { newRole } = req.body as { newRole: UserRole };
   if (![UserRole.Farmer, UserRole.Buyer, UserRole.Admin].includes(newRole)) return sendError(res, 'Invalid role', 400);
-  const user = await User.findById(req.params.userId);
+  if (!req.params.userId || !mongoose.isValidObjectId(req.params.userId)) return sendError(res, 'Invalid user ID', 400);
+  const safeUserId = new mongoose.Types.ObjectId(req.params.userId);
+  const user = await User.findById(safeUserId);
   if (!user) return sendError(res, 'User not found', 404);
   const oldRole = user.role;
   user.role = newRole;
@@ -541,7 +576,12 @@ export const getApprovedFarmers = asyncHandler(async (req: Request, res: Respons
   const { search } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = { role: UserRole.Farmer, kycStatus: KycStatus.Verified, status: UserStatus.Active };
-  if (search) query.$or = [{ firstName: { $regex: search, $options: 'i' } }, { lastName: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }, { farmName: { $regex: search, $options: 'i' } }];
+  if (search && typeof search === 'string') {
+    const cleanSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
+    if (cleanSearch) {
+      query.$or = [{ firstName: { $regex: cleanSearch, $options: 'i' } }, { lastName: { $regex: cleanSearch, $options: 'i' } }, { email: { $regex: cleanSearch, $options: 'i' } }, { farmName: { $regex: cleanSearch, $options: 'i' } }];
+    }
+  }
   const [farmers, total] = await Promise.all([
     User.find(query).lean().select('-password').skip(skip).limit(limit).sort({ createdAt: -1 }),
     User.countDocuments(query),
@@ -553,7 +593,12 @@ export const getApprovedBuyers = asyncHandler(async (req: Request, res: Response
   const { search } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = { role: UserRole.Buyer, kycStatus: KycStatus.Verified, status: UserStatus.Active };
-  if (search) query.$or = [{ firstName: { $regex: search, $options: 'i' } }, { lastName: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }];
+  if (search && typeof search === 'string') {
+    const cleanSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
+    if (cleanSearch) {
+      query.$or = [{ firstName: { $regex: cleanSearch, $options: 'i' } }, { lastName: { $regex: cleanSearch, $options: 'i' } }, { email: { $regex: cleanSearch, $options: 'i' } }];
+    }
+  }
   const [buyers, total] = await Promise.all([
     User.find(query).lean().select('-password').skip(skip).limit(limit).sort({ createdAt: -1 }),
     User.countDocuments(query),
@@ -565,7 +610,12 @@ export const getSuspendedUsers = asyncHandler(async (req: Request, res: Response
   const { search } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = { status: { $in: [UserStatus.Suspended, UserStatus.Banned] } };
-  if (search) query.$or = [{ firstName: { $regex: search, $options: 'i' } }, { lastName: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }];
+  if (search && typeof search === 'string') {
+    const cleanSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
+    if (cleanSearch) {
+      query.$or = [{ firstName: { $regex: cleanSearch, $options: 'i' } }, { lastName: { $regex: cleanSearch, $options: 'i' } }, { email: { $regex: cleanSearch, $options: 'i' } }];
+    }
+  }
   const [users, total] = await Promise.all([
     User.find(query).lean().select('-password').skip(skip).limit(limit).sort({ createdAt: -1 }),
     User.countDocuments(query),
@@ -575,12 +625,14 @@ export const getSuspendedUsers = asyncHandler(async (req: Request, res: Response
 
 export const getUserDocuments = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
-  const user = await User.findById(userId).lean().select('firstName lastName email role kycStatus farmImages kycDocuments');
+  if (!userId || !mongoose.isValidObjectId(userId)) return sendError(res, 'Invalid user ID', 400);
+  const safeUserId = new mongoose.Types.ObjectId(userId);
+  const user = await User.findById(safeUserId).lean().select('firstName lastName email role kycStatus farmImages kycDocuments');
   if (!user) return sendError(res, 'User not found', 404);
 
   let cropImages: { cropName: string; images: string[] }[] = [];
   if (user.role === UserRole.Farmer) {
-    const crops = await CropListing.find({ farmerId: userId }).select('cropName images').lean();
+    const crops = await CropListing.find({ farmerId: safeUserId }).select('cropName images').lean();
     cropImages = crops.map((crop) => ({ cropName: crop.cropName, images: crop.images || [] }));
   }
 
@@ -599,8 +651,8 @@ export const searchDocuments = asyncHandler(async (req: Request, res: Response) 
   const { role, kycStatus } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = {};
-  if (role) query.role = role;
-  if (kycStatus) query.kycStatus = kycStatus;
+  if (role && Object.values(UserRole).includes(role as UserRole)) query.role = role;
+  if (kycStatus && Object.values(KycStatus).includes(kycStatus as KycStatus)) query.kycStatus = kycStatus;
   const [users, total] = await Promise.all([
     User.find(query).lean().select('firstName lastName email role kycStatus kycSubmittedAt kycDocuments farmImages').skip(skip).limit(limit).sort({ kycSubmittedAt: -1 }),
     User.countDocuments(query),

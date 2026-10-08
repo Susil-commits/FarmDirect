@@ -90,12 +90,13 @@ export async function register(req: Request, res: Response, next: NextFunction):
     };
     const { firstName, lastName, email, password, role, phone, location, photo, address, city, state, pincode } = body;
 
-    if (!firstName || !lastName || !email || !password) {
-      sendError(res, 'First name, last name, email, and password are required', 400);
+    if (!firstName || !lastName || !email || !password || typeof email !== 'string' || typeof password !== 'string') {
+      sendError(res, 'Valid first name, last name, email, and password are required', 400);
       return;
     }
 
-    const userExists = await User.findOne({ email });
+    const cleanEmail = email.toLowerCase().trim();
+    const userExists = await User.findOne({ email: cleanEmail });
     if (userExists) {
       sendError(res, 'Email already registered', 400);
       return;
@@ -143,12 +144,13 @@ export async function register(req: Request, res: Response, next: NextFunction):
 export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { email, password } = req.body as LoginDto;
-    if (!email || !password) {
-      sendError(res, 'Please provide email and password', 400);
+    if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+      sendError(res, 'Please provide valid email and password', 400);
       return;
     }
 
-    const user = (await User.findOne({ email }).select('+password')) as unknown as PublicUserDoc | null;
+    const cleanEmail = email.toLowerCase().trim();
+    const user = (await User.findOne({ email: cleanEmail }).select('+password')) as unknown as PublicUserDoc | null;
     if (!user) {
       sendError(res, 'Invalid credentials', 401);
       return;
@@ -203,18 +205,24 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
       address, city, state, pincode,
     } = req.body as Record<string, unknown>;
 
-    const updateDoc: Record<string, unknown> = {
-      name, phone, location, bio, avatar,
-      address, city, state, pincode,
-    };
+    const updateDoc: Record<string, unknown> = {};
+    if (typeof name === 'string') updateDoc.name = name.trim();
+    if (typeof phone === 'string') updateDoc.phone = phone.trim();
+    if (typeof location === 'string') updateDoc.location = location.trim();
+    if (typeof bio === 'string') updateDoc.bio = bio.trim();
+    if (typeof address === 'string') updateDoc.address = address.trim();
+    if (typeof city === 'string') updateDoc.city = city.trim();
+    if (typeof state === 'string') updateDoc.state = state.trim();
+    if (typeof pincode === 'string') updateDoc.pincode = pincode.trim();
+
     const resolvedPhoto = photo || profilePicture || avatar;
-    if (resolvedPhoto !== undefined) {
+    if (typeof resolvedPhoto === 'string') {
       updateDoc.profilePicture = resolvedPhoto;
     }
 
     const user = (await User.findByIdAndUpdate(
       req.user!._id,
-      updateDoc,
+      { $set: updateDoc },
       { new: true, runValidators: true },
     )) as unknown as PublicUserDoc | null;
 
@@ -248,9 +256,10 @@ export async function logout(req: Request, res: Response): Promise<void> {
 export async function forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { email } = req.body as { email?: string };
-    if (!email) { sendError(res, 'Please provide an email', 400); return; }
+    if (!email || typeof email !== 'string') { sendError(res, 'Please provide a valid email', 400); return; }
 
-    const user = await User.findOne({ email });
+    const cleanEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: cleanEmail });
     if (!user) {
       res.status(200).json({ success: true, message: 'If that email is registered, a reset link has been sent.' });
       return;
@@ -260,7 +269,7 @@ export async function forgotPassword(req: Request, res: Response, next: NextFunc
     const passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
     const passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
 
-    await User.findByIdAndUpdate(user._id, { passwordResetToken, passwordResetExpires });
+    await User.findByIdAndUpdate(user._id, { $set: { passwordResetToken, passwordResetExpires } });
 
     const resetUrl = `${env.frontendUrl}/reset-password?token=${resetToken}`;
 

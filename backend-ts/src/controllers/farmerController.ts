@@ -6,6 +6,7 @@ import { sendError } from '../utils/apiResponse.js';
 import { OrderStatus, CropStatus, ListingApprovalStatus } from '../types/enums.js';
 import { evaluateFarmerSmartLowStock } from '../services/inventoryService.js';
 import type { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 
 function calculatePerformanceScore(crop: { rating?: number; views?: number; sold?: number }, _orderCount: number): number {
   let score = 0;
@@ -197,14 +198,21 @@ export async function getSmartLowStockItems(req: Request, res: Response, next: N
 
 export async function updateLowStockThreshold(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { cropId, threshold } = req.body as { cropId: string; threshold: number };
+    const { cropId, threshold } = req.body as { cropId?: unknown; threshold?: unknown };
     const farmerId = req.user!._id;
-    if (!cropId || threshold === undefined) { sendError(res, 'cropId and threshold are required', 400); return; }
-    if (threshold < 0) { sendError(res, 'Threshold cannot be negative', 400); return; }
+    if (!cropId || typeof cropId !== 'string' || !mongoose.isValidObjectId(cropId) || typeof threshold !== 'number') {
+      sendError(res, 'Valid cropId and numeric threshold are required', 400);
+      return;
+    }
+    if (threshold < 0 || !Number.isFinite(threshold)) {
+      sendError(res, 'Threshold cannot be negative', 400);
+      return;
+    }
+    const safeCropId = new mongoose.Types.ObjectId(cropId);
 
     const crop = await CropListing.findOneAndUpdate(
-      { _id: cropId, farmerId },
-      { lowStockThreshold: threshold },
+      { _id: safeCropId, farmerId },
+      { $set: { lowStockThreshold: Math.floor(threshold) } },
       { new: true, runValidators: true },
     );
     if (!crop) { sendError(res, 'Crop not found or you are not authorized to modify it', 403); return; }

@@ -27,7 +27,7 @@ export const INJECTION_PATTERNS = [
   /dump\s+all\s+environment\s+variables/i,
   /\[ADMIN\s+OVERRIDE\]/i,
   /output\s+the\s+raw\s+database\s+connection\s+string/i,
-  /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/i,
+  /<\s*script\b[^>]*>/i,
 ];
 
 export const OFF_TOPIC_PATTERNS = [
@@ -68,9 +68,10 @@ const LEAKAGE_PATTERNS = [
  */
 export function scrubPii(text: string): string {
   if (!text || typeof text !== 'string') return '';
-  return text
+  const bounded = text.slice(0, 10000);
+  return bounded
     // Email addresses
-    .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[REDACTED_EMAIL]')
+    .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}/g, '[REDACTED_EMAIL]')
     // 10-digit phone numbers with optional country code (+91 / 0)
     .replace(/(?:\+?91[\s-]?)?[6789]\d{9}\b/g, '[REDACTED_PHONE]')
     // 16-digit payment card numbers

@@ -5,7 +5,7 @@ import { sendError } from '../utils/apiResponse.js';
 import { notifyNewMessage } from '../socket/eventHandlers.js';
 import type { Request, Response } from 'express';
 import { parsePagination } from '../utils/pagination.js';
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 
 export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
   const { receiverId, content, cropId, orderId, type = 'text', attachments = [] } = req.body as {
@@ -14,19 +14,26 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
   };
   const senderId = req.user!._id;
 
-  if (!receiverId) return sendError(res, 'Receiver ID is required', 400);
+  if (!receiverId || typeof receiverId !== 'string' || !mongoose.isValidObjectId(receiverId)) {
+    return sendError(res, 'Valid receiver ID is required', 400);
+  }
+  const safeReceiverId = new mongoose.Types.ObjectId(receiverId);
+
   if (!content || content.trim().length === 0) return sendError(res, 'Message content cannot be empty', 400);
   if (content.trim().length > 5000) return sendError(res, 'Message content cannot exceed 5000 characters', 400);
-  if (senderId.toString() === receiverId.toString()) return sendError(res, 'Cannot send message to yourself', 400);
+  if (senderId.toString() === safeReceiverId.toString()) return sendError(res, 'Cannot send message to yourself', 400);
 
-  const receiver = await User.findById(receiverId);
+  const receiver = await User.findById(safeReceiverId);
   if (!receiver) return sendError(res, 'Receiver not found', 404);
 
-  const conversationId = (Message as unknown as MessageModel).generateConversationId(senderId.toString(), receiverId);
+  const conversationId = (Message as unknown as MessageModel).generateConversationId(senderId.toString(), safeReceiverId.toString());
+
+  const safeCropId = (cropId && mongoose.isValidObjectId(cropId)) ? new mongoose.Types.ObjectId(cropId) : null;
+  const safeOrderId = (orderId && mongoose.isValidObjectId(orderId)) ? new mongoose.Types.ObjectId(orderId) : null;
 
   const message = await Message.create({
-    senderId, receiverId, content: content.trim(),
-    cropId: cropId || null, orderId: orderId || null, type, attachments, conversationId,
+    senderId, receiverId: safeReceiverId, content: content.trim(),
+    cropId: safeCropId, orderId: safeOrderId, type, attachments, conversationId,
     metadata: { deviceType: req.headers['user-agent']?.includes('Mobile') ? 'mobile' : 'desktop' },
   });
 
@@ -41,6 +48,10 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
 
 export const getConversation = asyncHandler(async (req: Request, res: Response) => {
   const { receiverId } = req.params;
+  if (!receiverId || !mongoose.isValidObjectId(receiverId)) {
+    return sendError(res, 'Valid receiver ID is required', 400);
+  }
+  const safeReceiverId = new mongoose.Types.ObjectId(receiverId);
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 50, maxLimit: 100 });
   const userId = req.user!._id;
 

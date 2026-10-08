@@ -602,7 +602,7 @@ export default function FarmerDashboard() {
                       return (
                         <div key={status} className="flex items-center justify-between">
                           <div className="flex items-center gap-3 flex-1">
-                            <div className={`w-3 h-3 rounded-full ${STATUS_COLORS[status]?.split(' ')[0]?.replace('bg-', 'bg-') || 'bg-gray-500'}`} />
+                            <div className={`w-3 h-3 rounded-full ${STATUS_COLORS[status]?.split(' ')[0] || 'bg-gray-500'}`} />
                             <span className="text-gray-700 font-semibold">{STATUS_LABELS[status]}</span>
                           </div>
                           <span className="text-sm font-bold text-gray-900 w-8 text-right">{count}</span>

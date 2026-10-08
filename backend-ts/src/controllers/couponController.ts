@@ -160,7 +160,30 @@ export const createCoupon = asyncHandler(async (req: Request, res: Response) => 
 });
 
 export const updateCoupon = asyncHandler(async (req: Request, res: Response) => {
-  const coupon = await Coupon.findByIdAndUpdate(req.params.id, req.body, {
+  if (!req.params.id || !mongoose.isValidObjectId(req.params.id)) {
+    return sendError(res, 'Invalid coupon ID', 400);
+  }
+  const safeId = new mongoose.Types.ObjectId(req.params.id);
+
+  const {
+    code, type, value, minOrderAmount, maxDiscountAmount,
+    description, usageLimit, perUserLimit, validFrom, validUntil, isActive,
+  } = req.body as Record<string, unknown>;
+
+  const updateFields: Record<string, unknown> = {};
+  if (typeof code === 'string') updateFields.code = code.trim().toUpperCase();
+  if (type !== undefined) updateFields.type = type;
+  if (typeof value === 'number') updateFields.value = value;
+  if (typeof minOrderAmount === 'number') updateFields.minOrderAmount = minOrderAmount;
+  if (typeof maxDiscountAmount === 'number') updateFields.maxDiscountAmount = maxDiscountAmount;
+  if (typeof description === 'string') updateFields.description = description.trim();
+  if (typeof usageLimit === 'number') updateFields.usageLimit = usageLimit;
+  if (typeof perUserLimit === 'number') updateFields.perUserLimit = perUserLimit;
+  if (validFrom !== undefined) updateFields.validFrom = validFrom;
+  if (validUntil !== undefined) updateFields.validUntil = validUntil;
+  if (typeof isActive === 'boolean') updateFields.isActive = isActive;
+
+  const coupon = await Coupon.findByIdAndUpdate(safeId, { $set: updateFields }, {
     new: true,
     runValidators: true,
   });
@@ -169,7 +192,11 @@ export const updateCoupon = asyncHandler(async (req: Request, res: Response) => 
 });
 
 export const deleteCoupon = asyncHandler(async (req: Request, res: Response) => {
-  const coupon = await Coupon.findByIdAndDelete(req.params.id);
+  if (!req.params.id || !mongoose.isValidObjectId(req.params.id)) {
+    return sendError(res, 'Invalid coupon ID', 400);
+  }
+  const safeId = new mongoose.Types.ObjectId(req.params.id);
+  const coupon = await Coupon.findByIdAndDelete(safeId);
   if (!coupon) return sendError(res, 'Coupon not found', 404);
   res.status(200).json({ success: true, message: 'Coupon deleted' });
 });

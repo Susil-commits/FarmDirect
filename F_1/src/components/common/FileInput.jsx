@@ -106,11 +106,11 @@ export default function FileInput({
         </label>
       )}
 
-      {previewUrl ? (
+      {previewUrl && /^(data:image\/|blob:|https?:\/\/|\/)/i.test(String(previewUrl).trim()) ? (
         <div className="space-y-4">
           <div className="relative w-full">
             <img
-              src={previewUrl}
+              src={String(previewUrl).trim()}
               alt="Preview"
               className="w-full h-48 object-cover rounded-lg border-2 border-green-300"
             />

@@ -99,7 +99,7 @@ export class AdminService {
 
     const user = await User.findByIdAndUpdate(
       targetUserId,
-      { status, suspensionReason: status !== UserStatus.Active ? safeReason : '', updatedAt: new Date() },
+      { $set: { status, suspensionReason: status !== UserStatus.Active ? safeReason : '', updatedAt: new Date() } },
       { new: true },
     ).select('-password');
 

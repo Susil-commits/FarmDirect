@@ -12,7 +12,7 @@ const userSchema = new Schema<IUser>(
       required: [true, 'Email is required'],
       unique: true,
       lowercase: true,
-      match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email'],
+      match: [/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Please provide a valid email'],
     },
     password: { type: String, minlength: 6, select: false },
     phone: { type: String, trim: true },

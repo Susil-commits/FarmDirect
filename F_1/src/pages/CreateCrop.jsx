@@ -326,13 +326,15 @@ export default function CreateCrop() {
                             )}
                           </div>
                           <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                            {imagePreview.map((preview, index) => (
-                              <div key={index} className="relative group">
-                                <img
-                                  src={preview}
-                                  alt={`Preview ${index + 1}`}
-                                  className="w-full h-20 object-cover rounded-lg border-2 border-emerald-100 shadow-xs"
-                                />
+                            {imagePreview.map((preview, index) => {
+                              const safeSrc = typeof preview === 'string' && /^(data:image\/|blob:|https?:\/\/|\/)/i.test(preview.trim()) ? preview.trim() : '';
+                              return (
+                                <div key={index} className="relative group">
+                                  <img
+                                    src={safeSrc}
+                                    alt={`Preview ${index + 1}`}
+                                    className="w-full h-20 object-cover rounded-lg border-2 border-emerald-100 shadow-xs"
+                                  />
                                 <button
                                   type="button"
                                   onClick={() => removeImage(index)}
@@ -341,8 +343,9 @@ export default function CreateCrop() {
                                   <X size={12} />
                                 </button>
                               </div>
-                            ))}
-                          </div>
+                            );
+                          })}
+                        </div>
                         </div>
                       )}
 

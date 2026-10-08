@@ -12,10 +12,10 @@ const TOXIC_PATTERNS = [
 
 const SPAM_PATTERNS = [
   /https?:\/\/[^\s]+/i,
-  /www\.[a-z0-9.-]+\.[a-z]{2,}/i,
-  /\b[a-zA-Z0-9.-]+\.(com|xyz|top|ru|biz|club|site|online)\b/i,
+  /www\.[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}/i,
+  /\b[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.(?:com|xyz|top|ru|biz|club|site|online)\b/i,
   /\b(telegram|t\.me|whatsapp|wa\.me|crypto|forex|invest|earning app|free cash|win cash|lottery)\b/i,
-  /\b(\+?91[\s-]?)?[6789]\d{9}\b/, // Phone number sequence
+  /\b(?:\+?91[\s-]?)?[6789]\d{9}\b/, // Phone number sequence
   /(.)\1{6,}/, // Excessive repeated character spam like "aaaaaaa"
 ];
 
@@ -42,7 +42,7 @@ export interface ReviewAnalysisResult {
  * Analyzes review content for toxicity, spam, and sentiment.
  */
 export function analyzeReviewContent(comment: string, rating: number): ReviewAnalysisResult {
-  const text = (comment || '').trim();
+  const text = (comment || '').trim().slice(0, 1000);
   const lower = text.toLowerCase();
 
   // 1. Toxicity check

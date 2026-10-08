@@ -5,6 +5,7 @@ import Order from '../models/Order.js';
 import User from '../models/User.js';
 import Wishlist from '../models/Wishlist.js';
 import type { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { parsePagination } from '../utils/pagination.js';
 
 interface CacheEntry<T> {
@@ -76,8 +77,13 @@ export const getPublicApprovedCrops = asyncHandler(async (req: Request, res: Res
   const { search = '', category = '' } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 50 });
   const query: Record<string, unknown> = { listingApprovalStatus: 'approved' };
-  if (search) query.$or = [{ cropName: { $regex: search, $options: 'i' } }, { description: { $regex: search, $options: 'i' } }];
-  if (category) query.category = category;
+  if (search && typeof search === 'string') {
+    const cleanSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
+    if (cleanSearch) query.$or = [{ cropName: { $regex: cleanSearch, $options: 'i' } }, { description: { $regex: cleanSearch, $options: 'i' } }];
+  }
+  if (category && typeof category === 'string') {
+    query.category = category.trim().slice(0, 50);
+  }
 
   const isCacheable = !search && !category && page === 1;
   if (isCacheable && publicCropsCache && (Date.now() - publicCropsCache.timestamp < CACHE_TTL)) {
@@ -109,16 +115,21 @@ export const getPublicApprovedCrops = asyncHandler(async (req: Request, res: Res
 
 export const getPublicFarmerProfile = asyncHandler(async (req: Request, res: Response) => {
   const { farmerId } = req.params;
-  const farmer = await User.findById(farmerId).select('name email phone address city state rating kycStatus -password');
+  if (!farmerId || !mongoose.isValidObjectId(farmerId)) return sendError(res, 'Invalid farmer ID', 400);
+  const safeFarmerId = new mongoose.Types.ObjectId(farmerId);
+  const farmer = await User.findById(safeFarmerId).select('name email phone address city state rating kycStatus -password');
   if (!farmer || farmer.kycStatus !== 'verified') return sendError(res, 'Farmer not found or not verified', 404);
-  const crops = await CropListing.find({ farmerId, listingApprovalStatus: 'approved' }).lean().select('cropName price description quantity images');
+  const crops = await CropListing.find({ farmerId: safeFarmerId, listingApprovalStatus: 'approved' }).lean().select('cropName price description quantity images');
   res.status(200).json({ success: true, data: { farmer, cropCount: crops.length, crops: crops.slice(0, 5) } });
 });
 
 export const searchCrops = asyncHandler(async (req: Request, res: Response) => {
   const { q, sortBy = 'newest', priceMin = '0', priceMax = '10000' } = req.query as Record<string, string>;
   const query: Record<string, unknown> = { listingApprovalStatus: 'approved', price: { $gte: Number(priceMin), $lte: Number(priceMax) } };
-  if (q) query.$or = [{ cropName: { $regex: searchRegex(q), $options: 'i' } }, { description: { $regex: searchRegex(q), $options: 'i' } }];
+  if (q && typeof q === 'string') {
+    const escaped = searchRegex(q);
+    if (escaped) query.$or = [{ cropName: { $regex: escaped, $options: 'i' } }, { description: { $regex: escaped, $options: 'i' } }];
+  }
   let sort: Record<string, 1 | -1> = { createdAt: -1 };
   if (sortBy === 'price-low') sort = { price: 1 };
   if (sortBy === 'price-high') sort = { price: -1 };
@@ -129,13 +140,16 @@ export const searchCrops = asyncHandler(async (req: Request, res: Response) => {
 });
 
 function searchRegex(term: string): string {
-  return term;
+  if (typeof term !== 'string') return '';
+  return term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
 }
 
 export const getAdminAllCrops = asyncHandler(async (req: Request, res: Response) => {
   const { status = 'all' } = req.query as Record<string, string>;
   const query: Record<string, unknown> = {};
-  if (status !== 'all') query.listingApprovalStatus = status;
+  if (status !== 'all' && ['approved', 'pending', 'rejected'].includes(status)) {
+    query.listingApprovalStatus = status;
+  }
   const crops = await CropListing.find(query).lean().populate('farmerId', 'name email kycStatus').sort({ createdAt: -1 }).limit(250);
   res.status(200).json({
     success: true,

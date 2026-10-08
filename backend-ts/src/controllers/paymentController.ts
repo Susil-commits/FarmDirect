@@ -193,10 +193,14 @@ export async function verifyRazorpayPayment(req: Request, res: Response, next: N
 export async function markRazorpayPaymentFailed(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { razorpayOrderId, reason } = req.body as { razorpayOrderId: string; reason?: string };
-    if (!razorpayOrderId) { sendError(res, 'razorpayOrderId is required', 400); return; }
+    if (!razorpayOrderId || typeof razorpayOrderId !== 'string' || !/^[a-zA-Z0-9_\-]+$/.test(razorpayOrderId.trim())) {
+      sendError(res, 'Valid razorpayOrderId is required', 400);
+      return;
+    }
+    const safeOrderId = razorpayOrderId.trim();
 
     const result = await Order.updateMany(
-      { razorpayOrderId, buyerId: req.user!._id, paymentStatus: { $ne: PaymentStatus.Completed } },
+      { razorpayOrderId: safeOrderId, buyerId: req.user!._id, paymentStatus: { $ne: PaymentStatus.Completed } },
       {
         $set: { paymentStatus: PaymentStatus.Failed },
         $push: { timeline: { event: 'PAYMENT_FAILED', description: reason || 'Online payment failed', timestamp: new Date() } },
@@ -251,12 +255,13 @@ export async function handleRazorpayWebhook(req: Request, res: Response, next: N
       const razorpayOrderId = payment?.order_id || payload.order?.entity?.id;
       const razorpayPaymentId = payment?.id;
 
-      if (!razorpayOrderId) {
-        res.status(200).json({ status: 'ignored', message: 'No order ID in payload' });
+      if (!razorpayOrderId || typeof razorpayOrderId !== 'string' || !/^[a-zA-Z0-9_\-]+$/.test(razorpayOrderId.trim())) {
+        res.status(200).json({ status: 'ignored', message: 'No valid order ID in payload' });
         return;
       }
+      const safeOrderId = razorpayOrderId.trim();
 
-      const orders = await Order.find({ razorpayOrderId });
+      const orders = await Order.find({ razorpayOrderId: safeOrderId });
       if (orders.length === 0) {
         console.warn(`[Webhook] No matching orders found for razorpayOrderId: ${razorpayOrderId}`);
         res.status(200).json({ status: 'ignored', message: 'Orders not found' });
@@ -329,9 +334,10 @@ export async function handleRazorpayWebhook(req: Request, res: Response, next: N
       const razorpayOrderId = payment?.order_id;
       const errorDesc = payment?.error_description || 'Online payment failed';
 
-      if (razorpayOrderId) {
+      if (razorpayOrderId && typeof razorpayOrderId === 'string' && /^[a-zA-Z0-9_\-]+$/.test(razorpayOrderId.trim())) {
+        const safeOrderId = razorpayOrderId.trim();
         await Order.updateMany(
-          { razorpayOrderId, paymentStatus: { $ne: PaymentStatus.Completed } },
+          { razorpayOrderId: safeOrderId, paymentStatus: { $ne: PaymentStatus.Completed } },
           {
             $set: { paymentStatus: PaymentStatus.Failed },
             $push: {

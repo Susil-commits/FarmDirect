@@ -31,10 +31,17 @@ export function sanitizeField(...fields: string[]): RequestHandler {
   return (req: Request, _res: Response, next: NextFunction) => {
     for (const field of fields) {
       if (req.body?.[field] && typeof req.body[field] === 'string') {
-        req.body[field] = req.body[field]
-          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gis, '')
-          .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gis, '')
-          .replace(/<[^>]+>/g, '')
+        req.body[field] = (req.body[field] as string)
+          .replace(/[&<>"']/g, (match) => {
+            switch (match) {
+              case '&': return '&amp;';
+              case '<': return '&lt;';
+              case '>': return '&gt;';
+              case '"': return '&quot;';
+              case "'": return '&#39;';
+              default: return match;
+            }
+          })
           .trim();
       }
     }

@@ -443,13 +443,15 @@ export default function EditCrop() {
                     {}
                     {imagePreview.length > 0 && (
                       <div className="grid grid-cols-3 gap-3 mt-4">
-                        {imagePreview.map((preview, index) => (
-                          <div key={index} className="relative group">
-                            <img
-                              src={preview}
-                              alt={`Preview ${index + 1}`}
-                              className="w-full h-24 object-cover rounded-lg border-2 border-gray-200"
-                            />
+                        {imagePreview.map((preview, index) => {
+                          const safeSrc = typeof preview === 'string' && /^(data:image\/|blob:|https?:\/\/|\/)/i.test(preview.trim()) ? preview.trim() : '';
+                          return (
+                            <div key={index} className="relative group">
+                              <img
+                                src={safeSrc}
+                                alt={`Preview ${index + 1}`}
+                                className="w-full h-24 object-cover rounded-lg border-2 border-gray-200"
+                              />
                             <button
                               type="button"
                               onClick={() => removeImage(index)}
@@ -458,8 +460,9 @@ export default function EditCrop() {
                               <X size={14} />
                             </button>
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })}
+                    </div>
                     )}
                   </div>
 

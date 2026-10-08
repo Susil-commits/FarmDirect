@@ -9,7 +9,7 @@ import { sendError } from '../utils/apiResponse.js';
 import { ContactQueryStatus, InquiryType, ContactQueryPriority } from '../types/enums.js';
 import { env } from '../config/env.js';
 import type { Request, Response } from 'express';
-import type { Types } from 'mongoose';
+import mongoose, { type Types } from 'mongoose';
 import { parsePagination } from '../utils/pagination.js';
 
 export const submitContactQuery = asyncHandler(async (req: Request, res: Response) => {
@@ -75,8 +75,8 @@ export const getAllContactQueries = asyncHandler(async (req: Request, res: Respo
   const { status, inquiryType, kycStatus, sortBy = 'createdAt', order = '-1' } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const filter: Record<string, unknown> = { isDeleted: false };
-  if (status) filter.status = status;
-  if (inquiryType) filter.inquiryType = inquiryType;
+  if (status && Object.values(ContactQueryStatus).includes(status as ContactQueryStatus)) filter.status = status;
+  if (inquiryType && Object.values(InquiryType).includes(inquiryType as InquiryType)) filter.inquiryType = inquiryType;
 
   if (kycStatus && ['verified', 'not_verified', 'pending'].includes(kycStatus)) {
     const kycFilter = kycStatus === 'not_verified' ? { kycStatus: { $ne: 'verified' } } : { kycStatus };
@@ -89,7 +89,10 @@ export const getAllContactQueries = asyncHandler(async (req: Request, res: Respo
     }
   }
 
-  const sortOption: Record<string, 1 | -1> = { [sortBy]: Number(order) as 1 | -1 };
+  const sortField = typeof sortBy === 'string' && ['createdAt', 'updatedAt', 'priority', 'status'].includes(sortBy) ? sortBy : 'createdAt';
+  const sortDirection = order === '1' ? 1 : -1;
+  const sortOption: Record<string, 1 | -1> = { [sortField]: sortDirection };
+
   const [queries, total] = await Promise.all([
     ContactQuery.find(filter).sort(sortOption).skip(skip).limit(limit)
       .populate('adminResponse.respondedBy', 'name email').populate('userId', 'name email kycStatus role'),
@@ -103,7 +106,11 @@ export const getAllContactQueries = asyncHandler(async (req: Request, res: Respo
 });
 
 export const getContactQuery = asyncHandler(async (req: Request, res: Response) => {
-  const query = await ContactQuery.findById(req.params.id).populate('adminResponse.respondedBy', 'name email');
+  if (!req.params.id || !mongoose.isValidObjectId(req.params.id)) {
+    return sendError(res, 'Invalid query ID', 400);
+  }
+  const safeId = new mongoose.Types.ObjectId(req.params.id);
+  const query = await ContactQuery.findById(safeId).populate('adminResponse.respondedBy', 'name email');
   if (!query) return sendError(res, 'Query not found', 404);
   if (query.status === ContactQueryStatus.New) {
     query.status = ContactQueryStatus.Read;
@@ -113,19 +120,23 @@ export const getContactQuery = asyncHandler(async (req: Request, res: Response) 
 });
 
 export const updateContactQuery = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.params.id || !mongoose.isValidObjectId(req.params.id)) {
+    return sendError(res, 'Invalid query ID', 400);
+  }
+  const safeId = new mongoose.Types.ObjectId(req.params.id);
   const { status, adminResponse, internalNotes, priority } = req.body as {
     status?: ContactQueryStatus; adminResponse?: string; internalNotes?: string; priority?: ContactQueryPriority;
   };
   const adminId = (req.user as { _id?: Types.ObjectId } | undefined)?._id?.toString()
     ?? (req.user as { id?: string; _id?: Types.ObjectId } | undefined)?.id;
-  const query = await ContactQuery.findById(req.params.id);
+  const query = await ContactQuery.findById(safeId);
   if (!query) { sendError(res, 'Query not found', 404); return; }
 
-  if (status) query.status = status;
-  if (internalNotes) query.internalNotes = internalNotes;
-  if (priority) query.priority = priority;
+  if (status && Object.values(ContactQueryStatus).includes(status)) query.status = status;
+  if (typeof internalNotes === 'string') query.internalNotes = internalNotes.trim();
+  if (priority && Object.values(ContactQueryPriority).includes(priority)) query.priority = priority;
 
-  if (adminResponse) {
+  if (adminResponse && typeof adminResponse === 'string') {
     query.adminResponse = { respondedBy: adminId as unknown as Types.ObjectId, responseMessage: String(adminResponse).trim(), respondedAt: new Date() };
     query.status = ContactQueryStatus.Resolved;
   }
@@ -161,16 +172,23 @@ export const updateContactQuery = asyncHandler(async (req: Request, res: Respons
 });
 
 export const deleteContactQuery = asyncHandler(async (req: Request, res: Response) => {
-  const query = await ContactQuery.findByIdAndUpdate(req.params.id, { isDeleted: true }, { new: true });
+  if (!req.params.id || !mongoose.isValidObjectId(req.params.id)) {
+    return sendError(res, 'Invalid query ID', 400);
+  }
+  const safeId = new mongoose.Types.ObjectId(req.params.id);
+  const query = await ContactQuery.findByIdAndUpdate(safeId, { $set: { isDeleted: true } }, { new: true });
   if (!query) return sendError(res, 'Query not found', 404);
   res.status(200).json({ success: true, message: 'Query deleted successfully' });
 });
 
 export const searchContactQueries = asyncHandler(async (req: Request, res: Response) => {
   const { q, type } = req.query as { q?: string; type?: string };
-  if (!q) return sendError(res, 'Search query is required', 400);
-  const searchFilter: Record<string, unknown> = { isDeleted: false, $text: { $search: q } };
-  if (type) searchFilter.inquiryType = type;
+  if (!q || typeof q !== 'string') return sendError(res, 'Search query is required', 400);
+  const safeQ = q.trim().slice(0, 100);
+  const searchFilter: Record<string, unknown> = { isDeleted: false, $text: { $search: safeQ } };
+  if (type && typeof type === 'string' && Object.values(InquiryType).includes(type as InquiryType)) {
+    searchFilter.inquiryType = type;
+  }
   const results = await ContactQuery.find(searchFilter).sort({ score: { $meta: 'textScore' } }).limit(50).populate('adminResponse.respondedBy', 'name email');
   res.status(200).json({ success: true, data: results, count: results.length });
 });

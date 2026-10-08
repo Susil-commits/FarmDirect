@@ -78,7 +78,14 @@ export const getPreferences = asyncHandler(async (req: Request, res: Response) =
 });
 
 export const updatePreferences = asyncHandler(async (req: Request, res: Response) => {
-  const preferences = req.body;
-  await User.findByIdAndUpdate(req.user!._id, { notificationPreferences: preferences });
-  res.status(200).json({ success: true, message: 'Preferences updated successfully', data: preferences });
+  const body = (req.body || {}) as Record<string, unknown>;
+  const cleanPreferences: Record<string, boolean> = {};
+  const allowedKeys = ['orderUpdates', 'cropUpdates', 'reviews', 'promotions', 'email', 'push'];
+  for (const key of allowedKeys) {
+    if (typeof body[key] === 'boolean') {
+      cleanPreferences[key] = body[key] as boolean;
+    }
+  }
+  await User.findByIdAndUpdate(req.user!._id, { $set: { notificationPreferences: cleanPreferences } });
+  res.status(200).json({ success: true, message: 'Preferences updated successfully', data: cleanPreferences });
 });

@@ -10,6 +10,7 @@ import {
   OrderStatus, CancelledBy, ListingApprovalStatus,
 } from '../types/enums.js';
 import type { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import type { ICropSpecifications } from '../types/index.js';
 import { getCache, setCache, clearPrefix } from '../utils/cache.js';
 import { parsePagination } from '../utils/pagination.js';
@@ -168,21 +169,23 @@ export async function getCrops(req: Request, res: Response, next: NextFunction):
       query.price = price;
     }
 
-    if (location && location !== 'all') {
-      query.pickupLocation = { $regex: location, $options: 'i' };
+    if (typeof location === 'string' && location.trim() && location.trim() !== 'all') {
+      const escapedLoc = location.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
+      query.pickupLocation = { $regex: escapedLoc, $options: 'i' };
     }
     if (rating) query.rating = { $gte: Number(rating) };
 
-    if (certifications) {
+    if (certifications && typeof certifications === 'string') {
       const certList = certifications.split(',').map((c) => c.trim()).filter(Boolean);
       if (certList.length > 0) query.certifications = { $all: certList };
     }
 
-    if (search) {
+    if (typeof search === 'string' && search.trim()) {
+      const escapedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
       query.$or = [
-        { cropName: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { category: { $regex: search, $options: 'i' } },
+        { cropName: { $regex: escapedSearch, $options: 'i' } },
+        { description: { $regex: escapedSearch, $options: 'i' } },
+        { category: { $regex: escapedSearch, $options: 'i' } },
       ];
     }
 
@@ -354,7 +357,13 @@ export async function getCropById(req: Request, res: Response, next: NextFunctio
 
 export async function updateCrop(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    let crop = await CropListing.findById(req.params.id);
+    const { id } = req.params;
+    if (!id || !mongoose.isValidObjectId(id)) {
+      sendError(res, 'Valid crop ID is required', 400);
+      return;
+    }
+    const safeCropId = new mongoose.Types.ObjectId(id);
+    let crop = await CropListing.findById(safeCropId);
     if (!crop) {
       sendError(res, 'Crop not found', 404);
       return;
@@ -410,7 +419,7 @@ export async function updateCrop(req: Request, res: Response, next: NextFunction
     }
 
     const previousPrice = crop.price;
-    crop = await CropListing.findByIdAndUpdate(req.params.id, updateFields, { new: true, runValidators: true });
+    crop = await CropListing.findByIdAndUpdate(safeCropId, { $set: updateFields }, { new: true, runValidators: true });
     await clearPrefix('crops:');
 
     if (crop && price !== undefined && Number(price) !== previousPrice) {
