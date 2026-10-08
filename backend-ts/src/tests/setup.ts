@@ -7,7 +7,10 @@ let mongoServer: MongoMemoryReplSet;
 
 beforeAll(async () => {
   process.env.NODE_ENV = 'test';
-  mongoServer = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
+  mongoServer = await MongoMemoryReplSet.create({
+    replSet: { count: 1 },
+    instanceOpts: [{ launchTimeout: 60000 }],
+  });
   const mongoUri = mongoServer.getUri();
   await mongoose.connect(mongoUri);
 }, 60000);

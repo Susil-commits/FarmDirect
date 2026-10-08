@@ -1,4 +1,4 @@
-import nodemailer, { type Transporter } from 'nodemailer';
+import nodemailer, { type Transporter, type SendMailOptions, type SentMessageInfo } from 'nodemailer';
 import { env } from '../config/env.js';
 
 export interface EmailOptions {
@@ -38,7 +38,7 @@ if (env.smtpHost && env.smtpUser && env.smtpPass) {
   console.warn('Email Service: SMTP not configured. Logging emails to console instead.');
 }
 
-async function attemptSend(mailOptions: nodemailer.SendMailOptions, attempt = 1): Promise<nodemailer.SentMessageInfo> {
+async function attemptSend(mailOptions: SendMailOptions, attempt = 1): Promise<SentMessageInfo> {
   try {
     return await transporter!.sendMail(mailOptions);
   } catch (error) {
@@ -76,7 +76,7 @@ export async function sendEmail(mailOptions: EmailOptions): Promise<EmailResult>
       return { success: true, message: 'Email logged to console (dev mode)' };
     }
 
-    const result = await attemptSend(mailOptions as nodemailer.SendMailOptions);
+    const result = await attemptSend(mailOptions as SendMailOptions);
     if (env.isDev) console.log(`Email sent successfully to ${mailOptions.to}`);
     return { success: true, message: 'Email sent successfully', messageId: result.messageId };
   } catch (error) {
