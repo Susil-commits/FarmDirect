@@ -281,14 +281,16 @@ export const getAllCrops = asyncHandler(async (req: Request, res: Response) => {
   const { status, search } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = {};
-  if (status && Object.values(CropStatus).includes(status as CropStatus)) query.status = status;
-  if (search && typeof search === 'string') {
-    const cleanSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
+  const safeStatus = Object.values(CropStatus).find((s) => s === status);
+  if (safeStatus) query.status = safeStatus;
+  if (typeof search === 'string') {
+    const cleanSearch = search.replace(/[^a-zA-Z0-9\s_-]/g, '').trim().slice(0, 100);
     if (cleanSearch) query.$or = [{ cropName: { $regex: cleanSearch, $options: 'i' } }, { category: { $regex: cleanSearch, $options: 'i' } }];
   }
+  const safeQuery = mongoose.sanitizeFilter(query);
   const [crops, total] = await Promise.all([
-    CropListing.find(query).lean().populate('farmerId', 'firstName lastName farmName').skip(skip).limit(limit).sort({ createdAt: -1 }),
-    CropListing.countDocuments(query),
+    CropListing.find(safeQuery).lean().populate('farmerId', 'firstName lastName farmName').skip(skip).limit(limit).sort({ createdAt: -1 }),
+    CropListing.countDocuments(safeQuery),
   ]);
   paginated(res, crops, total, page, limit);
 });
@@ -348,15 +350,17 @@ export const getAllOrders = asyncHandler(async (req: Request, res: Response) => 
   const { status, search } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = {};
-  if (status && Object.values(OrderStatus).includes(status as OrderStatus)) query.orderStatus = status;
+  const safeStatus = Object.values(OrderStatus).find((s) => s === status);
+  if (safeStatus) query.orderStatus = safeStatus;
   
-  if (search && typeof search === 'string') {
-    const cleanSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
+  if (typeof search === 'string') {
+    const cleanSearch = search.replace(/[^a-zA-Z0-9\s_-]/g, '').trim().slice(0, 100);
     if (cleanSearch) query.orderNumber = { $regex: cleanSearch, $options: 'i' };
   }
+  const safeQuery = mongoose.sanitizeFilter(query);
   const [orders, total] = await Promise.all([
-    Order.find(query).lean().populate('buyerId', 'firstName lastName email phone city state').populate('farmerId', 'firstName lastName name farmName phone city state').populate('cropId', 'cropName images price unit').skip(skip).limit(limit).sort({ createdAt: -1 }),
-    Order.countDocuments(query),
+    Order.find(safeQuery).lean().populate('buyerId', 'firstName lastName email phone city state').populate('farmerId', 'firstName lastName name farmName phone city state').populate('cropId', 'cropName images price unit').skip(skip).limit(limit).sort({ createdAt: -1 }),
+    Order.countDocuments(safeQuery),
   ]);
   paginated(res, orders, total, page, limit);
 });
@@ -651,11 +655,14 @@ export const searchDocuments = asyncHandler(async (req: Request, res: Response) 
   const { role, kycStatus } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const query: Record<string, unknown> = {};
-  if (role && Object.values(UserRole).includes(role as UserRole)) query.role = role;
-  if (kycStatus && Object.values(KycStatus).includes(kycStatus as KycStatus)) query.kycStatus = kycStatus;
+  const safeRole = Object.values(UserRole).find((r) => r === role);
+  if (safeRole) query.role = safeRole;
+  const safeKycStatus = Object.values(KycStatus).find((s) => s === kycStatus);
+  if (safeKycStatus) query.kycStatus = safeKycStatus;
+  const safeQuery = mongoose.sanitizeFilter(query);
   const [users, total] = await Promise.all([
-    User.find(query).lean().select('firstName lastName email role kycStatus kycSubmittedAt kycDocuments farmImages').skip(skip).limit(limit).sort({ kycSubmittedAt: -1 }),
-    User.countDocuments(query),
+    User.find(safeQuery).lean().select('firstName lastName email role kycStatus kycSubmittedAt kycDocuments farmImages').skip(skip).limit(limit).sort({ kycSubmittedAt: -1 }),
+    User.countDocuments(safeQuery),
   ]);
   res.status(200).json({ success: true, users, pagination: { total, page, limit, pages: Math.ceil(total / limit) } });
 });

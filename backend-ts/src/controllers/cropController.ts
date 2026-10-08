@@ -6,7 +6,7 @@ import Notification from '../models/Notification.js';
 import { notifyCropInterest } from '../socket/eventHandlers.js';
 import { sendError } from '../utils/apiResponse.js';
 import {
-  CropStatus, CropAvailability, CropType, InterestedBuyerStatus, UserRole, KycStatus,
+  CropStatus, CropAvailability, CropType, CropCategory, InterestedBuyerStatus, UserRole, KycStatus,
   OrderStatus, CancelledBy, ListingApprovalStatus,
 } from '../types/enums.js';
 import type { Request, Response, NextFunction } from 'express';
@@ -159,34 +159,45 @@ export async function getCrops(req: Request, res: Response, next: NextFunction):
       listingApprovalStatus: ListingApprovalStatus.Approved,
     };
 
-    if (category && category !== 'all') query.category = category;
-    if (cropType && cropType !== 'all') query.cropType = cropType;
+    const safeCategory = typeof category === 'string' && category !== 'all'
+      ? Object.values(CropCategory).find((c) => c.toLowerCase() === category.toLowerCase())
+      : undefined;
+    if (safeCategory) query.category = safeCategory;
+
+    const safeCropType = typeof cropType === 'string' && cropType !== 'all'
+      ? Object.values(CropType).find((t) => t.toLowerCase() === cropType.toLowerCase())
+      : undefined;
+    if (safeCropType) query.cropType = safeCropType;
 
     if (minPrice || maxPrice) {
       const price: Record<string, number> = {};
-      if (minPrice) price.$gte = Number(minPrice);
-      if (maxPrice) price.$lte = Number(maxPrice);
-      query.price = price;
+      const numMin = Number(minPrice);
+      const numMax = Number(maxPrice);
+      if (!Number.isNaN(numMin)) price.$gte = numMin;
+      if (!Number.isNaN(numMax)) price.$lte = numMax;
+      if (Object.keys(price).length > 0) query.price = price;
     }
 
     if (typeof location === 'string' && location.trim() && location.trim() !== 'all') {
-      const escapedLoc = location.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
-      query.pickupLocation = { $regex: escapedLoc, $options: 'i' };
+      const cleanLoc = location.trim().replace(/[^a-zA-Z0-9\s,_-]/g, '').slice(0, 100);
+      if (cleanLoc) query.pickupLocation = { $regex: cleanLoc, $options: 'i' };
     }
-    if (rating) query.rating = { $gte: Number(rating) };
+    if (rating && !Number.isNaN(Number(rating))) query.rating = { $gte: Number(rating) };
 
     if (certifications && typeof certifications === 'string') {
-      const certList = certifications.split(',').map((c) => c.trim()).filter(Boolean);
+      const certList = certifications.split(',').map((c) => c.trim().replace(/[^a-zA-Z0-9\s_-]/g, '')).filter(Boolean);
       if (certList.length > 0) query.certifications = { $all: certList };
     }
 
     if (typeof search === 'string' && search.trim()) {
-      const escapedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').slice(0, 100);
-      query.$or = [
-        { cropName: { $regex: escapedSearch, $options: 'i' } },
-        { description: { $regex: escapedSearch, $options: 'i' } },
-        { category: { $regex: escapedSearch, $options: 'i' } },
-      ];
+      const cleanSearch = search.trim().replace(/[^a-zA-Z0-9\s_-]/g, '').slice(0, 100);
+      if (cleanSearch) {
+        query.$or = [
+          { cropName: { $regex: cleanSearch, $options: 'i' } },
+          { description: { $regex: cleanSearch, $options: 'i' } },
+          { category: { $regex: cleanSearch, $options: 'i' } },
+        ];
+      }
     }
 
     const ALLOWED_SORT_FIELDS = new Set(['createdAt', 'price', 'rating', 'sold', 'views', 'quantity']);
@@ -195,13 +206,15 @@ export async function getCrops(req: Request, res: Response, next: NextFunction):
     const sortDir = sortOrder === 'asc' ? 1 : -1;
     const sortOptions: Record<string, 1 | -1> = { [safeSortBy]: sortDir };
 
+    const safeQuery = mongoose.sanitizeFilter(query);
+
     const [crops, total] = await Promise.all([
-      CropListing.find(query).lean()
+      CropListing.find(safeQuery).lean()
         .populate('farmerId', 'firstName lastName name avatar rating farmName location city state')
         .skip(skip)
         .limit(limit)
         .sort(sortOptions),
-      CropListing.countDocuments(query),
+      CropListing.countDocuments(safeQuery),
     ]);
 
     const responseData = {

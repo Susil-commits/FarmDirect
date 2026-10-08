@@ -241,8 +241,22 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
   }
 }
 
+function extractRefreshToken(req: Request): string | undefined {
+  if (req.body?.refreshToken && typeof req.body.refreshToken === 'string') {
+    return req.body.refreshToken;
+  }
+  const cookieHeader = req.headers.cookie;
+  if (cookieHeader) {
+    const match = cookieHeader.match(/(?:^|;\s*)refreshToken=([^;]*)/);
+    if (match?.[1]) {
+      return decodeURIComponent(match[1]);
+    }
+  }
+  return undefined;
+}
+
 export async function logout(req: Request, res: Response): Promise<void> {
-  const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+  const refreshToken = extractRefreshToken(req);
   if (refreshToken) {
     const decoded = verifyRefreshToken(refreshToken);
     if (decoded?.jti) {
@@ -366,7 +380,7 @@ export async function updatePassword(req: Request, res: Response, next: NextFunc
 
 export async function refreshTokenHandler(req: Request, res: Response): Promise<void> {
   try {
-    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+    const refreshToken = extractRefreshToken(req);
     if (!refreshToken) {
       sendError(res, 'Refresh token is required', 401);
       return;

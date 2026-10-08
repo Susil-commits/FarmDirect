@@ -10,6 +10,7 @@ import { AlertCircle, CheckCircle, ArrowLeft, Leaf, Upload, X, Image, Sparkles, 
 import { cropService } from '../services/appService.js';
 import { getListingDraft } from '../services/aiChatService.js';
 import MarketPriceBand from '../components/crops/MarketPriceBand.jsx';
+import DOMPurify from 'dompurify';
 
 export default function CreateCrop() {
   const { user } = useAuth();
@@ -327,7 +328,10 @@ export default function CreateCrop() {
                           </div>
                           <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                             {imagePreview.map((preview, index) => {
-                              const safeSrc = typeof preview === 'string' && /^(data:image\/|blob:|https?:\/\/|\/)/i.test(preview.trim()) ? preview.trim() : '';
+                              const raw = typeof preview === 'string' ? preview.trim() : '';
+                              const isSafe = raw.startsWith('blob:') || raw.startsWith('https://') || raw.startsWith('http://') || raw.startsWith('/') || raw.startsWith('data:image/');
+                              const safeSrc = isSafe ? DOMPurify.sanitize(raw) : '';
+                              if (!safeSrc) return null;
                               return (
                                 <div key={index} className="relative group">
                                   <img

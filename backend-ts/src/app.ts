@@ -7,7 +7,6 @@ import rateLimit from 'express-rate-limit';
 import hpp from 'hpp';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import cookieParser from 'cookie-parser';
 import mongoSanitize from 'express-mongo-sanitize';
 import mongoose from 'mongoose';
 
@@ -143,35 +142,6 @@ app.use(
   }),
 );
 app.use(express.urlencoded({ limit: '10kb', extended: true }));
-app.use(cookieParser());
-
-// CSRF Defense: validates state-changing requests when cookies are used
-const csrfProtection: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
-  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
-    return next();
-  }
-  // Bearer tokens in Authorization header cannot be automatically forged cross-site
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    return next();
-  }
-  // Webhooks have independent signature verification
-  if (req.originalUrl?.includes('/webhook') || req.path?.includes('/webhook')) {
-    return next();
-  }
-  // Check custom CSRF anti-replay headers or allowed origins
-  const csrfToken = req.headers['x-csrf-token'] || req.headers['x-xsrf-token'] || req.headers['x-requested-with'];
-  const origin = (req.headers.origin as string) || (req.headers.referer as string);
-  if (csrfToken || (origin && env.corsOrigins.some((allowed) => origin.startsWith(allowed)))) {
-    return next();
-  }
-  // Allow unauthenticated requests through to route-level auth handlers if no session cookie exists
-  if (!req.cookies?.refreshToken) {
-    return next();
-  }
-  return res.status(403).json({ success: false, message: 'Invalid or missing CSRF token' });
-};
-app.use(csrfProtection);
 app.use(mongoSanitize());
 app.use(hpp());
 app.use(trimStrings);

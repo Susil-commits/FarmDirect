@@ -9,6 +9,7 @@ import SkeletonLoader from '../components/common/SkeletonLoader.jsx';
 import ErrorBoundary from '../components/common/ErrorBoundary.jsx';
 import { AlertCircle, CheckCircle, ArrowLeft, Edit2, Upload, X } from 'lucide-react';
 import { cropService } from '../services/appService.js';
+import DOMPurify from 'dompurify';
 
 export default function EditCrop() {
   const { navigate, params } = useRouter();
@@ -440,11 +441,13 @@ export default function EditCrop() {
                       </label>
                     </div>
 
-                    {}
                     {imagePreview.length > 0 && (
                       <div className="grid grid-cols-3 gap-3 mt-4">
                         {imagePreview.map((preview, index) => {
-                          const safeSrc = typeof preview === 'string' && /^(data:image\/|blob:|https?:\/\/|\/)/i.test(preview.trim()) ? preview.trim() : '';
+                          const raw = typeof preview === 'string' ? preview.trim() : '';
+                          const isSafe = raw.startsWith('blob:') || raw.startsWith('https://') || raw.startsWith('http://') || raw.startsWith('/') || raw.startsWith('data:image/');
+                          const safeSrc = isSafe ? DOMPurify.sanitize(raw) : '';
+                          if (!safeSrc) return null;
                           return (
                             <div key={index} className="relative group">
                               <img

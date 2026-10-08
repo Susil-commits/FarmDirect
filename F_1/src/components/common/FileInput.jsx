@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Upload, X, Camera } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 export default function FileInput({
   label = 'Upload Photo',
@@ -106,28 +107,34 @@ export default function FileInput({
         </label>
       )}
 
-      {previewUrl && /^(data:image\/|blob:|https?:\/\/|\/)/i.test(String(previewUrl).trim()) ? (
-        <div className="space-y-4">
-          <div className="relative w-full">
-            <img
-              src={String(previewUrl).trim()}
-              alt="Preview"
-              className="w-full h-48 object-cover rounded-lg border-2 border-green-300"
-            />
-            <button
-              type="button"
-              onClick={handleClearPreview}
-              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 transition"
-              title="Remove photo"
-            >
-              <X size={18} />
-            </button>
-            <div className="mt-2 text-sm text-green-700 bg-green-50 p-2 rounded border border-green-200">
-              ✓ Photo selected and ready to upload
+      {(() => {
+        const raw = typeof previewUrl === 'string' ? previewUrl.trim() : '';
+        const isSafe = raw.startsWith('blob:') || raw.startsWith('https://') || raw.startsWith('http://') || raw.startsWith('/') || raw.startsWith('data:image/');
+        const safeSrc = isSafe ? DOMPurify.sanitize(raw) : '';
+        if (!safeSrc) return null;
+        return (
+          <div className="space-y-4">
+            <div className="relative w-full">
+              <img
+                src={safeSrc}
+                alt="Preview"
+                className="w-full h-48 object-cover rounded-lg border-2 border-green-300"
+              />
+              <button
+                type="button"
+                onClick={handleClearPreview}
+                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 transition"
+                title="Remove photo"
+              >
+                <X size={18} />
+              </button>
+              <div className="mt-2 text-sm text-green-700 bg-green-50 p-2 rounded border border-green-200">
+                ✓ Photo selected and ready to upload
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
+        );
+      })() || (
         <div
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}

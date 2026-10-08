@@ -75,28 +75,39 @@ export const getAllContactQueries = asyncHandler(async (req: Request, res: Respo
   const { status, inquiryType, kycStatus, sortBy = 'createdAt', order = '-1' } = req.query as Record<string, string>;
   const { page, limit, skip } = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
   const filter: Record<string, unknown> = { isDeleted: false };
-  if (status && Object.values(ContactQueryStatus).includes(status as ContactQueryStatus)) filter.status = status;
-  if (inquiryType && Object.values(InquiryType).includes(inquiryType as InquiryType)) filter.inquiryType = inquiryType;
+  const safeStatus = Object.values(ContactQueryStatus).find((s) => s === status);
+  if (safeStatus) filter.status = safeStatus;
 
-  if (kycStatus && ['verified', 'not_verified', 'pending'].includes(kycStatus)) {
-    const kycFilter = kycStatus === 'not_verified' ? { kycStatus: { $ne: 'verified' } } : { kycStatus };
+  const safeInquiryType = Object.values(InquiryType).find((t) => t === inquiryType);
+  if (safeInquiryType) filter.inquiryType = safeInquiryType;
+
+  if (kycStatus === 'not_verified') {
+    const kycFilter = mongoose.sanitizeFilter({ kycStatus: { $ne: 'verified' } });
     const users = await User.find(kycFilter).select('_id');
     const kycUserIds = users.map((u) => u._id);
-    if (kycStatus === 'not_verified') {
-      filter.$or = [{ userId: { $in: kycUserIds } }, { userId: null }];
-    } else {
-      filter.userId = { $in: kycUserIds };
-    }
+    filter.$or = [{ userId: { $in: kycUserIds } }, { userId: null }];
+  } else if (kycStatus === 'verified') {
+    const kycFilter = mongoose.sanitizeFilter({ kycStatus: 'verified' });
+    const users = await User.find(kycFilter).select('_id');
+    const kycUserIds = users.map((u) => u._id);
+    filter.userId = { $in: kycUserIds };
+  } else if (kycStatus === 'pending') {
+    const kycFilter = mongoose.sanitizeFilter({ kycStatus: 'pending' });
+    const users = await User.find(kycFilter).select('_id');
+    const kycUserIds = users.map((u) => u._id);
+    filter.userId = { $in: kycUserIds };
   }
 
   const sortField = typeof sortBy === 'string' && ['createdAt', 'updatedAt', 'priority', 'status'].includes(sortBy) ? sortBy : 'createdAt';
   const sortDirection = order === '1' ? 1 : -1;
   const sortOption: Record<string, 1 | -1> = { [sortField]: sortDirection };
 
+  const safeFilter = mongoose.sanitizeFilter(filter);
+
   const [queries, total] = await Promise.all([
-    ContactQuery.find(filter).sort(sortOption).skip(skip).limit(limit)
+    ContactQuery.find(safeFilter).sort(sortOption).skip(skip).limit(limit)
       .populate('adminResponse.respondedBy', 'name email').populate('userId', 'name email kycStatus role'),
-    ContactQuery.countDocuments(filter),
+    ContactQuery.countDocuments(safeFilter),
   ]);
 
   res.status(200).json({

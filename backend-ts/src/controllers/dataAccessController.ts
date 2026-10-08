@@ -147,10 +147,15 @@ function searchRegex(term: string): string {
 export const getAdminAllCrops = asyncHandler(async (req: Request, res: Response) => {
   const { status = 'all' } = req.query as Record<string, string>;
   const query: Record<string, unknown> = {};
-  if (status !== 'all' && ['approved', 'pending', 'rejected'].includes(status)) {
-    query.listingApprovalStatus = status;
+  if (status === 'approved') {
+    query.listingApprovalStatus = 'approved';
+  } else if (status === 'pending') {
+    query.listingApprovalStatus = 'pending';
+  } else if (status === 'rejected') {
+    query.listingApprovalStatus = 'rejected';
   }
-  const crops = await CropListing.find(query).lean().populate('farmerId', 'name email kycStatus').sort({ createdAt: -1 }).limit(250);
+  const safeQuery = mongoose.sanitizeFilter(query);
+  const crops = await CropListing.find(safeQuery).lean().populate('farmerId', 'name email kycStatus').sort({ createdAt: -1 }).limit(250);
   res.status(200).json({
     success: true,
     stats: {
