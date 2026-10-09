@@ -239,7 +239,7 @@ describe('Phase 2 - Smart Listing & Multimodal Vision API', () => {
   });
 
   describe('Advisory aiReview Persistence in CropListing', () => {
-    it('saves aiReview signals when farmer publishes listing', async () => {
+    it('ignores client-supplied aiReview signals when farmer publishes listing', async () => {
       const listingPayload = {
         cropName: 'Fresh Tomato',
         category: CropCategory.Vegetables,
@@ -269,15 +269,16 @@ describe('Phase 2 - Smart Listing & Multimodal Vision API', () => {
       expect(res.body.message).toBeDefined();
       const crop = res.body.crop;
       expect(crop).toBeDefined();
-      expect(crop.aiReview).toBeDefined();
-      expect(crop.aiReview.looksLikeProduce).toBe(true);
-      expect(crop.aiReview.confidence).toBe(0.92);
-      expect(crop.aiReview.qualityGrade).toBe('A');
+      // Client-supplied aiReview must be ignored for security (cannot set qualityGrade or override confidence)
+      expect(crop.aiReview?.qualityGrade).toBeUndefined();
+      expect(crop.aiReview?.suggestedPrice).toBeUndefined();
+      expect(crop.aiReview?.confidence).not.toBe(0.92);
 
       // Verify in DB directly
       const saved = await CropListing.findById(crop._id);
-      expect(saved?.aiReview?.looksLikeProduce).toBe(true);
-      expect(saved?.aiReview?.qualityGrade).toBe('A');
+      expect(saved?.aiReview?.qualityGrade).toBeUndefined();
+      expect(saved?.aiReview?.suggestedPrice).toBeUndefined();
+      expect(saved?.aiReview?.confidence).not.toBe(0.92);
     });
   });
 });

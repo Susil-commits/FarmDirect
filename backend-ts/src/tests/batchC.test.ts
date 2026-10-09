@@ -89,10 +89,10 @@ describe('Batch C: Access Control and Input', () => {
       });
 
       // With "(", unescaped new RegExp(`^($`, 'i') would throw SyntaxError: Invalid regular expression: ^(: Unterminated group
-      await expect(getPriceForecast('(', 'Pune')).resolves.toBeDefined();
+      await expect(getPriceForecast({ cropName: '(', region: 'Pune' })).resolves.toBeDefined();
 
       // With ".*", regex search must not match Tomato
-      const res = await getPriceForecast('.*', 'Pune');
+      const res = await getPriceForecast({ cropName: '.*', region: 'Pune' });
       expect(res).toBeDefined();
       expect(res.cropName).not.toBe('Tomato');
     });
@@ -115,12 +115,13 @@ describe('Batch C: Access Control and Input', () => {
         listingApprovalStatus: ListingApprovalStatus.Approved,
       });
 
+      const mockCtx: any = { userId: farmerId, role: UserRole.Farmer };
       // Search with "("
-      const parenResult = await searchCropsTool.run({ query: '(' });
+      const parenResult = await searchCropsTool.run({ query: '(' }, mockCtx);
       expect(parenResult.foundCount).toBe(1);
 
       // Search with ".*"
-      const wildcardResult = await searchCropsTool.run({ query: '.*' });
+      const wildcardResult = await searchCropsTool.run({ query: '.*' }, mockCtx);
       expect(wildcardResult.foundCount).toBe(0);
     });
 
@@ -290,4 +291,70 @@ describe('Batch C: Access Control and Input', () => {
       expect(updated?.listingApprovalStatus).toBe(ListingApprovalStatus.Approved);
     });
   });
+
+  describe('C4: createCrop image URL validation and client aiReview rejection', () => {
+    beforeEach(async () => {
+      await User.findByIdAndUpdate(farmerId, { kycStatus: KycStatus.Verified });
+    });
+
+    it('rejects crop creation when image URL is not hosted on Cloudinary', async () => {
+      const res = await request(app)
+        .post('/api/crops')
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .send({
+          cropName: 'Organic Potato',
+          cropType: CropType.Vegetables,
+          category: CropCategory.Vegetables,
+          price: 30,
+          quantity: 100,
+          unit: CropUnit.Kg,
+          description: 'Farm fresh organic potatoes harvested today',
+          pickupLocation: 'Farm 1, Cuttack',
+          contactNumber: '9998887776',
+          images: ['https://malicious-site.com/exploit.jpg'],
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(/Cloudinary/i);
+    });
+
+    it('ignores client-supplied aiReview on crop creation', async () => {
+      const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'dwrzxdymw';
+      const validImageUrl = `https://res.cloudinary.com/${cloudName}/image/upload/v1/potato.jpg`;
+
+      const res = await request(app)
+        .post('/api/crops')
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .send({
+          cropName: 'Organic Potato',
+          cropType: CropType.Vegetables,
+          category: CropCategory.Vegetables,
+          price: 30,
+          quantity: 100,
+          unit: CropUnit.Kg,
+          description: 'Farm fresh organic potatoes harvested today',
+          pickupLocation: 'Farm 1, Cuttack',
+          contactNumber: '9998887776',
+          images: [validImageUrl],
+          aiReview: {
+            looksLikeProduce: false,
+            confidence: 0.55,
+            qualityGrade: 'A',
+            issues: ['Fake client issue'],
+            detectedCrop: 'Fake Crop',
+            suggestedPrice: 123,
+          },
+        });
+
+      expect(res.status).toBe(201);
+      const createdCrop = await CropListing.findById(res.body.crop._id);
+      expect(createdCrop).toBeDefined();
+      // Client-supplied aiReview must be completely ignored (cannot inject qualityGrade, detectedCrop, or override confidence)
+      expect(createdCrop?.aiReview?.qualityGrade).toBeUndefined();
+      expect(createdCrop?.aiReview?.detectedCrop).toBeUndefined();
+      expect(createdCrop?.aiReview?.suggestedPrice).toBeUndefined();
+      expect(createdCrop?.aiReview?.confidence).not.toBe(0.55);
+    });
+  });
 });
+

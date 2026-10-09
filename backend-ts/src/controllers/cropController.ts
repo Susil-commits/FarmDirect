@@ -17,6 +17,29 @@ import { parsePagination } from '../utils/pagination.js';
 import { capturePriceSnapshot } from '../services/priceSnapshotService.js';
 import { searchCropsHybrid, syncCropEmbedding } from '../services/listingEmbeddingService.js';
 import { getHybridRecommendations, getSimilarCropsVector } from '../services/recsysService.js';
+import { env } from '../config/env.js';
+
+function isAllowedCloudinaryImageUrl(imageUrl: string): boolean {
+  if (typeof imageUrl !== 'string' || !imageUrl.trim()) return false;
+  try {
+    const parsed = new URL(imageUrl);
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      return false;
+    }
+    if (parsed.hostname !== 'res.cloudinary.com') {
+      return false;
+    }
+    if (env.cloudinaryCloudName) {
+      const cloudNameSegment = parsed.pathname.split('/').filter(Boolean)[0];
+      if (cloudNameSegment !== env.cloudinaryCloudName) {
+        return false;
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export async function createCrop(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -47,6 +70,10 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
       } catch {
         bodyImages = Array.isArray(req.body.images) ? req.body.images : [];
       }
+    }
+    if (bodyImages.some((url) => !isAllowedCloudinaryImageUrl(url))) {
+      sendError(res, 'All image URLs must be hosted on Cloudinary', 400);
+      return;
     }
     const uploadedUrls = req.uploadedFiles ? req.uploadedFiles.map((f) => f.url) : [];
     const imageUrls = Array.from(new Set([...bodyImages, ...uploadedUrls]));
@@ -83,15 +110,7 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
     const isAutoApproved = req.user?.role === UserRole.Admin;
     const listingApprovalStatus = isAutoApproved ? ListingApprovalStatus.Approved : ListingApprovalStatus.Pending;
 
-    let aiReview: Record<string, unknown> | undefined = undefined;
-    if (req.body.aiReview) {
-      try {
-        aiReview = typeof req.body.aiReview === 'string' ? JSON.parse(req.body.aiReview) : req.body.aiReview;
-      } catch {
-        aiReview = undefined;
-      }
-    }
-
+    // Client-supplied aiReview is ignored for security; only server pipelines may set aiReview.
     const crop = await CropListing.create({
       farmerId: req.user!._id,
       cropName,
@@ -108,7 +127,6 @@ export async function createCrop(req: Request, res: Response, next: NextFunction
       status: CropStatus.Active,
       listingApprovalStatus,
       availability: CropAvailability.Available,
-      ...(aiReview ? { aiReview } : {}),
     });
     await clearPrefix('crops:');
 
