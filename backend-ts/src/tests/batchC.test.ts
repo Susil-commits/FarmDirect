@@ -368,7 +368,7 @@ describe('Batch C: Access Control and Input', () => {
       const crop = await CropListing.create({
         farmerId,
         cropName: 'Alphonso Mango',
-        cropType: CropType.Fruits,
+        cropType: CropType.Crops,
         category: CropCategory.Fruits,
         price: 100,
         quantity: 50,
@@ -560,7 +560,7 @@ describe('Batch C: Access Control and Input', () => {
       const crop = await CropListing.create({
         farmerId,
         cropName: 'Organic Barley',
-        cropType: CropType.Grains,
+        cropType: CropType.Crops,
         category: CropCategory.Grains,
         price: 45,
         quantity: 100,
@@ -580,7 +580,7 @@ describe('Batch C: Access Control and Input', () => {
         .set('Authorization', `Bearer ${farmerToken}`)
         .send({
           cropName: 'Organic Barley',
-          cropType: CropType.Grains,
+          cropType: CropType.Crops,
           category: CropCategory.Grains,
           price: 45,
           quantity: 100,
