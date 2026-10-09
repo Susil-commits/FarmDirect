@@ -260,7 +260,6 @@ describe('Batch B Money and Stock Fixes', () => {
         paymentStatus: PaymentStatus.Pending,
       });
 
-      const originalFindByIdAndUpdate = CropListing.findByIdAndUpdate;
       const spy = jest.spyOn(CropListing, 'findByIdAndUpdate').mockImplementationOnce(() => {
         throw new Error('Simulated database failure during stock restoration');
       });
