@@ -245,4 +245,69 @@ describe('Batch B Money and Stock Fixes', () => {
       expect(restoredCrop?.sold).toBe(0);
     });
   });
+
+  describe('B3: cancelOrder and denyOrder execute in ONE MongoDB transaction', () => {
+    it('rolls back order status update if crop stock restore fails during cancelOrder', async () => {
+      const order = await Order.create({
+        buyerId,
+        farmerId,
+        cropId,
+        quantity: 5,
+        unitPrice: 200,
+        totalAmount: 1000,
+        orderStatus: OrderStatus.Confirmed,
+        paymentMethod: PaymentMethod.Cod,
+        paymentStatus: PaymentStatus.Pending,
+      });
+
+      const originalFindByIdAndUpdate = CropListing.findByIdAndUpdate;
+      const spy = jest.spyOn(CropListing, 'findByIdAndUpdate').mockImplementationOnce(() => {
+        throw new Error('Simulated database failure during stock restoration');
+      });
+
+      const res = await request(app)
+        .patch(`/api/orders/${order._id}/cancel`)
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({ cancellationReason: 'Buyer changed their mind' });
+
+      expect(res.status).toBe(500);
+
+      // Restore spy
+      spy.mockRestore();
+
+      // Check order in database: MUST NOT be cancelled because transaction rolled back
+      const orderAfterFailedCancel = await Order.findById(order._id);
+      expect(orderAfterFailedCancel?.orderStatus).toBe(OrderStatus.Confirmed);
+    });
+
+    it('rolls back order status update if crop stock restore fails during denyOrder', async () => {
+      const order = await Order.create({
+        buyerId,
+        farmerId,
+        cropId,
+        quantity: 5,
+        unitPrice: 200,
+        totalAmount: 1000,
+        orderStatus: OrderStatus.Confirmed,
+        paymentMethod: PaymentMethod.Cod,
+        paymentStatus: PaymentStatus.Pending,
+      });
+
+      const spy = jest.spyOn(CropListing, 'findByIdAndUpdate').mockImplementationOnce(() => {
+        throw new Error('Simulated database failure during stock restoration');
+      });
+
+      const res = await request(app)
+        .post(`/api/orders/${order._id}/deny`)
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .send({ denialReason: 'Farmer out of stock' });
+
+      expect(res.status).toBe(500);
+
+      spy.mockRestore();
+
+      const orderAfterFailedDeny = await Order.findById(order._id);
+      expect(orderAfterFailedDeny?.orderStatus).toBe(OrderStatus.Confirmed);
+    });
+  });
 });

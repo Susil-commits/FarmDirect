@@ -688,19 +688,30 @@ export async function cancelOrder(req: Request, res: Response, next: NextFunctio
     order.cancelledBy = cancelledBy;
     order.cancelledAt = new Date();
     order.timeline.push({ event: 'CANCELLED', description: `Order cancelled by ${cancelledBy}. Reason: ${cancellationReason.trim()}`, timestamp: new Date() });
-    await order.save();
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await order.save({ session });
 
-    const cropForCancel = await CropListing.findById(order.cropId).select('status availability').lean();
-    const wasActive = cropForCancel?.status === CropStatus.Active || cropForCancel?.status === CropStatus.SoldOut;
-    const restoreSet: Record<string, unknown> = {};
-    if (wasActive) {
-      restoreSet.availability = CropAvailability.Available;
-      restoreSet.status = CropStatus.Active;
+        const cropForCancel = await CropListing.findById(order.cropId).session(session);
+        const wasActive = cropForCancel?.status === CropStatus.Active || cropForCancel?.status === CropStatus.SoldOut;
+        const restoreSet: Record<string, unknown> = {};
+        if (wasActive) {
+          restoreSet.availability = CropAvailability.Available;
+          restoreSet.status = CropStatus.Active;
+        }
+        await CropListing.findByIdAndUpdate(
+          order.cropId,
+          {
+            $inc: { quantity: order.quantity, sold: -order.quantity },
+            ...(Object.keys(restoreSet).length > 0 ? { $set: restoreSet } : {}),
+          },
+          { session }
+        );
+      });
+    } finally {
+      await session.endSession();
     }
-    await CropListing.findByIdAndUpdate(order.cropId, {
-      $inc: { quantity: order.quantity, sold: -order.quantity },
-      ...(Object.keys(restoreSet).length > 0 ? { $set: restoreSet } : {}),
-    });
 
     const notifyUserId = isFarmer ? order.buyerId : order.farmerId;
     try {
@@ -821,19 +832,30 @@ export async function denyOrder(req: Request, res: Response, next: NextFunction)
     order.cancelledBy = CancelledBy.Farmer;
     order.cancelledAt = new Date();
     order.timeline.push({ event: 'DENIED', description: `Order denied by farmer. Reason: ${denialReason.trim()}`, timestamp: new Date() });
-    await order.save();
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await order.save({ session });
 
-    const cropForDeny = await CropListing.findById(order.cropId).select('status').lean();
-    const wasActiveForDeny = cropForDeny?.status === CropStatus.Active || cropForDeny?.status === CropStatus.SoldOut;
-    const denyRestoreSet: Record<string, unknown> = {};
-    if (wasActiveForDeny) {
-      denyRestoreSet.availability = CropAvailability.Available;
-      denyRestoreSet.status = CropStatus.Active;
+        const cropForDeny = await CropListing.findById(order.cropId).session(session);
+        const wasActiveForDeny = cropForDeny?.status === CropStatus.Active || cropForDeny?.status === CropStatus.SoldOut;
+        const denyRestoreSet: Record<string, unknown> = {};
+        if (wasActiveForDeny) {
+          denyRestoreSet.availability = CropAvailability.Available;
+          denyRestoreSet.status = CropStatus.Active;
+        }
+        await CropListing.findByIdAndUpdate(
+          order.cropId,
+          {
+            $inc: { quantity: order.quantity, sold: -order.quantity },
+            ...(Object.keys(denyRestoreSet).length > 0 ? { $set: denyRestoreSet } : {}),
+          },
+          { session }
+        );
+      });
+    } finally {
+      await session.endSession();
     }
-    await CropListing.findByIdAndUpdate(order.cropId, {
-      $inc: { quantity: order.quantity, sold: -order.quantity },
-      ...(Object.keys(denyRestoreSet).length > 0 ? { $set: denyRestoreSet } : {}),
-    });
 
     try {
       await Notification.create({
