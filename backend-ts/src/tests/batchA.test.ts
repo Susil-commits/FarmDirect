@@ -76,7 +76,6 @@ describe('Batch A Security Fixes', () => {
 
   describe('A2: Message Controller Email Leak and profilePicture Fix', () => {
     let senderToken: string;
-    let senderId: string;
     let receiverId: string;
 
     beforeEach(async () => {
@@ -88,7 +87,6 @@ describe('Batch A Security Fixes', () => {
         kycStatus: KycStatus.Verified,
         profilePicture: 'https://cloudinary.com/alice.jpg',
       });
-      senderId = sender._id.toString();
       senderToken = generateToken(sender._id, UserRole.Buyer);
 
       const receiver = await User.create({
