@@ -496,5 +496,59 @@ describe('Batch C: Access Control and Input', () => {
       expect(Math.abs(diffMs - sevenDaysMs)).toBeLessThan(10000);
     });
   });
+
+  describe('C6: messageController.sendMessage rejects communication between blocked users', () => {
+    beforeEach(async () => {
+      // Both users KYC verified
+      await User.findByIdAndUpdate(farmerId, { kycStatus: KycStatus.Verified, blockedUsers: [] });
+      await User.findByIdAndUpdate(buyerId, { kycStatus: KycStatus.Verified, blockedUsers: [] });
+    });
+
+    it('rejects sendMessage when sender has blocked the receiver', async () => {
+      // Farmer blocks buyer
+      await User.findByIdAndUpdate(farmerId, { $push: { blockedUsers: buyerId } });
+
+      const res = await request(app)
+        .post('/api/messages')
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .send({
+          receiverId: buyerId,
+          content: 'Hello buyer',
+        });
+
+      expect(res.status).toBe(403);
+      expect(res.body.message).toMatch(/block/i);
+    });
+
+    it('rejects sendMessage when receiver has blocked the sender', async () => {
+      // Buyer blocks farmer
+      await User.findByIdAndUpdate(buyerId, { $push: { blockedUsers: farmerId } });
+
+      const res = await request(app)
+        .post('/api/messages')
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .send({
+          receiverId: buyerId,
+          content: 'Hello buyer',
+        });
+
+      expect(res.status).toBe(403);
+      expect(res.body.message).toMatch(/block/i);
+    });
+
+    it('allows sendMessage when neither user has blocked the other', async () => {
+      const res = await request(app)
+        .post('/api/messages')
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .send({
+          receiverId: buyerId,
+          content: 'Hello buyer',
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+    });
+  });
 });
+
 

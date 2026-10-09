@@ -24,8 +24,18 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
   if (content.trim().length > 5000) return sendError(res, 'Message content cannot exceed 5000 characters', 400);
   if (senderId.toString() === safeReceiverId.toString()) return sendError(res, 'Cannot send message to yourself', 400);
 
-  const receiver = await User.findById(safeReceiverId);
+  const [sender, receiver] = await Promise.all([
+    User.findById(senderId),
+    User.findById(safeReceiverId),
+  ]);
   if (!receiver) return sendError(res, 'Receiver not found', 404);
+  if (!sender) return sendError(res, 'Sender not found', 404);
+
+  const senderBlockedReceiver = sender.blockedUsers?.some((id) => id.toString() === safeReceiverId.toString());
+  const receiverBlockedSender = receiver.blockedUsers?.some((id) => id.toString() === senderId.toString());
+  if (senderBlockedReceiver || receiverBlockedSender) {
+    return sendError(res, 'Cannot send message: communication is blocked between these users', 403);
+  }
 
   const conversationId = (Message as unknown as MessageModel).generateConversationId(senderId.toString(), safeReceiverId.toString());
 
