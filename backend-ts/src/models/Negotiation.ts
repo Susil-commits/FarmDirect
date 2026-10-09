@@ -8,8 +8,8 @@ const negotiationSchema = new Schema<INegotiation>(
     buyerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     farmerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     originalPrice: { type: Number, required: true },
-    offeredPrice: { type: Number, required: true },
-    quantity: { type: Number, required: true },
+    offeredPrice: { type: Number, required: true, min: 0.01 },
+    quantity: { type: Number, required: true, min: 1 },
     status: {
       type: String,
       enum: Object.values(NegotiationStatus),
@@ -26,6 +26,11 @@ const negotiationSchema = new Schema<INegotiation>(
       },
     ],
     isSynthetic: { type: Boolean, default: false },
+    expiresAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      index: { expires: 0 },
+    },
   },
   { timestamps: true },
 );

@@ -283,6 +283,7 @@ export interface INegotiation extends Timestamps, Document {
   orderId?: Types.ObjectId | null;
   lastActionBy?: Types.ObjectId | null;
   isSynthetic?: boolean;
+  expiresAt?: Date;
 }
 
 export interface IReviewReport {

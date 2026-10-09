@@ -27,6 +27,9 @@ export async function makeOffer(req: Request, res: Response, next: NextFunction)
       if (!cropId || typeof cropId !== 'string' || !mongoose.isValidObjectId(cropId) || !offeredPrice || !quantity) {
         throw ApiError.badRequest('Valid Crop ID, offered price, and quantity are required.');
       }
+      if (typeof offeredPrice !== 'number' || offeredPrice < 0.01 || typeof quantity !== 'number' || quantity < 1) {
+        throw ApiError.badRequest('Offered price must be at least ₹0.01 and quantity must be at least 1.');
+      }
       const safeCropId = new mongoose.Types.ObjectId(cropId);
 
       const crop = await CropListing.findById(safeCropId).session(session);
@@ -168,6 +171,12 @@ export async function respondToOffer(req: Request, res: Response, next: NextFunc
         responseData = { message: 'Counter offer sent' };
 
       } else if (action === 'accept') {
+        if (crop.listingApprovalStatus !== ListingApprovalStatus.Approved) {
+          throw new ListingPendingApprovalError('Crop is no longer approved');
+        }
+        if (crop.availability !== CropAvailability.Available) {
+          throw new CropUnavailableError('Crop is no longer available');
+        }
         if (crop.quantity < negotiation.quantity) {
           throw new InsufficientStockError('Insufficient stock to accept this offer');
         }

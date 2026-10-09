@@ -4,6 +4,7 @@ import User from '../models/User.js';
 import Message from '../models/Message.js';
 import CropListing from '../models/CropListing.js';
 import PriceSnapshot from '../models/PriceSnapshot.js';
+import Negotiation from '../models/Negotiation.js';
 import {
   UserRole,
   CropCategory,
@@ -354,6 +355,145 @@ describe('Batch C: Access Control and Input', () => {
       expect(createdCrop?.aiReview?.detectedCrop).toBeUndefined();
       expect(createdCrop?.aiReview?.suggestedPrice).toBeUndefined();
       expect(createdCrop?.aiReview?.confidence).not.toBe(0.55);
+    });
+  });
+
+  describe('C5: Negotiation routes KYC, accept path crop checks, schema constraints and TTL', () => {
+    let testCropId: string;
+
+    beforeEach(async () => {
+      // Farmer has verified KYC for crop creation
+      await User.findByIdAndUpdate(farmerId, { kycStatus: KycStatus.Verified });
+
+      const crop = await CropListing.create({
+        farmerId,
+        cropName: 'Alphonso Mango',
+        cropType: CropType.Fruits,
+        category: CropCategory.Fruits,
+        price: 100,
+        quantity: 50,
+        unit: CropUnit.Kg,
+        description: 'Fresh Ratnagiri Alphonso mangoes sweet and aromatic',
+        pickupLocation: 'Ratnagiri',
+        contactNumber: '9998887776',
+        availability: CropAvailability.Available,
+        listingApprovalStatus: ListingApprovalStatus.Approved,
+      });
+      testCropId = crop._id.toString();
+    });
+
+    it('requires KYC verification on negotiation routes', async () => {
+      // Buyer currently has unverified KYC (default Pending)
+      const res = await request(app)
+        .post('/api/negotiations/offer')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({
+          cropId: testCropId,
+          offeredPrice: 80,
+          quantity: 10,
+        });
+
+      expect(res.status).toBe(403);
+      expect(res.body.message).toMatch(/KYC/i);
+    });
+
+    it('rejects offer with quantity < 1 or offeredPrice < 0.01 and enforces schema min constraints', async () => {
+      await User.findByIdAndUpdate(buyerId, { kycStatus: KycStatus.Verified });
+
+      // Reject non-positive quantity in API
+      const resZeroQty = await request(app)
+        .post('/api/negotiations/offer')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({
+          cropId: testCropId,
+          offeredPrice: 80,
+          quantity: 0,
+        });
+      expect(resZeroQty.status).toBe(400);
+
+      // Reject zero/negative price in API
+      const resZeroPrice = await request(app)
+        .post('/api/negotiations/offer')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({
+          cropId: testCropId,
+          offeredPrice: 0,
+          quantity: 10,
+        });
+      expect(resZeroPrice.status).toBe(400);
+
+      // Schema-level validation constraint
+      const invalidNeg = new Negotiation({
+        cropId: testCropId,
+        buyerId,
+        farmerId,
+        originalPrice: 100,
+        offeredPrice: 0,
+        quantity: 0,
+      });
+      await expect(invalidNeg.validate()).rejects.toThrow();
+    });
+
+    it('respondToOffer accept path rejects if crop listingApprovalStatus is not Approved or crop is Unavailable', async () => {
+      await User.findByIdAndUpdate(buyerId, { kycStatus: KycStatus.Verified });
+
+      // Create an offer
+      const offerRes = await request(app)
+        .post('/api/negotiations/offer')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({
+          cropId: testCropId,
+          offeredPrice: 85,
+          quantity: 5,
+        });
+      expect(offerRes.status).toBe(201);
+
+      const neg = await Negotiation.findOne({ cropId: testCropId, buyerId });
+      expect(neg).toBeDefined();
+
+      // Case A: Admin unapproves or changes crop approval status to Pending
+      await CropListing.findByIdAndUpdate(testCropId, { listingApprovalStatus: ListingApprovalStatus.Pending });
+
+      const acceptResUnapproved = await request(app)
+        .post(`/api/negotiations/${neg!._id}/respond`)
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .send({ action: 'accept' });
+
+      expect(acceptResUnapproved.status).toBeGreaterThanOrEqual(400);
+      expect(acceptResUnapproved.body.message || acceptResUnapproved.body.error).toMatch(/approval|approved/i);
+
+      // Restore approval but set availability to NotAvailable
+      await CropListing.findByIdAndUpdate(testCropId, {
+        listingApprovalStatus: ListingApprovalStatus.Approved,
+        availability: CropAvailability.NotAvailable,
+      });
+
+      const acceptResUnavailable = await request(app)
+        .post(`/api/negotiations/${neg!._id}/respond`)
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .send({ action: 'accept' });
+
+      expect(acceptResUnavailable.status).toBeGreaterThanOrEqual(400);
+      expect(acceptResUnavailable.body.message || acceptResUnavailable.body.error).toMatch(/available/i);
+    });
+
+    it('sets expiresAt TTL to 7 days on Negotiation document', async () => {
+      await User.findByIdAndUpdate(buyerId, { kycStatus: KycStatus.Verified });
+
+      const neg = await Negotiation.create({
+        cropId: testCropId,
+        buyerId,
+        farmerId,
+        originalPrice: 100,
+        offeredPrice: 80,
+        quantity: 10,
+      });
+
+      expect(neg.expiresAt).toBeDefined();
+      const diffMs = neg.expiresAt!.getTime() - Date.now();
+      const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+      // Should be roughly 7 days in future (within 10 seconds tolerance)
+      expect(Math.abs(diffMs - sevenDaysMs)).toBeLessThan(10000);
     });
   });
 });
