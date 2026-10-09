@@ -397,7 +397,6 @@ export async function updateCrop(req: Request, res: Response, next: NextFunction
     if (cropType !== undefined) updateFields.cropType = cropType;
     if (category !== undefined) updateFields.category = category;
     if (price !== undefined) updateFields.price = price;
-    if (quantity !== undefined) updateFields.quantity = quantity;
     if (unit !== undefined) updateFields.unit = unit;
     if (description !== undefined) updateFields.description = description;
     if (pickupLocation !== undefined) updateFields.pickupLocation = pickupLocation;
@@ -431,8 +430,34 @@ export async function updateCrop(req: Request, res: Response, next: NextFunction
       updateFields.images = [...existingUrls, ...newUploadUrls];
     }
 
+    // C3: If an approved listing changes price, description, images or specs, reset listingApprovalStatus to Pending
+    const isApproved = crop.listingApprovalStatus === ListingApprovalStatus.Approved;
+    const priceChanged = price !== undefined && Number(price) !== crop.price;
+    const descChanged = description !== undefined && String(description).trim() !== String(crop.description || '').trim();
+    const imagesChanged = newUploadUrls.length > 0 || (rawExistingUrls !== undefined && JSON.stringify(updateFields.images) !== JSON.stringify(crop.images || []));
+    const specsChanged = rawSpecs !== undefined && JSON.stringify(updateFields.specifications) !== JSON.stringify(crop.specifications || {});
+
+    if (isApproved && (priceChanged || descChanged || imagesChanged || specsChanged)) {
+      updateFields.listingApprovalStatus = ListingApprovalStatus.Pending;
+    }
+
+    // C3: Use $inc for restocking instead of overwriting quantity
+    const incFields: Record<string, number> = {};
+    const { restockQuantity } = req.body as { restockQuantity?: number };
+    if (restockQuantity !== undefined && !isNaN(Number(restockQuantity))) {
+      const delta = Number(restockQuantity);
+      if (delta !== 0) incFields.quantity = delta;
+    } else if (quantity !== undefined && !isNaN(Number(quantity))) {
+      const delta = Number(quantity) - crop.quantity;
+      if (delta !== 0) incFields.quantity = delta;
+    }
+
+    const updateQuery: Record<string, unknown> = {};
+    if (Object.keys(updateFields).length > 0) updateQuery.$set = updateFields;
+    if (Object.keys(incFields).length > 0) updateQuery.$inc = incFields;
+
     const previousPrice = crop.price;
-    crop = await CropListing.findByIdAndUpdate(safeCropId, { $set: updateFields }, { new: true, runValidators: true });
+    crop = await CropListing.findByIdAndUpdate(safeCropId, updateQuery, { new: true, runValidators: true });
     await clearPrefix('crops:');
 
     if (crop && price !== undefined && Number(price) !== previousPrice) {

@@ -212,4 +212,82 @@ describe('Batch C: Access Control and Input', () => {
       expect(res.body.errors.length).toBe(4);
     });
   });
+
+  describe('C3: updateCrop approval status reset and $inc restocking', () => {
+    let cropId: string;
+
+    beforeEach(async () => {
+      await User.findByIdAndUpdate(farmerId, { kycStatus: KycStatus.Verified });
+      const crop = await CropListing.create({
+        farmerId,
+        cropName: 'Approved Rice',
+        cropType: CropType.Crops,
+        category: CropCategory.Grains,
+        price: 50,
+        quantity: 100,
+        unit: CropUnit.Kg,
+        description: 'Original approved description',
+        pickupLocation: 'Farm 1',
+        contactNumber: '9998887776',
+        availability: CropAvailability.Available,
+        listingApprovalStatus: ListingApprovalStatus.Approved,
+        specifications: { organicCertified: true },
+        images: ['https://res.cloudinary.com/demo/image/upload/v1/rice.jpg'],
+      });
+      cropId = crop._id.toString();
+    });
+
+    it('resets listingApprovalStatus to Pending when price changes', async () => {
+      const res = await request(app)
+        .put(`/api/crops/${cropId}`)
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .send({ price: 65 });
+
+      expect(res.status).toBe(200);
+      const updated = await CropListing.findById(cropId);
+      expect(updated?.price).toBe(65);
+      expect(updated?.listingApprovalStatus).toBe(ListingApprovalStatus.Pending);
+    });
+
+    it('resets listingApprovalStatus to Pending when description changes', async () => {
+      const res = await request(app)
+        .put(`/api/crops/${cropId}`)
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .send({ description: 'New modified description' });
+
+      expect(res.status).toBe(200);
+      const updated = await CropListing.findById(cropId);
+      expect(updated?.listingApprovalStatus).toBe(ListingApprovalStatus.Pending);
+    });
+
+    it('resets listingApprovalStatus to Pending when specifications change', async () => {
+      const res = await request(app)
+        .put(`/api/crops/${cropId}`)
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .send({ specifications: { organicCertified: false, moistureContent: '12%' } });
+
+      expect(res.status).toBe(200);
+      const updated = await CropListing.findById(cropId);
+      expect(updated?.listingApprovalStatus).toBe(ListingApprovalStatus.Pending);
+    });
+
+    it('uses $inc for restocking so concurrent sales are not overwritten', async () => {
+      // Farmer restocks by 30 units (100 -> 130)
+      // Meanwhile, an order concurrently deducted 20 units (database currently has 80)
+      await CropListing.findByIdAndUpdate(cropId, { $inc: { quantity: -20 } });
+
+      const res = await request(app)
+        .put(`/api/crops/${cropId}`)
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .send({ restockQuantity: 30 }); // Farmer restocks +30 units
+
+      expect(res.status).toBe(200);
+      const updated = await CropListing.findById(cropId);
+      // With $inc, 80 + 30 = 110 (concurrent sale of 20 is preserved!).
+      // Without $inc, it would be 130, wiping out the concurrent sale!
+      expect(updated?.quantity).toBe(110);
+      // Restocking alone should NOT reset approval status
+      expect(updated?.listingApprovalStatus).toBe(ListingApprovalStatus.Approved);
+    });
+  });
 });
