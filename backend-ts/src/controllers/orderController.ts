@@ -57,6 +57,15 @@ const STATUS_DESCRIPTIONS: Record<string, string> = {
 };
 
 async function recordCropCompletion(order: OrderLike): Promise<void> {
+  // Idempotency: only record crop sales stats once per order
+  const updatedOrder = await Order.findOneAndUpdate(
+    { _id: order._id, completionRecorded: { $ne: true } },
+    { $set: { completionRecorded: true } },
+  );
+  if (!updatedOrder && (order as any).completionRecorded) {
+    return;
+  }
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -550,7 +559,7 @@ export async function getOrderById(req: Request, res: Response, next: NextFuncti
 
 export async function updateOrderStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { status } = req.body as { status: OrderStatus };
+    const { status, paymentRecorded } = req.body as { status: OrderStatus; paymentRecorded?: boolean };
     if (!VALID_STATUSES.includes(status)) {
       sendError(res, `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`, 400);
       return;
@@ -579,16 +588,33 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
       return;
     }
 
+    if (status === OrderStatus.Completed) {
+      const isCodPaid = order.paymentMethod === PaymentMethod.Cod && (paymentRecorded === true || order.paymentStatus === PaymentStatus.Completed);
+      const isRazorpayPaid = order.paymentMethod === PaymentMethod.Razorpay && order.paymentStatus === PaymentStatus.Completed;
+
+      if (!isCodPaid && !isRazorpayPaid) {
+        sendError(
+          res,
+          order.paymentMethod === PaymentMethod.Cod
+            ? 'Cannot complete COD order without recorded payment'
+            : 'Cannot complete order: Razorpay payment has not been completed',
+          400,
+        );
+        return;
+      }
+
+      order.completedAt = new Date();
+      order.paymentStatus = PaymentStatus.Completed;
+    }
+
     order.orderStatus = status;
     order.timeline.push({ event: status.toUpperCase(), description: STATUS_DESCRIPTIONS[status] || `Order status updated to ${status}`, timestamp: new Date() });
 
+    await order.save();
+
     if (status === OrderStatus.Completed) {
-      order.completedAt = new Date();
-      order.paymentStatus = PaymentStatus.Completed;
       await recordCropCompletion(order);
     }
-
-    await order.save();
 
     try {
       await Notification.create({

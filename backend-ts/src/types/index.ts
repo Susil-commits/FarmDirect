@@ -251,6 +251,8 @@ export interface IOrder extends Timestamps, Document {
   cancellationReason?: string;
   cancelledBy?: Enums.CancelledBy;
   completedAt?: Date;
+  completionRecorded?: boolean;
+  refundId?: string | null;
   flaggedAsAnomaly?: boolean;
   anomalyScore?: number | null;
   anomalyReasons?: string[];

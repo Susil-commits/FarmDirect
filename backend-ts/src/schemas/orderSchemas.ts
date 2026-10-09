@@ -40,6 +40,7 @@ export const updateOrderStatusSchema = z.object({
   status: z.enum(Object.values(OrderStatus) as [string, ...string[]], {
     errorMap: () => ({ message: `Status must be one of: ${Object.values(OrderStatus).join(', ')}` }),
   }),
+  paymentRecorded: z.boolean().optional(),
 });
 
 export const cancelOrderSchema = z.object({
