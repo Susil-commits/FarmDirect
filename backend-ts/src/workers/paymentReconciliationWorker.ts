@@ -1,10 +1,80 @@
+import mongoose from 'mongoose';
 import Order from '../models/Order.js';
+import CropListing from '../models/CropListing.js';
 import Notification from '../models/Notification.js';
 import { getRazorpayInstance, isRazorpayConfigured } from '../config/razorpay.js';
 import { notifyOrderUpdate } from '../socket/eventHandlers.js';
-import { PaymentMethod, PaymentStatus } from '../types/enums.js';
+import {
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+  CropStatus,
+  CropAvailability,
+} from '../types/enums.js';
 
 let intervalHandle: NodeJS.Timeout | null = null;
+
+async function expireOrderAndRestoreStock(orderId: any): Promise<void> {
+  const session = await mongoose.startSession();
+  let cancelledOrder: any = null;
+  try {
+    await session.withTransaction(async () => {
+      const order = await Order.findOneAndUpdate(
+        {
+          _id: orderId,
+          orderStatus: { $ne: OrderStatus.Cancelled },
+          paymentStatus: PaymentStatus.Pending,
+        },
+        {
+          $set: {
+            orderStatus: OrderStatus.Cancelled,
+            paymentStatus: PaymentStatus.Failed,
+            cancellationReason: 'Payment window expired without completion',
+            cancelledAt: new Date(),
+          },
+          $push: {
+            timeline: {
+              event: 'PAYMENT_EXPIRED',
+              description: 'Payment window expired without completion',
+              timestamp: new Date(),
+            },
+          },
+        },
+        { new: true, session }
+      );
+
+      if (order) {
+        cancelledOrder = order;
+        const crop = await CropListing.findById(order.cropId).session(session);
+        const wasActive = crop?.status === CropStatus.Active || crop?.status === CropStatus.SoldOut;
+        const restoreSet: Record<string, unknown> = {};
+        if (wasActive) {
+          restoreSet.availability = CropAvailability.Available;
+          restoreSet.status = CropStatus.Active;
+        }
+
+        await CropListing.findByIdAndUpdate(
+          order.cropId,
+          {
+            $inc: { quantity: order.quantity, sold: -order.quantity },
+            ...(Object.keys(restoreSet).length > 0 ? { $set: restoreSet } : {}),
+          },
+          { session }
+        );
+      }
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  if (cancelledOrder) {
+    try {
+      notifyOrderUpdate(cancelledOrder, 'order:cancelled');
+    } catch {
+      // socket error ignored
+    }
+  }
+}
 
 export async function reconcilePendingRazorpayPayments(): Promise<void> {
   if (!isRazorpayConfigured()) return;
@@ -12,21 +82,42 @@ export async function reconcilePendingRazorpayPayments(): Promise<void> {
   if (!razorpay) return;
 
   try {
-    const cutoffRecent = new Date(Date.now() - 15 * 60 * 1000); // at least 15 min old
+    const cutoffRecent = new Date(Date.now() - 15 * 60 * 1000); // at least 15 min old for orders with razorpayOrderId
+    const cutoffNoRazorpay = new Date(Date.now() - 30 * 60 * 1000); // at least 30 min old for orders without razorpayOrderId
     const cutoffOldest = new Date(Date.now() - 24 * 60 * 60 * 1000); // within last 24h
 
     const pendingOrders = await Order.find({
       paymentMethod: PaymentMethod.Razorpay,
       paymentStatus: PaymentStatus.Pending,
-      razorpayOrderId: { $exists: true, $ne: null },
-      createdAt: { $gte: cutoffOldest, $lte: cutoffRecent },
-    }).limit(50);
+      orderStatus: { $ne: OrderStatus.Cancelled },
+      createdAt: { $gte: cutoffOldest },
+      $or: [
+        {
+          razorpayOrderId: { $exists: true, $nin: ['', null] },
+          createdAt: { $lte: cutoffRecent },
+        },
+        {
+          $or: [
+            { razorpayOrderId: { $exists: false } },
+            { razorpayOrderId: null },
+            { razorpayOrderId: '' },
+          ],
+          createdAt: { $lte: cutoffNoRazorpay },
+        },
+      ],
+    })
+      .sort({ createdAt: 1 })
+      .limit(50);
 
     if (pendingOrders.length === 0) return;
 
     for (const order of pendingOrders) {
       try {
-        if (!order.razorpayOrderId) continue;
+        if (!order.razorpayOrderId) {
+          // Orders with no razorpayOrderId older than 30 min are expired
+          await expireOrderAndRestoreStock(order._id);
+          continue;
+        }
 
         // Fetch payments for this Razorpay order
         const paymentsResponse = await razorpay.orders.fetchPayments(order.razorpayOrderId) as any;
@@ -72,20 +163,8 @@ export async function reconcilePendingRazorpayPayments(): Promise<void> {
             }
           }
         } else if (order.createdAt < new Date(Date.now() - 6 * 60 * 60 * 1000)) {
-          // If older than 6 hours and no successful payment, mark as expired/failed
-          await Order.findOneAndUpdate(
-            { _id: order._id, paymentStatus: PaymentStatus.Pending },
-            {
-              $set: { paymentStatus: PaymentStatus.Failed },
-              $push: {
-                timeline: {
-                  event: 'PAYMENT_EXPIRED',
-                  description: 'Payment window expired without completion',
-                  timestamp: new Date(),
-                },
-              },
-            }
-          );
+          // If older than 6 hours and no successful payment, mark as expired/failed and restore stock in transaction
+          await expireOrderAndRestoreStock(order._id);
         }
       } catch (err: any) {
         console.warn(`[ReconciliationWorker] Failed to reconcile order ${order._id}:`, err?.message || err);

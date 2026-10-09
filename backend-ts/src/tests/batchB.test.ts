@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { jest } from '@jest/globals';
 import app from './testApp.js';
 import User from '../models/User.js';
 import Order from '../models/Order.js';
@@ -163,6 +164,85 @@ describe('Batch B Money and Stock Fixes', () => {
 
       const cropAfterSecond = await CropListing.findById(cropId).lean();
       expect(cropAfterSecond?.monthlyStats?.totalUnits).toBe(5);
+    });
+  });
+
+  describe('B2: paymentReconciliationWorker expiration and stock restore', () => {
+    it('cancels expired unpaid Razorpay order and restores crop stock in transaction', async () => {
+      const { reconcilePendingRazorpayPayments } = await import('../workers/paymentReconciliationWorker.js');
+      const { setRazorpayInstance } = await import('../config/razorpay.js');
+
+      // Mock razorpay orders.fetchPayments returning no captured payment
+      setRazorpayInstance({
+        orders: {
+          fetchPayments: jest.fn().mockResolvedValue({ items: [] }),
+        },
+      });
+
+      // Crop starts with 95 quantity, 5 sold (after placing 5 kg order)
+      await CropListing.findByIdAndUpdate(cropId, {
+        $set: { quantity: 95, sold: 5 },
+      });
+
+      // Order created 7 hours ago
+      const sevenHoursAgo = new Date(Date.now() - 7 * 60 * 60 * 1000);
+      const expiredOrder = await Order.create({
+        buyerId,
+        farmerId,
+        cropId,
+        quantity: 5,
+        unitPrice: 200,
+        totalAmount: 1000,
+        orderStatus: OrderStatus.Pending,
+        paymentMethod: PaymentMethod.Razorpay,
+        paymentStatus: PaymentStatus.Pending,
+        razorpayOrderId: 'order_test_expired_123',
+        createdAt: sevenHoursAgo,
+      });
+
+      await reconcilePendingRazorpayPayments();
+
+      const updatedOrder = await Order.findById(expiredOrder._id);
+      expect(updatedOrder?.orderStatus).toBe(OrderStatus.Cancelled);
+      expect(updatedOrder?.paymentStatus).toBe(PaymentStatus.Failed);
+
+      const restoredCrop = await CropListing.findById(cropId);
+      expect(restoredCrop?.quantity).toBe(100);
+      expect(restoredCrop?.sold).toBe(0);
+    });
+
+    it('cancels order without razorpayOrderId older than 30 min and restores crop stock', async () => {
+      const { reconcilePendingRazorpayPayments } = await import('../workers/paymentReconciliationWorker.js');
+
+      // Crop starts with 90 quantity, 10 sold
+      await CropListing.findByIdAndUpdate(cropId, {
+        $set: { quantity: 90, sold: 10 },
+      });
+
+      // Order created 40 minutes ago with NO razorpayOrderId
+      const fortyMinsAgo = new Date(Date.now() - 40 * 60 * 1000);
+      const noRzpOrder = await Order.create({
+        buyerId,
+        farmerId,
+        cropId,
+        quantity: 10,
+        unitPrice: 200,
+        totalAmount: 2000,
+        orderStatus: OrderStatus.Pending,
+        paymentMethod: PaymentMethod.Razorpay,
+        paymentStatus: PaymentStatus.Pending,
+        createdAt: fortyMinsAgo,
+      });
+
+      await reconcilePendingRazorpayPayments();
+
+      const updatedOrder = await Order.findById(noRzpOrder._id);
+      expect(updatedOrder?.orderStatus).toBe(OrderStatus.Cancelled);
+      expect(updatedOrder?.paymentStatus).toBe(PaymentStatus.Failed);
+
+      const restoredCrop = await CropListing.findById(cropId);
+      expect(restoredCrop?.quantity).toBe(100);
+      expect(restoredCrop?.sold).toBe(0);
     });
   });
 });
