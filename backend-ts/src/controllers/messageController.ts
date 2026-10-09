@@ -38,8 +38,8 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
   });
 
   const populatedMessage = await message.populate([
-    { path: 'senderId', select: 'firstName lastName email profilePhoto role' },
-    { path: 'receiverId', select: 'firstName lastName email profilePhoto role' },
+    { path: 'senderId', select: 'firstName lastName profilePicture role' },
+    { path: 'receiverId', select: 'firstName lastName profilePicture role' },
   ]);
 
   notifyNewMessage(populatedMessage as never);
@@ -105,7 +105,7 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
         localField: 'otherUserId',
         foreignField: '_id',
         as: 'otherUser',
-        pipeline: [{ $project: { firstName: 1, lastName: 1, email: 1, profilePicture: 1, role: 1 } }],
+        pipeline: [{ $project: { firstName: 1, lastName: 1, profilePicture: 1, role: 1 } }],
       },
     },
     { $addFields: { otherUser: { $arrayElemAt: ['$otherUser', 0] }, conversationId: '$_id' } },
