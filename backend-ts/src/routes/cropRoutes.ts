@@ -6,7 +6,8 @@ import {
 } from '../controllers/cropController.js';
 import { protect, authorize, requireKYC, optionalProtect } from '../middleware/auth.js';
 import { uploadCropImages } from '../middleware/localUpload.js';
-import { validateObjectId } from '../middleware/validator.js';
+import validateRequest, { validateObjectId } from '../middleware/validator.js';
+import { createCropSchema, updateCropSchema } from '../schemas/cropSchemas.js';
 import { UserRole } from '../types/enums.js';
 
 import { cacheRoute } from '../middleware/cacheRoute.js';
@@ -29,8 +30,8 @@ router.get('/:id', validateObjectId(), optionalProtect, getCropById);
 router.get('/:id/similar', validateObjectId(), getSimilarCrops);
 router.get('/:id/interested-buyers', validateObjectId(), protect, authorize(UserRole.Farmer, UserRole.Admin), getInterestedBuyers);
 
-router.post('/', protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, uploadCropImages(), createCrop);
-router.put('/:id', validateObjectId(), protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, uploadCropImages(), updateCrop);
+router.post('/', protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, uploadCropImages(), validateRequest({ body: createCropSchema }), createCrop);
+router.put('/:id', validateObjectId(), protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, uploadCropImages(), validateRequest({ body: updateCropSchema }), updateCrop);
 router.delete('/:id', validateObjectId(), protect, authorize(UserRole.Farmer, UserRole.Admin), requireKYC, deleteCrop);
 
 router.post('/:id/interest', validateObjectId(), protect, authorize(UserRole.Buyer), requireKYC, toggleInterest);

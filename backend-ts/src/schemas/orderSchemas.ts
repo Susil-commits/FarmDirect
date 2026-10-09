@@ -24,14 +24,16 @@ export const checkoutCartSchema = z.object({
     cropId: z.string().min(1, 'Crop ID is required'),
     quantity: z.union([z.string(), z.number()])
       .transform((v) => Number(v))
-      .refine((v) => Number.isInteger(v) && v > 0, { message: 'Quantity must be a positive integer' }),
+      .refine((v) => Number.isInteger(v) && v > 0, { message: 'Quantity must be a positive integer' })
+      .optional(),
+    unitPrice: z.number().optional(),
   })).min(1, 'Cart cannot be empty'),
   deliveryAddress: z.object({
     streetAddress: z.string().min(5, 'Street address is required').max(500),
     city: z.string().min(2, 'City is required').max(100),
     state: z.string().min(2, 'State is required').max(100),
     pincode: z.string().regex(/^\d{6}$/, 'Pincode must be 6 digits'),
-  }),
+  }).optional(),
   paymentMethod: z.enum(PAYMENT_METHODS).optional(),
   couponCode: z.string().max(50).optional(),
 });

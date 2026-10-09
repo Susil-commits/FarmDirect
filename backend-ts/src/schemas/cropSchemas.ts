@@ -18,7 +18,8 @@ export const createCropSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters').max(2000, 'Description too long'),
   pickupLocation: z.string().min(5, 'Pickup location is required').max(500),
   contactNumber: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
-  specifications: z.string().optional(),
+  specifications: z.union([z.string(), z.record(z.unknown())]).optional(),
+  images: z.union([z.string(), z.array(z.string())]).optional(),
   availability: z.enum(AVAILABILITIES).optional(),
 });
 
@@ -38,9 +39,16 @@ export const updateCropSchema = z.object({
   description: z.string().min(10).max(2000).optional(),
   pickupLocation: z.string().min(5).max(500).optional(),
   contactNumber: z.string().regex(/^[6-9]\d{9}$/, 'Invalid phone number').optional(),
-  specifications: z.string().optional(),
+  specifications: z.union([z.string(), z.record(z.unknown())]).optional(),
   availability: z.enum(AVAILABILITIES).optional(),
-}).strict();
+  restockQuantity: z.union([z.string(), z.number()])
+    .transform((v) => Number(v))
+    .refine((v) => !isNaN(v) && v > 0, { message: 'Restock quantity must be positive' })
+    .optional(),
+  existingImageUrls: z.union([z.string(), z.array(z.string())]).optional(),
+  images: z.union([z.string(), z.array(z.string())]).optional(),
+  status: z.string().optional(),
+});
 
 export const cropQuerySchema = z.object({
   page: z.string().optional().transform((v) => (v ? Math.max(1, parseInt(v, 10)) : 1)),

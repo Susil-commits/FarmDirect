@@ -9,13 +9,16 @@ import validateRequest, { validateObjectId } from '../middleware/validator.js';
 import { trimStrings } from '../middleware/sanitizer.js';
 import { UserRole } from '../types/enums.js';
 import { idempotency } from '../middleware/idempotency.js';
-import { updateOrderStatusSchema, cancelOrderSchema, orderQuerySchema } from '../schemas/orderSchemas.js';
+import {
+  createOrderSchema, checkoutCartSchema, updateOrderStatusSchema,
+  cancelOrderSchema, orderQuerySchema,
+} from '../schemas/orderSchemas.js';
 
 const router = Router();
 
 router.post('/start', protect, authorize(UserRole.Farmer), requireKYC, trimStrings, startOrder);
-router.post('/checkout-cart', protect, authorize(UserRole.Buyer), requireKYC, trimStrings, idempotency, checkoutCart);
-router.post('/', protect, authorize(UserRole.Buyer), requireKYC, trimStrings, idempotency, createOrder);
+router.post('/checkout-cart', protect, authorize(UserRole.Buyer), requireKYC, trimStrings, idempotency, validateRequest({ body: checkoutCartSchema }), checkoutCart);
+router.post('/', protect, authorize(UserRole.Buyer), requireKYC, trimStrings, idempotency, validateRequest({ body: createOrderSchema }), createOrder);
 router.get('/', protect, validateRequest({ query: orderQuerySchema }), getOrders);
 router.get('/stats/summary', protect, getOrderStats);
 router.get('/payment/pending-cod', protect, authorize(UserRole.Farmer), getPendingCODPayments);

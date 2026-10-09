@@ -549,6 +549,95 @@ describe('Batch C: Access Control and Input', () => {
       expect(res.body.success).toBe(true);
     });
   });
+
+  describe('C7: Zod schemas wired up with validateRequest', () => {
+    let cropId: string;
+
+    beforeEach(async () => {
+      await User.findByIdAndUpdate(farmerId, { kycStatus: KycStatus.Verified });
+      await User.findByIdAndUpdate(buyerId, { kycStatus: KycStatus.Verified });
+
+      const crop = await CropListing.create({
+        farmerId,
+        cropName: 'Organic Barley',
+        cropType: CropType.Grains,
+        category: CropCategory.Grains,
+        price: 45,
+        quantity: 100,
+        unit: CropUnit.Kg,
+        description: 'Clean high quality harvested organic barley',
+        pickupLocation: 'Farm 1, Sambalpur',
+        contactNumber: '9876543210',
+        availability: CropAvailability.Available,
+        listingApprovalStatus: ListingApprovalStatus.Approved,
+      });
+      cropId = crop._id.toString();
+    });
+
+    it('createCrop validates request body using createCropSchema (rejects invalid phone number)', async () => {
+      const res = await request(app)
+        .post('/api/crops')
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .send({
+          cropName: 'Organic Barley',
+          cropType: CropType.Grains,
+          category: CropCategory.Grains,
+          price: 45,
+          quantity: 100,
+          unit: CropUnit.Kg,
+          description: 'Clean high quality harvested organic barley',
+          pickupLocation: 'Farm 1, Sambalpur',
+          contactNumber: '12345', // Invalid phone number per createCropSchema regex
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('VALIDATION_ERROR');
+      expect(res.body.errors.contactNumber).toBeDefined();
+    });
+
+    it('updateCrop validates request body using updateCropSchema (rejects negative price)', async () => {
+      const res = await request(app)
+        .put(`/api/crops/${cropId}`)
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .send({
+          price: -25, // Invalid negative price per updateCropSchema
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('VALIDATION_ERROR');
+      expect(res.body.errors.price).toBeDefined();
+    });
+
+    it('createOrder validates request body using createOrderSchema (rejects quantity <= 0)', async () => {
+      const res = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .set('Idempotency-Key', 'test-key-c7-1')
+        .send({
+          cropId,
+          quantity: 0, // Invalid quantity per createOrderSchema
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('VALIDATION_ERROR');
+      expect(res.body.errors.quantity).toBeDefined();
+    });
+
+    it('checkoutCart validates request body using checkoutCartSchema (rejects empty items array)', async () => {
+      const res = await request(app)
+        .post('/api/orders/checkout-cart')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .set('Idempotency-Key', 'test-key-c7-2')
+        .send({
+          items: [], // Invalid empty items per checkoutCartSchema
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('VALIDATION_ERROR');
+      expect(res.body.errors.items).toBeDefined();
+    });
+  });
 });
+
 
 
