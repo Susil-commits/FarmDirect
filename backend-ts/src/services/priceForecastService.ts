@@ -3,6 +3,7 @@ import { mlClient, type PriceHistoryItem, type ForecastResponsePayload } from '.
 import { llmClient } from '../ai/llmClient.js';
 import { redisClient } from '../config/redis.js';
 import logger from '../utils/logger.js';
+import { escapeRegex } from '../utils/escapeRegex.js';
 
 export interface PriceForecastQuery {
   cropName: string;
@@ -94,8 +95,9 @@ export async function getPriceForecast(query: PriceForecastQuery): Promise<Price
   }
 
   // 3. Query historical snapshots from PriceSnapshot
+  const safeCropName = escapeRegex(cropName);
   const filter: Record<string, unknown> = {
-    cropName: { $regex: new RegExp(`^${cropName}$`, 'i') },
+    cropName: { $regex: new RegExp(`^${safeCropName}$`, 'i') },
   };
 
   let snapshots = await PriceSnapshot.find(filter)
@@ -104,9 +106,10 @@ export async function getPriceForecast(query: PriceForecastQuery): Promise<Price
     .select('at price');
 
   // If specific region is requested and has enough data, filter by region
+  const safeRegion = escapeRegex(region);
   const regionalSnapshots = await PriceSnapshot.find({
-    cropName: { $regex: new RegExp(`^${cropName}$`, 'i') },
-    region: { $regex: new RegExp(region, 'i') },
+    cropName: { $regex: new RegExp(`^${safeCropName}$`, 'i') },
+    region: { $regex: new RegExp(safeRegion, 'i') },
   })
     .sort({ at: 1 })
     .lean()

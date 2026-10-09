@@ -2,6 +2,7 @@ import Message, { type MessageModel } from '../models/Message.js';
 import User from '../models/User.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendError } from '../utils/apiResponse.js';
+import { escapeRegex } from '../utils/escapeRegex.js';
 import { notifyNewMessage } from '../socket/eventHandlers.js';
 import type { Request, Response } from 'express';
 import { parsePagination } from '../utils/pagination.js';
@@ -189,7 +190,7 @@ export const searchMessages = asyncHandler(async (req: Request, res: Response) =
   
   if (!receiverId) return sendError(res, 'receiverId is required', 400);
   const conversationId = (Message as unknown as MessageModel).generateConversationId(userId.toString(), receiverId);
-  const results = await Message.find({ conversationId, content: { $regex: q, $options: 'i' }, isDeleted: false })
+  const results = await Message.find({ conversationId, content: { $regex: escapeRegex(q), $options: 'i' }, isDeleted: false })
     .lean().sort({ createdAt: -1 }).limit(50);
   res.status(200).json({ success: true, data: results });
 });

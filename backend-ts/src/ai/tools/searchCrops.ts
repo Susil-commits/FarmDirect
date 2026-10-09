@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import CropListing from '../../models/CropListing.js';
 import { CropStatus, ListingApprovalStatus, CropAvailability } from '../../types/enums.js';
+import { escapeRegex } from '../../utils/escapeRegex.js';
 import type { ToolDefinition } from './types.js';
 
 export const searchCropsSchema = z.object({
@@ -58,7 +59,7 @@ export const searchCropsTool: ToolDefinition<SearchCropsArgs> = {
     };
 
     if (args.query && args.query.trim()) {
-      const q = args.query.trim();
+      const q = escapeRegex(args.query.trim());
       filter.$or = [
         { cropName: { $regex: q, $options: 'i' } },
         { description: { $regex: q, $options: 'i' } },
@@ -66,7 +67,7 @@ export const searchCropsTool: ToolDefinition<SearchCropsArgs> = {
     }
 
     if (args.category && args.category.trim()) {
-      filter.category = { $regex: `^${args.category.trim()}$`, $options: 'i' };
+      filter.category = { $regex: `^${escapeRegex(args.category.trim())}$`, $options: 'i' };
     }
 
     if (args.maxPrice !== undefined && args.maxPrice > 0) {
@@ -78,7 +79,7 @@ export const searchCropsTool: ToolDefinition<SearchCropsArgs> = {
     }
 
     if (args.location && args.location.trim()) {
-      filter.pickupLocation = { $regex: args.location.trim(), $options: 'i' };
+      filter.pickupLocation = { $regex: escapeRegex(args.location.trim()), $options: 'i' };
     }
 
     const crops = await CropListing.find(filter)

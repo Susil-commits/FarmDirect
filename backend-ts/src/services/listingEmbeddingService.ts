@@ -4,6 +4,7 @@ import Embedding from '../models/Embedding.js';
 import { llmClient } from '../ai/llmClient.js';
 import { generateDeterministicVector, cosineSimilarity } from './farmingKbService.js';
 import logger from '../utils/logger.js';
+import { escapeRegex } from '../utils/escapeRegex.js';
 import { CropStatus, CropAvailability, ListingApprovalStatus } from '../types/enums.js';
 
 // Multilingual produce dictionary mapping English, Hindi (Latin + Devanagari), and Odia (Latin + Odia)
@@ -225,10 +226,11 @@ export async function searchCropsHybrid(params: SemanticSearchParams): Promise<{
   }
 
   if (region && region !== 'all') {
+    const safeRegion = escapeRegex(region);
     baseFilter.$or = [
-      { pickupLocation: { $regex: region, $options: 'i' } },
-      { 'location.state': { $regex: region, $options: 'i' } },
-      { 'location.district': { $regex: region, $options: 'i' } },
+      { pickupLocation: { $regex: safeRegion, $options: 'i' } },
+      { 'location.state': { $regex: safeRegion, $options: 'i' } },
+      { 'location.district': { $regex: safeRegion, $options: 'i' } },
     ];
   }
 
