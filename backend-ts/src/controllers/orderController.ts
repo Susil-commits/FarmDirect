@@ -6,6 +6,7 @@ import Notification from '../models/Notification.js';
 import Coupon from '../models/Coupon.js';
 import IdempotencyKey from '../models/IdempotencyKey.js';
 import { notifyOrderUpdate } from '../socket/eventHandlers.js';
+import { getRazorpayInstance, isRazorpayConfigured } from '../config/razorpay.js';
 import { computeDiscount, redeemCoupon } from './couponController.js';
 import { sendError } from '../utils/apiResponse.js';
 import { createOutboxEvent } from '../workers/outboxPublisher.js';
@@ -688,6 +689,34 @@ export async function cancelOrder(req: Request, res: Response, next: NextFunctio
     order.cancelledBy = cancelledBy;
     order.cancelledAt = new Date();
     order.timeline.push({ event: 'CANCELLED', description: `Order cancelled by ${cancelledBy}. Reason: ${cancellationReason.trim()}`, timestamp: new Date() });
+
+    if (
+      order.paymentMethod === PaymentMethod.Razorpay &&
+      order.paymentStatus === PaymentStatus.Completed &&
+      order.razorpayPaymentId &&
+      !order.refundId
+    ) {
+      if (isRazorpayConfigured()) {
+        const razorpay = getRazorpayInstance();
+        if (razorpay) {
+          const refundResponse = await (razorpay.payments as any).refund(order.razorpayPaymentId, {
+            amount: Math.round(order.totalAmount * 100),
+            notes: {
+              orderId: String(order._id),
+              orderNumber: order.orderNumber,
+              reason: cancellationReason.trim(),
+            },
+          });
+          order.refundId = refundResponse?.id || `rfnd_${Date.now()}`;
+        }
+      }
+      order.paymentStatus = PaymentStatus.Refunded;
+      order.timeline.push({
+        event: 'PAYMENT_REFUNDED',
+        description: `Refund initiated via Razorpay (Refund ID: ${order.refundId || 'pending'})`,
+        timestamp: new Date(),
+      });
+    }
     const session = await mongoose.startSession();
     try {
       await session.withTransaction(async () => {
@@ -832,6 +861,34 @@ export async function denyOrder(req: Request, res: Response, next: NextFunction)
     order.cancelledBy = CancelledBy.Farmer;
     order.cancelledAt = new Date();
     order.timeline.push({ event: 'DENIED', description: `Order denied by farmer. Reason: ${denialReason.trim()}`, timestamp: new Date() });
+
+    if (
+      order.paymentMethod === PaymentMethod.Razorpay &&
+      order.paymentStatus === PaymentStatus.Completed &&
+      order.razorpayPaymentId &&
+      !order.refundId
+    ) {
+      if (isRazorpayConfigured()) {
+        const razorpay = getRazorpayInstance();
+        if (razorpay) {
+          const refundResponse = await (razorpay.payments as any).refund(order.razorpayPaymentId, {
+            amount: Math.round(order.totalAmount * 100),
+            notes: {
+              orderId: String(order._id),
+              orderNumber: order.orderNumber,
+              reason: `Denied by farmer: ${denialReason.trim()}`,
+            },
+          });
+          order.refundId = refundResponse?.id || `rfnd_${Date.now()}`;
+        }
+      }
+      order.paymentStatus = PaymentStatus.Refunded;
+      order.timeline.push({
+        event: 'PAYMENT_REFUNDED',
+        description: `Refund initiated via Razorpay (Refund ID: ${order.refundId || 'pending'})`,
+        timestamp: new Date(),
+      });
+    }
     const session = await mongoose.startSession();
     try {
       await session.withTransaction(async () => {

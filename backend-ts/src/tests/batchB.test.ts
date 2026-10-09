@@ -310,4 +310,88 @@ describe('Batch B Money and Stock Fixes', () => {
       expect(orderAfterFailedDeny?.orderStatus).toBe(OrderStatus.Confirmed);
     });
   });
+
+  describe('B4: Razorpay refund on cancellation', () => {
+    it('refunds captured payment on cancellation, stores refundId, and sets paymentStatus=Refunded', async () => {
+      const { setRazorpayInstance } = await import('../config/razorpay.js');
+
+      const refundMock = jest.fn().mockResolvedValue({ id: 'rfnd_mock_12345' });
+      setRazorpayInstance({
+        payments: {
+          refund: refundMock,
+        },
+      });
+
+      const order = await Order.create({
+        buyerId,
+        farmerId,
+        cropId,
+        quantity: 5,
+        unitPrice: 200,
+        totalAmount: 1000,
+        orderStatus: OrderStatus.Confirmed,
+        paymentMethod: PaymentMethod.Razorpay,
+        paymentStatus: PaymentStatus.Completed,
+        razorpayPaymentId: 'pay_test_refund_123',
+      });
+
+      const res = await request(app)
+        .patch(`/api/orders/${order._id}/cancel`)
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({ cancellationReason: 'Buyer requesting refund and cancellation' });
+
+      expect(res.status).toBe(200);
+      expect(refundMock).toHaveBeenCalledTimes(1);
+      expect(refundMock).toHaveBeenCalledWith('pay_test_refund_123', expect.objectContaining({
+        amount: 100000,
+      }));
+
+      const updated = await Order.findById(order._id);
+      expect(updated?.orderStatus).toBe(OrderStatus.Cancelled);
+      expect(updated?.paymentStatus).toBe('refunded');
+      expect(updated?.refundId).toBe('rfnd_mock_12345');
+    });
+
+    it('is idempotent on double-cancel and does not re-issue refund', async () => {
+      const { setRazorpayInstance } = await import('../config/razorpay.js');
+
+      const refundMock = jest.fn().mockResolvedValue({ id: 'rfnd_mock_double_123' });
+      setRazorpayInstance({
+        payments: {
+          refund: refundMock,
+        },
+      });
+
+      const order = await Order.create({
+        buyerId,
+        farmerId,
+        cropId,
+        quantity: 5,
+        unitPrice: 200,
+        totalAmount: 1000,
+        orderStatus: OrderStatus.Confirmed,
+        paymentMethod: PaymentMethod.Razorpay,
+        paymentStatus: PaymentStatus.Completed,
+        razorpayPaymentId: 'pay_test_double_cancel',
+      });
+
+      // First cancel: succeeds and refunds
+      const res1 = await request(app)
+        .patch(`/api/orders/${order._id}/cancel`)
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({ cancellationReason: 'First cancel request' });
+
+      expect(res1.status).toBe(200);
+      expect(refundMock).toHaveBeenCalledTimes(1);
+
+      // Second cancel (double-cancel): rejected with 400 and refund NOT called again
+      const res2 = await request(app)
+        .patch(`/api/orders/${order._id}/cancel`)
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({ cancellationReason: 'Second cancel attempt' });
+
+      expect(res2.status).toBe(400);
+      expect(refundMock).toHaveBeenCalledTimes(1);
+    });
+  });
 });

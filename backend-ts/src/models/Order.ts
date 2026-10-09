@@ -31,6 +31,7 @@ const orderSchema = new Schema<IOrder>(
     razorpayOrderId: { type: String, default: null, index: true },
     razorpayPaymentId: { type: String, default: null },
     razorpaySignature: { type: String, default: null },
+    refundId: { type: String, default: null },
     timeline: [
       { event: String, description: String, timestamp: { type: Date, default: Date.now } },
     ],
