@@ -8,6 +8,8 @@ import aiRoutes from '../routes/aiRoutes.js';
 import farmerRoutes from '../routes/farmerRoutes.js';
 import reviewRoutes from '../routes/reviewRoutes.js';
 import negotiationRoutes from '../routes/negotiationRoutes.js';
+import dataAccessRoutes from '../routes/dataAccessRoutes.js';
+import messageRoutes from '../routes/messageRoutes.js';
 import errorHandler from '../middleware/errorHandler.js';
 
 const app = express();
@@ -23,6 +25,8 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/farmer', farmerRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/negotiations', negotiationRoutes);
+app.use('/api/data', dataAccessRoutes);
+app.use('/api/messages', messageRoutes);
 app.use(errorHandler);
 
 export default app;

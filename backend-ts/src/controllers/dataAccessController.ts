@@ -48,7 +48,7 @@ export const getFarmerEarnings = asyncHandler(async (req: Request, res: Response
 
 export const getBuyerApprovedCrops = asyncHandler(async (_req: Request, res: Response) => {
   const crops = await CropListing.find({ listingApprovalStatus: 'approved' }).lean()
-    .populate({ path: 'farmerId', match: { kycStatus: 'verified' }, select: 'name email phone address rating' })
+    .populate({ path: 'farmerId', match: { kycStatus: 'verified' }, select: 'name rating city state farmName profilePicture' })
     .sort({ createdAt: -1 });
   const validCrops = crops.filter((c) => c.farmerId !== null);
   res.status(200).json({ success: true, count: validCrops.length, data: validCrops });
@@ -92,7 +92,7 @@ export const getPublicApprovedCrops = asyncHandler(async (req: Request, res: Res
 
   try {
     const crops = await CropListing.find(query).lean()
-      .populate({ path: 'farmerId', match: { kycStatus: 'verified' }, select: 'name email phone address rating' })
+      .populate({ path: 'farmerId', match: { kycStatus: 'verified' }, select: 'name rating city state farmName profilePicture' })
       .limit(limit).skip(skip).sort({ createdAt: -1 });
     const validCrops = crops.filter((c) => c.farmerId !== null);
     const total = await CropListing.countDocuments(query);
@@ -117,8 +117,8 @@ export const getPublicFarmerProfile = asyncHandler(async (req: Request, res: Res
   const { farmerId } = req.params;
   if (!farmerId || !mongoose.isValidObjectId(farmerId)) return sendError(res, 'Invalid farmer ID', 400);
   const safeFarmerId = new mongoose.Types.ObjectId(farmerId);
-  const farmer = await User.findById(safeFarmerId).select('name email phone address city state rating kycStatus -password');
-  if (!farmer || farmer.kycStatus !== 'verified') return sendError(res, 'Farmer not found or not verified', 404);
+  const farmer = await User.findOne({ _id: safeFarmerId, kycStatus: 'verified' }).select('name rating city state farmName profilePicture');
+  if (!farmer) return sendError(res, 'Farmer not found or not verified', 404);
   const crops = await CropListing.find({ farmerId: safeFarmerId, listingApprovalStatus: 'approved' }).lean().select('cropName price description quantity images');
   res.status(200).json({ success: true, data: { farmer, cropCount: crops.length, crops: crops.slice(0, 5) } });
 });
