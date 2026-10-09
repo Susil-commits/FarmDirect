@@ -11,6 +11,7 @@ import {
   CropUnit,
   CropAvailability,
   ListingApprovalStatus,
+  KycStatus,
 } from '../types/enums.js';
 import { generateToken } from '../utils/jwt.js';
 
@@ -154,6 +155,61 @@ describe('Batch C: Access Control and Input', () => {
         region: '.*',
       });
       expect(wildcardResult.total).toBe(0);
+    });
+  });
+
+  describe('C2: farmer bulk upload KYC, row validation, and 1000 row limit', () => {
+    it('requires KYC verification for bulk-upload', async () => {
+      // Farmer has default KycStatus.Pending (not verified)
+      const csvData = 'cropName,category,price,quantity,description\nWheat,grains,40,100,Organic wheat';
+      const res = await request(app)
+        .post('/api/farmer/crops/bulk-upload')
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .attach('file', Buffer.from(csvData), 'crops.csv');
+
+      expect(res.status).toBe(403);
+      expect(res.body.message).toMatch(/KYC/i);
+    });
+
+    it('rejects bulk-upload CSV if it exceeds 1000 data rows', async () => {
+      // Verify farmer KYC
+      await User.findByIdAndUpdate(farmerId, { kycStatus: KycStatus.Verified });
+
+      let csv = 'cropName,category,price,quantity,description\n';
+      for (let i = 0; i < 1001; i++) {
+        csv += `Crop${i},grains,40,10,Description\n`;
+      }
+
+      const res = await request(app)
+        .post('/api/farmer/crops/bulk-upload')
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .attach('file', Buffer.from(csv), 'crops.csv');
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(/1000 rows/i);
+    });
+
+    it('validates every row: price > 0, quantity >= 1, category in enum, discount 0-100', async () => {
+      await User.findByIdAndUpdate(farmerId, { kycStatus: KycStatus.Verified });
+
+      const csv = [
+        'cropName,category,price,quantity,description,discount',
+        'Crop1,grains,0,10,Zero price,10',
+        'Crop2,grains,40,0,Zero quantity,10',
+        'Crop3,invalid_cat,40,10,Invalid category,10',
+        'Crop4,grains,40,10,Excessive discount,150',
+        'ValidCrop,grains,40,10,Valid crop,10',
+      ].join('\n');
+
+      const res = await request(app)
+        .post('/api/farmer/crops/bulk-upload')
+        .set('Authorization', `Bearer ${farmerToken}`)
+        .attach('file', Buffer.from(csv), 'crops.csv');
+
+      expect(res.status).toBe(200);
+      expect(res.body.summary.inserted).toBe(1);
+      expect(res.body.summary.failed).toBe(4);
+      expect(res.body.errors.length).toBe(4);
     });
   });
 });

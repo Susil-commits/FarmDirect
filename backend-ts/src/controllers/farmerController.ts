@@ -3,7 +3,7 @@ import Order from '../models/Order.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import { sendError } from '../utils/apiResponse.js';
-import { OrderStatus, CropStatus, ListingApprovalStatus } from '../types/enums.js';
+import { OrderStatus, CropStatus, ListingApprovalStatus, CropCategory } from '../types/enums.js';
 import { evaluateFarmerSmartLowStock } from '../services/inventoryService.js';
 import type { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
@@ -336,6 +336,12 @@ export async function bulkUploadCrops(req: Request, res: Response, next: NextFun
       return;
     }
 
+    const dataRowCount = lines.length - 1;
+    if (dataRowCount > 1000) {
+      sendError(res, 'File exceeds maximum limit of 1000 rows', 400);
+      return;
+    }
+
     const headers = parseCsvLine(lines[0]).map((h) => h.toLowerCase());
     const requiredHeaders = ['cropname', 'category', 'price', 'quantity', 'description'];
     const missingHeaders = requiredHeaders.filter((h) => !headers.includes(h));
@@ -366,8 +372,26 @@ export async function bulkUploadCrops(req: Request, res: Response, next: NextFun
         errors.push({ row: i + 1, error: 'Missing required fields' });
         continue;
       }
-      if (isNaN(parseFloat(rowData.price)) || isNaN(parseInt(rowData.quantity))) {
-        errors.push({ row: i + 1, error: 'Price and quantity must be numbers' });
+
+      const price = parseFloat(rowData.price);
+      const quantity = parseInt(rowData.quantity, 10);
+      const discount = rowData.discount !== undefined && rowData.discount !== '' ? parseFloat(rowData.discount) : 0;
+      const normalizedCategory = rowData.category.toLowerCase().trim() as CropCategory;
+
+      if (isNaN(price) || price <= 0) {
+        errors.push({ row: i + 1, error: 'Price must be a positive number greater than 0' });
+        continue;
+      }
+      if (isNaN(quantity) || quantity < 1) {
+        errors.push({ row: i + 1, error: 'Quantity must be at least 1' });
+        continue;
+      }
+      if (!Object.values(CropCategory).includes(normalizedCategory)) {
+        errors.push({ row: i + 1, error: `Invalid category: ${rowData.category}. Allowed: ${Object.values(CropCategory).join(', ')}` });
+        continue;
+      }
+      if (isNaN(discount) || discount < 0 || discount > 100) {
+        errors.push({ row: i + 1, error: 'Discount must be between 0 and 100' });
         continue;
       }
 
@@ -375,12 +399,12 @@ export async function bulkUploadCrops(req: Request, res: Response, next: NextFun
         farmerId,
         cropName: rowData.cropname,
         cropType: rowData.croptype || 'vegetables',
-        category: rowData.category,
-        price: parseFloat(rowData.price),
-        quantity: parseInt(rowData.quantity, 10),  
+        category: normalizedCategory,
+        price,
+        quantity,
         description: rowData.description || 'No description provided',
         unit: rowData.unit || 'kg',
-        discount: parseFloat(rowData.discount) || 0,
+        discount,
         pickupLocation: rowData.pickuplocation || user.address || 'Location not provided',
         contactNumber: rowData.contactnumber || user.phone || 'Phone not provided',
         status: CropStatus.Active,
