@@ -138,5 +138,105 @@ describe('Batch A Security Fixes', () => {
       expect(conversation.otherUser.profilePicture).toBe('https://cloudinary.com/bob.jpg');
     });
   });
+
+  describe('A3: CSRF Protection on Cookie-Authenticated Routes', () => {
+    const allowedOrigin = 'http://localhost:5173';
+    const evilOrigin = 'http://evil.com';
+    const evilPrefixOrigin = 'http://localhost:5173.attacker.com';
+
+    it('rejects /api/auth/refresh-token with 403 when Origin header is missing', async () => {
+      const res = await request(app)
+        .post('/api/auth/refresh-token')
+        .send({});
+      expect(res.status).toBe(403);
+    });
+
+    it('rejects /api/auth/refresh-token with 403 when Origin is evil.com', async () => {
+      const res = await request(app)
+        .post('/api/auth/refresh-token')
+        .set('Origin', evilOrigin)
+        .send({});
+      expect(res.status).toBe(403);
+    });
+
+    it('rejects /api/auth/refresh-token with 403 when Origin uses startsWith bypass', async () => {
+      const res = await request(app)
+        .post('/api/auth/refresh-token')
+        .set('Origin', evilPrefixOrigin)
+        .send({});
+      expect(res.status).toBe(403);
+    });
+
+    it('rejects evil origin with 403 even if x-requested-with header is present (no shortcut)', async () => {
+      const res = await request(app)
+        .post('/api/auth/refresh-token')
+        .set('Origin', evilOrigin)
+        .set('X-Requested-With', 'XMLHttpRequest')
+        .send({});
+      expect(res.status).toBe(403);
+    });
+
+    it('allows /api/auth/refresh-token when Origin is an exact match in env.corsOrigins', async () => {
+      const res = await request(app)
+        .post('/api/auth/refresh-token')
+        .set('Origin', allowedOrigin)
+        .send({});
+      expect(res.status).not.toBe(403);
+    });
+
+    it('rejects /api/auth/logout with 403 when Origin header is missing', async () => {
+      const res = await request(app)
+        .post('/api/auth/logout')
+        .send({});
+      expect(res.status).toBe(403);
+    });
+
+    it('rejects /api/auth/logout with 403 when Origin is evil.com', async () => {
+      const res = await request(app)
+        .post('/api/auth/logout')
+        .set('Origin', evilOrigin)
+        .send({});
+      expect(res.status).toBe(403);
+    });
+
+    it('allows /api/auth/logout when Origin is an exact match in env.corsOrigins', async () => {
+      const res = await request(app)
+        .post('/api/auth/logout')
+        .set('Origin', allowedOrigin)
+        .send({});
+      expect(res.status).not.toBe(403);
+    });
+
+    it('rejects un-prefixed /auth/refresh with 403 when Origin is evil or missing', async () => {
+      const resMissing = await request(app).post('/auth/refresh').send({});
+      expect(resMissing.status).toBe(403);
+      const resEvil = await request(app).post('/auth/refresh').set('Origin', evilOrigin).send({});
+      expect(resEvil.status).toBe(403);
+    });
+
+    it('allows un-prefixed /auth/refresh when Origin is an exact match', async () => {
+      const res = await request(app)
+        .post('/auth/refresh')
+        .set('Origin', allowedOrigin)
+        .send({});
+      expect(res.status).not.toBe(403);
+    });
+
+    it('rejects un-prefixed /auth/logout with 403 when Origin is evil or missing', async () => {
+      const resMissing = await request(app).post('/auth/logout').send({});
+      expect(resMissing.status).toBe(403);
+      const resEvil = await request(app).post('/auth/logout').set('Origin', evilOrigin).send({});
+      expect(resEvil.status).toBe(403);
+    });
+
+    it('allows un-prefixed /auth/logout when Origin is an exact match', async () => {
+      const res = await request(app)
+        .post('/auth/logout')
+        .set('Origin', allowedOrigin)
+        .send({});
+      expect(res.status).not.toBe(403);
+    });
+  });
 });
+
 

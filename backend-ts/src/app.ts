@@ -9,9 +9,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import mongoSanitize from 'express-mongo-sanitize';
 import mongoose from 'mongoose';
+import cookieParser from 'cookie-parser';
 
 import { env } from './config/env.js';
 import errorHandler from './middleware/errorHandler.js';
+import csrfProtection from './middleware/csrf.js';
 import { requestId } from './middleware/requestId.js';
 import { protect, authorize } from './middleware/auth.js';
 import { UserRole } from './types/enums.js';
@@ -142,6 +144,8 @@ app.use(
   }),
 );
 app.use(express.urlencoded({ limit: '10kb', extended: true }));
+app.use(cookieParser());
+app.use(csrfProtection);
 app.use(mongoSanitize());
 app.use(hpp());
 app.use(trimStrings);
@@ -186,6 +190,7 @@ app.get('/api/health/detailed', protect, authorize(UserRole.Admin), async (_req:
 });
 
 app.use('/health', healthRoutes);
+app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/crops', cropRoutes);
 app.use('/api/orders', orderRoutes);

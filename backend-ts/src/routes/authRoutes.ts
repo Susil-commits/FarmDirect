@@ -30,6 +30,7 @@ router.post('/login',
 );
 
 router.post('/refresh-token', refreshTokenHandler);
+router.post('/refresh', refreshTokenHandler);
 
 router.post('/forgot-password',
   trimStrings,

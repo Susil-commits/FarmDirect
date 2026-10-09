@@ -10,13 +10,18 @@ import reviewRoutes from '../routes/reviewRoutes.js';
 import negotiationRoutes from '../routes/negotiationRoutes.js';
 import dataAccessRoutes from '../routes/dataAccessRoutes.js';
 import messageRoutes from '../routes/messageRoutes.js';
+import cookieParser from 'cookie-parser';
+import csrfProtection from '../middleware/csrf.js';
 import errorHandler from '../middleware/errorHandler.js';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(csrfProtection);
 app.use('/health', healthRoutes);
 app.use('/healthz', healthRoutes);
+app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/crops', cropRoutes);
 app.use('/api/orders', orderRoutes);
