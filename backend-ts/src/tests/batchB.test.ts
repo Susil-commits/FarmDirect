@@ -175,7 +175,7 @@ describe('Batch B Money and Stock Fixes', () => {
       // Mock razorpay orders.fetchPayments returning no captured payment
       setRazorpayInstance({
         orders: {
-          fetchPayments: jest.fn().mockResolvedValue({ items: [] }),
+          fetchPayments: (jest.fn() as any).mockResolvedValue({ items: [] }),
         },
       });
 
@@ -193,7 +193,7 @@ describe('Batch B Money and Stock Fixes', () => {
         quantity: 5,
         unitPrice: 200,
         totalAmount: 1000,
-        orderStatus: OrderStatus.Pending,
+        orderStatus: OrderStatus.Confirmed,
         paymentMethod: PaymentMethod.Razorpay,
         paymentStatus: PaymentStatus.Pending,
         razorpayOrderId: 'order_test_expired_123',
@@ -228,7 +228,7 @@ describe('Batch B Money and Stock Fixes', () => {
         quantity: 10,
         unitPrice: 200,
         totalAmount: 2000,
-        orderStatus: OrderStatus.Pending,
+        orderStatus: OrderStatus.Confirmed,
         paymentMethod: PaymentMethod.Razorpay,
         paymentStatus: PaymentStatus.Pending,
         createdAt: fortyMinsAgo,
@@ -315,7 +315,7 @@ describe('Batch B Money and Stock Fixes', () => {
     it('refunds captured payment on cancellation, stores refundId, and sets paymentStatus=Refunded', async () => {
       const { setRazorpayInstance } = await import('../config/razorpay.js');
 
-      const refundMock = jest.fn().mockResolvedValue({ id: 'rfnd_mock_12345' });
+      const refundMock = (jest.fn() as any).mockResolvedValue({ id: 'rfnd_mock_12345' });
       setRazorpayInstance({
         payments: {
           refund: refundMock,
@@ -355,7 +355,7 @@ describe('Batch B Money and Stock Fixes', () => {
     it('is idempotent on double-cancel and does not re-issue refund', async () => {
       const { setRazorpayInstance } = await import('../config/razorpay.js');
 
-      const refundMock = jest.fn().mockResolvedValue({ id: 'rfnd_mock_double_123' });
+      const refundMock = (jest.fn() as any).mockResolvedValue({ id: 'rfnd_mock_double_123' });
       setRazorpayInstance({
         payments: {
           refund: refundMock,
