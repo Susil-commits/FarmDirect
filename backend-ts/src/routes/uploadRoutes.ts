@@ -7,6 +7,8 @@ import { createRateLimitStore } from '../config/rateLimiter.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendSuccess, sendCreated, sendError } from '../utils/apiResponse.js';
 import { UserRole } from '../types/enums.js';
+import validateRequest from '../middleware/validator.js';
+import { presignUploadSchema } from '../schemas/uploadSchemas.js';
 
 const router = Router();
 
@@ -65,6 +67,7 @@ router.post(
 
 router.post(
   '/presign',
+  validateRequest({ body: presignUploadSchema }),
   asyncHandler(async (req: Request, res: Response) => {
     const { folder = 'general' } = req.body as { folder?: string };
     const params = generatePresignedUploadParams(folder);

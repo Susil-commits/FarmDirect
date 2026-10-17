@@ -1,6 +1,7 @@
 import { Worker } from 'bullmq';
 import { flagAnomalyAsync } from '../services/anomalyService.js';
 import { connection, type AnomalyJobData } from './queue.js';
+import logger from '../utils/logger.js';
 
 export function startAnomalyWorker() {
   if (!connection) {
@@ -8,7 +9,7 @@ export function startAnomalyWorker() {
   }
 
   const worker = new Worker<AnomalyJobData>('anomalyDetection', async (job) => {
-    console.log(`Processing anomaly detection for order ${job.data.orderId}`);
+    logger.info({ orderId: job.data.orderId }, `Processing anomaly detection for order ${job.data.orderId}`);
     await flagAnomalyAsync(job.data.orderId, job.data.amount, job.data.userId);
   }, {
     connection,
@@ -18,11 +19,11 @@ export function startAnomalyWorker() {
   });
 
   worker.on('completed', job => {
-    console.log(`Job ${job.id} has completed!`);
+    logger.info({ jobId: job.id }, `Job ${job.id} has completed!`);
   });
 
   worker.on('failed', (job, err) => {
-    console.error(`Job ${job?.id} has failed with ${err.message}`);
+    logger.error({ jobId: job?.id, err: err.message }, `Job ${job?.id} has failed with ${err.message}`);
   });
 
   return worker;

@@ -5,6 +5,7 @@ import OutboxEvent from '../models/OutboxEvent.js';
 import Notification from '../models/Notification.js';
 import { notifyOrderUpdate } from '../socket/eventHandlers.js';
 import Order from '../models/Order.js';
+import logger from '../utils/logger.js';
 
 export const outboxQueue = connection ? new Queue('outboxQueue', { connection }) : null;
 if (outboxQueue) {
@@ -163,7 +164,7 @@ export function startOutboxPollingWorker(intervalMs = 30 * 1000): void {
     sweepPendingOutboxEvents().catch(() => {});
   }, intervalMs);
 
-  console.log(`[OutboxWorker] Outbox fallback polling worker scheduled (every ${intervalMs / 1000}s)`);
+  logger.info(`[OutboxWorker] Outbox fallback polling worker scheduled (every ${intervalMs / 1000}s)`);
 }
 
 /**

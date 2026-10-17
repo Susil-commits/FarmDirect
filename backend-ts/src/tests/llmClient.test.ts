@@ -60,4 +60,20 @@ describe('LLM Client & AI Usage Governance', () => {
     const isUnderCapAllowed = await llmClient.checkUserDailyTokenCap(underCapUser);
     expect(isUnderCapAllowed).toBe(true);
   });
+
+  it('should validate official Gemini model identifiers and reject invalid model strings', async () => {
+    const { isValidGeminiModel } = await import('../config/env.js');
+
+    expect(isValidGeminiModel('gemini-3.5-flash-lite')).toBe(true);
+    expect(isValidGeminiModel('gemini-2.5-flash-lite')).toBe(true);
+    expect(isValidGeminiModel('gemini-2.0-flash')).toBe(true);
+    expect(isValidGeminiModel('gemini-1.5-flash')).toBe(true);
+    expect(isValidGeminiModel('gemini-1.5-pro')).toBe(true);
+
+    expect(isValidGeminiModel('')).toBe(false);
+    expect(isValidGeminiModel('gpt-4o')).toBe(false);
+    expect(isValidGeminiModel('claude-3-opus')).toBe(false);
+    expect(isValidGeminiModel('gemini-invalid-model')).toBe(false);
+    expect(isValidGeminiModel('gemini-99-pro')).toBe(false);
+  });
 });

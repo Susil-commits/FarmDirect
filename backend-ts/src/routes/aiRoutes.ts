@@ -15,6 +15,8 @@ import {
 } from '../controllers/aiController.js';
 import { protect, authorize } from '../middleware/auth.js';
 import { UserRole } from '../types/enums.js';
+import validateRequest from '../middleware/validator.js';
+import { aiChatRequestSchema, listingDraftRequestSchema } from '../schemas/aiSchemas.js';
 
 const router = Router();
 
@@ -39,11 +41,11 @@ const guestAiLimiter = rateLimit({
 });
 
 // Authenticated AI chat for farmers, buyers, admins
-router.post('/chat', protect, aiRateLimiter, handleAiChat);
-router.post('/chat/stream', protect, aiRateLimiter, handleAiChatStream);
+router.post('/chat', protect, aiRateLimiter, validateRequest({ body: aiChatRequestSchema }), handleAiChat);
+router.post('/chat/stream', protect, aiRateLimiter, validateRequest({ body: aiChatRequestSchema }), handleAiChatStream);
 
 // Restricted demo endpoint for guests
-router.post('/try', guestAiLimiter, handleGuestAiChat);
+router.post('/try', guestAiLimiter, validateRequest({ body: aiChatRequestSchema }), handleGuestAiChat);
 
 router.get('/suggestions', getPromptSuggestions);
 
@@ -53,6 +55,7 @@ router.post(
   protect,
   authorize(UserRole.Farmer, UserRole.Admin),
   aiRateLimiter,
+  validateRequest({ body: listingDraftRequestSchema }),
   handleListingDraft
 );
 

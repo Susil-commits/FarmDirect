@@ -346,6 +346,18 @@ F_1/src/
 - Environment variables for secrets
 - HTTPS only in production
 
+### Rate Limiter Architecture & Scaling Trade-off (Stated Design Decision)
+
+FarmDirect employs a deliberate, tiered rate-limiting architecture to balance operational cost and security rigor:
+
+| Limiter Layer | Scope / Endpoints | Storage Mechanism | Rationale & Architectural Trade-off |
+| :--- | :--- | :--- | :--- |
+| **Authentication Limiter** | `/api/auth/*` (Login, Register, Password Reset) | **Distributed Redis Store** (`rl:auth:`, window: 15m, max: 15) | **Zero-tolerance for distributed brute force**: Credential stuffing, brute-force password guessing, and OTP enumeration must be blocked across all server instances and worker processes simultaneously. Uses Redis atomic counters with TTL. |
+| **Global Limiter** | All HTTP endpoints (`app.use`) | **In-Memory Store** (single-instance, window: 15m, max: 600) | **Command budget conservation**: On managed cloud Redis tiers (such as Redis Cloud's 500k monthly command cap), routing every static hit and read query through Redis would exhaust quotas within days. In-memory limiting dampens single-client volumetric floods with zero latency and zero Redis roundtrips. |
+| **Polling Limiter** | `/api/messages/unread`, `/api/notifications/unread` | **In-Memory Store** (single-instance, window: 1m, max: 120) | **Client polling throttle**: Prevents runaway browser tabs from overwhelming the Node event loop, while keeping Redis commands reserved for ACID state mutations. |
+
+> **Interview & Audit Note**: This is a **stated design trade-off**, not an oversight. In multi-instance clustered environments, memory limiters apply per process; if horizontal cluster density increases and an enterprise uncapped Redis instance is provisioned, switching global limiters to Redis requires only passing `store: createRateLimitStore('rl:global:')` to `rateLimit()`.
+
 ---
 
 ## 7. Database Collections Overview

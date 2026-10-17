@@ -1,5 +1,6 @@
 import IORedis from 'ioredis';
 import dotenv from 'dotenv';
+import logger from '../utils/logger.js';
 
 dotenv.config();
 
@@ -19,13 +20,13 @@ if (redisUrl && process.env.NODE_ENV !== 'test') {
 
   rawClient.on('error', (err) => {
     if (!isOutageLogged) {
-      console.warn(`[Redis] Remote cache unreachable: ${err?.message || 'Connection error'}. Operating with in-memory & direct DB queries.`);
+      logger.warn({ err: err?.message || 'Connection error' }, '[Redis] Remote cache unreachable. Operating with in-memory & direct DB queries.');
       isOutageLogged = true;
     }
   });
 
   rawClient.on('connect', () => {
-    console.log('[Redis] Connected successfully');
+    logger.info('[Redis] Connected successfully');
     isOutageLogged = false;
   });
 
@@ -103,11 +104,11 @@ export const connectRedis = async (): Promise<void> => {
   try {
     await Promise.race([
       rawClient.connect().catch((err) => {
-        console.warn('[Redis] Initial connection failed:', err?.message || err);
+        logger.warn({ err: err?.message || err }, '[Redis] Initial connection failed');
       }),
       new Promise<void>((r) => setTimeout(r, 3000)),
     ]);
   } catch (err: any) {
-    console.warn('[Redis] Startup connect timed out or failed:', err?.message || err);
+    logger.warn({ err: err?.message || err }, '[Redis] Startup connect timed out or failed');
   }
 };

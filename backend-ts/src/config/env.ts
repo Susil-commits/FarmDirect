@@ -57,6 +57,13 @@ export interface EnvConfig {
   sentryDsn?: string;
 }
 
+export const VALID_GEMINI_MODEL_PATTERN = /^gemini-(1\.5|2\.0|2\.5|3\.5)-(flash|pro|flash-8b|flash-lite)(-[a-z0-9-]+)?$/;
+
+export function isValidGeminiModel(model: string): boolean {
+  if (!model || typeof model !== 'string') return false;
+  return VALID_GEMINI_MODEL_PATTERN.test(model.trim());
+}
+
 function loadEnv(): EnvConfig {
   const required: Array<[string, string | undefined]> = [];
 
@@ -115,6 +122,21 @@ function loadEnv(): EnvConfig {
     }
   }
 
+  const geminiModel = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+  const geminiFallbackModel = process.env.GEMINI_FALLBACK_MODEL || 'gemini-2.5-flash-lite';
+
+  if (!isValidGeminiModel(geminiModel)) {
+    throw new Error(
+      `Invalid GEMINI_MODEL "${geminiModel}". Must reference an active, valid Google Gemini model identifier (e.g. gemini-3.5-flash-lite, gemini-2.5-flash-lite, gemini-2.0-flash, gemini-1.5-flash).`
+    );
+  }
+
+  if (!isValidGeminiModel(geminiFallbackModel)) {
+    throw new Error(
+      `Invalid GEMINI_FALLBACK_MODEL "${geminiFallbackModel}". Must reference an active, valid Google Gemini model identifier (e.g. gemini-3.5-flash-lite, gemini-2.5-flash-lite, gemini-2.0-flash, gemini-1.5-flash).`
+    );
+  }
+
   return {
     nodeEnv,
     isProd,
@@ -146,8 +168,8 @@ function loadEnv(): EnvConfig {
     razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET || (nodeEnv === 'test' ? 'test_secret' : undefined),
     razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || (nodeEnv === 'test' ? 'test_webhook_secret' : undefined),
     geminiApiKey: process.env.GEMINI_API_KEY,
-    geminiModel: process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite',
-    geminiFallbackModel: process.env.GEMINI_FALLBACK_MODEL || 'gemini-2.5-flash-lite',
+    geminiModel,
+    geminiFallbackModel,
     aiChatEnabled: parseBoolean(process.env.AI_CHAT_ENABLED, true),
     aiVisionEnabled: parseBoolean(process.env.AI_VISION_ENABLED, true),
     aiDailyTokenCap: parseInt(process.env.AI_DAILY_TOKEN_CAP || '50000', 10),

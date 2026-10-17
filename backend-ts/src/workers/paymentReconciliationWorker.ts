@@ -4,6 +4,7 @@ import CropListing from '../models/CropListing.js';
 import Notification from '../models/Notification.js';
 import { getRazorpayInstance, isRazorpayConfigured } from '../config/razorpay.js';
 import { notifyOrderUpdate } from '../socket/eventHandlers.js';
+import logger from '../utils/logger.js';
 import {
   OrderStatus,
   PaymentMethod,
@@ -167,11 +168,11 @@ export async function reconcilePendingRazorpayPayments(): Promise<void> {
           await expireOrderAndRestoreStock(order._id);
         }
       } catch (err: any) {
-        console.warn(`[ReconciliationWorker] Failed to reconcile order ${order._id}:`, err?.message || err);
+        logger.warn({ orderId: order._id, err: err?.message || err }, '[ReconciliationWorker] Failed to reconcile order');
       }
     }
   } catch (error: any) {
-    console.error('[ReconciliationWorker] Error during payment reconciliation run:', error?.message || error);
+    logger.error({ err: error?.message || error }, '[ReconciliationWorker] Error during payment reconciliation run');
   }
 }
 
@@ -186,7 +187,7 @@ export function startPaymentReconciliationWorker(intervalMs = 15 * 60 * 1000): v
     reconcilePendingRazorpayPayments().catch(() => {});
   }, intervalMs);
 
-  console.log('[ReconciliationWorker] Razorpay payment reconciliation worker scheduled (every 15m)');
+  logger.info('[ReconciliationWorker] Razorpay payment reconciliation worker scheduled (every 15m)');
 }
 
 export function stopPaymentReconciliationWorker(): void {

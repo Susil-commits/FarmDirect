@@ -58,12 +58,14 @@ The system now implements a complete account registration and verification workf
 - Must match registration details
 - Original colored copies
 
-### 4. Admin Approval Phase (TODO - Backend Implementation)
-- **Backend Endpoint** (To be created):
-  - POST `/api/admin/verify-documents` - Upload and store documents
-  - GET `/api/verification/status` - Check current status
-  - PUT `/api/admin/documents/approve/:userId` - Admin approves
-  - PUT `/api/admin/documents/reject/:userId` - Admin rejects
+### 4. Admin Approval Phase (Backend Implemented)
+- **Backend Endpoints**:
+  - `POST /api/upload/kyc` - Upload and store KYC documents in Cloudinary / Local
+  - `GET /api/users/profile` - Check current KYC status
+  - `PATCH /api/admin/kyc/:userId/approve` - Admin approves KYC
+  - `PATCH /api/admin/kyc/:userId/reject` - Admin rejects KYC with reason
+  - `GET /api/admin/kyc/pending` - List pending applications
+  - `GET /api/admin/documents/:userId` - View uploaded documents
 
 - **Documents Storage**: S3/Cloud storage or server file storage
 - **Review Timeline**: 24-48 hours (as shown in UI)
@@ -184,14 +186,14 @@ The system now implements a complete account registration and verification workf
 - `User.kycRejectionReason` - Reason if rejected
 - `User.kycComments` - Admin comments
 
-## Integration Points (TODO)
-
-1. **Document Storage**: Create endpoint to store uploaded documents
-2. **Admin Dashboard**: Create admin verification review interface
-3. **Approval/Rejection**: Create endpoints to approve/reject applications
-4. **Email Notifications**: Send email when approved/rejected
-5. **Webhook Integration**: Notify users of status changes in real-time
-6. **Document Validation**: Server-side file validation and virus scanning
+## Integration Points
+ 
+1. **Document Storage**: `POST /api/upload/kyc` with Cloudinary signed storage & local fallback
+2. **Admin Dashboard**: `AdminProfile.jsx` verification review interface
+3. **Approval/Rejection**: `PATCH /api/admin/kyc/:userId/approve` and `reject`
+4. **Email Notifications**: Integrated via `emailService.ts` for status updates
+5. **Webhook/Socket Integration**: Real-time notifications dispatched via Socket.IO
+6. **Document Validation**: Server-side magic bytes validation (`validateMagicBytes`) and MIME filtering
 
 ## Testing Flow
 
@@ -217,11 +219,11 @@ The system now implements a complete account registration and verification workf
 7. Logout and login
 8. Status should show "pending"
 
-# Admin Approval (Manual for now)
-1. In database, update user.kycStatus = 'verified'
-2. User logs in
-3. Should now have dashboard access
-4. Should bypass /verification/progress
+# Admin Approval
+1. Log in as admin
+2. Approve KYC via admin dashboard
+3. User logs in
+4. Should now have full dashboard access
 ```
 
 ## Current Implementation Status
@@ -235,16 +237,16 @@ The system now implements a complete account registration and verification workf
 - Document upload interface
 - Status display and timeline
 - Farmer/buyer document differentiation
-
-🟡 **TODO**:
-- Backend document storage endpoint
+- Backend document storage endpoint (`/api/upload/kyc`)
 - Admin verification dashboard
-- Document approval/rejection endpoints
-- Email notifications
-- Real-time status updates
-- Document validation (size, format, content)
-- Virus/malware scanning
-- Duplicate application detection
+- Document approval/rejection endpoints (`/api/admin/kyc/:userId/approve`, `reject`)
+- Email & socket notifications on status change
+- Document magic bytes & MIME validation
+
+## Next Iterations:
+- Automated OCR extraction for Aadhaar / PAN
+- ClamAV containerized virus/malware scanning
+- Duplicate application detection across PAN hash indexes
 
 ## Environment Requirements
 

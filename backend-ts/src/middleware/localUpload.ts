@@ -7,6 +7,7 @@ import { env } from '../config/env.js';
 import type { UploadedFileMeta, UploadedFileMetaWithField } from '../types/index.js';
 
 import { ApiError } from '../utils/apiError.js';
+import logger from '../utils/logger.js';
 
 const storage = multer.memoryStorage();
 
@@ -22,6 +23,40 @@ const ALLOWED_UPLOAD_FIELDS = new Set([
   'governmentId', 'addressProof', 'landOwnership', 'farmRegistration',
   'businessRegistration', 'bankDetails', 'taxId', 'bankAccount', 'landSurvey',
 ]);
+
+export const KYC_FIELD_NAMES = new Set([
+  'governmentId', 'addressProof', 'landOwnership', 'farmRegistration',
+  'businessRegistration', 'bankDetails', 'taxId', 'bankAccount', 'landSurvey',
+]);
+
+export const UPLOAD_SIZE_LIMITS = {
+  // KYC / Identity documents: 15MB for high-resolution scans and multi-page PDFs
+  KYC_DOCUMENT: 15 * 1024 * 1024,
+  // Product / Crop listings: 5MB for compressed camera images (JPEG/PNG/WEBP)
+  PRODUCT_IMAGE: 5 * 1024 * 1024,
+  // User profile avatars: 5MB
+  PROFILE_IMAGE: 5 * 1024 * 1024,
+  // Order delivery receipts / invoices: 10MB
+  ORDER_DOCUMENT: 10 * 1024 * 1024,
+  // Fallback global default
+  DEFAULT: env.maxFileSize || 5 * 1024 * 1024,
+};
+
+export function getFieldSizeLimit(fieldname: string, folder = 'general'): number {
+  if (folder === 'kyc_documents' || KYC_FIELD_NAMES.has(fieldname)) {
+    return UPLOAD_SIZE_LIMITS.KYC_DOCUMENT;
+  }
+  if (folder === 'crops' || fieldname === 'image' || fieldname === 'images') {
+    return UPLOAD_SIZE_LIMITS.PRODUCT_IMAGE;
+  }
+  if (folder === 'profiles' || fieldname === 'profilePhoto') {
+    return UPLOAD_SIZE_LIMITS.PROFILE_IMAGE;
+  }
+  if (folder === 'orders') {
+    return UPLOAD_SIZE_LIMITS.ORDER_DOCUMENT;
+  }
+  return UPLOAD_SIZE_LIMITS.DEFAULT;
+}
 
 export function validateMagicBytes(buffer: Buffer, claimedMime: string): boolean {
   if (!buffer || buffer.length < 4) return false;
@@ -64,18 +99,27 @@ function fileFilter(
   }
 }
 
-const upload = multer({
-  storage,
-  fileFilter,
-  limits: { fileSize: env.maxFileSize },
-});
+export function createMulterUploader(maxFileSize: number) {
+  return multer({
+    storage,
+    fileFilter,
+    limits: { fileSize: maxFileSize },
+  });
+}
 
-export function uploadSingleFile(folder = 'general') {
+const upload = createMulterUploader(UPLOAD_SIZE_LIMITS.KYC_DOCUMENT);
+
+export function uploadSingleFile(folder = 'general', customMaxFileSize?: number) {
+  const limit = customMaxFileSize ?? getFieldSizeLimit('', folder);
+  const uploader = createMulterUploader(limit);
   return [
-    upload.single('file'),
+    uploader.single('file'),
     asyncHandler(async (req, res, next) => {
       if (!req.file) {
         return next();
+      }
+      if (req.file.size > limit) {
+        return sendError(res, `File exceeds the maximum size limit of ${Math.round(limit / (1024 * 1024))}MB`, 400);
       }
       if (!validateMagicBytes(req.file.buffer, req.file.mimetype)) {
         return sendError(res, 'File content does not match the claimed MIME type (magic bytes check failed)', 400);
@@ -98,9 +142,11 @@ export function uploadSingleFile(folder = 'general') {
   ];
 }
 
-export function uploadMultipleFiles(folder = 'general', maxFiles = 5) {
+export function uploadMultipleFiles(folder = 'general', maxFiles = 5, customMaxFileSize?: number) {
+  const limit = customMaxFileSize ?? getFieldSizeLimit('', folder);
+  const uploader = createMulterUploader(limit);
   return [
-    upload.any(),
+    uploader.any(),
     asyncHandler(async (req, res, next) => {
       if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
         req.uploadedFiles = [];
@@ -113,6 +159,10 @@ export function uploadMultipleFiles(folder = 'general', maxFiles = 5) {
       }
 
       for (const file of files) {
+        const perFieldLimit = getFieldSizeLimit(file.fieldname, folder);
+        if (file.size > perFieldLimit) {
+          return sendError(res, `File "${file.originalname}" exceeds maximum allowed size of ${Math.round(perFieldLimit / (1024 * 1024))}MB for field ${file.fieldname}`, 400);
+        }
         if (!validateMagicBytes(file.buffer, file.mimetype)) {
           return sendError(res, `File "${file.originalname}" content does not match its claimed MIME type`, 400);
         }
@@ -133,7 +183,7 @@ export function uploadMultipleFiles(folder = 'general', maxFiles = 5) {
         req.uploadedFiles = metas;
         next();
       } catch (error) {
-        console.error('File save failed:', error instanceof Error ? error.message : error);
+        logger.error({ err: error instanceof Error ? error.message : error }, 'File save failed');
         req.uploadedFiles = [];
         req.uploadError = error instanceof Error ? error.message : String(error);
         next();
@@ -143,19 +193,19 @@ export function uploadMultipleFiles(folder = 'general', maxFiles = 5) {
 }
 
 export function uploadProfilePicture() {
-  return uploadSingleFile('profiles');
+  return uploadSingleFile('profiles', UPLOAD_SIZE_LIMITS.PROFILE_IMAGE);
 }
 
 export function uploadCropImages() {
-  return uploadMultipleFiles('crops', 5);
+  return uploadMultipleFiles('crops', 5, UPLOAD_SIZE_LIMITS.PRODUCT_IMAGE);
 }
 
 export function uploadKYCDocuments() {
-  return uploadMultipleFiles('kyc_documents', 10);
+  return uploadMultipleFiles('kyc_documents', 10, UPLOAD_SIZE_LIMITS.KYC_DOCUMENT);
 }
 
 export function uploadOrderDocuments() {
-  return uploadMultipleFiles('orders', 10);
+  return uploadMultipleFiles('orders', 10, UPLOAD_SIZE_LIMITS.ORDER_DOCUMENT);
 }
 
 export default upload;

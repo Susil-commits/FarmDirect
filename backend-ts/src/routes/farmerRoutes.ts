@@ -7,6 +7,8 @@ import {
   getSmartLowStockItems, updateLowStockThreshold, getCategoryBreakdown, getTopPerformingCrops,
   bulkUploadCrops, getExportTemplate,
 } from '../controllers/farmerController.js';
+import validateRequest from '../middleware/validator.js';
+import { updateLowStockThresholdSchema } from '../schemas/farmerSchemas.js';
 
 const router = Router();
 
@@ -31,7 +33,7 @@ router.get('/crops/categories-breakdown', getCategoryBreakdown);
 router.get('/crops/top-performing', getTopPerformingCrops);
 router.get('/inventory/low-stock', getLowStockItems);
 router.get('/inventory/smart-low-stock', getSmartLowStockItems);
-router.post('/inventory/update-threshold', updateLowStockThreshold);
+router.post('/inventory/update-threshold', validateRequest({ body: updateLowStockThresholdSchema }), updateLowStockThreshold);
 router.post('/crops/bulk-upload', requireKYC, upload.single('file'), bulkUploadCrops);
 router.get('/crops/export-template', getExportTemplate);
 

@@ -4,12 +4,14 @@ import {
   markConversationAsRead, deleteMessage, getUnreadCount, searchMessages, toggleBlockUser,
 } from '../controllers/messageController.js';
 import { protect, requireKYC } from '../middleware/auth.js';
+import validateRequest from '../middleware/validator.js';
+import { sendMessageSchema } from '../schemas/messageSchemas.js';
 
 const router = Router();
 
 router.use(protect);
 
-router.post('/', requireKYC, sendMessage);
+router.post('/', requireKYC, validateRequest({ body: sendMessageSchema }), sendMessage);
 router.get('/conversations', getConversations);
 router.get('/unread/count', getUnreadCount);
 router.get('/conversation/:receiverId', requireKYC, getConversation);

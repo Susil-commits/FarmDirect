@@ -192,3 +192,20 @@ export const priceForecastQuerySchema = z.object({
 
 export type PriceForecastQueryInput = z.infer<typeof priceForecastQuerySchema>;
 
+export const aiChatRequestSchema = z.object({
+  message: z
+    .string()
+    .min(1, 'Please provide a valid question or message.')
+    .max(1200, 'Message is too long. Please limit your question to 1200 characters.'),
+  conversationId: z.string().optional(),
+  context: z
+    .object({
+      role: z.enum(['farmer', 'buyer', 'admin', 'guest']).optional(),
+      currentPath: z.string().optional(),
+      cropName: z.string().optional(),
+    })
+    .optional(),
+});
+
+export type AiChatRequestInput = z.infer<typeof aiChatRequestSchema>;
+

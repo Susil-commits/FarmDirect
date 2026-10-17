@@ -1,5 +1,6 @@
 import nodemailer, { type Transporter, type SendMailOptions, type SentMessageInfo } from 'nodemailer';
 import { env } from '../config/env.js';
+import logger from './logger.js';
 
 export interface EmailOptions {
   to: string;
@@ -78,11 +79,11 @@ export async function sendEmail(mailOptions: EmailOptions): Promise<EmailResult>
     }
 
     const result = await attemptSend(mailOptions as SendMailOptions);
-    if (env.isDev) console.log(`Email sent successfully to ${mailOptions.to}`);
+    if (env.isDev) logger.info({ to: mailOptions.to }, `Email sent successfully to ${mailOptions.to}`);
     return { success: true, message: 'Email sent successfully', messageId: result.messageId };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error('Error sending email:', message);
+    logger.error({ err: message }, 'Error sending email');
     if (!env.isProd) {
       return { success: true, message: 'Email queued (dev mode)', error: message };
     }
@@ -96,7 +97,7 @@ export async function verifyConnection(): Promise<boolean> {
     await transporter.verify();
     return true;
   } catch (error) {
-    console.error('Email service error:', error instanceof Error ? error.message : error);
+    logger.error({ err: error instanceof Error ? error.message : error }, 'Email service error');
     return false;
   }
 }

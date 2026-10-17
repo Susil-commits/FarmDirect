@@ -33,9 +33,10 @@ export function validateRequest(schemas: ValidationSchemas): RequestHandler {
           fieldErrors[field] = issue.message;
         }
       }
+      const issueMessages = issues.map((i) => i.message).join('; ');
       res.status(400).json({
         success: false,
-        message: 'Validation Error',
+        message: issueMessages ? `Validation Error: ${issueMessages}` : 'Validation Error',
         code: 'VALIDATION_ERROR',
         errors: fieldErrors,
       });
