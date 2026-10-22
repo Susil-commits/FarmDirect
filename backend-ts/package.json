@@ -84,6 +84,7 @@
   },
   "overrides": {
     "argparse": "^2.0.1",
-    "handlebars": "^4.7.10"
+    "handlebars": "^4.7.10",
+    "follow-redirects": "^1.16.1"
   }
 }
