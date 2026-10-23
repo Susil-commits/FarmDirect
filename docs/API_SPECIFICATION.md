@@ -1,1291 +1,384 @@
-# RESTful API Specification - Rural Farmer Marketplace
+# 🔌 FarmDirect RESTful API Specification
 
-## API Base URL
-```
-Development: http://localhost:5000/api/v1
-Production: https://api.farmersmarketplace.com/api/v1
-```
+[![API Version](https://img.shields.io/badge/API_Version-v2.0_TypeScript-blue?style=for-the-badge)](file:///c:/Users/nayak/OneDrive/Desktop/Projects/web/FaRm/docs/API_SPECIFICATION.md)
+[![Base URL](https://img.shields.io/badge/Endpoint-%2Fapi-success?style=for-the-badge)](https://farmdirect-backend.onrender.com/api)
+[![Security](https://img.shields.io/badge/Security-Timing--Safe_%7C_Zod_Validated-brightgreen?style=for-the-badge)](https://github.com/Susil-commits/FarmDirect)
 
-## Response Format
+> Complete contract and integration specification for the FarmDirect Backend API. All endpoints are strongly typed, validated using Zod, protected with CSRF/Rate-limiting middleware, and return standardized JSON envelopes.
 
-### Success Response
+---
+
+## 📑 Table of Contents
+1. [General Protocols & Base URLs](#1-general-protocols--base-urls)
+2. [Standard Response Envelopes](#2-standard-response-envelopes)
+3. [Authentication & Session Headers](#3-authentication--session-headers)
+4. [API Endpoints Overview](#4-api-endpoints-overview)
+   - [Health & Diagnostics](#41-health--diagnostics)
+   - [Authentication & Identity](#42-authentication--identity)
+   - [Crops & Marketplace Catalog](#43-crops--marketplace-catalog)
+   - [Atomic Orders & Checkout](#44-atomic-orders--checkout)
+   - [Bilateral Negotiations](#45-bilateral-negotiations)
+   - [Multimodal AI & Agronomy](#46-multimodal-ai--agronomy)
+   - [Payments & Webhooks](#47-payments--webhooks)
+   - [Shopping Cart](#48-shopping-cart)
+   - [Farmer Dashboard](#49-farmer-dashboard)
+   - [Admin & KYC Moderation](#410-admin--kyc-moderation)
+   - [Reviews, Messaging & Notifications](#411-reviews-messaging--notifications)
+   - [Transactional Outbox Events](#412-transactional-outbox-events)
+5. [Standard Error Codes Matrix](#5-standard-error-codes-matrix)
+
+---
+
+## 1. General Protocols & Base URLs
+
+* **Development Base URL:** `http://localhost:5000/api`
+* **Production Base URL:** `https://farmdirect-backend.onrender.com/api`
+* **Transport:** HTTPS / TLS 1.3 (Production), HTTP (Local Dev)
+* **WebSocket Ingress:** `wss://farmdirect-backend.onrender.com`
+
+---
+
+## 2. Standard Response Envelopes
+
+### 2.1 Success Envelope
 ```json
 {
   "success": true,
   "status": 200,
-  "message": "Operation successful",
-  "data": { /* response data */ }
+  "message": "Operation completed successfully",
+  "data": { ... },
+  "meta": {
+    "requestId": "req_a9f82d01",
+    "timestamp": "2026-10-23T10:00:00.000Z",
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "totalRecords": 85,
+      "totalPages": 5
+    }
+  }
 }
 ```
 
-### Error Response
+### 2.2 Error Envelope
 ```json
 {
   "success": false,
   "status": 400,
   "message": "Validation failed",
-  "errors": [
-    {
-      "field": "email",
-      "message": "Invalid email format"
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "details": [
+      {
+        "field": "quantity",
+        "message": "Quantity must be greater than zero"
+      }
+    ]
+  },
+  "meta": {
+    "requestId": "req_b72c918a",
+    "timestamp": "2026-10-23T10:00:00.000Z"
+  }
+}
+```
+
+---
+
+## 3. Authentication & Session Headers
+
+| Header | Required | Description | Example |
+| :--- | :---: | :--- | :--- |
+| `Authorization` | Protected routes | Bearer JWT access token (15-min TTL) | `Bearer eyJhbGciOi...` |
+| `Idempotency-Key` | Mutation routes | UUIDv4 to eliminate duplicate charges | `c7b508f9-1582-4bf1-a8cf-326ef3fba61a` |
+| `X-Request-Id` | Optional | Client correlation ID for audit tracing | `req_client_9941` |
+| `Content-Type` | JSON routes | Payload MIME type | `application/json` |
+
+---
+
+## 4. API Endpoints Overview
+
+### 4.1 Health & Diagnostics
+
+#### `GET /api/health`
+Returns quick liveness indicator.
+* **Access:** Public
+* **Response (200):**
+  ```json
+  {
+    "status": "ok",
+    "message": "Server is healthy",
+    "timestamp": "2026-10-23T10:00:00.000Z"
+  }
+  ```
+
+#### `GET /api/health/detailed`
+Deep diagnostic check including MongoDB replica ping latency and Redis memory status.
+* **Access:** Admin only
+* **Response (200):**
+  ```json
+  {
+    "status": "ok",
+    "uptime": 84210,
+    "services": {
+      "database": { "status": "connected", "latencyMs": 3 },
+      "redis": { "status": "connected", "latencyMs": 1 }
     }
-  ]
-}
-```
-
----
-
-## 1. Authentication APIs
-
-### 1.1 User Registration
-
-**Endpoint:** `POST /auth/register`
-
-**Public Access:** Yes
-
-**Request Body:**
-```json
-{
-  "firstName": "Rajesh",
-  "lastName": "Kumar",
-  "email": "rajesh@example.com",
-  "phone": "9876543210",
-  "password": "SecurePass123!",
-  "confirmPassword": "SecurePass123!",
-  "role": "farmer",
-  "acceptTerms": true
-}
-```
-
-**Response:** 201 Created
-```json
-{
-  "success": true,
-  "message": "Registration successful. Please verify your email.",
-  "data": {
-    "userId": "64a1b2c3d4e5f6g7h8i9j0",
-    "email": "rajesh@example.com",
-    "role": "farmer",
-    "verificationRequired": true
   }
-}
-```
-
-**Status Codes:**
-- 201: Created
-- 400: Validation error
-- 409: Email/Phone already exists
+  ```
 
 ---
 
-### 1.2 Email Verification
+### 4.2 Authentication & Identity
 
-**Endpoint:** `POST /auth/verify-email`
-
-**Request Body:**
-```json
-{
-  "email": "rajesh@example.com",
-  "otp": "123456"
-}
-```
-
-**Response:** 200 OK
-
----
-
-### 1.3 User Login
-
-**Endpoint:** `POST /auth/login`
-
-**Public Access:** Yes
-
-**Request Body:**
-```json
-{
-  "email": "rajesh@example.com",
-  "password": "SecurePass123!"
-}
-```
-
-**Response:** 200 OK
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "data": {
-    "userId": "64a1b2c3d4e5f6g7h8i9j0",
-    "email": "rajesh@example.com",
-    "firstName": "Rajesh",
-    "role": "farmer",
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "expiresIn": 900
-  }
-}
-```
-
----
-
-### 1.4 Refresh Token
-
-**Endpoint:** `POST /auth/refresh-token`
-
-**Request Body:**
-```json
-{
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-**Response:** 200 OK
-
----
-
-### 1.5 Logout
-
-**Endpoint:** `POST /auth/logout`
-
-**Protected:** Yes (JWT required)
-
-**Response:** 200 OK
-
----
-
-### 1.6 Forgot Password
-
-**Endpoint:** `POST /auth/forgot-password`
-
-**Request Body:**
-```json
-{
-  "email": "rajesh@example.com"
-}
-```
-
-**Response:** 200 OK
-
----
-
-### 1.7 Reset Password
-
-**Endpoint:** `POST /auth/reset-password`
-
-**Request Body:**
-```json
-{
-  "email": "rajesh@example.com",
-  "token": "reset_token_from_email",
-  "newPassword": "NewSecurePass123!",
-  "confirmPassword": "NewSecurePass123!"
-}
-```
-
-**Response:** 200 OK
-
----
-
-## 2. User Profile APIs
-
-### 2.1 Get Current User Profile
-
-**Endpoint:** `GET /users/profile`
-
-**Protected:** Yes
-
-**Response:** 200 OK
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "64a1b2c3d4e5f6g7h8i9j0",
-    "firstName": "Rajesh",
-    "lastName": "Kumar",
-    "email": "rajesh@example.com",
+#### `POST /api/auth/register`
+Creates a new Farmer or Buyer account.
+* **Access:** Public
+* **Request Body:**
+  ```json
+  {
+    "firstName": "Suresh",
+    "lastName": "Patel",
+    "email": "suresh@example.com",
     "phone": "9876543210",
-    "role": "farmer",
-    "profilePicture": "https://cloudinary.com/...",
-    "bio": "Organic vegetable farmer",
-    "address": { /* address details */ },
-    "farmName": "Kumar's Organic Farm",
-    "farmSize": 5,
-    "cropsGrown": ["Tomatoes", "Onions", "Peppers"],
-    "rating": 4.5,
-    "totalReviews": 23,
-    "totalOrders": 45
+    "password": "StrongPassword123!",
+    "role": "farmer"
   }
-}
-```
+  ```
+* **Response (201):** Returns user profile with authentication token.
 
----
-
-### 2.2 Update User Profile
-
-**Endpoint:** `PUT /users/profile`
-
-**Protected:** Yes
-
-**Request Body:**
-```json
-{
-  "firstName": "Rajesh",
-  "lastName": "Kumar",
-  "phone": "9876543210",
-  "bio": "Certified organic farmer",
-  "profilePicture": "image_file" // FormData file upload
-}
-```
-
-**Response:** 200 OK
-
----
-
-### 2.3 Add/Update Address
-
-**Endpoint:** `POST /users/addresses`
-
-**Protected:** Yes
-
-**Request Body:**
-```json
-{
-  "streetAddress": "123 Farm Lane",
-  "area": "Village XYZ",
-  "city": "Bangalore",
-  "state": "Karnataka",
-  "pincode": "560001",
-  "latitude": 12.9716,
-  "longitude": 77.5946,
-  "isDefault": true,
-  "deliveryInstructions": "Ring bell twice"
-}
-```
-
-**Response:** 201 Created
-
----
-
-### 2.4 Get All Addresses
-
-**Endpoint:** `GET /users/addresses`
-
-**Protected:** Yes
-
-**Response:** 200 OK
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "_id": "address_id",
-      "streetAddress": "123 Farm Lane",
-      "city": "Bangalore",
-      "isDefault": true
-    }
-  ]
-}
-```
-
----
-
-### 2.5 Delete Address
-
-**Endpoint:** `DELETE /users/addresses/:addressId`
-
-**Protected:** Yes
-
-**Response:** 200 OK
-
----
-
-### 2.6 Farmer KYC Submission
-
-**Endpoint:** `POST /users/kyc-submit`
-
-**Protected:** Yes (Farmer only)
-
-**Request Body:** FormData
-```
-aadharNumber: "XXXX1234XXXX"
-aadharFile: <file>
-panNumber: "ABCDE1234F"
-panFile: <file>
-bankAccountNumber: "XXXXXXX12345"
-ifscCode: "SBIN0001234"
-bankName: "State Bank of India"
-accountHolderName: "Rajesh Kumar"
-```
-
-**Response:** 202 Accepted
-
----
-
-## 3. Crop/Product APIs
-
-### 3.1 Get All Crops (Marketplace)
-
-**Endpoint:** `GET /crops`
-
-**Protected:** No
-
-**Query Parameters:**
-```
-?page=1
-&limit=20
-&search=tomatoes
-&category=vegetables
-&minPrice=100
-&maxPrice=500
-&city=Bangalore
-&distance=50
-&tags=organic
-&sortBy=createdAt
-&sortOrder=desc
-```
-
-**Response:** 200 OK
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "_id": "crop_id",
-      "name": "Fresh Tomatoes",
-      "category": "vegetables",
-      "pricePerUnit": 40,
-      "quantity": 100,
-      "quantityUnit": "kg",
-      "images": ["url1", "url2"],
-      "farmerId": "farmer_id",
-      "farmerName": "Rajesh Kumar",
-      "farmerRating": 4.5,
-      "location": {
-        "city": "Bangalore",
-        "distance": 5.2
-      },
-      "tags": ["organic", "fresh"],
-      "averageRating": 4.3,
-      "totalReviews": 12
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 150,
-    "pages": 8
+#### `POST /api/auth/login`
+Authenticates credentials and establishes session.
+* **Access:** Public
+* **Request Body:**
+  ```json
+  {
+    "email": "farmer1@farmdirect.local",
+    "password": "password123"
   }
-}
-```
+  ```
+* **Response (200):** Returns user object, sets HTTP-only refresh cookie, returns 15-minute access token.
+
+#### `POST /api/auth/refresh-token`
+Rotates refresh token and returns a fresh access token. Uses Redis JTI blacklist to detect replay attacks.
+
+#### `POST /api/auth/logout`
+Invalidates active refresh token in Redis and clears HTTP-only cookie.
 
 ---
 
-### 3.2 Get Crop Details
+### 4.3 Crops & Marketplace Catalog
 
-**Endpoint:** `GET /crops/:cropId`
+#### `GET /api/crops`
+List approved crops with advanced multi-faceted filtering and geospatial search.
+* **Access:** Public
+* **Query Parameters:**
+  * `category` (string, e.g. `vegetables`, `fruits`, `grains`, `pulses`)
+  * `minPrice` / `maxPrice` (number)
+  * `isOrganic` (boolean)
+  * `latitude`, `longitude`, `maxDistanceKm` (geospatial `2dsphere` discovery)
+  * `search` (text search against crop name and variety)
+  * `page`, `limit` (pagination)
 
-**Protected:** No
-
-**Response:** 200 OK
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "crop_id",
-    "name": "Fresh Tomatoes",
+#### `POST /api/crops`
+Lists a new crop harvest on the marketplace.
+* **Access:** Farmer only
+* **Request Body:**
+  ```json
+  {
+    "name": "Organic Tomatoes",
     "category": "vegetables",
-    "description": "Organic, pesticide-free tomatoes...",
-    "pricePerUnit": 40,
-    "finalPrice": 36,
-    "discount": { "type": "percentage", "value": 10 },
-    "quantity": 100,
-    "quantity": "kg",
-    "harvestDate": "2024-03-20",
-    "expiryDate": "2024-03-25",
-    "images": ["url1", "url2", "url3"],
-    "tags": ["organic", "pesticide-free"],
-    "farmerId": "farmer_id",
-    "farmerName": "Rajesh Kumar",
-    "farmerRating": 4.5,
-    "location": { /* location */ },
-    "deliveryModes": [
-      { "type": "pickup", "location": "Farm Gate" },
-      { "type": "delivery", "additionalCost": 50, "distance": 10 }
-    ],
-    "reviews": [ /* reviews array */ ]
-  }
-}
-```
-
----
-
-### 3.3 Create Crop (Farmer)
-
-**Endpoint:** `POST /crops`
-
-**Protected:** Yes (Farmer only)
-
-**Request Body:** FormData
-```
-name: "Fresh Tomatoes"
-category: "vegetables"
-description: "Organic, pesticide-free tomatoes from our farm"
-pricePerUnit: 40
-quantity: 100
-quantityUnit: "kg"
-tags: ["organic", "fresh"]
-harvestDate: "2024-03-20"
-expiryDate: "2024-03-25"
-isOrganic: true
-images: <file1>, <file2>, <file3>
-deliveryModes: JSON stringified array
-```
-
-**Response:** 201 Created
-
----
-
-### 3.4 Update Crop (Farmer)
-
-**Endpoint:** `PUT /crops/:cropId`
-
-**Protected:** Yes (Farmer only, must be owner)
-
-**Request Body:** FormData (same as create)
-
-**Response:** 200 OK
-
----
-
-### 3.5 Delete Crop (Farmer)
-
-**Endpoint:** `DELETE /crops/:cropId`
-
-**Protected:** Yes (Farmer only, must be owner)
-
-**Response:** 200 OK
-
----
-
-### 3.6 Get My Crops (Farmer)
-
-**Endpoint:** `GET /crops/farmer/my-crops`
-
-**Protected:** Yes (Farmer only)
-
-**Query Parameters:**
-```
-?page=1
-&limit=20
-&status=active
-&sortBy=createdAt
-```
-
-**Response:** 200 OK
-
----
-
-### 3.7 Update Crop Stock/Availability
-
-**Endpoint:** `PATCH /crops/:cropId/stock`
-
-**Protected:** Yes (Farmer only)
-
-**Request Body:**
-```json
-{
-  "quantity": 80,
-  "status": "available"
-}
-```
-
-**Response:** 200 OK
-
----
-
-## 4. Order APIs
-
-### 4.1 Create Order
-
-**Endpoint:** `POST /orders`
-
-**Protected:** Yes (Buyer only)
-
-**Request Body:**
-```json
-{
-  "items": [
-    {
-      "cropId": "crop_id",
-      "quantity": 2,
-      "notes": "Please deliver in morning"
+    "variety": "Desi",
+    "pricePerKg": 32.50,
+    "quantityAvailable": 250,
+    "harvestDate": "2026-10-22",
+    "isOrganic": true,
+    "images": ["https://res.cloudinary.com/.../tomato.jpg"],
+    "location": {
+      "type": "Point",
+      "coordinates": [85.8245, 20.2961],
+      "address": "Pipili, Puri, Odisha"
     }
-  ],
-  "deliveryAddressId": "address_id",
-  "deliveryMode": "delivery",
-  "paymentMethod": "card"
-}
-```
-
-**Response:** 201 Created
-```json
-{
-  "success": true,
-  "data": {
-    "orderId": "order_id",
-    "orderNumber": "ORD-2024-001234",
-    "totalAmount": 1250,
-    "status": "pending",
-    "createdAt": "2024-03-21T10:30:00Z"
   }
-}
-```
+  ```
 
 ---
 
-### 4.2 Get Order Details
-
-**Endpoint:** `GET /orders/:orderId`
-
-**Protected:** Yes (Buyer/Farmer/Admin only)
-
-**Response:** 200 OK
-```json
-{
-  "success": true,
-  "data": {
-    "orderId": "order_id",
-    "orderNumber": "ORD-2024-001234",
-    "status": "accepted",
-    "items": [ /* items */ ],
-    "buyerDetails": { /* buyer info */ },
-    "farmerDetails": { /* farmer info */ },
-    "deliveryAddress": { /* address */ },
-    "timeline": [
-      {
-        "status": "pending",
-        "timestamp": "2024-03-21T10:30:00Z"
-      },
-      {
-        "status": "accepted",
-        "timestamp": "2024-03-21T11:00:00Z"
-      }
-    ],
-    "totalAmount": 1250,
-    "paymentStatus": "completed",
-    "trackingNumber": "DL123456789"
-  }
-}
-```
-
----
-
-### 4.3 Get My Orders (Buyer)
-
-**Endpoint:** `GET /orders/buyer/my-orders`
-
-**Protected:** Yes (Buyer only)
-
-**Query Parameters:**
-```
-?page=1
-&limit=20
-&status=pending
-&sortBy=createdAt
-```
-
-**Response:** 200 OK
-
----
-
-### 4.4 Get Orders for Farmer
-
-**Endpoint:** `GET /orders/farmer/received-orders`
-
-**Protected:** Yes (Farmer only)
-
-**Query Parameters:**
-```
-?page=1
-&limit=20
-&status=pending
-&sortBy=createdAt
-```
-
-**Response:** 200 OK
-
----
-
-### 4.5 Accept Order (Farmer)
-
-**Endpoint:** `PATCH /orders/:orderId/accept`
-
-**Protected:** Yes (Farmer only)
-
-**Request Body:**
-```json
-{
-  "estimatedReadyDate": "2024-03-22T10:00:00Z",
-  "notes": "Will be ready by 10 AM"
-}
-```
-
-**Response:** 200 OK
-
----
-
-### 4.6 Reject Order (Farmer)
-
-**Endpoint:** `PATCH /orders/:orderId/reject`
-
-**Protected:** Yes (Farmer only)
-
-**Request Body:**
-```json
-{
-  "reason": "Out of stock"
-}
-```
-
-**Response:** 200 OK
-
----
-
-### 4.7 Update Order Status
-
-**Endpoint:** `PATCH /orders/:orderId/status`
-
-**Protected:** Yes (Farmer/Admin)
-
-**Request Body:**
-```json
-{
-  "status": "shipped",
-  "trackingNumber": "DL123456789",
-  "shippingProvider": "Delhivery"
-}
-```
-
-**Response:** 200 OK
-
----
-
-### 4.8 Cancel Order (Buyer)
-
-**Endpoint:** `PATCH /orders/:orderId/cancel`
-
-**Protected:** Yes (Buyer/Admin only)
-
-**Request Body:**
-```json
-{
-  "reason": "Changed my mind"
-}
-```
-
-**Response:** 200 OK
-
----
-
-### 4.9 Confirm Delivery (Buyer)
-
-**Endpoint:** `PATCH /orders/:orderId/confirm-delivery`
-
-**Protected:** Yes (Buyer only)
-
-**Response:** 200 OK
-
----
-
-## 5. Review & Rating APIs
-
-### 5.1 Create Review
-
-**Endpoint:** `POST /reviews`
-
-**Protected:** Yes (Buyer only, must be verified purchase)
-
-**Request Body:** FormData
-```
-orderId: "order_id"
-cropRating: JSON object with ratings
-farmerRating: JSON object with ratings
-title: "Great vegetables"
-comment: "Fresh, good quality, delivered on time"
-photos: <file1>, <file2>
-```
-
-**Response:** 201 Created
-
----
-
-### 5.2 Get Reviews for Crop
-
-**Endpoint:** `GET /reviews/crop/:cropId`
-
-**Protected:** No
-
-**Query Parameters:**
-```
-?page=1
-&limit=10
-&sortBy=helpful
-```
-
-**Response:** 200 OK
-
----
-
-### 5.3 Get Reviews for Farmer
-
-**Endpoint:** `GET /reviews/farmer/:farmerId`
-
-**Protected:** No
-
-**Response:** 200 OK
-
----
-
-### 5.4 Update Review (Farmer Response)
-
-**Endpoint:** `PUT /reviews/:reviewId/response`
-
-**Protected:** Yes (Farmer only)
-
-**Request Body:**
-```json
-{
-  "response": "Thank you for your feedback. We'll improve packaging."
-}
-```
-
-**Response:** 200 OK
-
----
-
-## 6. Wishlist APIs
-
-### 6.1 Get Wishlist
-
-**Endpoint:** `GET /wishlist`
-
-**Protected:** Yes
-
-**Response:** 200 OK
-```json
-{
-  "success": true,
-  "data": {
-    "items": [
-      {
-        "cropId": "crop_id",
-        "cropName": "Organic Tomatoes",
-        "farmerId": "farmer_id",
-        "farmers": "Rajesh Kumar"
-      }
-    ],
-    "totalItems": 5
-  }
-}
-```
-
----
-
-### 6.2 Add to Wishlist
-
-**Endpoint:** `POST /wishlist/:cropId`
-
-**Protected:** Yes
-
-**Response:** 201 Created
-
----
-
-### 6.3 Remove from Wishlist
-
-**Endpoint:** `DELETE /wishlist/:cropId`
-
-**Protected:** Yes
-
-**Response:** 200 OK
-
----
-
-## 7. Notification APIs
-
-### 7.1 Get Notifications
-
-**Endpoint:** `GET /notifications`
-
-**Protected:** Yes
-
-**Query Parameters:**
-```
-?page=1
-&limit=20
-&unreadOnly=true
-```
-
-**Response:** 200 OK
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "_id": "notification_id",
-      "type": "order_update",
-      "title": "Order Accepted",
-      "message": "Your order ORD-2024-001234 has been accepted",
-      "isRead": false,
-      "createdAt": "2024-03-21T11:00:00Z"
+### 4.4 Atomic Orders & Checkout
+
+#### `POST /api/orders`
+Executes single-phase atomic reservation inside a MongoDB ACID transaction.
+* **Access:** Buyer only
+* **Headers:** `Idempotency-Key: <UUID>`
+* **Request Body:**
+  ```json
+  {
+    "cropId": "653b1...81a",
+    "quantity": 15,
+    "paymentMethod": "razorpay",
+    "deliveryAddress": {
+      "street": "Plot 42, Saheed Nagar",
+      "city": "Bhubaneswar",
+      "state": "Odisha",
+      "pincode": "751007"
     }
-  ]
-}
-```
-
----
-
-### 7.2 Mark Notification as Read
-
-**Endpoint:** `PATCH /notifications/:notificationId/read`
-
-**Protected:** Yes
-
-**Response:** 200 OK
-
----
-
-### 7.3 Mark All as Read
-
-**Endpoint:** `PATCH /notifications/mark-all-read`
-
-**Protected:** Yes
-
-**Response:** 200 OK
-
----
-
-## 8. Admin APIs
-
-### 8.1 Get All Users (Admin)
-
-**Endpoint:** `GET /admin/users`
-
-**Protected:** Yes (Admin only)
-
-**Query Parameters:**
-```
-?page=1
-&limit=20
-&role=farmer
-&status=active
-&search=rajesh
-```
-
-**Response:** 200 OK
-
----
-
-### 8.2 Verify Farmer KYC (Admin)
-
-**Endpoint:** `PATCH /admin/users/:userId/verify-kyc`
-
-**Protected:** Yes (Admin only)
-
-**Request Body:**
-```json
-{
-  "status": "verified"
-}
-```
-
-**Response:** 200 OK
-
----
-
-### 8.3 Suspend User (Admin)
-
-**Endpoint:** `PATCH /admin/users/:userId/suspend`
-
-**Protected:** Yes (Admin only)
-
-**Request Body:**
-```json
-{
-  "reason": "Inappropriate listings"
-}
-```
-
-**Response:** 200 OK
-
----
-
-### 8.4 Approve Crop Listing (Admin)
-
-**Endpoint:** `PATCH /admin/crops/:cropId/approve`
-
-**Protected:** Yes (Admin only)
-
-**Response:** 200 OK
-
----
-
-### 8.5 Reject Crop Listing (Admin)
-
-**Endpoint:** `PATCH /admin/crops/:cropId/reject`
-
-**Protected:** Yes (Admin only)
-
-**Request Body:**
-```json
-{
-  "reason": "Inappropriate content"
-}
-```
-
-**Response:** 200 OK
-
----
-
-### 8.6 Get Analytics Dashboard (Admin)
-
-**Endpoint:** `GET /admin/analytics`
-
-**Protected:** Yes (Admin only)
-
-**Query Parameters:**
-```
-?startDate=2024-01-01
-&endDate=2024-03-21
-&metrics=revenue,orders,users
-```
-
-**Response:** 200 OK
-```json
-{
-  "success": true,
-  "data": {
-    "totalRevenue": 125000,
-    "totalOrders": 450,
-    "totalUsers": 1200,
-    "activeOrders": 45,
-    "topCrops": [ /* array */ ],
-    "topFarmers": [ /* array */ ]
   }
-}
-```
+  ```
+* **Response (201):** Order details and Razorpay `order_id` for client modal checkout.
+* **Error (400):** Returns `INSUFFICIENT_STOCK` if available stock is depleted.
+
+#### `GET /api/orders/:id`
+Retrieves comprehensive order details, delivery OTP, and audit timeline.
+
+#### `PUT /api/orders/:id/status`
+Updates order state machine (Pending → Accepted → Shipped → Delivered). Farmer/Admin only.
 
 ---
 
-### 8.7 Moderate Review (Admin)
+### 4.5 Bilateral Negotiations
 
-**Endpoint:** `PATCH /admin/reviews/:reviewId/moderate`
-
-**Protected:** Yes (Admin only)
-
-**Request Body:**
-```json
-{
-  "action": "approve",
-  "notes": "Valid review"
-}
-```
-
-**Response:** 200 OK
-
----
-
-## 9. Payment APIs
-
-### 9.1 Initiate Payment
-
-**Endpoint:** `POST /payments/initiate`
-
-**Protected:** Yes
-
-**Request Body:**
-```json
-{
-  "orderId": "order_id",
-  "amount": 1250,
-  "paymentMethod": "card"
-}
-```
-
-**Response:** 200 OK
-```json
-{
-  "success": true,
-  "data": {
-    "paymentId": "pay_123456",
-    "orderId": "order_id",
-    "amount": 1250,
-    "redirectUrl": "https://checkout.razorpay.com/..."
+#### `POST /api/negotiations`
+Initiates a structured bilateral counter-offer round for a crop listing.
+* **Access:** Buyer only
+* **Request Body:**
+  ```json
+  {
+    "cropId": "653b1...81a",
+    "proposedPricePerKg": 28.00,
+    "quantity": 50,
+    "message": "Looking to buy 50kg for our community kitchen."
   }
-}
-```
+  ```
 
----
-
-### 9.2 Payment Callback (Payment Gateway)
-
-**Endpoint:** `POST /payments/callback`
-
-**Public Access:** Yes (Webhook)
-
-**Request Body:** (From Payment Gateway)
-```json
-{
-  "paymentId": "pay_123456",
-  "orderId": "order_id",
-  "status": "success",
-  "transactionId": "txn_123456"
-}
-```
-
-**Response:** 200 OK
-
----
-
-## 10. Search & Filter APIs
-
-### 10.1 Advanced Search
-
-**Endpoint:** `GET /search`
-
-**Protected:** No
-
-**Query Parameters:**
-```
-?q=tomatoes
-&filters[category]=vegetables
-&filters[minPrice]=100
-&filters[maxPrice]=500
-&filters[city]=Bangalore
-&filters[tags]=organic
-&sortBy=relevance
-```
-
-**Response:** 200 OK
-
----
-
-## API Security & Headers
-
-### Required Headers (Authenticated Requests)
-```
-Authorization: Bearer <accessToken>
-Content-Type: application/json
-X-API-Version: v1
-```
-
-### CORS Configuration
-```
-Access-Control-Allow-Origin: https://yourdomain.com
-Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH
-Access-Control-Allow-Headers: Authorization, Content-Type
-Access-Control-Allow-Credentials: true
-```
-
----
-
-## 11. AI & AgriBot APIs
-
-### 11.1 Chat with AgriBot
-**Endpoint:** `POST /api/ai/chat`  
-**Authentication:** Required (Bearer Token)  
-**Rate Limit:** 30 requests/minute  
-
-**Request Body:**
-```json
-{
-  "message": "How do I list my crops?",
-  "conversationId": "6512bd34...",
-  "context": {
-    "role": "farmer",
-    "currentPath": "/marketplace"
+#### `POST /api/negotiations/:id/counter`
+Submits a counter-offer in response.
+* **Access:** Farmer or Buyer involved in negotiation
+* **Request Body:**
+  ```json
+  {
+    "counterPricePerKg": 30.00,
+    "notes": "Best I can do for freshly picked crop today."
   }
-}
-```
+  ```
 
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "reply": "### How to List Crops on FaRm...",
-  "topic": "platform",
-  "suggestions": ["How does price negotiation work?"],
-  "actionLinks": [{"label": "List a Crop", "url": "/create-crop", "icon": "PlusCircle"}],
-  "conversationId": "6512bd34...",
-  "modelUsed": "gemini-2.0-flash"
-}
-```
-
-### 11.2 Guest Demo Try
-**Endpoint:** `POST /api/ai/try`  
-**Authentication:** Public (Rate limit: 5 requests/hour/IP)  
-
-### 11.3 List Conversations
-**Endpoint:** `GET /api/ai/conversations`  
-**Authentication:** Required  
-
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "conversations": [
-    {
-      "_id": "6512bd34...",
-      "title": "How do I list my crops?",
-      "lastMessage": "Here are the steps to create a listing...",
-      "updatedAt": "2026-09-30T10:00:00.000Z",
-      "createdAt": "2026-09-30T09:45:00.000Z"
-    }
-  ]
-}
-```
-
-### 11.4 Get Conversation Details
-**Endpoint:** `GET /api/ai/conversations/:id`  
-**Authentication:** Required (Enforces user ownership)  
-
-### 11.5 Delete Conversation
-**Endpoint:** `DELETE /api/ai/conversations/:id`  
-**Authentication:** Required (Enforces user ownership)  
+#### `POST /api/negotiations/:id/accept`
+Accepts the active offer, locking the agreed price and unlocking checkout.
 
 ---
 
-## 12. Interaction Events API
+### 4.6 Multimodal AI & Agronomy
 
-### 12.1 Batch Log Events
-**Endpoint:** `POST /api/events`  
-**Authentication:** Optional (Session-based or Bearer Token)  
-**Rate Limit:** 120 requests/minute  
-
-**Request Body:**
-```json
-{
-  "events": [
-    {
-      "sessionId": "sess_abc123",
-      "type": "view",
-      "cropId": "6512...",
-      "meta": { "category": "vegetables" }
-    }
-  ]
-}
----
-
-## 14. Trust, Risk, Reviews & Advisory Assistants (Phase 5)
-
-### 14.1 Admin Anomaly Labeling & Override
-**Endpoint:** `POST /admin/orders/:orderId/anomaly-label`  
-**Protected:** Yes (Admin only)  
-**Request:**
-```json
-{
-  "label": "confirmed", // or "dismissed"
-  "notes": "Verified intentional festival bulk purchase"
-}
-```
-**Response:** 200 OK
-```json
-{
-  "success": true,
-  "data": {
-    "message": "Order anomaly successfully marked as confirmed",
-    "orderId": "6512...",
-    "anomalyLabel": "confirmed",
-    "flaggedAsAnomaly": true
+#### `POST /api/ai/chat`
+Conversational advisory with AgriBot (Google Gemini 3.5 Flash Lite + verified local agronomy RAG).
+* **Access:** Public or Authenticated
+* **Request Body:**
+  ```json
+  {
+    "message": "ଟମାଟୋ ଗଛରେ ପତ୍ର ହଳଦିଆ ପଡ଼ିଯାଉଛି, କ'ଣ ପ୍ରତିକାର କରିବି?",
+    "lang": "od",
+    "conversationId": "ai_conv_9941"
   }
-}
-```
-
-### 14.2 Crop AI Review Summary
-**Endpoint:** `GET /reviews/crop/:cropId/summary`  
-**Protected:** No  
-**Response:** 200 OK
-```json
-{
-  "success": true,
-  "data": {
-    "summary": "Buyers praised the exceptional crispness and sweet taste of these farm-fresh bell peppers with prompt dispatch.",
-    "pros": ["Exceptional farm freshness and sweetness", "Prompt delivery and secure transit boxing"],
-    "cons": ["Limited negative reports; minor size variations noted"],
-    "sentimentBreakdown": { "positive": 18, "neutral": 2, "negative": 1 },
-    "lastGeneratedAt": "2026-09-30T14:30:00.000Z",
-    "reviewCountAtGeneration": 21
+  ```
+* **Response (200):**
+  ```json
+  {
+    "reply": "ଏହା ସମ୍ଭବତଃ ଯବକ୍ଷାରଜାନର ଅଭାବ କିମ୍ବା ମୂଳ କୋରଡ଼ା ରୋଗ ହୋଇପାରେ...",
+    "suggestedActions": ["ଯାଞ୍ଚ କରନ୍ତୁ ପତ୍ର ତଳଭାଗ", "ନିମ୍ନଲିଖିତ ଜୈବିକ ଖତ ପ୍ରୟୋଗ କରନ୍ତୁ"],
+    "groundedSource": "Odisha Agri Extension Handbook 2026"
   }
-}
-```
+  ```
 
-### 14.3 Negotiation Copilot Advisory Guidance
-**Endpoint:** `GET /negotiations/copilot-guidance`  
-**Protected:** Yes (Authenticated Buyer or Farmer)  
-**Query Parameters:** `?cropId=6512...&offeredPrice=54&role=buyer`  
-**Response:** 200 OK
-```json
-{
-  "success": true,
-  "data": {
-    "cropName": "Organic Bell Pepper",
-    "cropUnit": "kg",
-    "askingPrice": 60,
-    "marketPrice": 58,
-    "fairPriceBand": { "min": 49.3, "max": 66.7, "median": 58 },
-    "buyerGuidance": {
-      "recommendedOffer": 55.5,
-      "recommendedRange": { "min": 52.8, "max": 56.4 },
-      "acceptanceLikelihood": 78,
-      "strategy": "An offer of ₹55.5/kg (7.5% off asking price) balances solid buyer savings with a high likelihood of farmer acceptance."
-    },
-    "farmerGuidance": {
-      "recommendedCounter": 57.9,
-      "recommendedRange": { "min": 55.8, "max": 58.2 },
-      "acceptanceLikelihood": 82,
-      "strategy": "A counter-offer of ₹57.9/kg protects your crop margin while conceding an attractive win for the buyer."
-    },
-    "currentEvaluation": {
-      "offeredPrice": 54,
-      "discountPct": 10,
-      "estimatedLikelihood": 69,
-      "status": "moderate",
-      "advisoryMessage": "Moderate offer (10% discount). Farmer may send a counter-offer near ₹57.9."
-    },
-    "historicalNegotiationCount": 42,
-    "disclaimer": "Suggested by AI • Advisory only. Final deal terms are strictly mutually agreed upon by buyers and farmers."
+#### `POST /api/ai/listing-draft`
+Smart Vision produce auto-detection. Ingests crop photo and drafts listing details.
+* **Request Body:** `{ "imageUrl": "https://..." }` or `{ "imageBase64": "..." }`
+* **Response (200):**
+  ```json
+  {
+    "cropName": "Tomato",
+    "variety": "Desi Organic",
+    "qualityGrade": "A",
+    "suggestedPrice": 32.0,
+    "priceCorridor": { "p25": 28.0, "median": 32.0, "p75": 36.0 },
+    "detectedFreshness": "92%",
+    "looksLikeProduce": true
   }
-}
-```
+  ```
+
+#### `GET /api/ai/price-forecast`
+Returns 14-day rolling price predictions with 80% confidence bands from the Python ML service.
+* **Query:** `cropName=Tomato&region=Odisha&days=14`
 
 ---
 
-## Rate Limiting
+### 4.7 Payments & Webhooks
 
-```
-Default: 100 requests per 15 minutes per IP
-Auth Endpoints: 5 requests per minute per IP
-AI Chat: 30 requests per minute per user
-AI Guest Try: 5 requests per hour per IP
-Events Ingestion: 120 requests per minute per IP
-```
+#### `POST /api/payments/create-order`
+Initializes a server-to-server Razorpay order with cryptographic order tracking.
+
+#### `POST /api/payments/verify`
+Validates client signature after modal payment completion.
+
+#### `POST /api/payments/webhook`
+Asynchronous webhook listener for background payment transitions.
+* **Access:** Razorpay Gateway (Signature verified via `crypto.timingSafeEqual`)
+* **Header:** `X-Razorpay-Signature: <hmac-sha256>`
 
 ---
 
-## Error Status Codes Reference
+### 4.8 Shopping Cart
 
-| Code | Meaning |
-|---|---|
-| 200 | OK |
-| 201 | Created |
-| 202 | Accepted |
-| 400 | Bad Request |
-| 401 | Unauthorized |
-| 403 | Forbidden |
-| 404 | Not Found |
-| 409 | Conflict |
-| 422 | Unprocessable Entity |
-| 429 | Too Many Requests |
-| 500 | Internal Server Error |
-| 503 | Service Unavailable |
+* `GET /api/cart`: Fetches current buyer's cart with live stock checks.
+* `POST /api/cart/items`: Adds item to cart with quantity validation.
+* `PUT /api/cart/items/:id`: Updates item quantity.
+* `DELETE /api/cart/items/:id`: Removes item from cart.
+* `DELETE /api/cart`: Clears cart contents.
 
-This comprehensive API specification provides a complete blueprint for implementing all platform functionalities.
+---
+
+### 4.9 Farmer Dashboard
+
+* `GET /api/farmer/stats`: Aggregates active listings, pending orders, and total earnings.
+* `GET /api/farmer/orders`: Lists incoming purchase orders with fulfillment filters.
+* `GET /api/farmer/negotiations`: Active bilateral negotiation requests.
+
+---
+
+### 4.10 Admin & KYC Moderation
+
+* `GET /api/admin/kyc/pending`: Queue of farmer document submissions awaiting review.
+* `PUT /api/admin/kyc/:userId/approve`: Approves farmer credentials and unlocks selling privileges.
+* `PUT /api/admin/kyc/:userId/reject`: Rejects submission with specific reason string.
+* `GET /api/admin/anomalies`: Flagged COD orders and price dumping/gouging events.
+* `GET /api/admin/analytics`: Platform-wide GMV, daily volume, and user acquisition metrics.
+
+---
+
+### 4.11 Reviews, Messaging & Notifications
+
+* `POST /api/reviews`: Verified buyer review creation (only allowed for completed orders).
+* `GET /api/reviews/crop/:cropId`: Lists paginated crop reviews and aggregate score.
+* `GET /api/messages/:conversationId`: P2P buyer-farmer message history.
+* `POST /api/messages`: Sends direct P2P message.
+* `GET /api/notifications`: Retrieves user notifications.
+* `PUT /api/notifications/:id/read`: Marks notification as read.
+
+---
+
+### 4.12 Transactional Outbox Events
+
+* `GET /api/events/outbox`: Inspects outbox queue status and unprocessed event count.
+* `POST /api/events/sweep`: Triggers manual outbox sweep runner (Admin / Worker).
+
+---
+
+## 5. Standard Error Codes Matrix
+
+| HTTP Status | Error Code | Description |
+| :---: | :--- | :--- |
+| **400** | `VALIDATION_ERROR` | Request payload failed Zod schema checks. |
+| **400** | `INSUFFICIENT_STOCK` | Requested quantity exceeds available inventory. |
+| **401** | `UNAUTHORIZED` | Missing, expired, or invalid JWT access token. |
+| **403** | `FORBIDDEN` | Role lack privileges for the requested resource. |
+| **404** | `RESOURCE_NOT_FOUND` | Crop, order, user, or negotiation ID does not exist. |
+| **409** | `IDEMPOTENCY_CONFLICT` | Request with identical `Idempotency-Key` is already in flight. |
+| **429** | `RATE_LIMIT_EXCEEDED` | Request threshold exceeded; client must back off. |
+| **500** | `INTERNAL_SERVER_ERROR`| Unhandled server exception with tracked `requestId`. |

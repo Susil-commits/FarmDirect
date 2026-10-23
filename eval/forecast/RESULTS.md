@@ -2,14 +2,14 @@
 
 This benchmark report provides rolling-origin backtesting results for the **FarmDirect Time-Series Price Forecasting Engine** across 6 key agricultural commodities in India.
 
-> **Evaluation Protocol**: 14-day rolling-origin backtest on daily price series ($N = 60$ historical days) capturing seasonal patterns, day-of-week demand oscillations, and harvest supply cycles.
+> **Evaluation Protocol**: 14-day rolling-origin backtest on daily price series (N = 60 historical days) capturing seasonal patterns, day-of-week demand oscillations, and harvest supply cycles.
 
 ## 1. Metric Definitions
-- **Baseline Model (Seasonal-Naive)**: 7-day lagged price persistence ($hat{y}_t = y_{t-7}$), representing the standard heuristic used by Indian mandi traders.
-- **Proposed Model (Holt-Damped Trend & LightGBM Regressor)**: Double exponential smoothing with damping ($p10, p50, p90$) and lag-aware gradient boosting.
-- **MAPE (%)**: Mean Absolute Percentage Error: $\frac{1}{n} \sum |y_t - \hat{y}_t| / y_t$.
-- **sMAPE (%)**: Symmetric Mean Absolute Percentage Error: $\frac{1}{n} \sum 2|y_t - \hat{y}_t| / (|y_t| + |\hat{y}_t|)$.
-- **80% CI Coverage**: Proportion of held-out test points landing inside $[p10, p90]$ interval.
+- **Baseline Model (Seasonal-Naive)**: 7-day lagged price persistence ($\hat{y}_t = y_{t-7}$), representing the standard heuristic used by Indian mandi traders.
+- **Proposed Model (Holt-Damped Trend & LightGBM Regressor)**: Double exponential smoothing with damping (p10, p50, p90) and lag-aware gradient boosting.
+- **MAPE (%)**: Mean Absolute Percentage Error: $\frac{1}{n} \sum_{t=1}^n \frac{|y_t - \hat{y}_t|}{y_t}$.
+- **sMAPE (%)**: Symmetric Mean Absolute Percentage Error: $\frac{1}{n} \sum_{t=1}^n \frac{2|y_t - \hat{y}_t|}{|y_t| + |\hat{y}_t|}$.
+- **80% CI Coverage**: Proportion of held-out test points landing inside [p10, p90] interval.
 
 ## 2. Benchmark Backtest Results
 
@@ -27,11 +27,11 @@ This benchmark report provides rolling-origin backtesting results for the **Farm
 1. **Gate 4 Safety Guardrail**:
    - The UI hides forecasts for any commodity/region series where the model fails to beat the Seasonal-Naive baseline.
    - When hidden, farmers are presented with historical price bands to prevent unwarranted financial speculation.
-2. **Quantile Projections ($p10, p50, p90$)**:
+2. **Quantile Projections (p10, p50, p90)**:
    - The shaded green band displayed on the Recharts UI represents the 80% confidence interval, scaling with horizon $\sqrt{h}$.
    - Observed average coverage is **84.5%**, closely matching theoretical 80% bounds.
 3. **Advisory Decision Recommendations**:
-   - Algorithmic hold/sell rules evaluate the $p50$ median trend over 14 days.
+   - Algorithmic hold/sell rules evaluate the p50 median trend over 14 days.
    - Text translations into Hindi and Odia are dynamically generated to respect linguistic diversity.
 
 ## 4. How to Run

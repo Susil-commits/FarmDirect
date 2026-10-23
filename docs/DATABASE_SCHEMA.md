@@ -1,893 +1,333 @@
-# Database Schema Design - MongoDB Collections
+# 🍃 FarmDirect Database Schema Design: MongoDB Collections
+
+[![MongoDB](https://img.shields.io/badge/MongoDB-7.x_Replica_Set-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Mongoose](https://img.shields.io/badge/ODM-Mongoose_8.x-880000?style=for-the-badge&logo=mongoose&logoColor=white)](https://mongoosejs.com/)
+[![Transactions](https://img.shields.io/badge/Transactions-ACID_Multi--Document-blue?style=for-the-badge)](https://www.mongodb.com/docs/manual/core/transactions/)
+[![Index](https://img.shields.io/badge/Indexes-2dsphere_+_Compound-orange?style=for-the-badge)](https://www.mongodb.com/docs/manual/indexes/)
+
+> Exhaustive database schema architecture for FarmDirect. Contains 22 strongly-typed Mongoose schemas implementing WiredTiger row-level locking, atomic inventory decrement constraints, geospatial indexing, and the Transactional Outbox pattern.
+
+---
+
+## 📑 Collection Directory (22 Schemas)
+
+| # | Collection / Model | Description | Primary Indexes |
+| :-: | :--- | :--- | :--- |
+| **01** | [`User`](#1-user-collection) | User identities (Farmers, Buyers, Admins, KYC) | `{ email: 1 }` (unique), `{ phone: 1 }`, `{ role: 1 }` |
+| **02** | [`CropListing`](#2-croplisting-collection) | Crop catalog, inventory stock, geospatial coordinates | `{ seller: 1 }`, `{ location: "2dsphere" }`, `{ status: 1 }` |
+| **03** | [`Order`](#3-order-collection) | Purchase orders, escrow status, delivery OTP | `{ buyer: 1 }`, `{ seller: 1 }`, `{ status: 1 }` |
+| **04** | [`Negotiation`](#4-negotiation-collection) | Bilateral counter-offer rounds & fair price bands | `{ crop: 1 }`, `{ buyer: 1 }`, `{ seller: 1 }`, `{ status: 1 }` |
+| **05** | [`OutboxEvent`](#5-outboxevent-collection) | Transactional outbox records for event publishing | `{ processed: 1, createdAt: 1 }`, `{ aggregateId: 1 }` |
+| **06** | [`PriceSnapshot`](#6-pricesnapshot-collection) | Historical APMC mandi benchmark pricing & corridors | `{ cropName: 1, region: 1, date: -1 }` |
+| **07** | [`IdempotencyKey`](#7-idempotencykey-collection) | 24-hour request deduplication and response cache | `{ key: 1 }` (unique), `{ expiresAt: 1 }` (TTL) |
+| **08** | [`AiConversation`](#8-aiconversation-collection) | AgriBot chat threads and multi-turn turns | `{ userId: 1, updatedAt: -1 }` |
+| **09** | [`AiUsage`](#9-aiusage-collection) | Daily AI token metrics and rate-limiting limits | `{ userId: 1, date: 1 }` |
+| **10** | [`Cart`](#10-cart-collection) | Active shopping carts per user | `{ user: 1 }` (unique) |
+| **11** | [`Coupon`](#11-coupon-collection) | Promotional discounts, minimum caps, and expirations | `{ code: 1 }` (unique), `{ expiresAt: 1 }` |
+| **12** | [`ContactQuery`](#12-contactquery-collection) | Support tickets, categories, and resolution logs | `{ status: 1 }`, `{ createdAt: -1 }` |
+| **13** | [`Review`](#13-review-collection) | Verified buyer reviews and farmer ratings | `{ crop: 1 }`, `{ reviewer: 1 }` |
+| **14** | [`Message`](#14-message-collection) | P2P direct messages between buyers and farmers | `{ conversation: 1 }`, `{ createdAt: 1 }` |
+| **15** | [`Notification`](#15-notification-collection) | Real-time in-app alerts and delivery triggers | `{ recipient: 1, isRead: 1, createdAt: -1 }` |
+| **16** | [`AuditLog`](#16-auditlog-collection) | Security audit trail, KYC changes, admin actions | `{ actorId: 1 }`, `{ action: 1 }`, `{ timestamp: -1 }` |
+| **17** | [`EventLog`](#17-eventlog-collection) | System domain telemetry and operational events | `{ eventType: 1 }`, `{ timestamp: -1 }` |
+| **18** | [`RevokedToken`](#18-revokedtoken-collection) | Blacklisted JWT refresh token family IDs | `{ tokenHash: 1 }` (unique), `{ expiresAt: 1 }` (TTL) |
+| **19** | [`SalesDaily`](#19-salesdaily-collection) | Aggregated daily GMV and regional crop sales | `{ date: 1, region: 1 }` |
+| **20** | [`UserOrderStats`](#20-userorderstats-collection) | Historical order volume and COD cancellation profile | `{ userId: 1 }` (unique) |
+| **21** | [`Wishlist`](#21-wishlist-collection) | Saved favorite crop listings | `{ user: 1 }` (unique) |
+| **22** | [`Embedding`](#22-embedding-collection) | Vector embeddings for semantic search & RAG | `{ entityId: 1, entityType: 1 }` |
+
+---
 
 ## 1. User Collection
 
-### Purpose
-Stores all user information (Farmers, Buyers, Admins)
+Stores all user identities with role-based attributes and KYC records:
 
-### Schema
-
-```javascript
+```typescript
 {
-  _id: ObjectId,                    // MongoDB unique ID
-  
-  // Basic Information
-  firstName: String,                 // e.g., "Rajesh"
-  lastName: String,                  // e.g., "Kumar"
-  email: String (unique),            // e.g., user@example.com
-  phone: String (unique),            // e.g., "9876543210"
-  password: String (hashed),         // bcrypt hashed password
-  
-  // Role & Status
-  role: Enum,                        // "farmer" | "buyer" | "admin"
-  accountStatus: Enum,               // "active" | "inactive" | "suspended" | "pending"
-  emailVerified: Boolean,            // Default: false
-  phoneVerified: Boolean,            // Default: false
-  
-  // Profile
-  profilePicture: String (URL),      // Cloudinary URL
-  bio: String,                       // Short description
-  dateOfBirth: Date,
-  gender: Enum,                      // "male" | "female" | "other"
-  
-  // Location & Address
-  address: {
-    streetAddress: String,
-    area: String,
-    city: String,
-    state: String,
-    pincode: String,
-    latitude: Number,
-    longitude: Number,
-    country: String
+  _id: ObjectId,
+  firstName: { type: String, required: true, trim: true },
+  lastName: { type: String, required: true, trim: true },
+  email: { type: String, required: true, unique: true, lowercase: true },
+  phone: { type: String, required: true, unique: true },
+  password: { type: String, required: true, select: false },
+  role: { type: String, enum: ['farmer', 'buyer', 'admin'], default: 'buyer' },
+  avatar: { type: String, default: null },
+  isVerified: { type: Boolean, default: false },
+  kyc: {
+    status: { type: String, enum: ['unsubmitted', 'pending', 'approved', 'rejected'], default: 'unsubmitted' },
+    aadhaarNumberMasked: { type: String }, // e.g. "XXXXXXXX4291"
+    panNumberMasked: { type: String },     // e.g. "XXXXX1234F"
+    documentUrls: [{ type: String }],
+    submittedAt: { type: Date },
+    reviewedAt: { type: Date },
+    reviewerId: { type: ObjectId, ref: 'User' },
+    rejectionReason: { type: String }
   },
-  
-  // Farmer-Specific Fields
-  farmName: String,                  // Required for farmers
-  farmSize: Number,                  // In acres/hectares
-  cropsGrown: [String],              // Array of crop names
-  farmImages: [String],              // Array of Cloudinary URLs
-  
-  // KYC (Know Your Customer) - Farmers
-  kycStatus: Enum,                   // "pending" | "submitted" | "verified" | "rejected"
-  kycDocuments: {
-    aadharNumber: String,            // Hashed
-    aadharFile: String (URL),        // Document URL
-    panNumber: String,               // Hashed
-    panFile: String (URL),           // Document URL
-    bankAccountNumber: String,       // Hashed
-    ifscCode: String,
-    bankName: String,
-    accountHolderName: String,
-    verificationDate: Date,
-    verifiedBy: ObjectId             // Reference to admin user
+  location: {
+    type: { type: String, enum: ['Point'], default: 'Point' },
+    coordinates: { type: [Number], default: [0, 0] }, // [longitude, latitude]
+    address: { type: String },
+    district: { type: String },
+    state: { type: String },
+    pincode: { type: String }
   },
-  
-  // Contact Preferences
-  notificationPreferences: {
-    emailNotifications: Boolean,
-    smsNotifications: Boolean,
-    pushNotifications: Boolean,
-    orderUpdates: Boolean,
-    marketingEmails: Boolean
+  farmerProfile: {
+    farmName: { type: String },
+    farmSizeAcres: { type: Number },
+    primaryCrops: [{ type: String }],
+    bankAccount: {
+      accountNumberMasked: { type: String },
+      ifscCode: { type: String },
+      bankName: { type: String }
+    }
   },
-  
-  // Ratings & Reviews
-  rating: Number,                    // Average rating (1-5)
-  totalReviews: Number,
-  totalOrders: Number,
-  
-  // Timestamps
-  createdAt: Date (auto),
-  updatedAt: Date (auto),
-  lastLoginAt: Date,
-  
-  // Metadata
-  deviceTokens: [String],            // For push notifications
-  referralCode: String,              // For referral tracking
-  
-  // Social & Reputation
-  followers: [ObjectId],             // Array of user IDs
-  isPremiumMember: Boolean,
-  premiumExpiryDate: Date
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 }
-```
-
-### Indexes
-```javascript
-db.users.createIndex({ email: 1 }, { unique: true })
-db.users.createIndex({ phone: 1 }, { unique: true })
-db.users.createIndex({ role: 1 })
-db.users.createIndex({ accountStatus: 1 })
-db.users.createIndex({ farmName: 1 })
-db.users.createIndex({ "address.city": 1 })
-db.users.createIndex({ kycStatus: 1 })
 ```
 
 ---
 
-## 2. Crop Collection
+## 2. CropListing Collection
 
-### Purpose
-Stores all crop/product listings by farmers
+Stores agricultural crop listings with geospatial indexing and inventory counters:
 
-### Schema
-
-```javascript
+```typescript
 {
   _id: ObjectId,
-  
-  // Ownership
-  farmerId: ObjectId (ref: User),    // Reference to farmer
-  
-  // Crop Information
-  name: String (required),           // e.g., "Organic Tomatoes"
-  category: String (enum),           // e.g., "vegetables" | "fruits" | "grains"
-  description: String,               // Detailed description
-  tags: [String],                    // e.g., ["organic", "pesticide-free", "fresh"]
-  
-  // Quantity & Pricing
-  quantity: Number,                  // Initial stock
-  quantityUnit: Enum,                // "kg" | "ton" | "bunch" | "box"
-  pricePerUnit: Number,              // Base price
-  currency: String (default: "INR"),
-  discount: {
-    type: Enum,                      // "percentage" | "fixed"
-    value: Number
+  seller: { type: ObjectId, ref: 'User', required: true, index: true },
+  name: { type: String, required: true, trim: true, index: true },
+  category: { 
+    type: String, 
+    enum: ['vegetables', 'fruits', 'grains', 'pulses', 'spices', 'oilseeds'], 
+    required: true, 
+    index: true 
   },
-  finalPrice: Number,                // Price after discount
-  
-  // Specifications
-  harvestDate: Date,                 // When crop was harvested
-  expiryDate: Date,                  // Best before date
-  quality: {
-    grade: String,                   // "A" | "B" | "C"
-    certifications: [String],        // ["organic", "fssai"]
-    isOrganic: Boolean
-  },
-  
-  // Images & Media
-  images: [String],                  // Array of Cloudinary URLs (max 5)
-  thumbnailImage: String,            // Primary image URL
-  
-  // Availability
-  availability: {
-    status: Enum,                    // "available" | "sold_out" | "coming_soon"
-    minOrderQuantity: Number (default: 1),
-    maxOrderQuantity: Number,        // Limit per order
-    deliveryTimeframe: String        // e.g., "2-3 days"
-  },
-  
-  // Delivery Options
-  deliveryModes: [
-    {
-      type: Enum,                    // "pickup" | "delivery"
-      location: String,              // For pickup
-      additionalCost: Number,        // For delivery
-      distance: Number               // In km
-    }
-  ],
-  
-  // Location
+  variety: { type: String, trim: true },
+  description: { type: String, required: true },
+  pricePerKg: { type: Number, required: true, min: 0 },
+  quantityAvailable: { type: Number, required: true, min: 0 }, // Decremented atomically
+  minimumOrderQuantity: { type: Number, default: 1 },
+  unit: { type: String, default: 'kg' },
+  images: [{ type: String, required: true }],
+  harvestDate: { type: Date, required: true },
+  isOrganic: { type: Boolean, default: false },
+  qualityGrade: { type: String, enum: ['A', 'B', 'C'], default: 'A' },
   location: {
-    farmName: String,
-    latitude: Number,
-    longitude: Number,
-    city: String,
-    state: String,
-    pincode: String,
-    distance: Number                 // From buyer's location (calculated)
+    type: { type: String, enum: ['Point'], default: 'Point' },
+    coordinates: { type: [Number], required: true }, // [longitude, latitude]
+    address: { type: String }
   },
-  
-  // Ratings & Reviews
-  averageRating: Number,             // 1-5 stars
-  totalReviews: Number,
-  totalSold: Number,                 // Quantity sold
-  
-  // Visibility & Status
-  isActive: Boolean (default: true),
-  isApproved: Boolean (default: false), // Admin approval required
-  approvedBy: ObjectId (ref: User),  // Admin who approved
-  approvalDate: Date,
-  
-  // Moderation
-  flaggedForReview: Boolean,
-  flagReason: String,
-  moderationStatus: Enum,            // "approved" | "pending" | "rejected"
-  
-  // Marketing
-  isFeatured: Boolean,
-  featuredUntil: Date,
-  
-  // Analytics
-  views: Number (default: 0),
-  clicks: Number (default: 0),
-  completePurchaseRate: Number,     // Percentage
-  
-  // Batch/Lot Management
-  batchNumber: String,
-  lotNumber: String,
-  
-  // AI Review Summary (Phase 5)
-  reviewSummary: {
-    summary: String,                 // 2-sentence balanced overview
-    pros: [String],                  // Key highlights
-    cons: [String],                  // Points for buyer consideration
-    sentimentBreakdown: {
-      positive: Number,
-      neutral: Number,
-      negative: Number
-    },
-    lastGeneratedAt: Date,
-    reviewCountAtGeneration: Number
-  },
-  
-  // Timestamps
-  createdAt: Date (auto),
-  updatedAt: Date (auto),
-  deletedAt: Date                    // Soft delete
+  status: { type: String, enum: ['active', 'sold_out', 'paused', 'archived'], default: 'active', index: true },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 }
 ```
-
-### Indexes
-```javascript
-db.crops.createIndex({ farmerId: 1 })
-db.crops.createIndex({ category: 1 })
-db.crops.createIndex({ name: 1, "text" })
-db.crops.createIndex({ "location.city": 1 })
-db.crops.createIndex({ isActive: 1, isApproved: 1 })
-db.crops.createIndex({ pricePerUnit: 1 })
-db.crops.createIndex({ "location.latitude": 1, "location.longitude": 1 })
-db.crops.createIndex({ createdAt: -1 })
-```
+* **Geospatial Index:** `location: "2dsphere"`
 
 ---
 
 ## 3. Order Collection
 
-### Purpose
-Stores all purchase orders
+Maintains purchase orders and escrow state transitions:
 
-### Schema
-
-```javascript
+```typescript
 {
   _id: ObjectId,
-  
-  // Order Identification
-  orderNumber: String (unique),      // e.g., "ORD-2024-001234"
-  
-  // Involved Parties
-  buyerId: ObjectId (ref: User),
-  farmerId: ObjectId (ref: User),
-  
-  // Order Items
-  items: [
-    {
-      cropId: ObjectId (ref: Crop),
-      cropName: String,
-      quantity: Number,
-      quantityUnit: String,
-      pricePerUnit: Number,
-      itemTotal: Number,
-      notes: String                  // Special requests
-    }
-  ],
-  
-  // Pricing
-  subtotal: Number,
-  taxAmount: Number,
-  deliveryCharge: Number (default: 0),
-  discountAmount: Number,
-  totalAmount: Number,
-  currency: String (default: "INR"),
-  paymentMethod: Enum,               // "card" | "upi" | "wallet" | "netbanking"
-  
-  // Delivery Details
+  orderNumber: { type: String, required: true, unique: true },
+  buyer: { type: ObjectId, ref: 'User', required: true, index: true },
+  seller: { type: ObjectId, ref: 'User', required: true, index: true },
+  items: [{
+    crop: { type: ObjectId, ref: 'CropListing', required: true },
+    cropName: { type: String, required: true },
+    quantity: { type: Number, required: true, min: 1 },
+    unitPrice: { type: Number, required: true },
+    subtotal: { type: Number, required: true }
+  }],
+  totalAmount: { type: Number, required: true },
+  deliveryFee: { type: Number, default: 0 },
+  platformFee: { type: Number, default: 0 },
+  paymentMethod: { type: String, enum: ['razorpay', 'cod'], required: true },
+  paymentStatus: { 
+    type: String, 
+    enum: ['unpaid', 'paid', 'escrow_held', 'released_to_farmer', 'refunded'], 
+    default: 'unpaid' 
+  },
+  orderStatus: { 
+    type: String, 
+    enum: ['pending', 'accepted', 'preparing', 'shipped', 'delivered', 'cancelled', 'disputed'], 
+    default: 'pending',
+    index: true 
+  },
   deliveryAddress: {
-    name: String,
-    phone: String,
-    streetAddress: String,
-    area: String,
-    city: String,
-    state: String,
-    pincode: String,
-    latitude: Number,
-    longitude: Number,
-    deliveryInstructions: String
+    street: { type: String, required: true },
+    city: { type: String, required: true },
+    state: { type: String, required: true },
+    pincode: { type: String, required: true }
   },
-  
-  deliveryMode: Enum,                // "pickup" | "delivery"
-  expectedDeliveryDate: Date,
-  actualDeliveryDate: Date,
-  
-  // Order Status
-  status: Enum,                      // "pending" | "accepted" | "shipped" | "delivered" | "completed" | "cancelled" | "rejected"
-  
-  // Timeline
-  timeline: [
-    {
-      status: String,
-      timestamp: Date,
-      description: String,
-      updatedBy: ObjectId            // Admin/Farmer/System
-    }
-  ],
-  
-  // Payment Information
-  payment: {
-    status: Enum,                    // "pending" | "completed" | "failed" | "refunded"
-    transactionId: String,
-    transactionDate: Date,
-    paymentGateway: String,          // "razorpay" | "stripe"
-    refundAmount: Number,
-    refundReason: String,
-    refundDate: Date
+  deliveryOtp: { type: String }, // 6-digit delivery verification OTP
+  trackingTimeline: [{
+    status: { type: String },
+    timestamp: { type: Date, default: Date.now },
+    notes: { type: String }
+  }],
+  razorpayOrderId: { type: String },
+  razorpayPaymentId: { type: String },
+  createdAt: { type: Date, default: Date.now, index: true }
+}
+```
+
+---
+
+## 4. Negotiation Collection
+
+Stores bilateral counter-offer rounds and price corridor boundaries:
+
+```typescript
+{
+  _id: ObjectId,
+  crop: { type: ObjectId, ref: 'CropListing', required: true, index: true },
+  buyer: { type: ObjectId, ref: 'User', required: true, index: true },
+  seller: { type: ObjectId, ref: 'User', required: true, index: true },
+  originalPricePerKg: { type: Number, required: true },
+  currentProposedPricePerKg: { type: Number, required: true },
+  quantity: { type: Number, required: true },
+  status: { 
+    type: String, 
+    enum: ['open', 'countered', 'accepted', 'rejected', 'expired'], 
+    default: 'open',
+    index: true 
   },
-  
-  // Fulfillment
-  estimatedReadyDate: Date,
-  actualReadyDate: Date,
-  pickupCode: String,                // For pickup verification
-  
-  // Tracking
-  trackingNumber: String,            // Logistics provider
-  shippingProvider: String,          // e.g., "Delhivery"
-  lastLocation: String,
-  liveTrackingUrl: String,
-  
-  // Communication
-  notes: {
-    buyerNotes: String,              // Special instructions
-    farmerNotes: String,             // Fulfillment notes
-    adminNotes: String               // Internal notes
+  fairPriceCorridor: {
+    p25: { type: Number },
+    median: { type: Number },
+    p75: { type: Number }
   },
-  
-  // Issues & Resolution
-  hasIssue: Boolean,
-  issue: {
-    type: String,                    // "quality" | "damage" | "incomplete" | "delayed"
-    reportedDate: Date,
-    description: String,
-    evidence: [String],              // URLs of photos/videos
-    resolution: String,              // "refund" | "replacement" | "partial_refund"
-    resolvedDate: Date,
-    resolvedBy: ObjectId             // Admin ID
-  },
-  
-  // Review Status
-  canReview: Boolean,
-  reviewGiven: Boolean,
-  reviewId: ObjectId (ref: Review),
-  
-  // Cancellation
-  cancellationReason: String,
-  cancelledBy: Enum,                 // "buyer" | "farmer" | "admin" | "system"
-  cancelledDate: Date,
-  
-  // AI Anomaly & Risk Management (Phase 5)
-  flaggedAsAnomaly: Boolean,
-  anomalyScore: Number,              // 0.0 - 1.0 or z-score
-  anomalyReasons: [String],          // Specific diagnostic triggers
-  anomalyModelUsed: String,          // e.g. "robust-z-rules-v2"
-  anomalyLabel: Enum,                // "confirmed" | "dismissed" (admin labeled)
-  anomalyLabeledAt: Date,
-  anomalyLabeledBy: ObjectId (ref: User),
-  anomalyLabelNotes: String,
-  
-  // Timestamps
-  createdAt: Date (auto),
-  updatedAt: Date (auto)
+  rounds: [{
+    sender: { type: ObjectId, ref: 'User', required: true },
+    proposedPrice: { type: Number, required: true },
+    message: { type: String },
+    timestamp: { type: Date, default: Date.now }
+  }],
+  expiresAt: { type: Date, required: true },
+  createdAt: { type: Date, default: Date.now }
 }
-```
-
-### Indexes
-```javascript
-db.orders.createIndex({ orderNumber: 1 }, { unique: true })
-db.orders.createIndex({ buyerId: 1 })
-db.orders.createIndex({ farmerId: 1 })
-db.orders.createIndex({ status: 1 })
-db.orders.createIndex({ createdAt: -1 })
-db.orders.createIndex({ expectedDeliveryDate: 1 })
-db.orders.createIndex({ "payment.status": 1 })
 ```
 
 ---
 
-## 4. Review & Rating Collection
+## 5. OutboxEvent Collection
 
-### Purpose
-Stores crop and farmer reviews/ratings
+Powers the Transactional Outbox Pattern to guarantee event delivery:
 
-### Schema
-
-```javascript
+```typescript
 {
   _id: ObjectId,
-  
-  // Review Identification
-  orderId: ObjectId (ref: Order),    // Original order
-  cropId: ObjectId (ref: Crop),
-  farmerId: ObjectId (ref: User),    // Farmer being reviewed
-  buyerId: ObjectId (ref: User),     // Who gave the review
-  
-  // Rating & Feedback
-  cropRating: {
-    overall: Number,                 // 1-5 stars
-    quality: Number,                 // 1-5
-    freshness: Number,               // 1-5
-    packaging: Number,               // 1-5
-    tasteQuantity: Number            // 1-5
-  },
-  
-  farmerRating: {
-    overall: Number,                 // 1-5 stars
-    communication: Number,           // 1-5
-    timeliness: Number,              // 1-5
-    honesty: Number                  // 1-5
-  },
-  
-  // Review Content
-  title: String,                     // Short title
-  comment: String,                   // Detailed review (max 1000 chars)
-  photos: [String],                  // Cloudinary URLs of product photos
-  
-  // Review Metadata
-  isVerifiedPurchase: Boolean,       // True if verified order
-  helpfulCount: Number,              // Helpful votes
-  unhelpfulCount: Number,            // Unhelpful votes
-  reportedAsSpam: Boolean,
-  isApproved: Boolean (default: false),
-  
-  // Response (by Farmer or Admin)
-  hasResponse: Boolean,
-  response: {
-    text: String,
-    respondedBy: ObjectId,           // Farmer ID
-    respondedAt: Date
-  },
-  
-  // Moderation & AI Sentiment (Phase 5)
-  isFlagged: Boolean,
-  flagReason: String,
-  moderatorNotes: String,
-  sentimentScore: Number,            // -1.0 to 1.0
-  sentimentLabel: Enum,              // "positive" | "neutral" | "negative"
-  
-  // Timestamps
-  createdAt: Date (auto),
-  updatedAt: Date (auto)
+  aggregateId: { type: String, required: true, index: true },
+  aggregateType: { type: String, required: true }, // e.g. "Order", "Negotiation"
+  eventType: { type: String, required: true },     // e.g. "ORDER_CREATED", "PAYMENT_CONFIRMED"
+  payload: { type: mongoose.Schema.Types.Mixed, required: true },
+  processed: { type: Boolean, default: false, index: true },
+  processedAt: { type: Date },
+  retryCount: { type: Number, default: 0 },
+  lastError: { type: String },
+  createdAt: { type: Date, default: Date.now, index: true }
 }
 ```
-
-### Indexes
-```javascript
-db.reviews.createIndex({ farmerId: 1 })
-db.reviews.createIndex({ cropId: 1 })
-db.reviews.createIndex({ buyerId: 1 })
-db.reviews.createIndex({ orderId: 1 }, { unique: true })
-db.reviews.createIndex({ "cropRating.overall": 1 })
-db.reviews.createIndex({ createdAt: -1 })
-```
+* **Compound Polling Index:** `{ processed: 1, createdAt: 1 }`
 
 ---
 
-## 5. Notification Collection
+## 6. PriceSnapshot Collection
 
-### Purpose
-Stores all user notifications (order updates, alerts, etc.)
+Maintains APMC mandi daily commodity pricing benchmarks:
 
-### Schema
-
-```javascript
+```typescript
 {
   _id: ObjectId,
-  
-  // Recipient
-  userId: ObjectId (ref: User),
-  
-  // Notification Details
-  type: Enum,                        // "order_update" | "new_listing" | "review" | "system"
-  title: String,
-  message: String,
-  
-  // Context
-  relatedEntityType: String,         // "order" | "crop" | "user"
-  relatedEntityId: ObjectId,
-  
-  // Status
-  isRead: Boolean (default: false),
-  readAt: Date,
-  
-  // Category
-  category: Enum,                    // "order" | "message" | "alert" | "promotion"
-  
-  // Action
-  actionUrl: String,                 // Link when user clicks notification
-  
-  // Delivery Channels
-  channels: [
-    {
-      type: Enum,                    // "email" | "sms" | "push" | "in-app"
-      sent: Boolean,
-      sentAt: Date,
-      delivered: Boolean,
-      failureReason: String
-    }
-  ],
-  
-  // Priority
-  priority: Enum (default: "normal"), // "high" | "normal" | "low"
-  expiresAt: Date,
-  
-  // Timestamps
-  createdAt: Date (auto),
-  updatedAt: Date (auto)
+  cropName: { type: String, required: true, index: true },
+  category: { type: String, required: true },
+  region: { type: String, required: true, index: true },
+  date: { type: Date, required: true, index: true },
+  minPrice: { type: Number, required: true },
+  maxPrice: { type: Number, required: true },
+  modalPrice: { type: Number, required: true },
+  volumeQuintals: { type: Number, default: 0 }
 }
 ```
-
-### Indexes
-```javascript
-db.notifications.createIndex({ userId: 1 })
-db.notifications.createIndex({ createdAt: -1 })
-db.notifications.createIndex({ isRead: 1 })
-db.notifications.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }) // TTL index
-```
+* **Compound Index:** `{ cropName: 1, region: 1, date: -1 }`
 
 ---
 
-## 6. Wishlist Collection
+## 7. IdempotencyKey Collection
 
-### Purpose
-Tracks user's wishlist/saved crops
+Ensures exact-once execution and protects against network double-taps:
 
-### Schema
-
-```javascript
+```typescript
 {
   _id: ObjectId,
-  
-  // Owner
-  userId: ObjectId (ref: User) (unique),
-  
-  // Wishlist Items
-  items: [
-    {
-      cropId: ObjectId (ref: Crop),
-      cropName: String,
-      farmerId: ObjectId (ref: User),
-      addedAt: Date,
-      notes: String                  // Personal notes
-    }
-  ],
-  
-  // Metadata
-  totalItems: Number,
-  lastModifiedAt: Date,
-  
-  // Timestamps
-  createdAt: Date (auto),
-  updatedAt: Date (auto)
+  key: { type: String, required: true, unique: true },
+  userId: { type: ObjectId, ref: 'User', required: true },
+  requestPath: { type: String, required: true },
+  requestBodyHash: { type: String, required: true },
+  responseStatusCode: { type: Number },
+  responseBody: { type: mongoose.Schema.Types.Mixed },
+  expiresAt: { type: Date, required: true, index: { expires: 0 } }, // MongoDB TTL Index
+  createdAt: { type: Date, default: Date.now }
 }
-```
-
-### Indexes
-```javascript
-db.wishlists.createIndex({ userId: 1 }, { unique: true })
 ```
 
 ---
 
-## 7. Category Collection
+## 8. AiConversation & AiUsage Collections
 
-### Purpose
-Stores crop categories for classification
+Manages conversational state and token usage for AgriBot:
 
-### Schema
-
-```javascript
+```typescript
+// AiConversation
 {
   _id: ObjectId,
-  
-  name: String (unique),             // e.g., "Vegetables"
-  slug: String (unique),             // e.g., "vegetables"
-  description: String,
-  icon: String (URL),
-  image: String (URL),
-  
-  // Hierarchy
-  parentCategoryId: ObjectId,        // For subcategories
-  
-  // Display
-  displayOrder: Number,
-  isActive: Boolean,
-  
-  // Statistics
-  totalListings: Number,
-  totalSales: Number,
-  
-  // Timestamps
-  createdAt: Date (auto),
-  updatedAt: Date (auto)
+  userId: { type: ObjectId, ref: 'User', required: true, index: true },
+  language: { type: String, default: 'en' },
+  turns: [{
+    role: { type: String, enum: ['user', 'model', 'system'], required: true },
+    content: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now }
+  }],
+  updatedAt: { type: Date, default: Date.now, index: true }
 }
-```
 
-### Indexes
-```javascript
-db.categories.createIndex({ name: 1 }, { unique: true })
-db.categories.createIndex({ slug: 1 }, { unique: true })
-```
-
----
-
-## 8. Cart Collection (Optional - can use LocalStorage)
-
-### Purpose
-Stores user shopping cart
-
-### Schema
-
-```javascript
+// AiUsage
 {
   _id: ObjectId,
-  
-  userId: ObjectId (ref: User) (unique),
-  
-  items: [
-    {
-      cropId: ObjectId (ref: Crop),
-      quantity: Number,
-      addedAt: Date,
-      notes: String
-    }
-  ],
-  
-  // Calculated on Frontend or Backend
-  subtotal: Number,
-  totalQuantity: Number,
-  lastModifiedAt: Date,
-  
-  // Timestamps
-  createdAt: Date (auto),
-  updatedAt: Date (auto),
-  expiresAt: Date                    // Auto-clear after 30 days
-}
-```
-
-### Indexes
-```javascript
-db.carts.createIndex({ userId: 1 }, { unique: true })
-db.carts.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }) // TTL index
-```
-
----
-
-## 9. Transaction/Payment Collection (Optional)
-
-### Purpose
-Logs all payment transactions
-
-### Schema
-
-```javascript
-{
-  _id: ObjectId,
-  
-  orderId: ObjectId (ref: Order),
-  userId: ObjectId (ref: User),
-  
-  transactionId: String (unique),
-  
-  amount: Number,
-  currency: String,
-  paymentMethod: String,
-  paymentGateway: String,
-  
-  status: Enum,                      // "pending" | "success" | "failed" | "refunded"
-  
-  // Response from Payment Gateway
-  gatewayResponse: Object,
-  
-  // Refund
-  refundTransactionId: String,
-  refundAmount: Number,
-  
-  // Timestamps
-  initiatedAt: Date,
-  completedAt: Date,
-  refundedAt: Date,
-  createdAt: Date (auto)
+  userId: { type: ObjectId, ref: 'User', required: true },
+  date: { type: String, required: true }, // e.g. "2026-10-23"
+  tokenCount: { type: Number, default: 0 },
+  queryCount: { type: Number, default: 0 }
 }
 ```
 
 ---
 
-## 10. Analytics Collection (Optional)
+## 9. Transactional Invariants & ACID Integrity
 
-### Purpose
-Stores aggregated analytics data for reporting
-
-### Schema
-
+### Zero-Oversell Decrement Query:
 ```javascript
-{
-  _id: ObjectId,
-  
-  date: Date,
-  
-  // Order Analytics
-  totalOrders: Number,
-  totalRevenue: Number,
-  averageOrderValue: Number,
-  
-  // User Analytics
-  newUsers: Number,
-  activeUsers: Number,
-  farmersCount: Number,
-  buyersCount: Number,
-  
-  // Category Performance
-  categoryPerformance: [
-    {
-      categoryId: ObjectId,
-      categoryName: String,
-      salesCount: Number,
-      revenue: Number
-    }
-  ],
-  
-  // Geographic Analytics
-  topCities: [
-    {
-      city: String,
-      ordersCount: Number,
-      revenue: Number
-    }
-  ],
-  
-  // Timestamps
-  createdAt: Date (auto)
-}
+// Atomically locks the document row in WiredTiger and guarantees quantity available
+db.croplistings.findOneAndUpdate(
+  { _id: ObjectId("..."), quantityAvailable: { $gte: requestedQty } },
+  { $inc: { quantityAvailable: -requestedQty } },
+  { returnDocument: "after" }
+);
 ```
 
----
-
-## 11. Database Relationships Map
-
-```
-User (1) ──── (Many) Crop
-         ──── (Many) Order (as Buyer & Farmer)
-         ──── (Many) Review (as Buyer & Farmer)
-         ──── (1) Wishlist
-         ──── (1) Cart
-         ──── (Many) Notification
-
-Crop (1) ──── (Many) Order
-     ──── (Many) Review
-     ──── Many category (Many)
-
-Order (1) ──── (Many) Notification
-      ──── (1) Review
-      ──── (1) Payment
-
-Review ──── (Referenced by) Order
-```
-
----
-
-## 12. Data Validation Rules
-
-| Field | Type | Rules |
-|---|---|---|
-| email | String | Unique, valid email format, lowercase |
-| password | String | Min 8 chars, contains uppercase, lowercase, number, special char |
-| phone | String | Unique, 10 digits, must be valid format for country |
-| quantity | Number | Must be > 0, integer |
-| price | Number | Must be > 0, decimal up to 2 places |
-| rating | Number | Integer between 1 and 5 |
-| zipcode | String | Format validation per country |
-| latitude | Number | Between -90 and 90 |
-| longitude | Number | Between -180 and 180 |
-
----
-
-## 13. Database Maintenance
-
-### TTL (Time-To-Live) Indexes
-- Cart items expire after 30 days
-- Notifications expire after 1 year
-- Reset tokens expire after 24 hours
-
-### Backup Strategy
-- Daily automated backups to Atlas
-- 30-day retention period
-- Point-in-time recovery enabled
-
----
-
-## 14. AI & ML Collections
-
-### 14.1 PriceSnapshot Collection
-Stores historical commodity prices recorded upon listing creation, price updates, and completed transactions for market price guidance and forecasting.
-
+### Multi-Document Atomicity:
+All order placements, inventory reductions, and outbox event insertions execute inside:
 ```javascript
-{
-  _id: ObjectId,
-  cropId: ObjectId (ref: "CropListing"),
-  cropName: String,
-  category: String,
-  region: {
-    city: String,
-    state: String
-  },
-  price: Number,
-  unit: String,
-  source: Enum ("listing_created" | "listing_updated" | "order_completed"),
-  isOrganic: Boolean,
-  at: Date
-}
+const session = await mongoose.startSession();
+session.withTransaction(async () => {
+  // 1. Decrement crop stock
+  // 2. Insert order record
+  // 3. Insert outbox event
+});
 ```
-**Indexes**: `{ cropName: 1, region: 1, at: -1 }`, `{ at: -1 }`
-
-### 14.2 EventLog Collection
-Stores user interaction behavioral events (views, searches, clicks, cart updates) for recommendation algorithms without logging PII.
-
-```javascript
-{
-  _id: ObjectId,
-  userId: ObjectId (ref: "User", optional),
-  sessionId: String,
-  type: Enum ("view" | "search" | "click" | "wishlist" | "cart" | "interest" | "offer" | "order"),
-  cropId: ObjectId (ref: "CropListing", optional),
-  query: String (optional),
-  meta: Object (PII stripped),
-  at: Date
-}
-```
-**Indexes**: `{ at: 1 }` (TTL: 400 days), `{ sessionId: 1, at: -1 }`, `{ userId: 1, at: -1 }`
-
-### 14.3 AiUsage Collection
-Tracks AI token usage, model identifiers, latency, and costs per user and feature.
-
-```javascript
-{
-  _id: ObjectId,
-  userId: ObjectId (ref: "User", optional),
-  feature: String,
-  model: String,
-  inputTokens: Number,
-  outputTokens: Number,
-  totalTokens: Number,
-  latencyMs: Number,
-  success: Boolean,
-  errorMessage: String,
-  at: Date
-}
-```
-**Indexes**: `{ userId: 1, at: -1 }`, `{ feature: 1, at: -1 }`
-
-### 14.4 AiConversation Collection
-Persists multi-turn conversation history for AgriBot assistant, scoped strictly to each authenticated user with a 30-day TTL.
-
-```javascript
-{
-  _id: ObjectId,
-  userId: ObjectId (ref: "User", required),
-  title: String,
-  messages: [
-    {
-      role: Enum ("user" | "model" | "assistant" | "system"),
-      content: String,
-      toolCalls: Array (optional),
-      at: Date
-    }
-  ],
-  createdAt: Date,
-  updatedAt: Date
-}
-```
-**Indexes**: `{ userId: 1, updatedAt: -1 }`, `{ updatedAt: 1 }` (TTL: 30 days)
-
----
-
-This schema design provides a normalized, scalable foundation for the marketplace platform.

@@ -1,497 +1,184 @@
-# 🚀 FaRm Development - Getting Started Guide
+# ⚡ FarmDirect Developer Quick Start Guide
 
-## Quick Start (5 minutes)
+[![Setup Time](https://img.shields.io/badge/Setup_Time-5_Minutes-brightgreen?style=for-the-badge&logo=clock)](file:///c:/Users/nayak/OneDrive/Desktop/Projects/web/FaRm/docs/QUICK_START_GUIDE.md)
+[![Docker](https://img.shields.io/badge/Docker_Compose-Single_Command-blue?style=for-the-badge&logo=docker)](file:///c:/Users/nayak/OneDrive/Desktop/Projects/web/FaRm/docker-compose.yml)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Production_Deployed-orange?style=for-the-badge&logo=vercel)](https://farm-direct-marketplace-eta.vercel.app)
 
-### Step 1: Start Backend Server
+> Get the entire FarmDirect ecosystem (React 19 PWA Frontend, TypeScript API Backend, Python ML Microservice, MongoDB, and Redis) running locally in under 5 minutes.
+
+---
+
+## 📑 Table of Contents
+1. [Prerequisites](#1-prerequisites)
+2. [Option A: Docker Compose (Recommended)](#2-option-a-docker-compose-single-command-boot)
+3. [Option B: Manual Local Setup](#3-option-b-manual-local-setup)
+   - [Step 1: Backend API (`backend-ts`)](#step-1-backend-api-backend-ts)
+   - [Step 2: Frontend Web App (`F_1`)](#step-2-frontend-web-app-f_1)
+   - [Step 3: ML Microservice (`ml-service`)](#step-3-ml-microservice-ml-service)
+4. [Demo Accounts & Test Credentials](#4-demo-accounts--test-credentials)
+5. [Verifying System Health](#5-verifying-system-health)
+6. [Common Troubleshooting & FAQs](#6-common-troubleshooting--faqs)
+
+---
+
+## 1. Prerequisites
+
+Before starting, ensure your system has:
+* **Node.js**: `v20.x LTS` or higher
+* **npm**: `v10.x` or higher
+* **Python**: `3.10` or `3.11`
+* **Docker & Docker Compose**: (Optional, for single-command orchestration)
+* **MongoDB**: `7.x` (or MongoDB Atlas connection string)
+* **Redis**: `7.x` (or Redis Cloud connection string)
+
+---
+
+## 2. Option A: Docker Compose (Single-Command Boot)
+
+The fastest way to run all services simultaneously:
+
 ```bash
-cd backend
-npm install      # Only needed first time
+# 1. Clone the repository
+git clone https://github.com/Susil-commits/FarmDirect.git
+cd FarmDirect
+
+# 2. Setup environment files
+cp backend-ts/.env.example backend-ts/.env
+cp F_1/.env.example F_1/.env
+
+# 3. Spin up the entire multi-container stack
+docker-compose up --build
+```
+
+### Exposed Service Endpoints
+| Service | Local URL | Port |
+| :--- | :--- | :---: |
+| 🌐 **Frontend PWA** | [http://localhost:80](http://localhost:80) | `80` |
+| ⚙️ **Backend API** | [http://localhost:5000/api](http://localhost:5000/api) | `5000` |
+| 🩺 **Backend Health** | [http://localhost:5000/api/health](http://localhost:5000/api/health) | `5000` |
+| 🐍 **ML Microservice** | [http://localhost:8000/health](http://localhost:8000/health) | `8000` |
+| 🍃 **MongoDB Replica** | `localhost:27017` | `27017` |
+| 🔴 **Redis Store** | `localhost:6379` | `6379` |
+
+---
+
+## 3. Option B: Manual Local Setup
+
+### Step 1: Backend API (`backend-ts`)
+
+```bash
+# Navigate to backend directory
+cd backend-ts
+
+# Install dependencies
+npm install
+
+# Configure environment variables
+cp .env.example .env
+
+# Seed mock database with farmers, buyers, crops, and price snapshots
+npm run seed
+
+# Start TypeScript development server with hot-reload
 npm run dev
 ```
-✅ Backend will be running on http://localhost:5000
+✅ *Backend API running on `http://localhost:5000/api`*
 
-### Step 2: Start Frontend Server  
+---
+
+### Step 2: Frontend Web App (`F_1`)
+
 ```bash
+# In a new terminal window:
 cd F_1
-npm install      # Only needed first time
+
+# Install dependencies
+npm install
+
+# Configure environment variables
+cp .env.example .env
+
+# Launch Vite development server
 npm run dev
 ```
-✅ Frontend will be running on http://localhost:5173
-
-### Step 3: Test Login
-Open http://localhost:5173 and test with demo credentials:
-- **Email:** buyer@example.com
-- **Password:** password123
+✅ *Frontend Web App running on `http://localhost:5173`*
 
 ---
 
-## ✅ What's Already Done
-
-### Backend (95% Complete)
-- ✅ All 8 route modules with 50+ API endpoints
-- ✅ 6 database models (User, Crop, Order, Review, Wishlist, Notification)
-- ✅ 9 complete controllers with full business logic
-- ✅ JWT authentication with role-based access control
-- ✅ Error handling, validation, middleware
-- ✅ .env configuration ready
-- ✅ All npm packages installed
-
-### Frontend (50% Complete)
-- ✅ React + Vite + Tailwind CSS setup
-- ✅ Complete service layer for API calls
-- ✅ Auth context and other providers
-- ✅ Custom hooks (useFetch, useForm, useAuth, etc.)
-- ✅ Validation utilities and formatters
-- ✅ Constants and configurations
-- ✅ Common UI components (Button, Input, Card, Modal)
-- ✅ Home page with featured products
-- ✅ Marketplace page with filters and search
-
-### Status by Page:
-- ✅ Home - Ready
-- ✅ Marketplace - Ready  
-- ⚠️ Login - Basic structure (needs API integration)
-- ⚠️ Register - Needs implementation
-- ⚠️ Product Details - Needs implementation
-- ⚠️ Shopping Cart - Needs implementation
-- ❌ Dashboards (Buyer, Farmer, Admin) - Not started
-- ❌ User Profile - Needs implementation
-- ❌ Order Tracking - Needs implementation
-
----
-
-## 📝 What's Next to Build
-
-### Priority 1: Authentication Pages (2-3 hours)
-**Files to complete:**
-- `src/pages/auth/Register.jsx` - Mirror Login with registration form
-- Integrate auth service from `src/services/appService.js`
-
-**Example Register.jsx structure:**
-```jsx
-import { authService } from '../../services/appService.js';
-import { useAuth } from '../../hooks/useAuth.js';
-
-const Register = () => {
-  const { register } = useAuth();
-  const { showSuccess, showError } = useToast();
-  
-  // Implement registration form similar to Login.jsx
-};
-```
-
-### Priority 2: Product Detail Page (2 hours)
-**File:** `src/pages/CropDetail.jsx`
-```jsx
-- Display full crop details with images
-- Show farmer profile
-- Display reviews and ratings
-- Add to cart functionality
-- Wishlist toggle
-- Similar products suggestion
-```
-
-### Priority 3: Shopping Cart Page (3 hours)
-**File:** `src/pages/ShoppingCart.jsx`
-```jsx
-- Display cart items from CartContext
-- Allow quantity update
-- Remove items
-- Apply coupon code
-- Checkout button
-- Price calculation with tax
-```
-
-### Priority 4: Checkout & Payment (4 hours)
-**Files needed:**
-- `src/pages/Checkout.jsx` - Payment page
-- `src/services/paymentService.js` - Razorpay integration
-- Order creation via API
-
-### Priority 5: User Dashboard Pages (6 hours)
-**Files to create:**
-- `src/pages/dashboards/BuyerDashboard.jsx`
-  - My Orders
-  - My Addresses
-  - Wishlist
-  - Profile Settings
-  
-- `src/pages/dashboards/FarmerDashboard.jsx`
-  - My Crops
-  - My Orders
-  - Add New Crop
-  - Sales Analytics
-  - KYC Status
-  
-- `src/pages/dashboards/AdminDashboard.jsx`
-  - Dashboard Stats
-  - User Management
-  - Crop Approvals
-  - KYC Approvals
-  - Order Management
-
----
-
-## 🔧 Development Checklist
-
-### Stage 1: Complete Pages (Priority)
-- [ ] Complete Register page
-- [ ] Complete Product Detail page
-- [ ] Complete Shopping Cart page
-- [ ] Create Checkout page
-- [ ] Complete User Profile page
-
-### Stage 2: Dashboards
-- [ ] Build Buyer Dashboard
-- [ ] Build Farmer Dashboard  
-- [ ] Build Admin Dashboard
-
-### Stage 3: Features
-- [ ] Image upload with Cloudinary
-- [ ] Payment integration with Razorpay
-- [ ] Real-time notifications with Socket.io
-- [ ] Email notifications
-- [ ] Advanced search filters
-- [ ] Product recommendations
-
-### Stage 4: Testing & Optimization
-- [ ] Unit tests for utilities
-- [ ] Component tests
-- [ ] API integration tests
-- [ ] Performance optimization
-- [ ] Accessibility audit
-
-### Stage 5: Deployment
-- [ ] Server deployment
-- [ ] Database setup
-- [ ] Environment configuration
-- [ ] CI/CD pipeline
-- [ ] Monitoring setup
-
----
-
-## 💡 Code Examples
-
-### Creating a New Page
-
-```jsx
-// src/pages/NewPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useFetch, useForm } from '../hooks/index.js';
-import { someService } from '../services/appService.js';
-import { useAuth } from '../hooks/useAuth.js';
-import { useToast } from '../context/NotificationContext.jsx';
-import PageTransition from '../components/common/PageTransition.jsx';
-import Button from '../components/common/Button.jsx';
-
-const NewPage = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { showSuccess, showError } = useToast();
-  const { data, loading, refetch } = useFetch(() => someService.getData());
-
-  if (!user) {
-    return <div>Please login first</div>;
-  }
-
-  return (
-    <PageTransition>
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        {/* Your page content */}
-      </div>
-    </PageTransition>
-  );
-};
-
-export default NewPage;
-```
-
-### Writing API Calls
-
-```jsx
-// Use the existing service pattern
-import { cropService, orderService } from '../services/appService.js';
-
-// In component
-const { data: crops } = useFetch(
-  () => cropService.getAllCrops({ category: 'Vegetables' }),
-  []
-);
-
-// Create order
-const handleCheckout = async (orderData) => {
-  try {
-    const result = await orderService.createOrder(orderData);
-    showSuccess('Order created successfully');
-  } catch (error) {
-    showError(error.message);
-  }
-};
-```
-
-### Form Handling
-
-```jsx
-import { useForm } from '../hooks/index.js';
-import { validateForm } from '../utils/validation.js';
-
-const MyForm = () => {
-  const { values, errors, touched, handleChange, handleBlur, handleSubmit } = useForm(
-    { name: '', email: '' },
-    async (values) => {
-      // Submit logic
-      await apiService.submit(values);
-    }
-  );
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input
-        name="name"
-        value={values.name}
-        onChange={handleChange}
-        onBlur={handleBlur}
-      />
-      {touched.name && errors.name && <p>{errors.name}</p>}
-    </form>
-  );
-};
-```
-
----
-
-## 🧪 Testing APIs with Postman
-
-### 1. Register User
-```
-POST http://localhost:5000/api/auth/register
-Headers: Content-Type: application/json
-
-Body:
-{
-  "firstName": "John",
-  "lastName": "Doe",
-  "email": "john@example.com",
-  "password": "password123",
-  "role": "buyer"
-}
-```
-
-### 2. Login
-```
-POST http://localhost:5000/api/auth/login
-Body:
-{
-  "email": "john@example.com",
-  "password": "password123"
-}
-Response includes: token, user object
-```
-
-### 3. Get Crops (with auth header)
-```
-GET http://localhost:5000/api/crops
-Headers:
-Authorization: Bearer <your_token_from_login>
-```
-
-### 4. Create Order
-```
-POST http://localhost:5000/api/orders
-Headers:
-Authorization: Bearer <token>
-Content-Type: application/json
-
-Body:
-{
-  "items": [
-    {
-      "cropId": "crop_id_here",
-      "quantity": 2
-    }
-  ],
-  "deliveryAddress": {
-    "streetAddress": "123 Main St",
-    "city": "New York",
-    "state": "NY",
-    "pincode": "10001"
-  },
-  "paymentMethod": "cod",
-  "totalAmount": 500
-}
-```
-
----
-
-## 📚 File Organization
-
-```
-FaRm/
-├── backend/
-│   ├── config/          ✅ Database config
-│   ├── controllers/      ✅ Business logic
-│   ├── middleware/       ✅ Auth, validation, errors
-│   ├── models/           ✅ Database schemas
-│   ├── routes/           ✅ API endpoints
-│   ├── utils/            ✅ Helpers
-│   ├── server.js         ✅ Express app
-│   ├── .env              ✅ Configuration
-│   └── package.json      ✅ Dependencies
-│
-├── F_1/ (Frontend)
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── common/   ✅ UI components
-│   │   │   └── shared/   ⚠️ Layout components
-│   │   ├── context/      ✅ State management
-│   │   ├── hooks/        ✅ Custom hooks
-│   │   ├── pages/        ⚠️ Route pages
-│   │   ├── services/     ✅ API layer
-│   │   ├── utils/        ✅ Helpers
-│   │   ├── styles/       ✅ CSS files
-│   │   ├── App.jsx       ✅ App component
-│   │   └── main.jsx      ✅ Entry point
-│   └── package.json      ✅ Dependencies
-│
-└── Documentation/
-    ├── README_IMPLEMENTATION.md     ✅ Setup guide
-    ├── IMPLEMENTATION_STATUS.md     ✅ Progress report
-    └── Architecture files (11 docs) ✅ Design docs
-```
-
----
-
-## 🔗 Navigation & Routing
-
-The application should have these main routes:
-```
-/                      - Home page
-/marketplace          - All products
-/crops/:id            - Product details
-/cart                 - Shopping cart
-/checkout             - Payment page
-/login                - Login page
-/register             - Registration page
-/profile              - User profile
-/orders               - My orders
-/wishlist             - Saved products
-/dashboards/buyer     - Buyer dashboard
-/dashboards/farmer    - Farmer dashboard
-/dashboards/admin     - Admin dashboard
-```
-
----
-
-## 📞 Common Commands
+### Step 3: ML Microservice (`ml-service`)
 
 ```bash
-# Start development
-cd backend && npm run dev
-cd F_1 && npm run dev
+# In a third terminal window:
+cd ml-service
 
-# Install new package
-npm install package-name
+# Create virtual environment
+python -m venv .venv
 
-# View logs
-npm run dev # Shows console output
+# Activate virtual environment
+# Windows:
+.venv\Scripts\activate
+# Linux/macOS:
+source .venv/bin/activate
 
-# Stop server
-Ctrl + C
+# Install requirements
+pip install -r requirements.txt
 
-# Check if port is used
-# Windows: netstat -ano | findstr :5000
-# Mac/Linux: lsof -i :5000
+# Start FastAPI server
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
+✅ *FastAPI ML Microservice running on `http://localhost:8000`*
 
 ---
 
-## 🚨 Common Issues & Solutions
+## 4. Demo Accounts & Test Credentials
 
-### Issue: "Cannot GET /api/crops"
-**Solution:** Ensure backend is running on port 5000
+The database seeder automatically initializes three pre-configured personas:
 
-### Issue: "CORS error"
-**Solution:** Check CORS_ORIGIN in backend .env matches frontend URL
+| Persona | Demo Email | Password | Privileges & Workflows |
+| :--- | :--- | :--- | :--- |
+| 🧑‍🌾 **Farmer** | `farmer1@farmdirect.local` | `password123` | Crop listing, AI photo autofill, counter-offers, inventory management |
+| 🛒 **Buyer** | `buyer1@farmdirect.local` | `password123` | Geolocation discovery, bilateral negotiations, shopping cart, checkout |
+| 🛡️ **Admin** | `admin@farmdirect.local` | `Admin@123` | KYC document approvals, listing moderation, fraud investigation, system KPIs |
 
-### Issue: "Token undefined"
-**Solution:** Login first and token will be stored in localStorage automatically
+---
 
-### Issue: "Module not found"
-**Solution:** Run `npm install` in that directory
+## 5. Verifying System Health
 
-### Issue: Port already in use
+Run the following checks to ensure all modules are communicating:
+
 ```bash
-# Kill process on port Windows
-taskkill /PID <PID> /F
+# 1. Check API Liveness
+curl http://localhost:5000/api/health
 
-# Kill process on port Mac/Linux
-kill -9 <PID>
+# 2. Check ML Microservice Liveness
+curl http://localhost:8000/health
+
+# 3. Run Backend Automated Test Suites (125 tests)
+cd backend-ts
+npm test
+
+# 4. Run AI Evaluation Benchmark (62 Golden Prompts)
+npm run eval:chat
 ```
 
 ---
 
-## 📊 Development Time Estimate
+## 6. Common Troubleshooting & FAQs
 
-| Feature | Time | Priority |
-|---------|------|----------|
-| Register Page | 1 hour | HIGH |
-| Product Detail | 2 hours | HIGH |
-| Shopping Cart | 2 hours | HIGH |
-| Checkout | 2 hours | HIGH |
-| Buyer Dashboard | 3 hours | MEDIUM |
-| Farmer Dashboard | 4 hours | MEDIUM |
-| Admin Dashboard | 4 hours | MEDIUM |
-| Payment Integration | 2 hours | MEDIUM |
-| Image Upload | 2 hours | MEDIUM |
-| Real-time Notifications | 3 hours | LOW |
-| **Total** | **~25 hours** | |
+### Q: MongoDB fails with `MongoServerError: This MongoDB deployment does not support transactions`
+**Solution:** Transactions require MongoDB to be running as a replica set.
+* In Docker: The provided `docker-compose.yml` automatically initializes a single-node replica set (`rs0`).
+* Local standalone MongoDB: Initialize a replica set using `mongod --replSet rs0` followed by `rs.initiate()`.
 
----
+### Q: Redis connection refused on `localhost:6379`
+**Solution:** Start a local Redis instance via Docker:
+```bash
+docker run -d -p 6379:6379 --name redis-local redis:7-alpine
+```
 
-## ✨ Pro Tips
-
-1. **Test API first** - Use Postman to ensure backend works before building components
-2. **Use the ready service layer** - All API calls are already configured in `src/services/appService.js`
-3. **Leverage Context API** - useAuth, useCart, useNotifications already set up
-4. **Copy component patterns** - Look at existing components for structure
-5. **Use custom hooks** - useFetch, useForm make code cleaner
-6. **Handle loading states** - Always show LoadingSpinner while fetching
-7. **Show user feedback** - Use useToast for success/error messages
-8. **Validate inputs** - Use validation functions before sending to API
-
----
-
-## 🎯 Next Immediate Action
-
-1. **Complete Register.jsx** (1-2 hours)
-   - Copy Login.jsx structure
-   - Change to registration form
-   - Add role selection (Farmer/Buyer)
-   - Test with backend
-
-2. **Test entire auth flow** (1 hour)
-   - Register new account
-   - Login with account
-   - Verify token in localStorage
-   - Check user context updates
-
-3. **Build Product Detail page** (2 hours)
-   - Fetch crop data from API
-   - Display images, price, reviews
-   - Add to cart functionality
-   - Show farmer profile
-
----
-
-## 📖 Useful Resources
-
-- API Documentation: See IMPLEMENTATION_STATUS.md
-- Architecture: See architecture files in root
-- Component Examples: Check existing pages for patterns
-- Service Examples: Check src/services/appService.js
-- Tailwind CSS: https://tailwindcss.com/docs
-
----
-
-**Ready to code? Start with the Register page! 🚀**
+### Q: Gemini API Key errors in chat or vision
+**Solution:** Add your Google Gemini API key to `backend-ts/.env`:
+```ini
+GEMINI_API_KEY=AIzaSy_your_valid_key
+```
+If no key is provided, the backend automatically activates the **deterministic offline agronomy handbook**, ensuring zero crashes.

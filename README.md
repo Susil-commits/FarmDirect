@@ -27,8 +27,17 @@
 
 ---
 
+### 📚 Documentation & Subsystem Quick Links
+* 🎯 **[12-Slide Executive Investor Pitch Deck](docs/PITCH_DECK.md)** — Complete deck covering TAM/SAM/SOM, unit economics, GTM, competitive matrix, and 3-year financial projections.
+* 📖 **[Master Documentation Hub (`docs/README.md`)](docs/README.md)** — Centralized index linking all 15+ architectural, operational, and API specifications.
+* ⚙️ **[Backend TypeScript API Guide (`backend-ts/README.md`)](backend-ts/README.md)** — Deep dive into 22 models, zero-oversell WiredTiger locks, and outbox sweeper.
+* 🎨 **[Frontend React 19 PWA Guide (`F_1/README.md`)](F_1/README.md)** — Mobile-first PWA, i18n Odia/Hindi/English dictionaries, and real-time Socket.IO.
+* 🐍 **[Python FastAPI ML Service Guide (`ml-service/README.md`)](ml-service/README.md)** — LightGBM 14-day price forecasting and COD fraud scoring.
+
+---
+
 ## 📑 Table of Contents
-1. [Executive Pitch Deck](#-executive-pitch-deck)
+1. [Executive Pitch Deck](#-executive-pitch-deck) &nbsp; *(👉 [Open Full 12-Slide Deck](docs/PITCH_DECK.md))*
    - [The Problem: Agricultural Supply Chain Failure](#1-the-problem-broken-agricultural-supply-chains)
    - [The Solution: FarmDirect Ecosystem](#2-the-solution-the-farmdirect-marketplace)
    - [Market Size & Value Creation](#3-market-opportunity--value-creation)
@@ -43,6 +52,7 @@
 ---
 
 ## 🎯 Executive Pitch Deck
+> 💡 *Looking for the complete investor presentation? Read the standalone **[12-Slide Executive Investor Pitch Deck](docs/PITCH_DECK.md)**.*
 
 ### 1. The Problem: Broken Agricultural Supply Chains
 In India and developing agrarian markets, **over 140 million smallholder farmers** face systemic exploitation and crippling distribution inefficiencies:
@@ -95,7 +105,7 @@ FarmDirect eliminates intermediaries through a **mobile-first, peer-to-peer agri
 
 ### 1. 🤝 Dynamic Bilateral Negotiation Engine
 * **Counter-Offer Workflows**: Buyers and farmers can initiate, counter, accept, or reject offers in structured interactive rounds.
-* **Price Corridor Enforcement**: Suggests fair negotiation boundaries using real-time percentile bands ($p25, \text{median}, p75$) from historical mandi transactions to prevent predatory down-bidding.
+* **Price Corridor Enforcement**: Suggests fair negotiation boundaries using real-time percentile bands (p25, median, p75) from historical mandi transactions to prevent predatory down-bidding.
 * **Automatic Expiration & Stale Cleanup**: Negotiations auto-expire after configurable TTLs, returning held interest back to the general marketplace.
 
 ### 2. ⚡ Atomic Inventory Reservation (Zero Oversell)
@@ -106,7 +116,7 @@ FarmDirect eliminates intermediaries through a **mobile-first, peer-to-peer agri
 * **Razorpay Gateway Integration**: Server-to-server checkout creation and webhook processing.
 * **Cryptographic Timing-Safe Verification**: Webhook and signature validation uses `crypto.timingSafeEqual` with byte-length pre-checks to defeat side-channel timing attacks.
 * **Distributed Idempotency Layer**: Guarantees that network retries or double-taps on checkout never double-bill buyers or deplete duplicate stock.
-* **Fraud & Anomaly Scoring**: Real-time evaluation of price gouging, dumping, bulk scraping bots, and high-risk Cash-on-Delivery (COD) orders with $>40\%$ cancellation profiles.
+* **Fraud & Anomaly Scoring**: Real-time evaluation of price gouging, dumping, bulk scraping bots, and high-risk Cash-on-Delivery (COD) orders with >40% cancellation profiles.
 
 ### 4. 🧠 Multilingual Multimodal AI Advisory (AgriBot)
 * **Multilingual Agronomy Support**: Fluent conversational understanding in English, Hindi (हिंदी), and Odia (ଓଡ଼ିଆ).
@@ -263,8 +273,8 @@ sequenceDiagram
 * **The Challenge**: Wholesale middlemen collude to make below-market offers to desperate rural farmers during harvest peaks.
 * **The Failure Mode Prevented**: Farmers selling below minimum support cost without understanding fair regional market rates.
 * **How FarmDirect Solves It**:
-  1. Dynamic price corridors calculate historical $p25, \text{median}, p75$ percentiles for every crop in that specific district/mandi.
-  2. Counter-offer interfaces display visual market corridors, flagging offers $>35\%$ below median as high-risk and advising farmers to hold or counter.
+  1. Dynamic price corridors calculate historical p25, median, p75 percentiles for every crop in that specific district/mandi.
+  2. Counter-offer interfaces display visual market corridors, flagging offers >35% below median as high-risk and advising farmers to hold or counter.
 
 ### Scenario 8: NoSQL Injection & Parameter Tampering
 * **The Challenge**: Malicious payloads attempt MongoDB operator injection (e.g., passing `{ "$gt": "" }` in auth or filter endpoints to bypass queries).
@@ -323,12 +333,12 @@ k6 run tests/load/k6-concurrency.js
 #### Verified Benchmark Results
 | Metric | Target Threshold | Measured Result | Status |
 | :--- | :--- | :--- | :--- |
-| **Concurrent Buyers** | 100 Virtual Users | 100 simultaneous requests at $t=0$ | ✅ Validated |
+| **Concurrent Buyers** | 100 Virtual Users | 100 simultaneous requests at t = 0 | ✅ Validated |
 | **Initial Stock** | 10 Units | 10 Units | ✅ Validated |
 | **Successful Orders** | Exactly 10 | **10** (100% of available inventory allocated) | ✅ PASS |
 | **Clean Stock Rejections** | Exactly 90 | **90** (HTTP 400 `INSUFFICIENT_STOCK`) | ✅ PASS |
 | **Oversell Count** | **0** | **0** (Zero inventory deficit invariant) | ✅ PASS |
-| **Tail Latency (p95)** | $< 500\text{ms}$ | **114ms** | ✅ PASS |
+| **Tail Latency (p95)** | < 500ms | **114ms** | ✅ PASS |
 
 ### 2. AI Golden Evaluation Suite (`aiGoldenEval.test.ts`)
 Automated evaluation of **62 real-world agronomy and marketplace scenarios** against live localized context:
@@ -361,7 +371,7 @@ npm run eval:vision
 * **Average Inference Speed**: **95.6ms** per evaluation sample.
 
 ### 4. Agricultural Price Forecasting Backtest
-14-day rolling backtest across 6 key commodities ($N=60$ historical daily time series):
+14-day rolling backtest across 6 key commodities (N = 60 historical daily time series):
 
 ```bash
 cd backend-ts
