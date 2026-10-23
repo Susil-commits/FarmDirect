@@ -109,6 +109,8 @@ export interface IUser extends Timestamps, Document {
   passwordResetExpires?: Date;
   passwordChangedAt?: Date;
   tokenVersion?: number;
+  failedLoginAttempts?: number;
+  lockUntil?: Date | null;
   socialLinks?: ISocialLinks;
   socialAuth?: ISocialAuth;
   notificationPreferences?: INotificationPreferences;

@@ -10,9 +10,10 @@ import { env } from '../config/env.js';
 import sendEmail from '../utils/emailService.js';
 import { deleteFile } from '../utils/cloudinaryService.js';
 import { disconnectUserSockets } from '../socket/socketManager.js';
+import logger from '../utils/logger.js';
 import type { RegisterDto, LoginDto } from '../types/index.js';
 import type { Request, Response, NextFunction } from 'express';
-import type { Types } from 'mongoose';
+import mongoose, { type Types } from 'mongoose';
 
 interface PublicUserDoc {
   _id: Types.ObjectId;
@@ -41,6 +42,9 @@ interface PublicUserDoc {
   farmName?: string;
   farmArea?: string;
   experience?: number;
+  tokenVersion?: number;
+  failedLoginAttempts?: number;
+  lockUntil?: Date | null;
   save(): Promise<void>;
   toObject(): Record<string, unknown>;
 }
@@ -141,6 +145,9 @@ export async function register(req: Request, res: Response, next: NextFunction):
   }
 }
 
+const MAX_LOGIN_ATTEMPTS = 10;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
+
 export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { email, password } = req.body as LoginDto;
@@ -155,18 +162,54 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
       sendError(res, 'Invalid credentials', 401);
       return;
     }
+
+    const now = new Date();
+    if (user.lockUntil && user.lockUntil > now) {
+      const remainingMinutes = Math.ceil((user.lockUntil.getTime() - now.getTime()) / 60000);
+      sendError(
+        res,
+        `Account temporarily locked due to excessive failed login attempts. Please try again after ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}.`,
+        429
+      );
+      return;
+    }
+
     if (!user.password) {
       sendError(res, 'This account does not have a password set. Please use the forgot password flow to create one.', 400);
       return;
     }
     const isPasswordCorrect = await comparePassword(password, user.password);
     if (!isPasswordCorrect) {
+      const isLockExpired = user.lockUntil && user.lockUntil <= now;
+      const currentAttempts = isLockExpired ? 0 : (user.failedLoginAttempts || 0);
+      const newAttempts = currentAttempts + 1;
+
+      const updateOp: Record<string, unknown> = isLockExpired
+        ? { $set: { failedLoginAttempts: 1, lockUntil: null } }
+        : { $inc: { failedLoginAttempts: 1 } };
+
+      if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+        (updateOp as any).$set = {
+          ...((updateOp as any).$set || {}),
+          lockUntil: new Date(Date.now() + LOCKOUT_DURATION_MS),
+        };
+      }
+
+      await User.updateOne({ _id: user._id }, updateOp);
       sendError(res, 'Invalid credentials', 401);
       return;
     }
 
-    const token = generateToken(user._id, user.role, (user as any).tokenVersion || 0);
-    const refreshToken = generateRefreshToken(user._id, undefined, (user as any).tokenVersion || 0);
+    // Reset failed attempts upon successful login
+    if ((user.failedLoginAttempts && user.failedLoginAttempts > 0) || user.lockUntil) {
+      await User.updateOne(
+        { _id: user._id },
+        { $set: { failedLoginAttempts: 0, lockUntil: null } }
+      );
+    }
+
+    const token = generateToken(user._id, user.role, user.tokenVersion || 0);
+    const refreshToken = generateRefreshToken(user._id, undefined, user.tokenVersion || 0);
 
     res.cookie('refreshToken', refreshToken, getRefreshTokenCookieOptions());
 
@@ -217,6 +260,11 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
 
     const resolvedPhoto = photo || profilePicture || avatar;
     if (typeof resolvedPhoto === 'string') {
+      // [FIX M-3] Only allow Cloudinary URLs for profile pictures
+      if (resolvedPhoto && !/^https:\/\/res\.cloudinary\.com\//.test(resolvedPhoto)) {
+        sendError(res, 'Profile picture must be a valid Cloudinary URL', 400);
+        return;
+      }
       updateDoc.profilePicture = resolvedPhoto;
     }
 
@@ -233,7 +281,8 @@ export async function updateProfile(req: Request, res: Response, next: NextFunct
 
     res.status(200).json({
       message: 'Profile updated successfully',
-      token: generateToken(user._id, user.role),
+      // [FIX C-3] Pass tokenVersion so session invalidation checks work correctly
+      token: generateToken(user._id, user.role, (user as any).tokenVersion || 0),
       user: { ...user.toObject(), photo: user.profilePicture, id: user._id },
     });
   } catch (error) {
@@ -320,7 +369,7 @@ export async function forgotPassword(req: Request, res: Response, next: NextFunc
         text: `Reset your FaRm password by visiting: ${resetUrl}\n\nThis link expires in 10 minutes.`,
       });
     } catch (emailErr) {
-      console.error('Failed to send password reset email:', emailErr);
+      logger.error({ err: emailErr }, 'Failed to send password reset email');
     }
 
     res.status(200).json({ success: true, message: 'If that email is registered, a reset link has been sent.' });
@@ -392,7 +441,7 @@ export async function refreshTokenHandler(req: Request, res: Response): Promise<
     }
 
     if (decoded.jti && await isTokenRevoked(decoded.jti)) {
-      console.warn(`🔒 Refresh token reuse attempt detected for jti: ${decoded.jti}, user: ${decoded.id}`);
+      logger.warn({ jti: decoded.jti, userId: decoded.id }, 'Refresh token reuse attempt detected');
       res.clearCookie('refreshToken', getRefreshTokenCookieOptions());
       sendError(res, 'Refresh token reuse detected. Please log in again.', 401);
       return;
@@ -467,7 +516,7 @@ export async function submitKYCDocuments(req: Request, res: Response, next: Next
     const { aadharNumber, address, city, state, pincode, farmName, farmArea, experience } = req.body as Record<string, string | undefined>;
 
     if (req.uploadError) {
-      console.error('File upload failed:', req.uploadError);
+      logger.error({ uploadError: req.uploadError }, 'File upload failed');
       res.status(500).json({ success: false, message: 'File upload to storage failed. Please try again.', error: req.uploadError });
       return;
     }
@@ -581,12 +630,13 @@ export async function submitKYCDocuments(req: Request, res: Response, next: Next
       },
     });
   } catch (error) {
-    console.error('KYC submission error:', error);
+    logger.error({ err: error }, 'KYC submission error');
     next(error);
   }
 }
 
 export async function deleteAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const session = await mongoose.startSession();
   try {
     const userId = req.user!._id;
     const { password } = req.body as { password?: string };
@@ -607,55 +657,81 @@ export async function deleteAccount(req: Request, res: Response, next: NextFunct
       return;
     }
 
-    // Retain orders as legally-mandated financial & tax records, but redact customer PII
-    const Order = (await import('../models/Order.js')).default;
-    await Order.updateMany({ buyerId: userId }, { $set: { buyerContact: '[Redacted]', deliveryAddress: '[Redacted]' } });
-    await Order.updateMany({ farmerId: userId }, { $set: { farmerContact: '[Redacted]' } });
+    const [
+      { default: Order },
+      { default: CropListing },
+      { default: Review },
+      { default: Wishlist },
+      { default: Notification },
+      { default: Cart },
+      { default: Negotiation },
+      { default: Message },
+      { default: AiConversation },
+    ] = await Promise.all([
+      import('../models/Order.js'),
+      import('../models/CropListing.js'),
+      import('../models/Review.js'),
+      import('../models/Wishlist.js'),
+      import('../models/Notification.js'),
+      import('../models/Cart.js'),
+      import('../models/Negotiation.js'),
+      import('../models/Message.js'),
+      import('../models/AiConversation.js'),
+    ]);
 
-    const CropListing = (await import('../models/CropListing.js')).default;
-    const Review = (await import('../models/Review.js')).default;
-    const Wishlist = (await import('../models/Wishlist.js')).default;
-    const Notification = (await import('../models/Notification.js')).default;
-    const Cart = (await import('../models/Cart.js')).default;
-    const Negotiation = (await import('../models/Negotiation.js')).default;
-    const Message = (await import('../models/Message.js')).default;
-    const AiConversation = (await import('../models/AiConversation.js')).default;
+    const avatarUrl = user.profilePicture;
 
-    if (user.role === UserRole.Farmer) {
-      const farmerCropIds = await CropListing.find({ farmerId: userId }).distinct('_id');
-      await CropListing.deleteMany({ farmerId: userId });
-      await Review.deleteMany({ cropId: { $in: farmerCropIds } });
-    }
-    await Review.deleteMany({ userId });
-    await Wishlist.deleteMany({ userId });
-    await Notification.deleteMany({ userId });
-    await Cart.deleteMany({ buyerId: userId });
-    await Negotiation.deleteMany({ $or: [{ buyerId: userId }, { farmerId: userId }] });
-    await Message.deleteMany({ $or: [{ senderId: userId }, { receiverId: userId }] });
-    await AiConversation.deleteMany({ userId });
+    await session.withTransaction(async () => {
+      // Retain orders as legally-mandated financial & tax records, but redact customer PII
+      await Order.updateMany(
+        { buyerId: userId },
+        { $set: { buyerContact: '[Redacted]', deliveryAddress: '[Redacted]' } },
+        { session }
+      );
+      await Order.updateMany(
+        { farmerId: userId },
+        { $set: { farmerContact: '[Redacted]' } },
+        { session }
+      );
 
-    // Clean up Cloudinary avatar if stored remotely
-    if (user.profilePicture) {
+      if (user.role === UserRole.Farmer) {
+        const farmerCrops = await CropListing.find({ farmerId: userId }, '_id').session(session);
+        const farmerCropIds = farmerCrops.map((c) => c._id);
+        await CropListing.deleteMany({ farmerId: userId }, { session });
+        await Review.deleteMany({ cropId: { $in: farmerCropIds } }, { session });
+      }
+      await Review.deleteMany({ userId }, { session });
+      await Wishlist.deleteMany({ userId }, { session });
+      await Notification.deleteMany({ userId }, { session });
+      await Cart.deleteMany({ buyerId: userId }, { session });
+      await Negotiation.deleteMany({ $or: [{ buyerId: userId }, { farmerId: userId }] }, { session });
+      await Message.deleteMany({ $or: [{ senderId: userId }, { receiverId: userId }] }, { session });
+      await AiConversation.deleteMany({ userId }, { session });
+
+      // [FIX H-3] Mark as Banned (not Suspended) so whitelisted-path bypass for suspended users
+      // does NOT apply to deleted accounts. tokenVersion increment invalidates all live tokens.
+      user.status = UserStatus.Banned;
+      user.email = `deleted_${userId}_${Date.now()}@farmdirect.deleted`;
+      user.name = 'Deleted User';
+      user.firstName = 'Deleted';
+      user.lastName = 'User';
+      user.phone = '';
+      user.profilePicture = null;
+      user.tokenVersion = ((user as any).tokenVersion || 0) + 1;
+      await user.save({ session });
+    });
+
+    // Clean up Cloudinary avatar if stored remotely (side effect outside transaction)
+    if (avatarUrl) {
       try {
-        await deleteFile(user.profilePicture);
+        await deleteFile(avatarUrl);
       } catch (fileErr) {
-        console.warn('Failed to delete Cloudinary profile picture on account deletion:', fileErr);
+        logger.warn({ err: fileErr }, 'Failed to delete Cloudinary profile picture on account deletion');
       }
     }
 
     // Immediately terminate any open realtime socket connections
     disconnectUserSockets(String(userId));
-
-    // Scrub identity and mark account deleted
-    user.status = UserStatus.Suspended;
-    user.email = `deleted_${userId}_${Date.now()}@farmdirect.deleted`;
-    user.name = 'Deleted User';
-    user.firstName = 'Deleted';
-    user.lastName = 'User';
-    user.phone = '';
-    user.profilePicture = null;
-    (user as any).tokenVersion = ((user as any).tokenVersion || 0) + 1;
-    await user.save();
 
     res.clearCookie('refreshToken', getRefreshTokenCookieOptions());
 
@@ -664,8 +740,10 @@ export async function deleteAccount(req: Request, res: Response, next: NextFunct
       message: 'Your account has been deleted and active sessions revoked. Financial records have been anonymized.',
     });
   } catch (error) {
-    console.error('Account deletion error:', error);
+    logger.error({ err: error }, 'Account deletion error');
     next(error);
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -683,17 +761,18 @@ export async function completeOnboarding(req: Request, res: Response, next: Next
       return;
     }
 
+    // [FIX M-5] Strict type guards to prevent schema pollution
     const updates: Record<string, unknown> = {};
-    if (farmName !== undefined) updates.farmName = farmName;
-    if (farmArea !== undefined) updates.farmArea = farmArea;
+    if (typeof farmName === 'string') updates.farmName = farmName.trim();
+    if (typeof farmArea === 'string') updates.farmArea = farmArea.trim();
     if (cropsGrown !== undefined) updates.cropsGrown = cropsGrown;
     if (experience !== undefined) updates.experience = Number(experience);
-    if (bio !== undefined) updates.bio = bio;
-    if (phone !== undefined) updates.phone = phone;
-    if (address !== undefined) updates.address = address;
-    if (city !== undefined) updates.city = city;
-    if (state !== undefined) updates.state = state;
-    if (pincode !== undefined) updates.pincode = pincode;
+    if (typeof bio === 'string') updates.bio = bio.trim().slice(0, 1000);
+    if (typeof phone === 'string') updates.phone = phone.trim();
+    if (typeof address === 'string') updates.address = address.trim();
+    if (typeof city === 'string') updates.city = city.trim();
+    if (typeof state === 'string') updates.state = state.trim();
+    if (typeof pincode === 'string') updates.pincode = pincode.trim();
 
     const updated = (await User.findByIdAndUpdate(
       userId,

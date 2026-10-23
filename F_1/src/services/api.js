@@ -130,25 +130,25 @@ api.interceptors.request.use(
 
 
     if (token && isTokenExpired(token, 120)) {
-      try {
-        if (!isRefreshing) {
-          isRefreshing = true;
+      if (!isRefreshing) {
+        isRefreshing = true;
+        try {
+          // [FIX M-6] Always reset isRefreshing in finally to prevent permanent lockout
           token = await refreshAuthToken();
-          isRefreshing = false;
           processQueue(null, token);
-        } else {
-          
-          return new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
-          }).then(refreshedToken => {
-            config.headers.Authorization = `Bearer ${refreshedToken}`;
-            return config;
-          });
+        } catch (error) {
+          processQueue(error, null);
+          return Promise.reject(error);
+        } finally {
+          isRefreshing = false;
         }
-      } catch (error) {
-        isRefreshing = false;
-        processQueue(error, null);
-        return Promise.reject(error);
+      } else {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(refreshedToken => {
+          config.headers.Authorization = `Bearer ${refreshedToken}`;
+          return config;
+        });
       }
     }
 

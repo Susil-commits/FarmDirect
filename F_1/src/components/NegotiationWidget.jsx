@@ -58,7 +58,19 @@ export default function NegotiationWidget({ negotiation, userRole, onUpdate }) {
           setLoadingAction(null);
           return;
         }
-        payload.offeredPrice = Number(counterPrice);
+        const parsedPrice = Number(counterPrice);
+        // [FIX H-5] Validate bounds client-side before hitting the server
+        if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+          addToast('Counter price must be a positive number', 'warning');
+          setLoadingAction(null);
+          return;
+        }
+        if (parsedPrice > 10_000_000) {
+          addToast('Counter price is unreasonably high', 'warning');
+          setLoadingAction(null);
+          return;
+        }
+        payload.offeredPrice = parsedPrice;
       }
 
       if (message) {

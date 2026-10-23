@@ -32,6 +32,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { parsePagination } from '../utils/pagination.js';
 import { capturePriceSnapshot } from '../services/priceSnapshotService.js';
 import { recordOrderSalesDaily, evaluateFarmerSmartLowStock } from '../services/inventoryService.js';
+import logger from '../utils/logger.js';
 
 const VALID_STATUSES: OrderStatus[] = [
   OrderStatus.Confirmed, OrderStatus.Preparing, OrderStatus.ReadyForPickup,
@@ -224,7 +225,7 @@ export async function startOrder(req: Request, res: Response, next: NextFunction
           data: { orderId: order._id, orderNumber: order.orderNumber, cropName, farmerId: req.user!._id },
         });
       } catch (notifErr) {
-        console.error('Failed to create start order notification:', notifErr);
+        logger.error({ err: notifErr }, 'Failed to create start order notification');
       }
 
       notifyOrderUpdate(order, 'order:created');
@@ -483,7 +484,7 @@ export async function checkoutCart(req: Request, res: Response, next: NextFuncti
         priority: 'high',
         actionUrl: `/farmer/orders/${info.order._id}`,
         data: { orderId: info.order._id, cropId: info.cropId, orderNumber: info.order.orderNumber, buyerId },
-      }).catch((notifErr: unknown) => console.error('Failed to create order notification:', notifErr));
+      }).catch((notifErr: unknown) => logger.error({ err: notifErr }, 'Failed to create order notification'));
 
       notifyOrderUpdate(info.order, 'order:created');
     }
@@ -624,7 +625,7 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
         data: { orderId: order._id, orderNumber: order.orderNumber, status },
       });
     } catch (notifErr) {
-      console.error('Failed to create status notification:', notifErr);
+      logger.error({ err: notifErr }, 'Failed to create status notification');
     }
 
     notifyOrderUpdate(order, 'order:statusUpdated');
@@ -751,7 +752,7 @@ export async function cancelOrder(req: Request, res: Response, next: NextFunctio
         data: { orderId: order._id, orderNumber: order.orderNumber, cancelledBy, reason: cancellationReason.trim() },
       });
     } catch (notifErr) {
-      console.error('Failed to create cancel notification:', notifErr);
+      logger.error({ err: notifErr }, 'Failed to create cancel notification');
     }
 
     notifyOrderUpdate(order, 'order:cancelled');
@@ -921,7 +922,7 @@ export async function denyOrder(req: Request, res: Response, next: NextFunction)
         data: { orderId: order._id, orderNumber: order.orderNumber, deniedBy: 'farmer', reason: denialReason.trim() },
       });
     } catch (notifErr) {
-      console.error('Failed to create denial notification:', notifErr);
+      logger.error({ err: notifErr }, 'Failed to create denial notification');
     }
 
     notifyOrderUpdate(order, 'order:cancelled');
@@ -962,7 +963,7 @@ export async function markOrderReceived(req: Request, res: Response, next: NextF
         data: { orderId: order._id, orderNumber: order.orderNumber, status: 'completed' },
       });
     } catch (notifErr) {
-      console.error('Failed to create received notification:', notifErr);
+      logger.error({ err: notifErr }, 'Failed to create received notification');
     }
 
     notifyOrderUpdate(order, 'order:statusUpdated');

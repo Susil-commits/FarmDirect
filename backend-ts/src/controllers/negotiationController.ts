@@ -11,6 +11,7 @@ import type { MakeOfferDto, RespondOfferDto } from '../types/index.js';
 import { getNegotiationCopilotGuidance } from '../services/negotiationCopilotService.js';
 import { createOrderInSession } from '../services/orderService.js';
 import { ApiError, CropNotFoundError, CropUnavailableError, ListingPendingApprovalError, InsufficientStockError } from '../utils/apiError.js';
+import logger from '../utils/logger.js';
 
 export async function makeOffer(req: Request, res: Response, next: NextFunction): Promise<void> {
   const session = await mongoose.startSession();
@@ -86,7 +87,7 @@ export async function makeOffer(req: Request, res: Response, next: NextFunction)
     });
 
     if (notifPayload) {
-      await Notification.create([notifPayload]).catch((err) => console.error('Failed to create offer notification:', err));
+      await Notification.create([notifPayload]).catch((err) => logger.error({ err }, 'Failed to create offer notification'));
     }
 
     if (negotiationId) {
@@ -226,7 +227,7 @@ export async function respondToOffer(req: Request, res: Response, next: NextFunc
     });
 
     if (notifPayload) {
-      await Notification.create([notifPayload]).catch((err) => console.error('Failed to create response notification:', err));
+      await Notification.create([notifPayload]).catch((err) => logger.error({ err }, 'Failed to create response notification'));
     }
 
     if (orderToNotify) {
@@ -272,8 +273,10 @@ export async function getNegotiations(req: Request, res: Response, next: NextFun
 
 export async function getCopilotGuidance(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { cropId, cropName, offeredPrice, quantity, role } = req.query as Record<string, string>;
-    const userRole = (role as 'buyer' | 'farmer') || (req.user?.role === 'farmer' ? 'farmer' : 'buyer');
+    const { cropId, cropName, offeredPrice, quantity } = req.query as Record<string, string>;
+    // [FIX H-4] Always derive role from authenticated user — never trust user-supplied role query param.
+    // A buyer passing ?role=farmer could receive farmer-specific pricing strategy guidance.
+    const userRole: 'buyer' | 'farmer' = req.user?.role === 'farmer' ? 'farmer' : 'buyer';
 
     const guidance = await getNegotiationCopilotGuidance({
       cropId,

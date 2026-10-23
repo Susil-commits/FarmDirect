@@ -19,6 +19,7 @@ import { AdminService } from '../services/adminService.js';
 import { getUploadsRoot } from '../config/localStorage.js';
 import { parsePagination } from '../utils/pagination.js';
 import { syncCropEmbedding } from '../services/listingEmbeddingService.js';
+import logger from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -96,7 +97,7 @@ export const getPublicCommunityStats = asyncHandler(async (_req: Request, res: R
       data,
     });
   } catch (error) {
-    console.error('Error fetching community stats:', error);
+    logger.error({ err: error }, 'Error fetching community stats');
     if (cachedCommunityStats) {
       res.status(200).json({
         success: true,
@@ -187,13 +188,13 @@ export const approveUserKYC = asyncHandler(async (req: Request, res: Response) =
     : 'You can now browse the marketplace and place orders!';
   try {
     await Notification.create({ userId: safeUserId, title: 'KYC Approved', message: `Congratulations! Your KYC has been approved. ${roleMessage} ${comments ? `Admin notes: ${comments}` : ''}`, type: 'general', priority: 'high' });
-  } catch (err) { console.error('Notification creation error:', err); }
+  } catch (err) { logger.error({ err }, 'Notification creation error in approveUserKYC'); }
 
   notifyKYCUpdate(String(safeUserId), 'verified', undefined);
 
   try {
     await AuditLog.create({ adminId: adminUser._id, adminEmail: adminUser.email, action: 'KYC_APPROVED', resourceType: 'KYC', resourceId: safeUserId, resourceDetails: `${user.firstName} ${user.lastName} (${user.email})`, reason: comments || 'KYC documents verified', ipAddress: req.ip, userAgent: req.get('user-agent') || 'Unknown', status: 'success' });
-  } catch (auditErr) { console.error('Audit log error:', auditErr); }
+  } catch (auditErr) { logger.error({ err: auditErr }, 'Audit log error in approveUserKYC'); }
 
   res.status(200).json({ success: true, message: 'User KYC approved', data: user });
 });
@@ -218,13 +219,13 @@ export const rejectUserKYC = asyncHandler(async (req: Request, res: Response) =>
 
   try {
     await Notification.create({ userId: safeUserId, title: 'KYC Rejected', message: `Your KYC application has been rejected. Reason: ${reason.trim()}. You can re-submit your documents for verification.`, type: 'general', priority: 'high' });
-  } catch (err) { console.error('Notification creation error:', err); }
+  } catch (err) { logger.error({ err }, 'Notification creation error in rejectUserKYC'); }
 
   notifyKYCUpdate(String(safeUserId), 'rejected', reason.trim());
 
   try {
     await AuditLog.create({ adminId: adminUser._id, adminEmail: adminUser.email, action: 'KYC_REJECTED', resourceType: 'KYC', resourceId: safeUserId, resourceDetails: `${user.firstName} ${user.lastName} (${user.email})`, reason: reason.trim(), ipAddress: req.ip, userAgent: req.get('user-agent') || 'Unknown', status: 'success' });
-  } catch (auditErr) { console.error('Audit log error:', auditErr); }
+  } catch (auditErr) { logger.error({ err: auditErr }, 'Audit log error in rejectUserKYC'); }
 
   res.status(200).json({ success: true, message: 'User KYC rejected', data: user });
 });
@@ -302,7 +303,7 @@ export const approveCrop = asyncHandler(async (req: Request, res: Response) => {
   if (!crop) return sendError(res, 'Crop not found', 404);
   try {
     await Notification.create({ userId: crop.farmerId, title: 'Crop Approved', message: `Your crop listing "${crop.cropName}" has been approved and is now visible to buyers!`, type: 'general', priority: 'high', data: { cropId: crop._id, cropName: crop.cropName } });
-  } catch (err) { console.error('Notification creation error:', err); }
+  } catch (err) { logger.error({ err }, 'Notification creation error in approveCrop'); }
   syncCropEmbedding(crop._id).catch(() => {});
   res.status(200).json({ success: true, message: 'Crop approved successfully', data: crop });
 });
@@ -315,7 +316,7 @@ export const rejectCrop = asyncHandler(async (req: Request, res: Response) => {
   if (!crop) return sendError(res, 'Crop not found', 404);
   try {
     await Notification.create({ userId: crop.farmerId, title: 'Crop Rejected', message: `Your crop listing "${crop.cropName}" has been rejected. Reason: ${reason || 'Not specified'}.`, type: 'general', priority: 'high', data: { cropId: crop._id, cropName: crop.cropName, rejectionReason: reason } });
-  } catch (err) { console.error('Notification creation error:', err); }
+  } catch (err) { logger.error({ err }, 'Notification creation error in rejectCrop'); }
   res.status(200).json({ success: true, message: 'Crop rejected', data: crop });
 });
 
@@ -327,7 +328,7 @@ export const freezeCrop = asyncHandler(async (req: Request, res: Response) => {
   if (!crop) return sendError(res, 'Crop not found', 404);
   try {
     await Notification.create({ userId: crop.farmerId, title: 'Crop Suspended', message: `Your crop "${crop.cropName}" has been suspended. Reason: ${reason}`, type: 'general', relatedId: String(crop._id), priority: 'high' });
-  } catch (err) { console.error('Notification creation error:', err); }
+  } catch (err) { logger.error({ err }, 'Notification creation error in freezeCrop'); }
   res.status(200).json({ success: true, message: 'Crop frozen successfully', data: crop });
 });
 
@@ -342,7 +343,7 @@ export const deleteCrop = asyncHandler(async (req: Request, res: Response) => {
   await CropListing.findByIdAndDelete(safeCropId);
   try {
     await Notification.create({ userId: farmerId, title: 'Crop Deleted', message: `Your crop "${cropName}" has been deleted from marketplace. Reason: ${reason}`, type: 'general', priority: 'high' });
-  } catch (err) { console.error('Notification creation error:', err); }
+  } catch (err) { logger.error({ err }, 'Notification creation error in deleteCrop'); }
   res.status(200).json({ success: true, message: 'Crop deleted successfully', data: { id: String(safeCropId) } });
 });
 
@@ -463,11 +464,11 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
         data: { orderId: order._id, orderNumber: order.orderNumber, status: orderStatus },
       });
     }
-  } catch (notifErr) { console.error('Failed to create admin status notification:', notifErr); }
+  } catch (notifErr) { logger.error({ err: notifErr }, 'Failed to create admin status notification'); }
 
   try {
     await AuditLog.create({ adminId: adminUser._id, adminEmail: adminUser.email, action: 'ORDER_STATUS_CHANGED', resourceType: 'Order', resourceId: order._id, status: 'success', changes: { previousStatus, newStatus: orderStatus, cancellationReason: cancellationReason || null }, timestamp: new Date() });
-  } catch (auditErr) { console.error('Failed to log admin action:', auditErr); }
+  } catch (auditErr) { logger.error({ err: auditErr }, 'Failed to log admin action'); }
 
   res.status(200).json({ success: true, message: 'Order status updated by admin', data: order });
 });
@@ -543,7 +544,7 @@ export async function logAdminAction(adminId: Types.ObjectId, action: string, re
     const admin = await User.findById(adminId);
     await AuditLog.create({ adminId, adminEmail: admin?.email || 'unknown', action, resourceType, resourceId, changes, reason, status: 'success', timestamp: new Date() });
     await invalidationStrategies.adminAction();
-  } catch (err) { console.error('Audit log error:', err); }
+  } catch (err) { logger.error({ err }, 'Audit log error in logAdminAction'); }
 }
 
 export const getAuditLogs = asyncHandler(async (req: Request, res: Response) => {

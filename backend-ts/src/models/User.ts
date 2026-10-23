@@ -69,6 +69,8 @@ const userSchema = new Schema<IUser>(
     passwordResetExpires: Date,
     passwordChangedAt: Date,
     tokenVersion: { type: Number, default: 0 },
+    failedLoginAttempts: { type: Number, default: 0 },
+    lockUntil: { type: Date, default: null },
     socialLinks: { linkedin: String, twitter: String, facebook: String, instagram: String },
     socialAuth: {
       provider: { type: String, enum: Object.values(SocialAuthProvider), default: null },

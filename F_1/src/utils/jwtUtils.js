@@ -9,9 +9,10 @@ export const decodeToken = (token) => {
       return null;
     }
 
-    const decoded = JSON.parse(
-      atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))
-    );
+    // [FIX L-3] Repair Base64URL padding before decoding — some JWT libs omit '=' padding
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64 + '==='.slice(0, (4 - base64.length % 4) % 4);
+    const decoded = JSON.parse(atob(padded));
     return decoded;
   } catch (error) {
     console.error('Failed to decode token:', error);

@@ -18,6 +18,7 @@ import { capturePriceSnapshot } from '../services/priceSnapshotService.js';
 import { searchCropsHybrid, syncCropEmbedding } from '../services/listingEmbeddingService.js';
 import { getHybridRecommendations, getSimilarCropsVector } from '../services/recsysService.js';
 import { env } from '../config/env.js';
+import logger from '../utils/logger.js';
 
 function isAllowedCloudinaryImageUrl(imageUrl: string): boolean {
   if (typeof imageUrl !== 'string' || !imageUrl.trim()) return false;
@@ -551,7 +552,7 @@ export async function deleteCrop(req: Request, res: Response, next: NextFunction
           relatedId: String(activeOrder._id),
           priority: 'high',
           actionUrl: `/buyer/orders/${activeOrder._id}`,
-        }).catch((e: unknown) => console.error('Failed to create cancellation notification:', e));
+        }).catch((e: unknown) => logger.error({ err: e }, 'Failed to create cancellation notification'));
       }
     }
 
@@ -661,7 +662,7 @@ export async function toggleInterest(req: Request, res: Response, next: NextFunc
           data: { cropId: crop._id, cropName: crop.cropName, buyerId: buyer._id, buyerName: buyer.firstName || buyer.name, buyerPhone: buyer.phone, buyerEmail: buyer.email, buyerCity: buyer.city, buyerState: buyer.state },
         });
       } catch (notifErr) {
-        console.error('Failed to create interest notification:', notifErr);
+        logger.error({ err: notifErr }, 'Failed to create interest notification');
       }
       notifyCropInterest(crop.farmerId.toString(), crop, buyer);
     }

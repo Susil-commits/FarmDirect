@@ -49,7 +49,18 @@ export const idempotency = async (req: Request, res: Response, next: NextFunctio
 
       if (existingKey.status === 'pending') {
         if (now.getTime() - existingKey.createdAt.getTime() > 2 * 60 * 1000) {
-          await IdempotencyKey.updateOne({ _id: existingKey._id }, { $set: { createdAt: now } });
+          // [FIX H-2] Atomic conditional update: only one racing request wins the CAS;
+          // the losers see modifiedCount=0 and correctly get a 409.
+          const resetResult = await IdempotencyKey.updateOne(
+            { _id: existingKey._id, status: 'pending', createdAt: existingKey.createdAt },
+            { $set: { createdAt: now } },
+          );
+          if (resetResult.modifiedCount === 0) {
+            // Another concurrent request already reset it; treat as still-processing
+            sendError(res, 'Request is currently processing', 409);
+            return;
+          }
+          // Won the CAS — fall through to next()
         } else {
           sendError(res, 'Request is currently processing', 409);
           return;

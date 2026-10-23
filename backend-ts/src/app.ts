@@ -53,6 +53,9 @@ app.set('trust proxy', 1);
 
 app.use('/uploads', express.static(getUploadsRoot(), {
   setHeaders: (res, filePath) => {
+    // [FIX L-6] Only the uploads route needs cross-origin CORP so browsers can display images
+    // served from this path when embedded in cross-origin contexts (e.g., farmer dashboards)
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     if (filePath.endsWith('.svg')) {
       res.setHeader('Content-Disposition', 'attachment; filename="file.svg"');
       res.setHeader('Content-Type', 'image/svg+xml');
@@ -70,7 +73,8 @@ app.use((_req: Request, res: Response, next) => {
 });
 
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  // [FIX L-6] Use same-origin CORP; /uploads is handled separately below with cross-origin
+  crossOriginResourcePolicy: { policy: 'same-origin' },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -84,7 +88,7 @@ app.use(helmet({
       frameSrc: ["'self'", "https://api.razorpay.com"],
     },
   },
-  xXssProtection: true,
+  // [FIX L-5] Removed deprecated xXssProtection — CSP handles XSS prevention in modern browsers
   xFrameOptions: { action: 'deny' },
 }));
 
@@ -190,9 +194,11 @@ app.get('/api/health/detailed', protect, authorize(UserRole.Admin), async (_req:
 });
 
 app.use('/health', healthRoutes);
-app.use('/auth', authRoutes);
+// [FIX C-4] Removed bare '/auth' mount — all auth goes through '/api/auth' which
+// is protected by the Redis-backed authLimiter (brute-force defense).
 app.use('/api/auth', authRoutes);
 app.use('/api/crops', cropRoutes);
+
 app.use('/api/orders', orderRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/users', userRoutes);
@@ -213,8 +219,11 @@ app.use('/api/events', eventRoutes);
 app.use('/api/upload', uploadRoutes);
 
 app.use('*', (req: Request, res: Response) => {
-  res.status(404).json({ success: false, message: `Route not found: ${req.method} ${req.originalUrl}` });
+  // [FIX M-9] Don't echo the full URL in production — avoids path enumeration leakage
+  const detail = env.isProd ? '' : `: ${req.method} ${req.originalUrl}`;
+  res.status(404).json({ success: false, message: `Route not found${detail}` });
 });
+
 
 app.use(errorHandler);
 

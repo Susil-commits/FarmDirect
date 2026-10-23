@@ -11,6 +11,7 @@ import { env } from '../config/env.js';
 import type { Request, Response } from 'express';
 import mongoose, { type Types } from 'mongoose';
 import { parsePagination } from '../utils/pagination.js';
+import logger from '../utils/logger.js';
 
 export const submitContactQuery = asyncHandler(async (req: Request, res: Response) => {
   const { name, email, phone, inquiryType, message } = req.body as {
@@ -19,6 +20,10 @@ export const submitContactQuery = asyncHandler(async (req: Request, res: Respons
 
   if (!name || !email || !inquiryType || !message) return sendError(res, 'Please fill in all required fields', 400);
   if (message.length < 10) return sendError(res, 'Message must be at least 10 characters long', 400);
+  // [FIX M-8] Validate inquiryType against enum to prevent arbitrary strings stored in DB
+  if (!Object.values(InquiryType).includes(inquiryType as InquiryType)) {
+    return sendError(res, `Invalid inquiry type. Must be one of: ${Object.values(InquiryType).join(', ')}`, 400);
+  }
 
   const userId = (req.user as { _id?: Types.ObjectId } | undefined)?._id?.toString()
     ?? (req.user as { id?: string; _id?: Types.ObjectId } | undefined)?.id
@@ -39,14 +44,14 @@ export const submitContactQuery = asyncHandler(async (req: Request, res: Respons
     const confirmationEmail = generateContactConfirmation(name, inquiryType, message);
     await sendEmail({ to: email, ...confirmationEmail });
   } catch (emailError) {
-    console.error('Error sending confirmation email:', emailError);
+    logger.error({ err: emailError }, 'Error sending confirmation email');
   }
 
   try {
     const adminNotification = generateAdminNotification(name, email, phone || null, inquiryType, message, contactQuery._id);
     await sendEmail({ to: env.adminEmail, ...adminNotification });
   } catch (emailError) {
-    console.error('Error sending admin notification:', emailError);
+    logger.error({ err: emailError }, 'Error sending admin notification');
   }
 
   if (userId) {
@@ -61,7 +66,7 @@ export const submitContactQuery = asyncHandler(async (req: Request, res: Respons
         priority: 'medium',
       });
     } catch (notifError) {
-      console.error('Error creating notification for contact query:', notifError);
+      logger.error({ err: notifError }, 'Error creating notification for contact query');
     }
   }
 
@@ -159,7 +164,7 @@ export const updateContactQuery = asyncHandler(async (req: Request, res: Respons
       const responseEmail = generateAdminResponse(query.name, query.inquiryType, String(adminResponse));
       await sendEmail({ to: query.email, ...responseEmail });
     } catch (emailError) {
-      console.error('Error sending response email:', emailError);
+      logger.error({ err: emailError }, 'Error sending response email');
     }
 
     if (query.userId) {
@@ -174,7 +179,7 @@ export const updateContactQuery = asyncHandler(async (req: Request, res: Respons
           priority: 'high',
         });
       } catch (notifError) {
-        console.error('Error creating notification for admin response:', notifError);
+        logger.error({ err: notifError }, 'Error creating notification for admin response');
       }
     }
   }

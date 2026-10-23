@@ -7,6 +7,7 @@ import { sendError } from '../utils/apiResponse.js';
 import { env } from '../config/env.js';
 import { PaymentMethod, PaymentStatus, OrderStatus } from '../types/enums.js';
 import type { Request, Response, NextFunction } from 'express';
+import logger from '../utils/logger.js';
 
 import { createCircuitBreaker } from '../utils/circuitBreaker.js';
 
@@ -14,8 +15,10 @@ export const VALID_PAYMENT_METHODS = [PaymentMethod.Cod, PaymentMethod.Razorpay]
 
 function safeCompareSignatures(expected: string, received: string): boolean {
   if (!expected || !received) return false;
-  const bufExpected = Buffer.from(expected, 'utf-8');
-  const bufReceived = Buffer.from(received, 'utf-8');
+  // [FIX H-1] Use hex buffers so lengths are always equal for valid HMAC values;
+  // this prevents timing oracle attacks from length-divergent inputs.
+  const bufExpected = Buffer.from(expected, 'hex');
+  const bufReceived = Buffer.from(received, 'hex');
   if (bufExpected.length !== bufReceived.length) return false;
   return crypto.timingSafeEqual(bufExpected, bufReceived);
 }
@@ -180,7 +183,7 @@ export async function verifyRazorpayPayment(req: Request, res: Response, next: N
         });
         notifyOrderUpdate(order, 'order:statusUpdated');
       } catch (notifErr) {
-        console.error('Failed to create payment notification:', notifErr);
+        logger.error({ err: notifErr }, 'Failed to create payment notification');
       }
     }
 
@@ -203,7 +206,8 @@ export async function markRazorpayPaymentFailed(req: Request, res: Response, nex
       { razorpayOrderId: safeOrderId, buyerId: req.user!._id, paymentStatus: { $ne: PaymentStatus.Completed } },
       {
         $set: { paymentStatus: PaymentStatus.Failed },
-        $push: { timeline: { event: 'PAYMENT_FAILED', description: reason || 'Online payment failed', timestamp: new Date() } },
+        // [FIX H-6] Truncate user-supplied reason to prevent payload stuffing in order timeline
+        $push: { timeline: { event: 'PAYMENT_FAILED', description: (reason || 'Online payment failed').trim().slice(0, 500), timestamp: new Date() } },
       },
     );
     res.status(200).json({ success: true, message: 'Payment marked as failed', modifiedCount: result.modifiedCount });
@@ -214,9 +218,12 @@ export async function markRazorpayPaymentFailed(req: Request, res: Response, nex
 
 export async function handleRazorpayWebhook(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const webhookSecret = env.razorpayWebhookSecret || env.razorpayKeySecret;
+    // [FIX C-2] Never fall back to the API key secret for webhook verification.
+    // RAZORPAY_WEBHOOK_SECRET must be explicitly configured; falling back to the key secret
+    // would allow anyone with the key secret to forge arbitrary webhook events.
+    const webhookSecret = env.razorpayWebhookSecret;
     if (!webhookSecret) {
-      sendError(res, 'Webhook secret not configured on server', 400);
+      sendError(res, 'Webhook secret not configured on server (RAZORPAY_WEBHOOK_SECRET is required)', 500);
       return;
     }
 
@@ -237,7 +244,7 @@ export async function handleRazorpayWebhook(req: Request, res: Response, next: N
       .digest('hex');
 
     if (!safeCompareSignatures(expectedSignature, signature)) {
-      console.warn('[Webhook] Razorpay signature verification failed');
+      logger.warn('Razorpay signature verification failed');
       sendError(res, 'Invalid webhook signature', 400);
       return;
     }
@@ -263,7 +270,7 @@ export async function handleRazorpayWebhook(req: Request, res: Response, next: N
 
       const orders = await Order.find({ razorpayOrderId: safeOrderId });
       if (orders.length === 0) {
-        console.warn(`[Webhook] No matching orders found for razorpayOrderId: ${razorpayOrderId}`);
+        logger.warn({ razorpayOrderId: safeOrderId }, 'No matching orders found for razorpayOrderId');
         res.status(200).json({ status: 'ignored', message: 'Orders not found' });
         return;
       }
@@ -273,7 +280,7 @@ export async function handleRazorpayWebhook(req: Request, res: Response, next: N
       if (payment?.amount !== undefined) {
         const paidAmount = Number(payment.amount) / 100;
         if (Math.abs(paidAmount - totalAmount) > 0.01) {
-          console.error(`[Webhook] Amount mismatch for order ${razorpayOrderId}: expected ₹${totalAmount}, paid ₹${paidAmount}`);
+          logger.error({ razorpayOrderId: safeOrderId, expected: totalAmount, paid: paidAmount }, 'Amount mismatch for order in Razorpay webhook');
           sendError(res, 'Payment amount mismatch', 400);
           return;
         }
@@ -321,7 +328,7 @@ export async function handleRazorpayWebhook(req: Request, res: Response, next: N
           });
           notifyOrderUpdate(order, 'order:statusUpdated');
         } catch (notifErr) {
-          console.error('[Webhook] Failed to create payment notification:', notifErr);
+          logger.error({ err: notifErr }, 'Failed to create payment notification in webhook');
         }
       }
 

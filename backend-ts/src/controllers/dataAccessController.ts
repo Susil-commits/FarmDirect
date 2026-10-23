@@ -7,6 +7,7 @@ import Wishlist from '../models/Wishlist.js';
 import type { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { parsePagination } from '../utils/pagination.js';
+import logger from '../utils/logger.js';
 
 interface CacheEntry<T> {
   data: T;
@@ -106,7 +107,7 @@ export const getPublicApprovedCrops = asyncHandler(async (req: Request, res: Res
     return res.status(200).json(responseData);
   } catch (error) {
     if (isCacheable && publicCropsCache) {
-      console.warn('Database error fetching crops, serving stale cache', error);
+      logger.warn({ err: error }, 'Database error fetching crops, serving stale cache');
       return res.status(200).json(publicCropsCache.data);
     }
     throw error;
