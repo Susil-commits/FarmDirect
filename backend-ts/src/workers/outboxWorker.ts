@@ -48,7 +48,11 @@ export async function processOutboxEvent(eventId: string | Types.ObjectId): Prom
         .populate('buyerId', 'firstName lastName email')
         .populate('cropId', 'cropName images price');
 
-      if (order) notifyOrderUpdate(order, 'order:new');
+      if (order) {
+        if (!order.farmerId && farmerId) (order as any).farmerId = farmerId;
+        if (!order.buyerId && (event.payload as any)?.buyerId) (order as any).buyerId = (event.payload as any).buyerId;
+        notifyOrderUpdate(order, 'order:new');
+      }
     }
 
     event.status = 'PROCESSED';

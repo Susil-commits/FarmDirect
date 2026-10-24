@@ -17,8 +17,22 @@ interface OrderLike {
   orderStatus: string;
   cropName?: string;
   totalAmount?: number;
-  buyerId: Types.ObjectId | string;
-  farmerId: Types.ObjectId | string;
+  buyerId?: Types.ObjectId | string | { _id?: Types.ObjectId | string } | null;
+  farmerId?: Types.ObjectId | string | { _id?: Types.ObjectId | string } | null;
+}
+
+export function extractIdString(val: unknown): string | null {
+  if (!val) return null;
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    if ('_id' in (val as any) && (val as any)._id) return String((val as any)._id);
+    if ('id' in (val as any) && (val as any).id) return String((val as any).id);
+    if (typeof (val as any).toString === 'function') {
+      const str = (val as any).toString();
+      if (str !== '[object Object]') return str;
+    }
+  }
+  return null;
 }
 
 export function notifyOrderUpdate(order: OrderLike, event: string): void {
@@ -31,9 +45,20 @@ export function notifyOrderUpdate(order: OrderLike, event: string): void {
     updatedAt: new Date(),
   };
 
-  emitToOrder(order._id.toString(), event, data);
-  emitToUser(order.buyerId.toString(), 'order:updated', { ...data, role: 'buyer' });
-  emitToUser(order.farmerId.toString(), 'order:updated', { ...data, role: 'farmer' });
+  const orderIdStr = extractIdString(order._id);
+  if (orderIdStr) {
+    emitToOrder(orderIdStr, event, data);
+  }
+
+  const buyerIdStr = extractIdString(order.buyerId);
+  if (buyerIdStr) {
+    emitToUser(buyerIdStr, 'order:updated', { ...data, role: 'buyer' });
+  }
+
+  const farmerIdStr = extractIdString(order.farmerId);
+  if (farmerIdStr) {
+    emitToUser(farmerIdStr, 'order:updated', { ...data, role: 'farmer' });
+  }
 }
 
 interface NotificationLike {
@@ -107,13 +132,20 @@ export function notifyNewMessage(message: MessageLike): void {
     createdAt: message.createdAt ?? new Date(),
   };
 
-  emitToUser(message.receiverId.toString(), 'message:new', data);
-  emitToUser(senderId.toString(), 'message:sent', data);
+  const receiverIdStr = extractIdString(message.receiverId);
+  const senderIdStr = extractIdString(senderId);
+
+  if (receiverIdStr) {
+    emitToUser(receiverIdStr, 'message:new', data);
+    emitToUser(receiverIdStr, 'message:unreadUpdate', { unreadCount: 1 });
+  }
+  if (senderIdStr) {
+    emitToUser(senderIdStr, 'message:sent', data);
+  }
 
   if (message.conversationId) {
     emitToConversation(message.conversationId, 'message:new', data);
   }
-  emitToUser(message.receiverId.toString(), 'message:unreadUpdate', { unreadCount: 1 });
 }
 
 interface CropLike {
