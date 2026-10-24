@@ -112,14 +112,17 @@ flowchart TD
   - High-volume polling endpoints: In-memory token bucket to conserve cloud Redis command quotas.
 
 ### 3.3 Machine Learning Microservice (`ml-service`)
-* **Technology:** Python 3.11, FastAPI 0.110, Uvicorn, LightGBM, Statsmodels, Pydantic v2.
-* **Authentication:** `X-ML-Service-Key` compared in constant-time via `secrets.compare_digest`.
-* **Price Forecasting:** Generates 14-day rolling price predictions with 80% confidence intervals, achieving **2.38% average MAPE** across Indian regional agricultural commodities.
-* **Anomaly Detection:** Flags price dumping/gouging (> 2.5x or < 0.35x mandi median), unusual order velocity, and high cancellation COD buyers.
+* **Technology:** Python 3.11 / 3.13, FastAPI 0.115, Gunicorn + 4 Uvicorn Workers, Scikit-Learn (HistGradientBoosting & IsolationForest), Pydantic v2.
+* **Authentication:** Cryptographic **HMAC-SHA256 payload signing** (`X-Signature`, `X-Timestamp`, `X-Nonce`) with enforced $\pm 60$-second timestamp tolerance to defeat internal replay attacks; constant-time secret comparison fallback.
+* **Process Concurrency:** Multi-worker Gunicorn architecture (`-w 4 -k uvicorn.workers.UvicornWorker`) enabling high-throughput non-blocking inference.
+* **Price Forecasting:** In-memory cached model registry (`_MODEL_CACHE`) with quantile `HistGradientBoostingRegressor` ($\alpha=0.10, 0.50, 0.90$) and discrete grid-search Holt damped trend auto-tuning.
+* **Anomaly Detection:** Unsupervised `IsolationForest` multi-dimensional order vector outlier scoring with explainable human-readable reason attribution for admin review.
+* **Health Probes:** Kubernetes-style separated `/health/live` (container ping) and `/health/ready` (model registry cache readiness).
 
 ### 3.4 Data & Cache Tier
 * **Primary Database:** MongoDB 7.x Replica Set with WiredTiger storage engine:
   - Multi-document ACID transactions (`session.withTransaction`).
+  - Deadlock & transient write conflict mitigation via `withTransactionRetry` with exponential backoff and randomized decorrelated jitter.
   - Geospatial queries via `2dsphere` indexes on farm locations.
   - Compound indexes on status, seller, buyer, and timestamp dimensions.
 * **Distributed In-Memory Store:** Redis 7.x:
@@ -172,6 +175,14 @@ if (!crop) {
 │   3. Update OutboxEvent set processed = true                │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### 4.3 Deadlock Mitigation with Randomized Exponential Jitter
+Under high-concurrency burst checkouts where multiple sessions compete for row-level locks on adjacent documents, MongoDB can return transient lock errors (`TransientTransactionError`, error code `112` WriteConflict or `251` NoSuchTransaction).
+The system mitigates lock thrashing using `withTransactionRetry`:
+- Detects transient Mongo error labels and error codes.
+- Computes backoff delay with randomized decorrelated jitter:
+  $$\text{delay} = \min(\text{maxDelay}, \text{baseDelay} \times 2^{\text{attempt}}) + \text{random}(0, \text{baseDelay})$$
+- Retries up to 3 times before bubbling an error, eliminating thundering-herd lock re-contention during flash sales.
 
 ---
 

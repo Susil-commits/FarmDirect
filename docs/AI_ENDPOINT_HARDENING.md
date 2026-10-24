@@ -16,21 +16,32 @@ User input enters through three primary channels:
 
 ### Pre-Gemini Input Sanitization Pipeline
 Before any user text reaches an LLM prompt:
-1. **Character Filtering**:
+1. **Unicode NFKC Normalization & Obfuscation Stripping**:
+   - Applies `rawMessage.normalize('NFKC')` to collapse full-width characters, homoglyphs, and mathematical alphanumerics into canonical ASCII/Unicode equivalents.
+   - Strips zero-width and invisible control characters (`\u200B`, `\u200C`, `\u200D`, `\uFEFF`, `\u202A-\u202E`).
+   - Decodes common leetspeak substitutions (e.g. `1gn0re`, `p-r-o-m-p-t`, `syst3m`) to prevent evasion of pattern matchers.
+2. **Character Filtering**:
    - `sanitizeUserInput` strips non-printable ASCII control characters (`[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]`) to neutralize terminal escapes and byte-order control tricks.
    - Tabs (`\t`) and standard newlines (`\n`) are preserved for formatting.
-2. **Truncation & Boundary Enforcing**:
+3. **Truncation & Boundary Enforcing**:
    - Strictly clamped to `1,200` characters. Any excess text is truncated deterministically before evaluation.
-3. **PII Scrubbing**:
+4. **PII Scrubbing**:
    - RegEx scrubbing (`scrubPiiFromText`) detects and redacts Aadhaar numbers, PAN cards, phone numbers, email addresses, and credit card numbers, replacing them with generic placeholders (`[REDACTED_PHONE]`, `[REDACTED_AADHAAR]`, etc.) to prevent inadvertent PII exfiltration to external LLM providers.
-4. **Deterministic Pre-Execution Guardrails**:
-   - `checkPromptInjection(rawMessage)`: Fast-path deterministic detection for jailbreak signatures (e.g. `ignore previous instructions`, `DAN mode`, `act as linux terminal`, system prompt exfiltration tokens, script tags, delimiter breaking). If triggered, execution halts immediately and deflects with `topic: "guardrail_blocked"` without making any LLM API call.
+5. **Deterministic Pre-Execution Guardrails**:
+   - `checkPromptInjection(rawMessage)`: Fast-path deterministic detection for jailbreak signatures (e.g. `ignore previous instructions`, `DAN mode`, `act as linux terminal`, system prompt exfiltration tokens, script tags, delimiter breaking, `developer mode`). If triggered, execution halts immediately and deflects with `topic: "guardrail_blocked"` without making any LLM API call.
    - `checkSecurityPiiRequest(rawMessage)`: Intercepts queries attempting to discover backend credentials, database passwords, user tables, or admin audit logs.
    - `checkOffTopic(rawMessage)`: Rejects queries unrelated to Indian agronomy, crop economics, and FaRm marketplace operations.
 
 ---
 
 ## 2. Escaping, Templating & Context Isolation
+
+### Conversational Memory & Sliding Token Window
+To defend against context blow-up and persistent conversational prompt poisoning:
+- **`buildHardenedConversationContext`**:
+  - Enforces a strict sliding token budget (maximum 3,500 characters / ~900 tokens) across historical turns.
+  - Generates a concise context recap summary when older conversational turns exceed the window budget.
+  - Strips simulated prompt headers (`[SYSTEM INSTRUCTION]`, `Developer:`, `AgriBot:`) embedded in user-supplied past history turns.
 
 ### System Instruction Boundaries
 - Gemini is configured using system-level instruction (`systemInstruction` parameter in Google GenAI SDK), isolated from user turns.
@@ -58,6 +69,16 @@ Before any generated response is streamed or returned to the client:
 - If leakage patterns are detected, they are scrubbed and replaced with safe, friendly fallback text.
 
 ---
+
+## 3. Multimodal Vision Diagnostics & Statutory Safety
+
+The vision endpoint (`POST /api/ai/listing-draft`) supports dual operating modes:
+1. **Listing Mode (`mode: 'listing'`)**: Extracts produce variety, quantity unit, quality grade, and recommended fair pricing.
+2. **Crop Health Diagnostics Mode (`mode: 'crop_health'`)**:
+   - Detects foliar diseases (Early/Late Blight, Leaf Curl Virus, Bacterial Wilt) and pests (Stem Borer, Aphids, Whiteflies).
+   - Classifies condition into `healthy`, `diseased`, `pest_infested`, or `nutrient_deficient`.
+   - Provides organic and chemical remedies.
+   - **Mandatory Statutory Notice**: Systematically appends verified guidance to consult local Krishi Vigyan Kendra (KVK) or Block Agriculture Officers before applying chemical pesticides.
 
 ## 3. Tool-Calling Scope & Data Access Control
 
