@@ -21,6 +21,7 @@ const kycLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
   keyGenerator: (req) => String(req.user?._id ?? req.ip),
+  validate: { keyGeneratorIpFallback: false },
   store: createRateLimitStore('rl:kyc:'),
   standardHeaders: true,
   legacyHeaders: false,

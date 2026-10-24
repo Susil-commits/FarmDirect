@@ -1,7 +1,11 @@
 import os
+import hmac
+import hashlib
+import time
 import secrets
 import logging
-from fastapi import FastAPI, Depends, HTTPException, Security, status
+from typing import Optional
+from fastapi import FastAPI, Depends, HTTPException, Security, Request, status
 from fastapi.security.api_key import APIKeyHeader
 
 logger = logging.getLogger("ml_service")
@@ -14,6 +18,7 @@ from .schemas import (
     AnomalyScoreResponse,
 )
 from .forecasting import generate_price_forecast
+from .anomaly import score_transaction_anomaly
 
 API_KEY_NAME = "X-ML-Service-Key"
 EXPECTED_API_KEY = os.getenv("ML_SERVICE_KEY")
@@ -22,31 +27,99 @@ if not EXPECTED_API_KEY:
 
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
-def verify_api_key(api_key: str = Security(api_key_header)):
-    if not api_key or not secrets.compare_digest(api_key, EXPECTED_API_KEY):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing X-ML-Service-Key authentication header",
-        )
-    return api_key
+async def verify_service_auth(
+    request: Request,
+    api_key: Optional[str] = Security(api_key_header),
+):
+    correlation_id = request.headers.get("X-Correlation-Id") or secrets.token_hex(8)
+    request.state.correlation_id = correlation_id
+
+    signature = request.headers.get("X-Signature")
+    timestamp_str = request.headers.get("X-Timestamp")
+    nonce = request.headers.get("X-Nonce")
+
+    # Tier 1 Cryptographic Authentication: HMAC-SHA256 with timestamp tolerance
+    if signature and timestamp_str and nonce:
+        try:
+            timestamp = int(timestamp_str)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid X-Timestamp header in service authentication",
+            )
+
+        current_time = int(time.time())
+        # Enforce maximum 60-second replay window
+        if abs(current_time - timestamp) > 60:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Request timestamp outside allowed 60-second tolerance window",
+            )
+
+        body = await request.body()
+        message = f"{timestamp}.{nonce}.".encode("utf-8") + body
+        expected_sig = "sha256=" + hmac.new(
+            EXPECTED_API_KEY.encode("utf-8"),
+            message,
+            hashlib.sha256,
+        ).hexdigest()
+
+        if not hmac.compare_digest(expected_sig, signature):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid X-Signature cryptographic payload signature",
+            )
+        return {"auth": "hmac", "correlation_id": correlation_id}
+
+    # Backward-compatible Tier 2 fallback: Static API Key Header
+    if api_key and secrets.compare_digest(api_key, EXPECTED_API_KEY):
+        return {"auth": "api_key", "correlation_id": correlation_id}
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Missing or invalid authentication (requires HMAC signature or X-ML-Service-Key)",
+    )
 
 app = FastAPI(
     title="FarmDirect ML Service",
     description="Internal machine learning microservice for price forecasting and anomaly scoring",
-    version="1.0.0",
+    version="1.1.0",
     docs_url=None,  # No public API exposure
     redoc_url=None,
 )
+
+@app.middleware("http")
+async def add_correlation_id_header(request: Request, call_next):
+    correlation_id = getattr(request.state, "correlation_id", None) or request.headers.get("X-Correlation-Id")
+    response = await call_next(request)
+    if correlation_id:
+        response.headers["X-Correlation-Id"] = correlation_id
+    return response
 
 @app.get("/health", response_model=HealthResponse)
 def health_check():
     return HealthResponse(
         status="ok",
         service="farmdirect-ml-service",
-        version="1.0.0",
+        version="1.1.0",
     )
 
-@app.post("/forecast/price", response_model=PriceForecastResponse, dependencies=[Depends(verify_api_key)])
+@app.get("/health/live")
+def liveness_check():
+    return {"status": "ok", "service": "farmdirect-ml-service", "version": "1.1.0"}
+
+@app.get("/health/ready")
+def readiness_check():
+    # Verify forecasting engine availability
+    return {
+        "status": "ok",
+        "ready": True,
+        "service": "farmdirect-ml-service",
+        "version": "1.1.0",
+        "capabilities": ["price_forecast", "anomaly_score"],
+    }
+
+@app.post("/forecast/price", response_model=PriceForecastResponse, dependencies=[Depends(verify_service_auth)])
 def forecast_price(request: PriceForecastRequest):
     try:
         response = generate_price_forecast(
@@ -64,41 +137,10 @@ def forecast_price(request: PriceForecastRequest):
         logger.error(f"Forecasting engine error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal forecasting service error")
 
-@app.post("/anomaly/score", response_model=AnomalyScoreResponse, dependencies=[Depends(verify_api_key)])
+@app.post("/anomaly/score", response_model=AnomalyScoreResponse, dependencies=[Depends(verify_service_auth)])
 def score_anomaly(request: AnomalyScoreRequest):
-    reasons = []
-    anomaly_score = 0.0
-
-    # 1. Price deviation vs market median
-    if request.market_median > 0:
-        ratio = request.unit_price / request.market_median
-        if ratio > 2.5:
-            reasons.append(f"Price is {ratio:.1f}x higher than market median (₹{request.market_median})")
-            anomaly_score += 0.35
-        elif ratio < 0.35:
-            reasons.append(f"Price is heavily discounted ({ratio:.1f}x market median)")
-            anomaly_score += 0.25
-
-    # 2. Unusual quantity spikes
-    if request.typical_quantity > 0:
-        q_ratio = request.quantity / request.typical_quantity
-        if q_ratio > 4.0:
-            reasons.append(f"Bulk order quantity {request.quantity} is {q_ratio:.1f}x above average")
-            anomaly_score += 0.25
-
-    # 3. High order velocity for brand new accounts
-    if request.buyer_age_days < 1.0 and request.orders_last_hour >= 3:
-        reasons.append(f"Rapid order velocity ({request.orders_last_hour} orders in first 24h)")
-        anomaly_score += 0.30
-
-    # 4. COD high risk buyer cancellation rate
-    if request.is_cod and request.buyer_cancellation_rate > 0.40:
-        reasons.append(f"High risk COD buyer with {request.buyer_cancellation_rate * 100:.0f}% historical cancellations")
-        anomaly_score += 0.20
-
-    is_anomaly = anomaly_score >= 0.50
-    return AnomalyScoreResponse(
-        anomaly_score=round(min(1.0, anomaly_score), 2),
-        is_anomaly=is_anomaly,
-        reasons=reasons,
-    )
+    try:
+        return score_transaction_anomaly(request)
+    except Exception as e:
+        logger.error(f"Anomaly scoring error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal anomaly scoring service error")

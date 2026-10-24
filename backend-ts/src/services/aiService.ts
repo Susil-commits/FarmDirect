@@ -10,6 +10,7 @@ import {
   listingDraftResponseSchema,
   GEMINI_LISTING_DRAFT_SCHEMA,
   type ListingDraftResponse,
+  type CropHealthDiagnosis,
 } from '../schemas/aiSchemas.js';
 import { getPriceGuidance } from './priceSnapshotService.js';
 import {
@@ -90,6 +91,71 @@ export function detectLanguage(text: string, contextLang?: string): SupportedLan
   }
 
   return 'en';
+}
+
+export function buildHardenedConversationContext(
+  messages: Array<{ role: string; content: string }>,
+  maxChars = 10000
+): { contents: ChatContentItem[]; contextSummary?: string } {
+  if (!messages || messages.length === 0) {
+    return { contents: [] };
+  }
+
+  // 1. Sanitize history to prevent context poisoning and strip simulated system instructions
+  const sanitized = messages.map((m) => {
+    let cleanContent = sanitizeUserInput(m.content || '', 2000);
+    // Strip simulated prompt injection headers if previously stored
+    cleanContent = cleanContent
+      .replace(/^(system|assistant|agribot|admin|root):\s*/gi, '')
+      .replace(/\[\s*(system|instruction|override|system\s+instruction|developer|prompt)\b[^\]]*\]/gi, '')
+      .trim();
+    return {
+      role: m.role === 'model' || m.role === 'assistant' ? 'model' : 'user',
+      content: cleanContent,
+    };
+  });
+
+  // 2. Sliding window character/token budget (walk backwards from newest to oldest)
+  let accumulatedChars = 0;
+  const recentWindow: typeof sanitized = [];
+  const olderMessages: typeof sanitized = [];
+
+  for (let i = sanitized.length - 1; i >= 0; i--) {
+    const item = sanitized[i];
+    const itemLen = item.content.length;
+    if (accumulatedChars + itemLen <= maxChars && recentWindow.length < 16) {
+      recentWindow.unshift(item);
+      accumulatedChars += itemLen;
+    } else {
+      olderMessages.unshift(item);
+    }
+  }
+
+  const contents: ChatContentItem[] = [];
+
+  // 3. If older messages fell outside active window, synthesize dense background summary note
+  let contextSummary: string | undefined;
+  if (olderMessages.length > 0) {
+    const olderTopics = olderMessages
+      .filter((m) => m.role === 'user')
+      .slice(-3)
+      .map((m) => m.content.slice(0, 80))
+      .filter(Boolean)
+      .join('; ');
+
+    if (olderTopics) {
+      contextSummary = `Prior Context Summary: User previously inquired about: "${olderTopics}".`;
+    }
+  }
+
+  for (const msg of recentWindow) {
+    contents.push({
+      role: msg.role as 'user' | 'model',
+      parts: [{ text: msg.content }],
+    });
+  }
+
+  return { contents, contextSummary };
 }
 
 const SYSTEM_INSTRUCTION = `
@@ -442,24 +508,16 @@ class AiService {
           ? 'User Language: Hindi (हिन्दी). You MUST respond strictly in fluent Devanagari Hindi (हिन्दी लिपि).'
           : 'User Language: English. Respond in clear English.';
 
+    const { contents, contextSummary } = buildHardenedConversationContext(conversation?.messages || []);
+
     const promptWithContext = `
 ${roleContext} ${pageContext} ${cropContext}
 ${langDirective}
-User Query: "${userMessage}"
+${contextSummary ? contextSummary + '\n' : ''}User Query: "${userMessage}"
 
 Respond helpfully as AgriBot for the FaRm marketplace. Ensure markdown formatting is clean and professional. Ground your response on actual marketplace data using available tools when appropriate.
 `.trim();
 
-    const contents: ChatContentItem[] = [];
-    if (conversation && Array.isArray(conversation.messages) && conversation.messages.length > 0) {
-      const recentHistory = conversation.messages.slice(-20);
-      for (const msg of recentHistory) {
-        contents.push({
-          role: msg.role === 'model' || msg.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: msg.content }],
-        });
-      }
-    }
     contents.push({
       role: 'user',
       parts: [{ text: promptWithContext }],
@@ -618,25 +676,16 @@ Respond helpfully as AgriBot for the FaRm marketplace. Ensure markdown formattin
           ? 'User Language: Hindi (हिन्दी). You MUST respond strictly in fluent Devanagari Hindi (हिन्दी लिपि).'
           : 'User Language: English. Respond in clear English.';
 
+    const { contents, contextSummary } = buildHardenedConversationContext(conversation?.messages || []);
+
     const promptWithContext = `
 ${roleContext} ${pageContext} ${cropContext}
 ${langDirective}
-User Query: "${userMessage}"
+${contextSummary ? contextSummary + '\n' : ''}User Query: "${userMessage}"
 
 Respond helpfully as AgriBot for the FaRm marketplace. Ensure markdown formatting is clean and professional. Ground your response on actual marketplace data using available tools when appropriate.
 `.trim();
 
-    // Cap conversation history to the last ~10 turns (20 messages max)
-    const contents: ChatContentItem[] = [];
-    if (conversation && Array.isArray(conversation.messages) && conversation.messages.length > 0) {
-      const recentHistory = conversation.messages.slice(-20);
-      for (const msg of recentHistory) {
-        contents.push({
-          role: msg.role === 'model' || msg.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: msg.content }],
-        });
-      }
-    }
     contents.push({
       role: 'user',
       parts: [{ text: promptWithContext }],
@@ -1099,9 +1148,10 @@ What would you like to explore today?`,
     imageBase64?: string;
     mimeType?: string;
     cropNameHint?: string;
+    mode?: 'listing' | 'crop_health' | 'hybrid';
     userId?: Types.ObjectId | string | null;
   }): Promise<ListingDraftResponse> {
-    const { imageUrl, imageUrls, imageBase64, cropNameHint, userId } = params;
+    const { imageUrl, imageUrls, imageBase64, cropNameHint, mode = 'listing', userId } = params;
     const targetUrl = imageUrl || (imageUrls && imageUrls[0]) || '';
     let imageBuffer: Buffer | undefined;
     let mimeType = params.mimeType || 'image/jpeg';
@@ -1152,8 +1202,9 @@ What would you like to explore today?`,
     // 2. Try Gemini Vision Structured Analysis if configured
     if (llmClient.isVisionConfigured() && (imageBuffer || base64Data)) {
       try {
-        const prompt = `You are an expert Indian agricultural botanist and produce grading inspector for the FaRm direct farmer-to-consumer marketplace.
-Analyze this farm produce photograph carefully and generate a complete structured listing draft.
+        const isHealthMode = mode === 'crop_health' || mode === 'hybrid';
+        const prompt = `You are an expert Indian agricultural botanist, plant pathologist, and produce grading inspector for the FaRm direct farmer-to-consumer marketplace.
+Analyze this farm photograph carefully and generate a complete structured listing and health diagnosis.
 
 Required JSON output fields:
 1. cropName: Specific commercial name (e.g. "Fresh Tomato", "Potato", "Red Onion", "Brinjal", "Alphonso Mango", "Basmati Rice", "Green Chilli", "Ginger", "Turmeric").
@@ -1166,7 +1217,17 @@ Required JSON output fields:
 8. confidence: Confidence score between 0.0 and 1.0.
 9. description: 2-3 engaging, factual sentences describing the freshness, harvest condition, and culinary qualities (min 15 words).
 10. looksLikeProduce: Boolean. True if photograph clearly shows agricultural produce/crops. False if photograph is not farm produce (e.g. selfie, car, receipt, screenshot, machinery, random object, blank).
-11. issues: Array of detected quality flags (e.g. 'blurry', 'stock_photo_watermark', 'not_produce', 'poor_lighting'). Empty [] if clean.`;
+11. issues: Array of detected quality flags (e.g. 'blurry', 'stock_photo_watermark', 'not_produce', 'poor_lighting', 'partially_spoiled'). Empty [] if clean.
+12. healthDiagnosis: ${isHealthMode ? 'MANDATORY' : 'OPTIONAL'}. If crop foliage or produce shows signs of disease (blight, rot, leaf curl, spots, yellowing), pests (stem borer, aphids, caterpillars), or if health assessment is requested:
+   Provide:
+   - isHealthy (boolean)
+   - diseaseOrPestName (string)
+   - confidence (0.0 to 1.0)
+   - severity ('none' | 'low' | 'moderate' | 'severe')
+   - symptoms (string array)
+   - organicRemedies (string array)
+   - chemicalRemedies (string array)
+   - kvkSafetyNotice ("Mandatory Notice: Always consult your nearest Krishi Vigyan Kendra (KVK) or Agriculture Extension Officer for exact chemical dosages, spray schedule, and pre-harvest intervals.")`;
 
         const visionResult = await llmClient.generateVisionJson<ListingDraftResponse>({
           imageBuffer,
@@ -1201,12 +1262,13 @@ Required JSON output fields:
     }
 
     // 3. Robust Non-AI Heuristic Fallback
-    return this.generateHeuristicListingDraft(targetUrl, cropNameHint);
+    return this.generateHeuristicListingDraft(targetUrl, cropNameHint, mode);
   }
 
   public async generateHeuristicListingDraft(
     targetUrl: string,
-    cropNameHint?: string
+    cropNameHint?: string,
+    mode: 'listing' | 'crop_health' | 'hybrid' = 'listing'
   ): Promise<ListingDraftResponse> {
     const rawHint = `${cropNameHint || ''} ${targetUrl || ''}`.replace(/[._\-/]/g, ' ').toLowerCase();
 
@@ -1220,7 +1282,121 @@ Required JSON output fields:
     if (isBlurry) issues.push('blurry');
     if (isWatermarked) issues.push('stock_photo_watermark');
 
-    const looksLikeProduce = issues.length === 0;
+    // Pathological signals for disease & pest diagnostics
+    let healthDiagnosis: CropHealthDiagnosis | undefined;
+    const isBlight = /\b(blight|jhulsa|alternaria|phytophthora|late[- ]?blight|early[- ]?blight)\b/i.test(rawHint);
+    const isLeafCurl = /\b(curl|leaf[- ]?curl|patta[- ]?modak|patra[- ]?modaka|geminivirus)\b/i.test(rawHint);
+    const isStemBorer = /\b(borer|stem[- ]?borer|majra|tana[- ]?chhedak|dead[- ]?heart)\b/i.test(rawHint);
+    const isRootRot = /\b(rot|root[- ]?rot|tuber[- ]?rot|sadha|galan|damping[- ]?off)\b/i.test(rawHint);
+    const isAphidPest = /\b(aphid|aphids|whitefly|whiteflies|thrips|mahua|sucking[- ]?pest)\b/i.test(rawHint);
+
+    const kvkNotice =
+      'Mandatory Notice: Always consult your nearest Krishi Vigyan Kendra (KVK) or Agriculture Extension Officer for exact chemical dosages, spray schedule, and pre-harvest intervals.';
+
+    if (isBlight) {
+      healthDiagnosis = {
+        isHealthy: false,
+        diseaseOrPestName: 'Early/Late Blight (Fungal Pathogen)',
+        confidence: 0.9,
+        severity: 'moderate',
+        symptoms: ['Dark brown necrotic water-soaked lesions', 'Concentric target rings on leaves', 'Foliage dieback'],
+        organicRemedies: [
+          'Prophylactic foliar spray of Trichoderma viride @ 5g/liter of water',
+          'Immediate pruning and solarizing/burning of infected lower leaves',
+          'Avoid overhead sprinkler irrigation to keep foliage canopy dry',
+        ],
+        chemicalRemedies: [
+          'Preventive contact spray: Mancozeb 75% WP @ 2.0g/L or Copper Oxychloride 50 WP @ 2.5g/L',
+          'Curative systemic spray (if ETL breached): Metalaxyl 8% + Mancozeb 64% WP @ 2.0g/L',
+        ],
+        kvkSafetyNotice: kvkNotice,
+      };
+      if (!issues.includes('partially_spoiled')) issues.push('partially_spoiled');
+    } else if (isLeafCurl) {
+      healthDiagnosis = {
+        isHealthy: false,
+        diseaseOrPestName: 'Crop Leaf Curl Geminivirus',
+        confidence: 0.88,
+        severity: 'moderate',
+        symptoms: ['Severe upward curling and puckering of leaves', 'Thickening and vein enation', 'Stunted bush habit'],
+        organicRemedies: [
+          'Yellow sticky traps (15-20 traps/acre) to trap whitefly vector (Bemisia tabaci)',
+          'Foliar spray of cold-pressed Neem oil (1500 ppm Azadirachtin) @ 5ml/L + Khadi soap',
+          'Rogue out and destroy severely stunted infected seedlings early',
+        ],
+        chemicalRemedies: [
+          'Vector control: Imidacloprid 17.8 SL @ 0.3ml/L or Thiamethoxam 25 WG @ 0.3g/L',
+        ],
+        kvkSafetyNotice: kvkNotice,
+      };
+    } else if (isStemBorer) {
+      healthDiagnosis = {
+        isHealthy: false,
+        diseaseOrPestName: 'Yellow Stem Borer (Scirpophaga incertulas)',
+        confidence: 0.91,
+        severity: 'moderate',
+        symptoms: ['Dead heart during vegetative tillering stage', 'White earheads with chaffy grain during flowering'],
+        organicRemedies: [
+          'Install pheromone traps with lures @ 8-10 traps/acre for adult monitoring and mass trapping',
+          'Release egg parasitoid Trichogramma japonicum @ 1,00,000/ha thrice at weekly intervals',
+          'Clipping of seedling leaf tips before transplanting to eliminate egg masses',
+        ],
+        chemicalRemedies: [
+          'Cartap Hydrochloride 4G @ 10kg/acre or Chlorantraniliprole 0.4G @ 4kg/acre',
+        ],
+        kvkSafetyNotice: kvkNotice,
+      };
+    } else if (isRootRot) {
+      healthDiagnosis = {
+        isHealthy: false,
+        diseaseOrPestName: 'Root Rot / Damping-Off (Pythium / Rhizoctonia)',
+        confidence: 0.87,
+        severity: 'severe',
+        symptoms: ['Water-soaked soft brown decay at collar region', 'Collar constriction and plant wilting', 'Root necrosis'],
+        organicRemedies: [
+          'Soil drenching with Pseudomonas fluorescens or Trichoderma harzianum @ 10g/L',
+          'Ensure raised bed broad-furrow planting to eliminate waterlogging and root hypoxia',
+          'Apply neem cake @ 100 kg/acre during land preparation',
+        ],
+        chemicalRemedies: [
+          'Soil drenching around root zone with Copper Oxychloride 50 WP @ 3g/L',
+        ],
+        kvkSafetyNotice: kvkNotice,
+      };
+    } else if (isAphidPest) {
+      healthDiagnosis = {
+        isHealthy: false,
+        diseaseOrPestName: 'Sucking Pest Infestation (Aphids / Whiteflies / Thrips)',
+        confidence: 0.89,
+        severity: 'low',
+        symptoms: ['Colonies on underside of tender shoots and leaf axils', 'Sticky honeydew and sooty mould growth', 'Leaf yellowing'],
+        organicRemedies: [
+          'Spray cold-pressed Neem oil (min 1500 ppm Azadirachtin) @ 5ml/L emulsified with liquid organic soap',
+          'Spray 5% Neem Seed Kernel Extract (NSKE)',
+          'Install blue and yellow sticky insect traps',
+        ],
+        chemicalRemedies: [
+          'Acetamiprid 20 SP @ 0.2g/L or Dimethoate 30 EC @ 1.7ml/L (only if ETL breached)',
+        ],
+        kvkSafetyNotice: kvkNotice,
+      };
+    } else if (mode === 'crop_health' || mode === 'hybrid') {
+      healthDiagnosis = {
+        isHealthy: true,
+        diseaseOrPestName: 'Healthy Agricultural Produce',
+        confidence: 0.92,
+        severity: 'none',
+        symptoms: ['Uniform healthy coloration', 'Intact epidermis without lesions, punctures, or mycelial growth'],
+        organicRemedies: [
+          'Maintain preventive biological soil health with vermicompost and Jeevamrut application',
+          'Routine bi-weekly prophylactic neem oil spray (2ml/L) during active vegetative growth',
+        ],
+        chemicalRemedies: ['None required. Crop is in healthy commercial market grade.'],
+        kvkSafetyNotice: kvkNotice,
+      };
+    }
+
+    const looksLikeProduce = issues.filter((i) => i !== 'partially_spoiled').length === 0;
 
     if (!looksLikeProduce) {
       return {
@@ -1365,13 +1541,41 @@ Required JSON output fields:
       ripeness: detected.ripeness,
       colour: detected.colour,
       size: 'Medium (Uniform)',
-      qualityGrade: isBlurry ? 'C' : 'A',
+      qualityGrade: (healthDiagnosis && !healthDiagnosis.isHealthy) ? 'C' : isBlurry ? 'C' : 'A',
       confidence: 0.88,
       description: `Fresh, farm-harvested ${detected.cropName} grown using sustainable agricultural practices. Graded for high purity, optimal freshness, and direct farm-to-table culinary value.`,
       looksLikeProduce: true,
       issues,
       suggestedPrice,
+      healthDiagnosis,
     };
+  }
+
+  public async diagnoseCropHealth(params: {
+    imageUrl?: string;
+    imageUrls?: string[];
+    imageBase64?: string;
+    mimeType?: string;
+    cropNameHint?: string;
+    userId?: Types.ObjectId | string | null;
+  }): Promise<CropHealthDiagnosis> {
+    const draft = await this.generateListingDraft({
+      ...params,
+      mode: 'crop_health',
+    });
+    return (
+      draft.healthDiagnosis || {
+        isHealthy: true,
+        diseaseOrPestName: 'Healthy Crop Produce',
+        confidence: draft.confidence || 0.85,
+        severity: 'none',
+        symptoms: ['No visible pest infestation or pathological lesions'],
+        organicRemedies: ['Preventive organic soil health and neem spray maintenance'],
+        chemicalRemedies: ['None required. Practice Integrated Pest Management (IPM).'],
+        kvkSafetyNotice:
+          'Mandatory Notice: Always consult your nearest Krishi Vigyan Kendra (KVK) or Agriculture Extension Officer for exact chemical dosages, spray schedule, and pre-harvest intervals.',
+      }
+    );
   }
 }
 

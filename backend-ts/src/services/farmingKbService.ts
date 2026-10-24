@@ -43,6 +43,110 @@ export function generateDeterministicVector(text: string, dimensions = 64): numb
   return norm === 0 ? vec : vec.map((v) => v / norm);
 }
 
+export const AGRONOMY_SYNONYMS: Record<string, string[]> = {
+  // Pests & Insects (Odia, Hindi, English)
+  poka: ['pest', 'insect', 'caterpillar', 'borer', 'aphid'],
+  keeda: ['pest', 'insect', 'caterpillar', 'borer', 'aphid'],
+  kida: ['pest', 'insect'],
+  patanga: ['pest', 'moth', 'insect'],
+  majra: ['stem borer', 'paddy', 'borer', 'pest'],
+  'tana chhedak': ['stem borer', 'pest'],
+  borer: ['majra', 'stem borer', 'tana chhedak'],
+  aphid: ['sucking pest', 'mahua', 'whitefly', 'neem oil'],
+  aphids: ['sucking pest', 'mahua', 'whitefly', 'neem oil'],
+  mahua: ['aphid', 'sucking pest'],
+  whitefly: ['sucking pest', 'leaf curl vector', 'neem oil'],
+  thrips: ['sucking pest', 'leaf curl', 'neem oil'],
+
+  // Diseases & Symptoms (Odia, Hindi, English)
+  jhulsa: ['blight', 'late blight', 'early blight', 'fungal', 'phytophthora'],
+  jhulasa: ['blight', 'fungal'],
+  jhunsi: ['blast', 'blight', 'fungus'],
+  blight: ['jhulsa', 'alternaria', 'phytophthora', 'leaf spot'],
+  blast: ['paddy blast', 'leaf blast', 'pyricularia', 'jhunsi'],
+  'leaf curl': ['patta modak', 'patra modaka', 'geminivirus', 'whitefly'],
+  'patta modak': ['leaf curl', 'disease', 'whitefly'],
+  'patra modaka': ['leaf curl', 'disease', 'whitefly'],
+  rot: ['damping off', 'root rot', 'tuber rot', 'sadha'],
+  sadha: ['rot', 'damping off', 'fungus'],
+  galan: ['rot', 'damping off', 'fungus'],
+  wilt: ['bacterial wilt', 'fusarium', 'drooping'],
+  mildew: ['powdery mildew', 'downy mildew', 'fungus'],
+
+  // Crops (Vernacular & English)
+  dhan: ['paddy', 'rice'],
+  dhana: ['paddy', 'rice'],
+  paddy: ['dhan', 'dhana', 'rice'],
+  rice: ['paddy', 'dhan', 'dhana'],
+  aalu: ['potato'],
+  aloo: ['potato'],
+  potato: ['aalu', 'aloo'],
+  tamatar: ['tomato', 'bilaati'],
+  bilaati: ['tomato', 'tamatar'],
+  tomato: ['tamatar', 'bilaati'],
+  pyaz: ['onion', 'piaja'],
+  piaja: ['onion', 'pyaz'],
+  onion: ['pyaz', 'piaja'],
+  baingan: ['brinjal', 'eggplant', 'baigana'],
+  baigana: ['brinjal', 'eggplant', 'baingan'],
+  brinjal: ['baingan', 'baigana', 'eggplant'],
+  sarson: ['mustard', 'sorisa'],
+  sorisa: ['mustard', 'sarson'],
+  arhar: ['toor dal', 'pigeon pea', 'harada'],
+  harada: ['toor dal', 'pigeon pea', 'arhar'],
+  chana: ['gram', 'chickpea', 'buta'],
+  buta: ['gram', 'chickpea', 'chana'],
+
+  // Soil, Fertilizers & Manure
+  khata: ['organic manure', 'vermicompost', 'fym', 'compost'],
+  khat: ['organic manure', 'vermicompost', 'fym'],
+  khad: ['fertilizer', 'manure', 'compost'],
+  sar: ['fertilizer', 'chemical fertilizer', 'urea'],
+  sara: ['fertilizer', 'chemical fertilizer', 'urea'],
+  gobar: ['cow dung', 'fym', 'jeevamrut'],
+  jeevamrut: ['bio fertilizer', 'liquid manure', 'cow urine formulation'],
+  vermicompost: ['earthworm compost', 'organic matter', 'fym', 'soil health'],
+  dhaincha: ['green manure', 'sesbania', 'nitrogen fixation'],
+
+  // Operations
+  chhidkaw: ['spray', 'foliar spray', 'application'],
+  chanka: ['spray', 'foliar spray', 'application'],
+  sinchai: ['irrigation', 'watering', 'drip'],
+  pani: ['water', 'irrigation', 'drainage'],
+  chasa: ['farming', 'cultivation', 'agriculture'],
+  kheti: ['farming', 'cultivation', 'agriculture'],
+};
+
+export function expandAgronomyQuery(query: string): string[] {
+  const clean = query.toLowerCase();
+  const tokens = clean.split(/\W+/).filter((w) => w.length > 2);
+  const expanded = new Set<string>(tokens);
+
+  // Match single tokens in synonym dictionary
+  for (const token of tokens) {
+    if (AGRONOMY_SYNONYMS[token]) {
+      for (const syn of AGRONOMY_SYNONYMS[token]) {
+        for (const word of syn.split(/\W+/).filter((w) => w.length > 2)) {
+          expanded.add(word);
+        }
+      }
+    }
+  }
+
+  // Match 2-word phrases (e.g., 'leaf curl', 'stem borer', 'patta modak')
+  for (const key of Object.keys(AGRONOMY_SYNONYMS)) {
+    if (key.includes(' ') && clean.includes(key)) {
+      for (const syn of AGRONOMY_SYNONYMS[key]) {
+        for (const word of syn.split(/\W+/).filter((w) => w.length > 2)) {
+          expanded.add(word);
+        }
+      }
+    }
+  }
+
+  return Array.from(expanded);
+}
+
 class FarmingKbService {
   private isSynced = false;
 
@@ -99,7 +203,7 @@ class FarmingKbService {
     }
 
     const cleanQuery = question.trim().toLowerCase();
-    const isPesticideQuery = /\b(pesticide|chemical pesticide|chemical spray|insecticide|fungicide|herbicide|weedicide|chemical dosage)\b/i.test(
+    const isPesticideQuery = /\b(pesticide|chemical pesticide|chemical spray|insecticide|fungicide|herbicide|weedicide|chemical dosage|mancozeb|chlorpyrifos|copper oxychloride|tricyclazole)\b/i.test(
       cleanQuery
     );
 
@@ -120,7 +224,8 @@ class FarmingKbService {
       return this.searchFarmingKb(question, limit);
     }
 
-    const queryWords = cleanQuery.split(/\W+/).filter((w) => w.length > 2);
+    // Expand query tokens with multi-lingual agronomy synonyms
+    const expandedWords = expandAgronomyQuery(question);
 
     const scored = allDocs.map((doc: any) => {
       let vectorScore = 0;
@@ -128,22 +233,36 @@ class FarmingKbService {
         vectorScore = cosineSimilarity(queryVector, doc.embedding);
       }
 
-      // Keyword boost
-      let keywordHits = 0;
-      const combined = `${doc.title} ${doc.content} ${doc.tags?.join(' ') || ''}`.toLowerCase();
-      for (const word of queryWords) {
-        if (combined.includes(word)) keywordHits++;
+      // BM25-style weighted lexical scoring with field boosts
+      const titleLower = (doc.title || '').toLowerCase();
+      const tagsLower = (doc.tags || []).join(' ').toLowerCase();
+      const contentLower = (doc.content || '').toLowerCase();
+
+      let lexicalMatches = 0;
+      for (const word of expandedWords) {
+        if (titleLower.includes(word)) lexicalMatches += 2.5;
+        if (tagsLower.includes(word)) lexicalMatches += 2.0;
+        if (contentLower.includes(word)) lexicalMatches += 1.0;
       }
 
-      const keywordScore = queryWords.length > 0 ? keywordHits / queryWords.length : 0;
-      // Combined hybrid score
-      const finalScore = vectorScore * 0.7 + keywordScore * 0.3;
+      const totalTokens = Math.max(expandedWords.length, 1);
+      const rawLexical = lexicalMatches / (totalTokens * 3.5);
+      const lexicalScore = Math.min(1.0, rawLexical);
+
+      // Blended hybrid score: 65% dense vector + 35% expanded lexical
+      const finalScore = vectorScore > 0 ? vectorScore * 0.65 + lexicalScore * 0.35 : lexicalScore;
+
+      let content = doc.content;
+      // If chemical/pesticide query, append standardized KVK safety notice if not present
+      if (isPesticideQuery && !content.includes('KVK (Krishi Vigyan Kendra)')) {
+        content = `${content} CAUTION: Any chemical pesticide selection, formulation, or dosage MUST be confirmed with your local KVK (Krishi Vigyan Kendra) or District Agriculture Officer.`;
+      }
 
       return {
         sourceId: doc.sourceId,
         title: doc.title,
         category: doc.category,
-        content: doc.content,
+        content,
         attribution: doc.attribution,
         relevanceScore: Math.round(finalScore * 1000) / 1000,
       };
@@ -176,3 +295,4 @@ class FarmingKbService {
 }
 
 export const farmingKbService = new FarmingKbService();
+

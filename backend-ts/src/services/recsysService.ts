@@ -322,10 +322,15 @@ export async function getHybridRecommendations(options: RecommendationOptions): 
       const catCount = userCategoryCounts[crop.category] || 0;
       const categoryAffinity = totalUserCatWeight > 0 ? catCount / totalUserCatWeight : 0;
 
-      // Combined base score
+      // Combined base score with sparse-aware dynamic re-normalization
       let baseScore: number;
       if (userProfileVector) {
-        baseScore = (0.35 * categoryAffinity) + (0.30 * normCoocScore) + (0.25 * contentSim) + (0.10 * popularityScore);
+        if (normCoocScore > 0) {
+          baseScore = (0.40 * categoryAffinity) + (0.25 * normCoocScore) + (0.20 * contentSim) + (0.15 * popularityScore);
+        } else {
+          // Co-occurrence not yet observed for this item pair; re-normalize across affinity, content, and popularity
+          baseScore = (0.50 * categoryAffinity) + (0.30 * contentSim) + (0.20 * popularityScore);
+        }
       } else {
         // Cold start: rely primarily on popularity and regional/seasonal relevance
         baseScore = popularityScore;

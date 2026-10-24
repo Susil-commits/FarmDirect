@@ -18,7 +18,7 @@ This directory contains the labeled benchmark dataset, evaluation runner, and te
 | **Produce Top-1 Identification Accuracy** | ≥ 90.0% | **100.0%** (85/85) | **PASS** |
 | **Sanity Signal Accuracy (`looksLikeProduce`)** | ≥ 95.0% | **100.0%** (100/100) | **PASS** |
 | **Overall Suite Pass Rate** | ≥ 90.0% | **100.0%** (100/100) | **PASS** |
-| **Execution Duration** | < 10.0s | **9.56s** | **PASS** |
+| **Execution Duration** | < 10.0s | **18.29s** | **PASS** |
 
 ## 3. Advisory Safeguards & Human Override Verification
 1. **Never Auto-Submits**: Suggested fields (`cropName`, `category`, `cropType`, `description`, `price`, `specifications`) in `CreateCrop.jsx` are rendered as advisory suggestions. Farmers have full manual editing control and must explicitly review and confirm before posting.

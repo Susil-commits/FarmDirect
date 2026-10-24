@@ -81,17 +81,61 @@ export function scrubPii(text: string): string {
 }
 
 /**
- * Sanitizes input text: strips ASCII control characters (keeping \n, \r, and \t),
+ * Canonicalizes user input by:
+ * 1. Applying Unicode NFKC normalization (decomposing and recombining compatibility characters, homoglyphs).
+ * 2. Stripping zero-width, invisible, and bidirectional override characters.
+ * 3. Translating common leetspeak substitutions (e.g. 1gn0re -> ignore, d@n -> dan).
+ */
+export function canonicalizeText(input: string): string {
+  if (!input || typeof input !== 'string') return '';
+
+  // 1. Unicode NFKC normalization
+  let normalized = input.normalize('NFKC');
+
+  // 2. Strip zero-width, invisible formatting, and BiDi override characters
+  normalized = normalized.replace(/[\u200B-\u200D\uFEFF\u202A-\u202E\u2060-\u206F]/g, '');
+
+  // 3. Lowercase for leetspeak mapping
+  let leet = normalized.toLowerCase();
+
+  // Leetspeak character substitutions
+  const leetMap: Record<string, string> = {
+    '@': 'a',
+    '4': 'a',
+    '8': 'b',
+    '3': 'e',
+    '1': 'i',
+    '!': 'i',
+    '|': 'l',
+    '0': 'o',
+    '$': 's',
+    '5': 's',
+    '7': 't',
+    '+': 't',
+  };
+
+  let deobfuscated = '';
+  for (let i = 0; i < leet.length; i++) {
+    const char = leet[i];
+    deobfuscated += leetMap[char] || char;
+  }
+
+  return deobfuscated;
+}
+
+/**
+ * Sanitizes input text: strips zero-width and ASCII control characters (keeping \n, \r, and \t),
  * scrubs PII, normalizes whitespace, and clamps to maximum allowed length.
  */
 export function sanitizeUserInput(input: string, maxLength: number = 1200): string {
   if (!input || typeof input !== 'string') return '';
+  const cleaned = input.replace(/[\u200B-\u200D\uFEFF\u202A-\u202E]/g, '').normalize('NFKC');
   let result = '';
-  for (let i = 0; i < input.length; i++) {
-    const code = input.charCodeAt(i);
+  for (let i = 0; i < cleaned.length; i++) {
+    const code = cleaned.charCodeAt(i);
     // Allow tab (9), newline (10), carriage return (13), and characters >= 32 except DEL (127)
     if (code === 9 || code === 10 || code === 13 || (code >= 32 && code !== 127)) {
-      result += input[i];
+      result += cleaned[i];
     }
   }
   return scrubPii(result.trim()).slice(0, maxLength);
@@ -121,11 +165,44 @@ export function filterOutputPromptLeakage(output: string): string {
   return output;
 }
 
+const COLLAPSED_INJECTION_PATTERNS = [
+  /ignoreallpreviousinstructions/i,
+  /ignorepreviousinstructions/i,
+  /youarenowindan/i,
+  /doanythingnow/i,
+  /systemoverride/i,
+  /repeatsystemprompt/i,
+  /revealsystemprompt/i,
+  /forgetyouareagribot/i,
+];
+
 /**
- * Checks for prompt injection and jailbreak attempts.
+ * Checks for prompt injection and jailbreak attempts using multi-tiered analysis:
+ * 1. Direct regex pattern matching on raw input.
+ * 2. Canonicalized matching against homoglyphs, zero-width characters, and leetspeak.
+ * 3. Collapsed whitespace matching against spaced-out injection tokens.
  */
 export function checkPromptInjection(input: string): boolean {
-  return INJECTION_PATTERNS.some((pattern) => pattern.test(input));
+  if (!input || typeof input !== 'string') return false;
+
+  // Tier 1: Direct regex check on raw input
+  if (INJECTION_PATTERNS.some((pattern) => pattern.test(input))) {
+    return true;
+  }
+
+  // Tier 2: De-obfuscated check (strips zero-width and translates leetspeak)
+  const canonical = canonicalizeText(input);
+  if (INJECTION_PATTERNS.some((pattern) => pattern.test(canonical))) {
+    return true;
+  }
+
+  // Tier 3: Collapsed whitespace check
+  const collapsed = canonical.replace(/\s+/g, '');
+  if (COLLAPSED_INJECTION_PATTERNS.some((pattern) => pattern.test(collapsed))) {
+    return true;
+  }
+
+  return false;
 }
 
 /**

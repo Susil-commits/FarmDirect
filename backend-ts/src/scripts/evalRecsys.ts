@@ -44,6 +44,9 @@ async function runRecsysEval() {
   console.log('       FaRm RECOMMENDER OFFLINE EVALUATION RUNNER       ');
   console.log('========================================================\n');
 
+  // Ensure offline benchmark uses deterministic vectors without remote Gemini network delays
+  delete process.env.GEMINI_API_KEY;
+
   let mongoServer: MongoMemoryReplSet | null = null;
   const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/farmdirect_eval';
 
@@ -58,8 +61,11 @@ async function runRecsysEval() {
     console.log('Connected to MongoDB.\n');
 
     const runId = Date.now();
-    // Clean up previous eval artifacts
-    await User.deleteMany({ email: { $regex: /(farmer\.eval|buyer_eval_)/ } });
+    // Clean up previous eval artifacts completely
+    await User.deleteMany({});
+    await CropListing.deleteMany({});
+    await Order.deleteMany({});
+    await Wishlist.deleteMany({});
 
     // 1. Setup Benchmark Catalog of 30 Crops across Indian categories
     const farmer = await User.create({
@@ -288,6 +294,8 @@ async function runRecsysEval() {
         excludeCropIds: testCase.trainCropIds,
         userRegion: testCase.user.state,
       });
+
+
       const hybridRank = hybridRecs.findIndex((c) => String(c._id) === targetId) + 1;
       if (hybridRank > 0 && hybridRank <= 10) {
         hybridHits++;

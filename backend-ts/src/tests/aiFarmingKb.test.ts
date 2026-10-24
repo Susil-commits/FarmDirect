@@ -1,5 +1,5 @@
 import Embedding from '../models/Embedding.js';
-import { farmingKbService } from '../services/farmingKbService.js';
+import { farmingKbService, expandAgronomyQuery } from '../services/farmingKbService.js';
 import { executeTool, ALL_TOOLS } from '../ai/tools/index.js';
 
 describe('T1.7 Farming Knowledge Base (RAG)', () => {
@@ -55,4 +55,28 @@ describe('T1.7 Farming Knowledge Base (RAG)', () => {
     expect(data.citationInstruction).toContain('sourceId');
     expect(data.results.some((r: any) => r.sourceId === 'KB-GRAIN-01')).toBe(true);
   });
+
+  it('correctly expands regional vernacular farming terms with agronomy synonyms', () => {
+    const expandedOdia = expandAgronomyQuery('dhana re majra poka');
+    expect(expandedOdia).toContain('paddy');
+    expect(expandedOdia).toContain('stem');
+    expect(expandedOdia).toContain('borer');
+
+    const expandedHindi = expandAgronomyQuery('tamatar me jhulsa rog');
+    expect(expandedHindi).toContain('tomato');
+    expect(expandedHindi).toContain('blight');
+  });
+
+  it('retrieves relevant disease management for vernacular query (tamatar jhulsa)', async () => {
+    const results = await farmingKbService.searchFarmingKb('tamatar jhulsa leaf disease', 2);
+    expect(results.length).toBeGreaterThanOrEqual(1);
+    expect(['KB-DISEASE-01', 'KB-DISEASE-03']).toContain(results[0].sourceId);
+  });
+
+  it('retrieves paddy stem borer guidance for Odia query (dhana majra poka)', async () => {
+    const results = await farmingKbService.searchFarmingKb('dhana majra poka', 2);
+    expect(results.length).toBeGreaterThanOrEqual(1);
+    expect(results[0].sourceId).toBe('KB-DISEASE-02');
+  });
 });
+

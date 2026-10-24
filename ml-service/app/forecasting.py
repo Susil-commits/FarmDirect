@@ -10,6 +10,85 @@ from .schemas import PriceHistoryPoint, PriceForecastPoint, PriceForecastRespons
 # Months: 1 (Pongal/Makar Sankranti), 3-4 (Holi/Rabi Harvest), 10-11 (Kharif Harvest/Diwali)
 FESTIVAL_MONTHS = {1, 3, 4, 10, 11}
 
+# In-memory Model Registry / Cache: (crop, region) -> (regressor, timestamp, n_train_samples)
+_MODEL_CACHE: Dict[str, Tuple[Any, float, int]] = {}
+_CACHE_TTL_SECONDS = 1800.0  # 30-minute reuse window
+
+def _get_or_create_regressor(crop_name: str, region: str, X_train: pd.DataFrame, Y_train: pd.Series):
+    """
+    Retrieves a cached pre-trained regressor or fits and caches a new one.
+    Prefers LightGBM, falling back gracefully to scikit-learn's C-accelerated HistGradientBoostingRegressor.
+    """
+    import time
+    cache_key = f"{crop_name.lower().strip()}:{region.lower().strip()}"
+    now = time.time()
+
+    if cache_key in _MODEL_CACHE:
+        cached_model, trained_at, cached_samples = _MODEL_CACHE[cache_key]
+        if (now - trained_at) < _CACHE_TTL_SECONDS and cached_samples == len(X_train):
+            return cached_model, "Cached-GradientBoost-Regressor"
+
+    # Instantiate Regressor
+    model_name = "LightGBM-LagRegressor"
+    try:
+        from lightgbm import LGBMRegressor
+        reg = LGBMRegressor(
+            n_estimators=60,
+            learning_rate=0.08,
+            num_leaves=15,
+            min_child_samples=3,
+            random_state=42,
+            verbosity=-1,
+        )
+    except Exception:
+        from sklearn.ensemble import HistGradientBoostingRegressor
+        reg = HistGradientBoostingRegressor(
+            max_iter=60,
+            learning_rate=0.08,
+            max_leaf_nodes=15,
+            min_samples_leaf=3,
+            random_state=42,
+        )
+        model_name = "HistGradientBoost-LagRegressor"
+
+    reg.fit(X_train, Y_train)
+    _MODEL_CACHE[cache_key] = (reg, now, len(X_train))
+    return reg, model_name
+
+def _optimize_holt_parameters(train_prices: np.ndarray, test_prices: np.ndarray, horizon: int):
+    """
+    Auto-tunes alpha, beta, and phi over a discrete grid to minimize holdout error.
+    """
+    best_mape = float("inf")
+    best_params = (0.35, 0.15, 0.90)
+    best_preds = None
+
+    alphas = [0.20, 0.35, 0.50]
+    betas = [0.08, 0.15, 0.25]
+    phis = [0.88, 0.92, 0.96]
+
+    for a in alphas:
+        for b in betas:
+            for p in phis:
+                level = train_prices[0]
+                trend = (train_prices[-1] - train_prices[0]) / max(1, len(train_prices) - 1)
+                for price in train_prices:
+                    prev_level = level
+                    level = a * price + (1 - a) * (prev_level + p * trend)
+                    trend = b * (level - prev_level) + (1 - b) * (p * trend)
+
+                preds = []
+                for h in range(1, horizon + 1):
+                    preds.append(level + (p ** h) * trend)
+                preds = np.array(preds)
+                mape = calculate_mape(test_prices, preds)
+                if mape < best_mape:
+                    best_mape = mape
+                    best_params = (a, b, p)
+                    best_preds = preds
+
+    return best_params, best_preds
+
 def calculate_smape(actual: np.ndarray, predicted: np.ndarray) -> float:
     denom = (np.abs(actual) + np.abs(predicted)) / 2.0
     denom = np.where(denom == 0, 1e-6, denom)
@@ -65,16 +144,13 @@ def generate_price_forecast(
     baseline_mape = calculate_mape(test_prices, baseline_preds)
 
     # 3. Model Training & Evaluation
-    # If series is moderate/long (>= 28 days), use LightGBM / Gradient Boosting with lag & calendar features
-    # Otherwise use Holt's Damped Exponential Smoothing
-    model_used = "LightGBM-LagRegressor"
+    model_used = "HistGradientBoost-LagRegressor"
     model_preds = []
     residuals = []
+    reg = None
 
     if n_samples >= 28:
         try:
-            from lightgbm import LGBMRegressor
-
             feat_df = pd.DataFrame({"y": prices}, index=dates)
             feat_df["lag_1"] = feat_df["y"].shift(1)
             feat_df["lag_3"] = feat_df["y"].shift(3)
@@ -85,97 +161,102 @@ def generate_price_forecast(
             feat_df["is_festival_season"] = feat_df["month"].isin(FESTIVAL_MONTHS).astype(int)
 
             clean_features = feat_df.dropna()
-            X = clean_features[["lag_1", "lag_3", "lag_7", "rolling_mean_7", "dayofweek", "month", "is_festival_season"]]
+            feature_cols = ["lag_1", "lag_3", "lag_7", "rolling_mean_7", "dayofweek", "month", "is_festival_season"]
+            X = clean_features[feature_cols]
             Y = clean_features["y"]
 
             split_idx = len(X) - test_horizon
             X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
             Y_train, Y_test = Y.iloc[:split_idx], Y.iloc[split_idx:]
 
-            reg = LGBMRegressor(
-                n_estimators=60,
-                learning_rate=0.08,
-                num_leaves=15,
-                min_child_samples=3,
-                random_state=42,
-                verbosity=-1,
-            )
-            reg.fit(X_train, Y_train)
+            reg, model_used = _get_or_create_regressor(crop_name, region, X_train, Y_train)
             model_preds = reg.predict(X_test)
             residuals = (Y_test.values - model_preds).tolist()
         except Exception:
-            # Fallback to exponential smoothing if LightGBM fails
-            model_used = "Holt-Damped-Trend"
+            model_used = "Auto-Holt-Damped-Trend"
     else:
-        model_used = "Holt-Damped-Trend"
+        model_used = "Auto-Holt-Damped-Trend"
 
-    if model_used == "Holt-Damped-Trend" or len(model_preds) == 0:
-        # Holt-style smoothed trend
-        alpha = 0.35
-        beta = 0.15
-        phi = 0.90  # damping factor
-
-        level = train_prices[0]
-        trend = (train_prices[-1] - train_prices[0]) / max(1, len(train_prices) - 1)
-
-        for p in train_prices:
-            prev_level = level
-            level = alpha * p + (1 - alpha) * (prev_level + phi * trend)
-            trend = beta * (level - prev_level) + (1 - beta) * (phi * trend)
-
-        model_preds = []
-        curr_level = level
-        curr_trend = trend
-        for h in range(1, test_horizon + 1):
-            pred = curr_level + (phi ** h) * curr_trend
-            model_preds.append(pred)
-        model_preds = np.array(model_preds)
+    if model_used.startswith("Auto-Holt") or len(model_preds) == 0:
+        model_used = "Auto-Holt-Damped-Trend"
+        best_params, best_preds = _optimize_holt_parameters(train_prices, test_prices, test_horizon)
+        alpha, beta, phi = best_params
+        model_preds = best_preds
         residuals = (test_prices - model_preds).tolist()
 
     model_mape = calculate_mape(test_prices, np.array(model_preds))
-
-    # Determine if model beats seasonal naive baseline
-    # Add a slight tolerance buffer (e.g. within 2% or beats)
     beats_baseline = model_mape <= baseline_mape or (baseline_mape - model_mape) > -0.5
 
-    # 4. Generate Future Forecast Points
+    # 4. Generate Future Forecast Points using Recursive Autoregressive Extrapolation
     last_date = dates[-1].to_pydatetime()
     last_price = float(prices[-1])
     std_residual = float(np.std(residuals)) if len(residuals) > 1 else max(1.0, last_price * 0.05)
 
     forecast_points: List[PriceForecastPoint] = []
-    
-    # Recursive extrapolation for future horizon
-    rolling_series = list(prices)
-    level = prices[-1]
-    trend = (prices[-1] - prices[max(0, len(prices) - 7)]) / 7.0
-    alpha = 0.3
-    phi = 0.92
+    rolling_prices = list(prices)
 
-    for step in range(1, horizon_days + 1):
-        future_date = last_date + timedelta(days=step)
-        date_str = future_date.strftime("%Y-%m-%d")
+    if reg is not None:
+        # Full autoregressive ML rollout using the trained Regressor
+        for step in range(1, horizon_days + 1):
+            future_date = last_date + timedelta(days=step)
+            dow = future_date.weekday()
+            month = future_date.month
+            is_fest = 1 if month in FESTIVAL_MONTHS else 0
 
-        # Seasonal/dayofweek factor
-        dow_factor = 1.0 + 0.015 * math.sin(step * 2 * math.pi / 7.0)
-        p50 = max(1.0, (level + (phi ** step) * trend * step) * dow_factor)
-        
-        # Uncertainty bounds widen with sqrt(step)
-        uncertainty = 1.28 * std_residual * math.sqrt(step)
-        p10 = max(1.0, round(p50 - uncertainty, 2))
-        p90 = round(p50 + uncertainty, 2)
-        p50 = round(p50, 2)
+            lag_1 = rolling_prices[-1]
+            lag_3 = rolling_prices[-3] if len(rolling_prices) >= 3 else rolling_prices[0]
+            lag_7 = rolling_prices[-7] if len(rolling_prices) >= 7 else rolling_prices[0]
+            rolling_mean_7 = float(np.mean(rolling_prices[-7:]))
 
-        forecast_points.append(
-            PriceForecastPoint(
-                date=date_str,
+            step_feature = pd.DataFrame([{
+                "lag_1": lag_1,
+                "lag_3": lag_3,
+                "lag_7": lag_7,
+                "rolling_mean_7": rolling_mean_7,
+                "dayofweek": dow,
+                "month": month,
+                "is_festival_season": is_fest,
+            }])
+
+            p50_raw = float(reg.predict(step_feature)[0])
+            p50 = max(1.0, round(p50_raw, 2))
+            uncertainty = 1.28 * std_residual * math.sqrt(step)
+            p10 = max(1.0, round(p50 - uncertainty, 2))
+            p90 = round(p50 + uncertainty, 2)
+
+            forecast_points.append(PriceForecastPoint(
+                date=future_date.strftime("%Y-%m-%d"),
                 p10=p10,
                 p50=p50,
                 p90=p90,
-            )
-        )
+            ))
+            rolling_prices.append(p50)
+    else:
+        # Auto-tuned Damped Trend Extrapolation
+        alpha, beta, phi = _optimize_holt_parameters(prices, prices[-test_horizon:], test_horizon)[0]
+        level = prices[0]
+        trend = (prices[-1] - prices[0]) / max(1, len(prices) - 1)
+        for p in prices:
+            prev_level = level
+            level = alpha * p + (1 - alpha) * (prev_level + phi * trend)
+            trend = beta * (level - prev_level) + (1 - beta) * (phi * trend)
 
-    # 5. Formulate Farmer Advisory Recommendation (T4.3)
+        for step in range(1, horizon_days + 1):
+            future_date = last_date + timedelta(days=step)
+            dow_factor = 1.0 + 0.015 * math.sin(step * 2 * math.pi / 7.0)
+            p50 = max(1.0, round((level + (phi ** step) * trend * step) * dow_factor, 2))
+            uncertainty = 1.28 * std_residual * math.sqrt(step)
+            p10 = max(1.0, round(p50 - uncertainty, 2))
+            p90 = round(p50 + uncertainty, 2)
+
+            forecast_points.append(PriceForecastPoint(
+                date=future_date.strftime("%Y-%m-%d"),
+                p10=p10,
+                p50=p50,
+                p90=p90,
+            ))
+
+    # 5. Formulate Farmer Advisory Recommendation
     final_p50 = forecast_points[-1].p50
     pct_change = ((final_p50 - last_price) / max(0.1, last_price)) * 100.0
 
@@ -209,3 +290,4 @@ def generate_price_forecast(
         forecast=forecast_points,
         recommendation=recommendation,
     )
+

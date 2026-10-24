@@ -98,4 +98,32 @@ export const FARMING_GUIDES: FarmingGuideItem[] = [
       'Kharif (June-October): Paddy, maize, arhar (pigeon pea), groundnut, and brinjal sown with onset of monsoon. Rabi (October-March): Wheat, mustard, chickpea, potato, tomato, and onion sown under declining temperatures with assured irrigation. Zaid / Summer (March-June): Watermelon, cucumber, bitter gourd, and moong (green gram) providing quick cash returns before monsoon arrival.',
     attribution: 'ICAR Agrometeorological Advisory Advisory Guide',
   },
+  {
+    sourceId: 'KB-DISEASE-01',
+    title: 'Tomato Early Blight, Late Blight & Leaf Curl Virus Management',
+    category: 'pest_management',
+    tags: ['tomato', 'tamatar', 'bilaati', 'blight', 'jhulsa', 'leaf curl', 'patta modak', 'patra modaka', 'whitefly', 'trichoderma'],
+    content:
+      'Tomato Leaf Curl virus is transmitted by whiteflies; control vectors with yellow sticky traps (15-20 traps/acre) and 5% neem seed kernel extract (NSKE) spray. For Early & Late Blight (Alternaria / Phytophthora fungal spots and brown leaf scorched margins): Spray biological bio-fungicide Trichoderma viride or Pseudomonas fluorescens (5g/liter) prophylactically. Remove and burn infected lower leaves. CAUTION: Any chemical fungicide (e.g. Copper Oxychloride or Mancozeb) MUST be confirmed with your local KVK or Agriculture Officer for dosage and harvest waiting periods.',
+    attribution: 'ICAR-IIHR Tomato Disease Advisory & IPM Protocol',
+  },
+  {
+    sourceId: 'KB-DISEASE-02',
+    title: 'Paddy Yellow Stem Borer & Leaf Blast (Pyricularia) Management',
+    category: 'pest_management',
+    tags: ['paddy', 'rice', 'dhan', 'dhana', 'stem borer', 'majra poka', 'tana chhedak', 'blast', 'jhunsi', 'pheromone trap'],
+    content:
+      'For Paddy Yellow Stem Borer (dead heart at vegetative stage and white earhead at heading stage): Install pheromone traps with Scirpophaga incertulas lures at 8-10 traps/acre to monitor moth population. Release egg parasitoid Trichogramma japonicum @ 1,00,000/ha thrice at weekly intervals. For Blast (eye-shaped spots with grey center): Avoid excessive nitrogenous fertilizers. CAUTION: If Economic Threshold Level (ETL) is breached, confirm any chemical spray (such as Tricyclazole) with your local KVK or District Agriculture Extension Officer.',
+    attribution: 'ICAR-NRRI Cuttack Rice Crop Protection Manual',
+  },
+  {
+    sourceId: 'KB-DISEASE-03',
+    title: 'Potato Late Blight (Phytophthora) & Tuber Rot Prevention',
+    category: 'pest_management',
+    tags: ['potato', 'aalu', 'aloo', 'late blight', 'jhulsa', 'phytophthora', 'tuber rot', 'ridging', 'mancozeb'],
+    content:
+      'Potato Late Blight (Phytophthora infestans) manifests as water-soaked lesions on leaves turning blackish-brown with white mildew ring underneath during humid cool weather. Practice high earthing-up (ridging) to create an 8-10 cm protective soil barrier preventing fungal spores from washing down to tubers. Treat seed tubers with Trichoderma viride before planting. CAUTION: For chemical blight management, always confirm recommended preventive contact or curative systemic fungicides and safe spray intervals with your local KVK or Agriculture Extension Officer.',
+    attribution: 'Central Potato Research Institute (CPRI) Advisory',
+  },
 ];
+

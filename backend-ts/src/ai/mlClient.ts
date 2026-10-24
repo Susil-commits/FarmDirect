@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { env } from '../config/env.js';
 import logger from '../utils/logger.js';
 
@@ -97,6 +98,29 @@ class MLClient {
   }
 
   /**
+   * Generates cryptographic HMAC-SHA256 inter-service authentication headers.
+   * Format: message = `${timestamp}.${nonce}.${bodyStr}`
+   */
+  private generateAuthHeaders(bodyStr: string, correlationId?: string): Record<string, string> {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const nonce = crypto.randomUUID();
+    const corrId = correlationId || crypto.randomUUID();
+    const secret = env.mlServiceKey || 'dev_ml_secret_key';
+
+    const message = `${timestamp}.${nonce}.${bodyStr}`;
+    const signature = 'sha256=' + crypto.createHmac('sha256', secret).update(message).digest('hex');
+
+    return {
+      'Content-Type': 'application/json',
+      'X-ML-Service-Key': secret,
+      'X-Signature': signature,
+      'X-Timestamp': String(timestamp),
+      'X-Nonce': nonce,
+      'X-Correlation-Id': corrId,
+    };
+  }
+
+  /**
    * Forecast price series using ml-service or in-process fallback
    */
   public async forecastPrice(payload: ForecastRequestPayload): Promise<ForecastResponsePayload> {
@@ -107,19 +131,20 @@ class MLClient {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 4000);
 
+        const bodyStr = JSON.stringify({
+          crop_name: payload.cropName,
+          category: payload.category,
+          region: payload.region,
+          history: payload.history,
+          horizon_days: horizonDays,
+        });
+
+        const headers = this.generateAuthHeaders(bodyStr);
+
         const response = await fetch(`${env.mlServiceUrl}/forecast/price`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-ML-Service-Key': env.mlServiceKey,
-          },
-          body: JSON.stringify({
-            crop_name: payload.cropName,
-            category: payload.category,
-            region: payload.region,
-            history: payload.history,
-            horizon_days: horizonDays,
-          }),
+          headers,
+          body: bodyStr,
           signal: controller.signal,
         });
 
@@ -162,24 +187,25 @@ class MLClient {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
 
+        const bodyStr = JSON.stringify({
+          order_id: payload.orderId,
+          unit_price: payload.unitPrice,
+          market_median: payload.marketMedian,
+          quantity: payload.quantity,
+          typical_quantity: payload.typicalQuantity,
+          buyer_age_days: payload.buyerAgeDays,
+          orders_last_hour: payload.ordersLastHour,
+          is_cod: payload.isCod,
+          buyer_cancellation_rate: payload.buyerCancellationRate,
+          discount_pct: payload.discountPct,
+        });
+
+        const headers = this.generateAuthHeaders(bodyStr);
+
         const response = await fetch(`${env.mlServiceUrl}/anomaly/score`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-ML-Service-Key': env.mlServiceKey,
-          },
-          body: JSON.stringify({
-            order_id: payload.orderId,
-            unit_price: payload.unitPrice,
-            market_median: payload.marketMedian,
-            quantity: payload.quantity,
-            typical_quantity: payload.typicalQuantity,
-            buyer_age_days: payload.buyerAgeDays,
-            orders_last_hour: payload.ordersLastHour,
-            is_cod: payload.isCod,
-            buyer_cancellation_rate: payload.buyerCancellationRate,
-            discount_pct: payload.discountPct,
-          }),
+          headers,
+          body: bodyStr,
           signal: controller.signal,
         });
 

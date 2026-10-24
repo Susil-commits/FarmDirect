@@ -55,6 +55,19 @@ export const GEMINI_STRUCTURED_RESPONSE_SCHEMA = {
   required: ['reply', 'topic', 'suggestions'],
 };
 
+export const cropHealthDiagnosisSchema = z.object({
+  isHealthy: z.boolean(),
+  diseaseOrPestName: z.string().optional(),
+  confidence: z.number().min(0).max(1),
+  severity: z.enum(['none', 'low', 'moderate', 'severe']).default('none'),
+  symptoms: z.array(z.string()).default([]),
+  organicRemedies: z.array(z.string()).default([]),
+  chemicalRemedies: z.array(z.string()).default([]),
+  kvkSafetyNotice: z.string(),
+});
+
+export type CropHealthDiagnosis = z.infer<typeof cropHealthDiagnosisSchema>;
+
 export const listingDraftRequestSchema = z
   .object({
     imageUrl: z.string().optional(),
@@ -62,6 +75,7 @@ export const listingDraftRequestSchema = z
     imageBase64: z.string().optional(),
     mimeType: z.string().optional(),
     cropNameHint: z.string().optional(),
+    mode: z.enum(['listing', 'crop_health', 'hybrid']).optional().default('listing'),
   })
   .refine(
     (data) => Boolean(data.imageUrl || (data.imageUrls && data.imageUrls.length > 0) || data.imageBase64),
@@ -96,6 +110,7 @@ export const listingDraftResponseSchema = z.object({
   looksLikeProduce: z.boolean(),
   issues: z.array(z.string()).default([]),
   suggestedPrice: z.number().optional(),
+  healthDiagnosis: cropHealthDiagnosisSchema.optional(),
 });
 
 export type ListingDraftResponse = z.infer<typeof listingDraftResponseSchema>;
@@ -150,6 +165,49 @@ export const GEMINI_LISTING_DRAFT_SCHEMA = {
       type: 'ARRAY',
       items: { type: 'STRING' },
       description: 'List of detected quality issues, if any (e.g., blurry, stock_photo_watermark, not_produce, poor_lighting, low_resolution, partially_spoiled). Empty if clean.',
+    },
+    healthDiagnosis: {
+      type: 'OBJECT',
+      properties: {
+        isHealthy: {
+          type: 'BOOLEAN',
+          description: 'True if crop shows no symptoms of disease or pest infestation; False if disease, pest, or pathogen symptoms are present.',
+        },
+        diseaseOrPestName: {
+          type: 'STRING',
+          description: 'Specific agricultural pest or disease diagnosis (e.g. Tomato Late Blight, Paddy Stem Borer, Healthy Produce).',
+        },
+        confidence: {
+          type: 'NUMBER',
+          description: 'Diagnostic confidence between 0.0 and 1.0.',
+        },
+        severity: {
+          type: 'STRING',
+          enum: ['none', 'low', 'moderate', 'severe'],
+          description: 'Severity grade of crop health issue.',
+        },
+        symptoms: {
+          type: 'ARRAY',
+          items: { type: 'STRING' },
+          description: 'List of observed physical symptoms on leaves, fruit, or stems.',
+        },
+        organicRemedies: {
+          type: 'ARRAY',
+          items: { type: 'STRING' },
+          description: 'Recommended natural, bio-organic, and cultural remedies.',
+        },
+        chemicalRemedies: {
+          type: 'ARRAY',
+          items: { type: 'STRING' },
+          description: 'Emergency chemical interventions for severe infestations when ETL is breached.',
+        },
+        kvkSafetyNotice: {
+          type: 'STRING',
+          description: 'Mandatory advisory notice directing farmer to local KVK before chemical spraying.',
+        },
+      },
+      required: ['isHealthy', 'confidence', 'severity', 'symptoms', 'organicRemedies', 'chemicalRemedies', 'kvkSafetyNotice'],
+      description: 'Optional crop health diagnosis if disease symptoms are visible or if crop_health mode is requested.',
     },
   },
   required: [
