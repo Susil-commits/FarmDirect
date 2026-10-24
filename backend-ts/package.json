@@ -59,15 +59,15 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.0",
     "mongoose-update-if-current": "^1.4.0",
-    "multer": "^2.4.0",
-    "nodemailer": "^10.0.16",
+    "multer": "^2.5.0",
+    "nodemailer": "^10.2.1",
     "opossum": "^10.0.0",
     "pino": "^10.3.1",
     "rate-limit-redis": "^6.0.1",
     "razorpay": "^2.9.6",
     "socket.io": "^4.7.2",
     "typescript": "^5.9.3",
-    "zod": "^3.23.8"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

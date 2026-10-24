@@ -6,7 +6,7 @@ const AVAILABILITIES = Object.values(CropAvailability) as [string, ...string[]];
 
 export const createCropSchema = z.object({
   cropName: z.string().min(2, 'Crop name must be at least 2 characters').max(100, 'Crop name too long'),
-  cropType: z.enum(CROP_TYPES, { errorMap: () => ({ message: `Invalid crop type` }) }).optional(),
+  cropType: z.enum(CROP_TYPES, { message: 'Invalid crop type' }).optional(),
   category: z.string().max(100).optional(),
   price: z.union([z.string(), z.number()])
     .transform((v) => Number(v))
@@ -18,7 +18,7 @@ export const createCropSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters').max(2000, 'Description too long'),
   pickupLocation: z.string().min(5, 'Pickup location is required').max(500),
   contactNumber: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
-  specifications: z.union([z.string(), z.record(z.unknown())]).optional(),
+  specifications: z.union([z.string(), z.record(z.string(), z.unknown())]).optional(),
   images: z.union([z.string(), z.array(z.string())]).optional(),
   availability: z.enum(AVAILABILITIES).optional(),
 });
@@ -39,7 +39,7 @@ export const updateCropSchema = z.object({
   description: z.string().min(10).max(2000).optional(),
   pickupLocation: z.string().min(5).max(500).optional(),
   contactNumber: z.string().regex(/^[6-9]\d{9}$/, 'Invalid phone number').optional(),
-  specifications: z.union([z.string(), z.record(z.unknown())]).optional(),
+  specifications: z.union([z.string(), z.record(z.string(), z.unknown())]).optional(),
   availability: z.enum(AVAILABILITIES).optional(),
   restockQuantity: z.union([z.string(), z.number()])
     .transform((v) => Number(v))

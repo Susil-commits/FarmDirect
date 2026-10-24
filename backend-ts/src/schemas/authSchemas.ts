@@ -14,7 +14,7 @@ export const registerSchema = z.object({
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
-  role: z.enum(ALLOWED_ROLES, { errorMap: () => ({ message: `Role must be one of: ${ALLOWED_ROLES.join(', ')}` }) }).optional(),
+  role: z.enum(ALLOWED_ROLES, { message: `Role must be one of: ${ALLOWED_ROLES.join(', ')}` }).optional(),
   phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number').optional().or(z.literal('')),
   location: z.string().max(200).optional(),
   address: z.string().max(500).optional(),

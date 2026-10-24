@@ -24,7 +24,7 @@ function sanitizeMeta(meta?: Record<string, unknown>): Record<string, unknown> {
 export const logEvents = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const parseResult = batchEventsSchema.safeParse(req.body);
   if (!parseResult.success) {
-    sendError(res, 'Invalid event payload', 400, { errors: parseResult.error.errors });
+    sendError(res, 'Invalid event payload', 400, { errors: parseResult.error.issues ?? (parseResult.error as any).errors });
     return;
   }
 

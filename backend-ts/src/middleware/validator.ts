@@ -26,14 +26,14 @@ export function validateRequest(schemas: ValidationSchemas): RequestHandler {
     } catch (error) {
       const zodError = error as ZodError;
       const fieldErrors: Record<string, string> = {};
-      const issues = zodError.errors ?? zodError.issues ?? [];
+      const issues = zodError.issues ?? (zodError as any).errors ?? [];
       for (const issue of issues) {
         const field = issue.path.join('.') || '_root';
         if (!fieldErrors[field]) {
           fieldErrors[field] = issue.message;
         }
       }
-      const issueMessages = issues.map((i) => i.message).join('; ');
+      const issueMessages = issues.map((i: { message: string }) => i.message).join('; ');
       res.status(400).json({
         success: false,
         message: issueMessages ? `Validation Error: ${issueMessages}` : 'Validation Error',

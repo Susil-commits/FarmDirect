@@ -96,7 +96,7 @@ export function canonicalizeText(input: string): string {
   normalized = normalized.replace(/[\u200B-\u200D\uFEFF\u202A-\u202E\u2060-\u206F]/g, '');
 
   // 3. Lowercase for leetspeak mapping
-  let leet = normalized.toLowerCase();
+  const leet = normalized.toLowerCase();
 
   // Leetspeak character substitutions
   const leetMap: Record<string, string> = {

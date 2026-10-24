@@ -5,7 +5,7 @@ export const singleEventSchema = z.object({
   type: z.enum(['view', 'search', 'click', 'wishlist', 'cart', 'interest', 'offer', 'order']),
   cropId: z.string().regex(/^[0-9a-fA-F]{24}$/).optional().nullable(),
   query: z.string().max(200).optional().nullable(),
-  meta: z.record(z.unknown()).optional(),
+  meta: z.record(z.string(), z.unknown()).optional(),
   at: z.string().datetime().or(z.date()).optional(),
 });
 

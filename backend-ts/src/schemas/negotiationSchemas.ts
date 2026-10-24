@@ -8,7 +8,7 @@ export const makeOfferSchema = z.object({
 });
 
 export const respondOfferSchema = z.object({
-  action: z.enum(['accept', 'reject', 'counter'], { errorMap: () => ({ message: 'Invalid action. Must be accept, reject, or counter.' }) }),
+  action: z.enum(['accept', 'reject', 'counter'], { message: 'Invalid action. Must be accept, reject, or counter.' }),
   offeredPrice: z.number().min(0.01).optional(),
   message: z.string().max(500).optional(),
 });
