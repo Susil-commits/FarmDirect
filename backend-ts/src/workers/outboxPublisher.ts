@@ -21,7 +21,9 @@ export async function createOutboxEvent(eventType: string, payload: any, session
       backoff: { type: 'exponential', delay: 1000 },
     });
   } else {
-    console.warn('[OutboxPublisher] OutboxQueue is not initialized. Event stored in MongoDB; fallback polling sweeper will process it.');
+    if (process.env.NODE_ENV !== 'test') {
+      console.warn('[OutboxPublisher] OutboxQueue is not initialized. Event stored in MongoDB; fallback polling sweeper will process it.');
+    }
     // If not inside a session, trigger an immediate sweep
     if (!session) {
       triggerImmediateOutboxSweep();

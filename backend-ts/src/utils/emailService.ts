@@ -36,7 +36,7 @@ if (env.smtpHost && env.smtpUser && env.smtpPass) {
     secure: env.smtpPort === 465,
     auth: { user: env.smtpUser, pass: env.smtpPass },
   });
-} else {
+} else if (env.nodeEnv !== 'test' && process.env.NODE_ENV !== 'test') {
   console.warn('Email Service: SMTP not configured. Logging emails to console instead.');
 }
 
