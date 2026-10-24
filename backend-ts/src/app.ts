@@ -9,7 +9,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import mongoSanitize from 'express-mongo-sanitize';
 import mongoose from 'mongoose';
-import cookieParser from 'cookie-parser';
 
 import { env } from './config/env.js';
 import errorHandler from './middleware/errorHandler.js';
@@ -148,7 +147,6 @@ app.use(
   }),
 );
 app.use(express.urlencoded({ limit: '10kb', extended: true }));
-app.use(cookieParser());
 app.use(csrfProtection);
 app.use(mongoSanitize());
 app.use(hpp());

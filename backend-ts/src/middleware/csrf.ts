@@ -18,9 +18,9 @@ export const csrfProtection: RequestHandler = (req: Request, res: Response, next
     normalizedPath.endsWith('/auth/refresh-token') ||
     normalizedPath.endsWith('/auth/logout');
 
+  const cookieHeader = req.headers.cookie;
   const hasCookieAuth = Boolean(
-    req.cookies?.refreshToken ||
-    (req.headers.cookie && req.headers.cookie.includes('refreshToken='))
+    cookieHeader && cookieHeader.includes('refreshToken=')
   );
 
   // For cookie-authenticated routes (/auth/refresh, /auth/logout) and cookie-authenticated requests:
