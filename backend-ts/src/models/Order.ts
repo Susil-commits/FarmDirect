@@ -60,8 +60,10 @@ const orderSchema = new Schema<IOrder>(
 orderSchema.index({ cropId: 1 });
 orderSchema.index({ orderStatus: 1 });
 orderSchema.index({ createdAt: -1 });
+orderSchema.index({ orderStatus: 1, createdAt: -1 });
 orderSchema.index({ buyerId: 1, createdAt: -1 });
 orderSchema.index({ farmerId: 1, createdAt: -1 });
+orderSchema.index({ farmerId: 1, orderStatus: 1, createdAt: -1 });
 
 orderSchema.plugin(updateIfCurrentPlugin);
 

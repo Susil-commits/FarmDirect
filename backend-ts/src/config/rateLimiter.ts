@@ -26,6 +26,22 @@ export const createRateLimitStore = (prefix: string): Store | undefined => {
 
   const memoryMap = new Map<string, { totalHits: number; resetTime: Date }>();
 
+  // Eviction guard (#22): prune expired keys and cap memory usage under high volume
+  const pruneExpiredMemoryEntries = (now: number) => {
+    for (const [k, v] of memoryMap.entries()) {
+      if (v.resetTime.getTime() <= now) {
+        memoryMap.delete(k);
+      }
+    }
+    if (memoryMap.size > 5000) {
+      let toRemove = memoryMap.size - 5000;
+      for (const k of memoryMap.keys()) {
+        memoryMap.delete(k);
+        if (--toRemove <= 0) break;
+      }
+    }
+  };
+
   const resilientStore: Store = {
     init(options: Options) {
       if (redisStoreInstance?.init) {
@@ -45,6 +61,10 @@ export const createRateLimitStore = (prefix: string): Store | undefined => {
       }
 
       const now = Date.now();
+      if (memoryMap.size > 2000) {
+        pruneExpiredMemoryEntries(now);
+      }
+
       const existing = memoryMap.get(key);
       if (!existing || existing.resetTime.getTime() <= now) {
         const resetTime = new Date(now + 60000);

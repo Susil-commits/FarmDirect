@@ -184,6 +184,40 @@ The system mitigates lock thrashing using `withTransactionRetry`:
   $$\text{delay} = \min(\text{maxDelay}, \text{baseDelay} \times 2^{\text{attempt}}) + \text{random}(0, \text{baseDelay})$$
 - Retries up to 3 times before bubbling an error, eliminating thundering-herd lock re-contention during flash sales.
 
+### 4.4 High-Performance Distributed Caching & Stampede Defense
+* **Singleflight Promise Coalescing (`getOrSetCache`)**:
+  When hot cache keys (such as `crops:all:approved` or `admin:analytics`) expire under concurrent user load, concurrent read requests join a single in-flight Promise registry. Only 1 query reaches MongoDB while all other callers receive the resolved result, eliminating **Cache Stampedes / Thundering Herds**.
+* **Non-Blocking Invalidation (`SCAN` + `UNLINK`)**:
+  Replaced $O(N)$ blocking `KEYS *` with chunked cursor iteration (`SCAN MATCH ... COUNT 100`) and asynchronous memory freeing via `UNLINK`. This prevents the single-threaded Redis event loop from stalling under large key sets.
+
+### 4.5 Resilient Reconnection & Full Jitter Exponential Backoff
+All persistent network connections (MongoDB `connectDB`, Redis `ioredis`, BullMQ `connection`) employ **Full Jitter Exponential Backoff**:
+$$\text{delay} = \text{floor}\left(\min(t_{\text{base}} \times 2^{\text{attempt}}, \; t_{\text{max}}) \times (0.5 + 0.5 \times \text{random}())\right)$$
+Spreading reconnection attempts over randomized windows eliminates lockstep reconnection spikes when dependencies recover from outages.
+
+### 4.6 Connection Pooling Architecture
+MongoDB connection parameters in `src/config/db.ts` are tuned for low-latency multi-pod concurrency:
+* `minPoolSize: 10`: Keeps warm persistent TCP connections allocated to eliminate cold-connection latency spikes.
+* `maxPoolSize: 50`: Prevents socket exhaustion on database nodes.
+* `maxIdleTimeMS: 30000`: Automatically cleans up stale idle connections.
+* `waitQueueTimeoutMS: 5000`: Fails fast rather than blocking threads indefinitely when the pool is fully saturated.
+
+### 4.7 Bounded Memory Eviction Guard on Ingress Rate Limiting
+The in-memory fallback rate limiter (`createRateLimitStore`) enforces an active eviction guard:
+* Periodically purges expired entries when key count exceeds 2,000.
+* Caps the in-memory store at 5,000 max entries by dropping oldest keys during sustained high-volume traffic or DDoS attacks, guaranteeing zero unbounded memory leaks.
+
+### 4.8 Compound Index Optimization
+Compound indexes accelerate high-frequency range queries and eliminate in-memory sorting:
+* `Order`: `{ orderStatus: 1, createdAt: -1 }` and `{ farmerId: 1, orderStatus: 1, createdAt: -1 }`.
+* `Notification`: `{ userId: 1, isRead: 1, createdAt: -1 }`.
+
+### 4.9 Distributed Tracing & W3C Trace Context Propagation
+The `requestId` middleware extracts and propagates standard W3C `traceparent` headers (`00-<trace_id>-<span_id>-<flags>`), `X-Correlation-Id`, and `X-Request-Id` across all incoming requests and outgoing responses, enabling end-to-end request correlation across edge gateways and microservices.
+
+### 4.10 Idempotent Graceful Shutdown Lifecycle
+`server.ts` traps `SIGTERM` and `SIGINT` with an `isShuttingDown` atomic guard to prevent racing shutdown sequences, shutting down worker pollers, closing BullMQ workers, terminating HTTP servers, and disconnecting Redis and MongoDB with clean timeout boundaries.
+
 ---
 
 ## 5. Real-Time WebSocket Architecture

@@ -15,7 +15,13 @@ if (redisUrl && process.env.NODE_ENV !== 'test') {
     lazyConnect: true,
     connectTimeout: 10_000,
     maxRetriesPerRequest: null,
-    retryStrategy: (times) => Math.min(500 * 2 ** times, 15_000),
+    // Full Jitter: spreads reconnect bursts over a randomized window to prevent thundering herds (#27, #28)
+    retryStrategy: (times) => {
+      const maxDelay = 15_000;
+      const baseDelay = 500;
+      const exponential = Math.min(baseDelay * 2 ** times, maxDelay);
+      return Math.floor(exponential * (0.5 + Math.random() * 0.5));
+    },
   });
 
   rawClient.on('error', (err) => {
@@ -67,6 +73,18 @@ export const redisClient = {
       return rawClient.del(...key);
     }
     return rawClient.del(key);
+  },
+  async unlink(key: string | string[]): Promise<number> {
+    if (!this.isReady || !rawClient) return 0;
+    if (Array.isArray(key)) {
+      if (key.length === 0) return 0;
+      return rawClient.unlink(...key);
+    }
+    return rawClient.unlink(key);
+  },
+  async scan(cursor: string, ...args: (string | number)[]): Promise<[string, string[]]> {
+    if (!this.isReady || !rawClient) return ['0', []];
+    return rawClient.scan(cursor, ...(args as any)) as Promise<[string, string[]]>;
   },
   async keys(pattern: string): Promise<string[]> {
     if (!this.isReady || !rawClient) return [];

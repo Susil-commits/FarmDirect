@@ -9,8 +9,12 @@ export async function connectDB(retries = MAX_RETRIES): Promise<typeof mongoose>
   try {
     mongoose.set('strictQuery', true);
     
+    // High-performance connection pooling (#8)
     const conn = await mongoose.connect(env.mongoUri, {
       maxPoolSize: 50,
+      minPoolSize: 10,
+      maxIdleTimeMS: 30000,
+      waitQueueTimeoutMS: 5000,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
@@ -23,8 +27,12 @@ export async function connectDB(retries = MAX_RETRIES): Promise<typeof mongoose>
     logger.error({ err: message }, `MongoDB connection error: ${message}`);
     
     if (retries > 0) {
-      logger.info({ retryInSec: RETRY_DELAY_MS / 1000, retriesLeft: retries }, `Retrying MongoDB connection in ${RETRY_DELAY_MS / 1000}s... (${retries} retries left)`);
-      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+      // Exponential backoff + full jitter (#27, #28)
+      const attempt = MAX_RETRIES - retries + 1;
+      const exponentialDelay = Math.min(1000 * 2 ** attempt, 15000);
+      const jitteredDelay = Math.floor(exponentialDelay * (0.5 + Math.random() * 0.5));
+      logger.info({ retryInMs: jitteredDelay, retriesLeft: retries }, `Retrying MongoDB connection in ${(jitteredDelay / 1000).toFixed(1)}s... (${retries} retries left)`);
+      await new Promise(resolve => setTimeout(resolve, jitteredDelay));
       return connectDB(retries - 1);
     } else {
       logger.error('MongoDB connection failed after maximum retries. Exiting.');

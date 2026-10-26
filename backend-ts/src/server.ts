@@ -20,7 +20,14 @@ initSocket(httpServer, { origin: env.corsOrigins });
 let workerInstance: any = null;
 let outboxWorkerInstance: any = null;
 
+let isShuttingDown = false;
+
 function gracefulShutdown(signal: string): void {
+  if (isShuttingDown) {
+    logger.warn(`Shutdown already in progress, ignoring duplicate ${signal}`);
+    return;
+  }
+  isShuttingDown = true;
   logger.info(`Received ${signal}, shutting down gracefully...`);
   stopPaymentReconciliationWorker();
   stopOutboxPollingWorker();

@@ -35,18 +35,58 @@ export async function getCache<T = unknown>(key: string): Promise<T | null> {
   }
 }
 
+/**
+ * In-flight promise registry implementing Singleflight / Request Coalescing (#23 Cache Stampede Shield).
+ * When multiple concurrent callers request the same expired or missing key, only one upstream fetch runs.
+ */
+const inFlightRequests = new Map<string, Promise<any>>();
+
+export async function getOrSetCache<T>(
+  key: string,
+  fetchFn: () => Promise<T>,
+  ttlSeconds = 120
+): Promise<T> {
+  const cached = await getCache<T>(key);
+  if (cached !== null) return cached;
+
+  if (inFlightRequests.has(key)) {
+    return inFlightRequests.get(key) as Promise<T>;
+  }
+
+  const promise = (async () => {
+    try {
+      const data = await fetchFn();
+      await setCache(key, data, ttlSeconds);
+      return data;
+    } finally {
+      inFlightRequests.delete(key);
+    }
+  })();
+
+  inFlightRequests.set(key, promise);
+  return promise;
+}
+
 export async function invalidateCache(pattern: string): Promise<void> {
   if (!redisClient.isReady) return;
   try {
-    // If exact key without wildcards, directly del to save a KEYS command
+    // If exact key without wildcards, directly unlink/del to avoid scanning
     if (!pattern.includes('*')) {
-      await redisClient.del(pattern);
+      await (redisClient.unlink ? redisClient.unlink(pattern) : redisClient.del(pattern));
       return;
     }
-    const keys = await redisClient.keys(`*${pattern}*`);
-    if (keys.length > 0) {
-      await redisClient.del(keys);
-    }
+
+    // High performance non-blocking cursor iteration (#21, #24)
+    // Avoids running O(N) blocking KEYS command on production Redis instances
+    const matchPattern = pattern.startsWith('*') || pattern.endsWith('*') ? pattern : `*${pattern}*`;
+    let cursor = '0';
+    do {
+      const [nextCursor, keys] = await redisClient.scan(cursor, 'MATCH', matchPattern, 'COUNT', 100);
+      cursor = nextCursor;
+      if (keys && keys.length > 0) {
+        await (redisClient.unlink ? redisClient.unlink(keys) : redisClient.del(keys));
+      }
+    } while (cursor !== '0');
   } catch (error) {
     console.error(`Failed to invalidate cache for pattern ${pattern}`, error);
   }
@@ -55,10 +95,14 @@ export async function invalidateCache(pattern: string): Promise<void> {
 export async function clearPrefix(prefix: string): Promise<void> {
   if (!redisClient.isReady) return;
   try {
-    const keys = await redisClient.keys(`${prefix}*`);
-    if (keys.length > 0) {
-      await redisClient.del(keys);
-    }
+    let cursor = '0';
+    do {
+      const [nextCursor, keys] = await redisClient.scan(cursor, 'MATCH', `${prefix}*`, 'COUNT', 100);
+      cursor = nextCursor;
+      if (keys && keys.length > 0) {
+        await (redisClient.unlink ? redisClient.unlink(keys) : redisClient.del(keys));
+      }
+    } while (cursor !== '0');
   } catch (error) {
     console.error(`Failed to clear prefix ${prefix}`, error);
   }
